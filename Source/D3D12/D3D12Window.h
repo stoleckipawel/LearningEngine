@@ -11,6 +11,7 @@ private:
 	static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 private:
 	ATOM m_wndClass;
+	HWND m_window = nullptr;
 
 
 

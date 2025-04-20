@@ -23,7 +23,19 @@ bool D3D12Window::Initialize()
 		return false;
 	}
 
-	return true;
+	m_window = CreateWindowEx(
+		0,
+		(LPCWSTR)m_wndClass,
+		L"Unrealistic Engine",
+		WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		nullptr,
+		nullptr,
+		windowClassX.hInstance,
+		nullptr
+	);
+
+	return m_window != nullptr;
 }
 
 void D3D12Window::Shutdown()
