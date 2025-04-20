@@ -2,6 +2,11 @@
 
 bool D3D12Context::Initialize()
 {
+	if (FAILED(CreateDXGIFactory2(0, IID_PPV_ARGS(&m_dxgiFactory))))
+	{
+		return false;
+	}
+
 	if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&m_device))))
 	{
 		return false;
@@ -49,6 +54,7 @@ void D3D12Context::Shutdown()
 
 	m_cmdQueue.Release();
 	m_device.Release();
+	m_dxgiFactory.Release();
 }
 
 void D3D12Context::SignalAndWait()

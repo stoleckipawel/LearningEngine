@@ -14,12 +14,14 @@ public:
 	inline ComPointer<ID3D12CommandQueue>& GetCommmandQueue() { return m_cmdQueue; }
 	inline ComPointer<ID3D12CommandAllocator>& GetCommandAllocator() { return m_cmdAllocator; }
 	inline ComPointer<ID3D12GraphicsCommandList7>& GetCommandList() { return m_cmdList; }
+	inline ComPointer<IDXGIFactory7>& GetFactory() { return m_dxgiFactory; }
 	inline ComPointer<ID3D12Fence1>& GetFence() { return m_fence; }
 private:
 	ComPointer<ID3D12Device10> m_device;
 	ComPointer<ID3D12CommandQueue> m_cmdQueue;
 	ComPointer<ID3D12CommandAllocator> m_cmdAllocator;
 	ComPointer<ID3D12GraphicsCommandList7> m_cmdList;
+	ComPointer<IDXGIFactory7> m_dxgiFactory;
 
 	ComPointer<ID3D12Fence1> m_fence;
 	UINT64 m_fenceValue = 0;

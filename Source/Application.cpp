@@ -23,6 +23,8 @@ int main()
 			//draw
 
 			D3D12Context::Get().ExecuteCommandList();
+
+			D3D12Window::Get().Present();
 		}
 
 		D3D12Window::Get().Shutdown();
