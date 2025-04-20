@@ -25,6 +25,7 @@ void D3D12DebugLayer::Shutdown()
 	if (m_dxgiDebug)
 	{
 		OutputDebugStringW(L"DXGI Reports Living Device Objects: \n");
+
 		m_dxgiDebug->ReportLiveObjects(
 			DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL)
 		);

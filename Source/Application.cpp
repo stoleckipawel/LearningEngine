@@ -1,16 +1,22 @@
-#include <cstdio>
 #include <iostream>
+
 #include "Vendor/Windows/WinInclude.h"
+
 #include "Debug/D3D12DebugLayer.h"
+#include "D3D12/D3D12Context.h"
 
 int main()
 {
     D3D12DebugLayer::Get().Initialize();
 
-	POINT CursorPos;
-    GetCursorPos(&CursorPos);
+	if(D3D12Context::Get().Initialize());
+	{
+		D3D12Context::Get().GetDevice();
+		D3D12Context::Get().GetQueue();
+		D3D12Context::Get().GetFence();
 
-    std::cout << "The cursor is x: " << CursorPos.x << " y: " << CursorPos.y;
+		D3D12Context::Get().Shutdown();
+	}
 
 	D3D12DebugLayer::Get().Shutdown();
 
