@@ -1,10 +1,12 @@
 #include <cstdio>
 #include <iostream>
-#include "Vendor/WinInclude.h"
+#include "Vendor/Windows/WinInclude.h"
 
 int main()
 {
-    
+    ComPointer<IUnknown> p;
+
+
 	POINT CursorPos;
     GetCursorPos(&CursorPos);
 
