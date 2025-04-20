@@ -127,10 +127,13 @@ LRESULT D3D12Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
     {
 	case WM_CLOSE:
 		Get().bShouldClose = true;
-		return 0;
+		break;
 	case WM_SIZE:
-		Get().bShouldResize = true;
-		return 0;
+		if (lParam && (HIWORD(lParam) != Get().m_height && LOWORD(lParam) != Get().m_width))
+		{
+			Get().bShouldResize = true;
+		}
+		break;
     }
 	return DefWindowProcW(wnd, msg, wParam, lParam);
 }
