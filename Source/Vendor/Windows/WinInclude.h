@@ -3,6 +3,8 @@
 #define NOMINMAX
 
 #include "Windows.h"
+#include <cstdlib>
+
 #include "d3d12.h"
 #include "dxgi1_6.h"
 #include "ComPointer.h"

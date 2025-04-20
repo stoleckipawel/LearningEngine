@@ -11,9 +11,11 @@ int main()
 
 	if(D3D12Context::Get().Initialize());
 	{
-		D3D12Context::Get().GetDevice();
-		D3D12Context::Get().GetQueue();
-		D3D12Context::Get().GetFence();
+		while (true)
+		{
+			auto cmdList = D3D12Context::Get().InitializeCommandList();
+			D3D12Context::Get().ExecuteCommandList();
+		}
 
 		D3D12Context::Get().Shutdown();
 	}

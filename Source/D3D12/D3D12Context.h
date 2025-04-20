@@ -6,15 +6,24 @@ class D3D12Context
 public:
 	bool Initialize();
 	void Shutdown();
+	void SignalAndWait();
+	ComPointer<ID3D12GraphicsCommandList7>& InitializeCommandList();
+	void ExecuteCommandList();
 
 	inline ComPointer<ID3D12Device10>& GetDevice() { return m_device; }
-	inline ComPointer<ID3D12CommandQueue>& GetQueue() { return m_cmdQueue; }
+	inline ComPointer<ID3D12CommandQueue>& GetCommmandQueue() { return m_cmdQueue; }
+	inline ComPointer<ID3D12CommandAllocator>& GetCommandAllocator() { return m_cmdAllocator; }
+	inline ComPointer<ID3D12GraphicsCommandList7>& GetCommandList() { return m_cmdList; }
 	inline ComPointer<ID3D12Fence1>& GetFence() { return m_fence; }
 private:
 	ComPointer<ID3D12Device10> m_device;
 	ComPointer<ID3D12CommandQueue> m_cmdQueue;
+	ComPointer<ID3D12CommandAllocator> m_cmdAllocator;
+	ComPointer<ID3D12GraphicsCommandList7> m_cmdList;
+
 	ComPointer<ID3D12Fence1> m_fence;
 	UINT64 m_fenceValue = 0;
+	HANDLE m_fenceEvent = nullptr;
 
 	//Singleton pattern to ensure only one instance of the device exists
 public:
