@@ -40,6 +40,11 @@ bool D3D12Window::Initialize()
 
 void D3D12Window::Shutdown()
 {
+	if (m_window)
+	{
+		DestroyWindow(m_window);
+	}
+
 	if (m_wndClass)
 	{
 		UnregisterClassW((LPCWSTR)m_wndClass, GetModuleHandle(nullptr));
@@ -47,11 +52,23 @@ void D3D12Window::Shutdown()
 	}
 }
 
+void D3D12Window::Update()
+{
+	MSG msg;
+	while (PeekMessageW(&msg, m_window, 0, 0, PM_REMOVE))
+	{
+		TranslateMessage(&msg);
+		DispatchMessageW(&msg);
+	}
+}
+
 LRESULT D3D12Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
-
+	case WM_CLOSE:
+		Get().bShouldClose = true;
+		break;
     }
 	return DefWindowProcW(wnd, msg, wParam, lParam);
 }

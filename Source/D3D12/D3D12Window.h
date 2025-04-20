@@ -6,14 +6,15 @@ class D3D12Window
 public:
 	bool Initialize();
 	void Shutdown();
+	void Update();
+	inline bool GetShouldClose() { return bShouldClose; };
 
 private:
 	static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 private:
 	ATOM m_wndClass;
 	HWND m_window = nullptr;
-
-
+	bool bShouldClose = false;
 
 	//Singleton pattern to ensure only one instance of the debug layer exists
 public:

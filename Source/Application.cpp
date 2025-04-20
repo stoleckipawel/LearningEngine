@@ -12,8 +12,10 @@ int main()
 
 	if(D3D12Context::Get().Initialize() && D3D12Window::Get().Initialize());
 	{
-		while (true)
+		while (!D3D12Window::Get().GetShouldClose())
 		{
+			D3D12Window::Get().Update();
+
 			auto cmdList = D3D12Context::Get().InitializeCommandList();
 
 			//a lot of setup
@@ -23,6 +25,7 @@ int main()
 			D3D12Context::Get().ExecuteCommandList();
 		}
 
+		D3D12Window::Get().Shutdown();
 		D3D12Context::Get().Shutdown();
 	}
 
