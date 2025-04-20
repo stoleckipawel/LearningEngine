@@ -9,7 +9,7 @@ public:
 
 private:
 #if defined(_DEBUG)
-	ComPointer<ID3D12Debug6> m_d3d12Debug;
+	ComPointer<ID3D12Debug> m_d3d12Debug;
 	ComPointer<IDXGIDebug1> m_dxgiDebug;
 #endif
 

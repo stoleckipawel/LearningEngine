@@ -39,8 +39,8 @@ bool D3D12Context::Initialize()
 
 void D3D12Context::Shutdown()
 {
-	m_cmdList.Release();
 	m_cmdAllocator.Release();
+	m_cmdList.Release();
 
 	if (m_fenceEvent)
 	{
