@@ -10,6 +10,8 @@ public:
 	ComPointer<ID3D12GraphicsCommandList7>& InitializeCommandList();
 	void ExecuteCommandList();
 
+	inline void Flush(size_t count){ for (size_t i = 0; i < count; ++i){ SignalAndWait();}}
+
 	inline ComPointer<ID3D12Device10>& GetDevice() { return m_device; }
 	inline ComPointer<ID3D12CommandQueue>& GetCommmandQueue() { return m_cmdQueue; }
 	inline ComPointer<ID3D12CommandAllocator>& GetCommandAllocator() { return m_cmdAllocator; }

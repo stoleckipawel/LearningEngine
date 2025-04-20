@@ -14,18 +14,30 @@ int main()
 	{
 		while (!D3D12Window::Get().GetShouldClose())
 		{
+			// Process pending window messages
 			D3D12Window::Get().Update();
 
+			//Handle Resizing
+			if (D3D12Window::Get().GetShouldResize())
+			{
+				D3D12Context::Get().Flush(D3D12Window::Get().GetFrameCount());
+				D3D12Window::Get().Resize();
+			}
+
+			//Begin Drawing
 			auto cmdList = D3D12Context::Get().InitializeCommandList();
 
 			//a lot of setup
 
-			//draw
+			//ToDo: draw
 
+			//Finish Drawing & Present
 			D3D12Context::Get().ExecuteCommandList();
-
 			D3D12Window::Get().Present();
 		}
+
+		
+		D3D12Context::Get().Flush(D3D12Window::Get().GetFrameCount());
 
 		D3D12Window::Get().Shutdown();
 		D3D12Context::Get().Shutdown();

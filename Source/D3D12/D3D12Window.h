@@ -9,14 +9,22 @@ public:
 	void Shutdown();
 	void Update();
 	void Present();
-	inline bool GetShouldClose() { return bShouldClose; };
+	void Resize();
 
+	inline bool GetShouldClose() { return bShouldClose; };
+	inline bool GetShouldResize() { return bShouldResize; };
+
+	static constexpr size_t GetFrameCount() { return 2; };//2:Vsync OFF, 3: Vsync ON
 private:
 	static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 private:
 	ATOM m_wndClass;
 	HWND m_window = nullptr;
 	bool bShouldClose = false;
+	bool bShouldResize = false;
+
+	UINT m_width = 1;
+	UINT m_height = 1;
 
 	ComPointer<IDXGISwapChain3> m_swapChain;
 

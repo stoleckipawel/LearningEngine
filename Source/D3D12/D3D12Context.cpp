@@ -44,13 +44,15 @@ bool D3D12Context::Initialize()
 
 void D3D12Context::Shutdown()
 {
-	m_cmdAllocator.Release();
 	m_cmdList.Release();
+	m_cmdAllocator.Release();
 
 	if (m_fenceEvent)
 	{
 		CloseHandle(m_fenceEvent);
 	}
+
+	m_fence.Release();
 
 	m_cmdQueue.Release();
 	m_device.Release();
@@ -72,8 +74,6 @@ void D3D12Context::SignalAndWait()
 			   OutputDebugStringW(L"Timeout waiting for fence completion.\n");
 			   std::exit(-1);
 		   }
-
-		   CloseHandle(m_fenceEvent);
        }
        else
        {

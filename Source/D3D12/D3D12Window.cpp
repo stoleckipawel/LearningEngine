@@ -52,7 +52,7 @@ bool D3D12Window::Initialize()
 	swd.SampleDesc.Quality = 0;
 	swd.SampleDesc.Count = 1;
 	swd.BufferUsage = DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swd.BufferCount = 2;//2:Vsync OFF, 3: Vsync ON
+	swd.BufferCount = GetFrameCount();
 	swd.Scaling = DXGI_SCALING_STRETCH;
 	swd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swd.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
@@ -71,7 +71,6 @@ bool D3D12Window::Initialize()
 	}
 
 	return true;
-
 }
 
 void D3D12Window::Shutdown()
@@ -105,13 +104,33 @@ void D3D12Window::Present()
 	m_swapChain->Present(1, 0);
 }
 
+void D3D12Window::Resize()
+{
+	RECT rect;
+	if (GetClientRect(m_window, &rect))
+	{
+		m_width = rect.right - rect.left;
+		m_height = rect.bottom - rect.top;
+		m_swapChain->ResizeBuffers(GetFrameCount(),
+			m_width, m_height,
+			DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH |
+			DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING);
+
+		bShouldResize = false;
+	};
+
+}
+
 LRESULT D3D12Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
 	case WM_CLOSE:
 		Get().bShouldClose = true;
-		break;
+		return 0;
+	case WM_SIZE:
+		Get().bShouldResize = true;
+		return 0;
     }
 	return DefWindowProcW(wnd, msg, wParam, lParam);
 }
