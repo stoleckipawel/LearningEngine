@@ -70,11 +70,18 @@ bool D3D12Window::Initialize()
 		return false;
 	}
 
+	if (!GetBuffers())
+	{
+		return false;
+	}
+
 	return true;
 }
 
 void D3D12Window::Shutdown()
 {
+	ReleaseBuffers();
+
 	m_swapChain.Release();
 
 	if (m_window)
@@ -106,6 +113,8 @@ void D3D12Window::Present()
 
 void D3D12Window::Resize()
 {
+	ReleaseBuffers();
+
 	RECT rect;
 	if (GetClientRect(m_window, &rect))
 	{
@@ -119,6 +128,7 @@ void D3D12Window::Resize()
 		bShouldResize = false;
 	};
 
+	GetBuffers();
 }
 
 void D3D12Window::SetFullScreen(bool bSetFullScreen)
@@ -185,4 +195,25 @@ LRESULT D3D12Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 		break;
     }
 	return DefWindowProcW(wnd, msg, wParam, lParam);
+}
+
+bool D3D12Window::GetBuffers()
+{
+	//Get Swap Buffers
+	for (size_t i = 0; i < m_FrameCount; i++)
+	{
+		if (FAILED(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i]))))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+void D3D12Window::ReleaseBuffers()
+{
+	for (size_t i = 0; i < m_FrameCount; i++)
+	{
+		m_buffers[i].Release();
+	}
 }
