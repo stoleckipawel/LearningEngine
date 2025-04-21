@@ -24,7 +24,7 @@ bool D3D12Window::Initialize()
 	}
 
 	m_window = CreateWindowEx(
-		0,
+		WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW,
 		(LPCWSTR)m_wndClass,
 		L"Unrealistic Engine",
 		WS_OVERLAPPEDWINDOW | WS_VISIBLE,
@@ -121,10 +121,59 @@ void D3D12Window::Resize()
 
 }
 
+void D3D12Window::SetFullScreen(bool bSetFullScreen)
+{
+	//Update Window Styles
+	DWORD style;
+	DWORD exStyle;
+	if (bSetFullScreen)
+	{
+		style = WS_POPUP | WS_VISIBLE;
+		exStyle = WS_EX_APPWINDOW;
+	}
+	else
+	{
+		style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+		exStyle = WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW;
+	}
+
+	SetWindowLong(m_window, GWL_STYLE, style);
+	SetWindowLong(m_window, GWL_EXSTYLE, exStyle);
+
+	if (bSetFullScreen)
+	{
+		HMONITOR monitorFromWindow = MonitorFromWindow(m_window, MONITOR_DEFAULTTONEAREST);
+		MONITORINFO monitorInfo{};
+		monitorInfo.cbSize = sizeof(MONITORINFO);
+		if (GetMonitorInfoW(monitorFromWindow, &monitorInfo))
+		{
+			SetWindowPos(m_window, nullptr,
+				monitorInfo.rcMonitor.left,
+				monitorInfo.rcMonitor.top,
+				monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+				monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
+				SWP_NOZORDER);
+		}
+	}
+	else
+	{
+		ShowWindow(m_window, SW_MAXIMIZE);
+	}
+
+	bIsFullScreen = bSetFullScreen;	
+}
+
 LRESULT D3D12Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
+	case WM_KEYDOWN:
+		if (wParam == VK_F11)
+		{
+			//Toggle FullScreen  
+			Get().SetFullScreen(!Get().IsFullScreen());
+		}
+		break;
 	case WM_CLOSE:
 		Get().bShouldClose = true;
 		break;

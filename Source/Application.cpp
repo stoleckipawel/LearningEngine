@@ -12,6 +12,8 @@ int main()
 
 	if(D3D12Context::Get().Initialize() && D3D12Window::Get().Initialize());
 	{
+		D3D12Window::Get().SetFullScreen(true);
+
 		while (!D3D12Window::Get().GetShouldClose())
 		{
 			// Process pending window messages
@@ -26,8 +28,6 @@ int main()
 
 			//Begin Drawing
 			auto cmdList = D3D12Context::Get().InitializeCommandList();
-
-			//a lot of setup
 
 			//ToDo: draw
 
