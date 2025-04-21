@@ -29,7 +29,11 @@ int main()
 			//Begin Drawing
 			auto cmdList = D3D12Context::Get().InitializeCommandList();
 
-			//ToDo: draw
+			//Draw To Window
+			D3D12Window::Get().BeginFrame(cmdList);
+
+			//#ToDo: Draw
+			D3D12Window::Get().EndFrame(cmdList);
 
 			//Finish Drawing & Present
 			D3D12Context::Get().ExecuteCommandList();

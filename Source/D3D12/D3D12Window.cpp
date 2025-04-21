@@ -173,6 +173,32 @@ void D3D12Window::SetFullScreen(bool bSetFullScreen)
 	bIsFullScreen = bSetFullScreen;	
 }
 
+void D3D12Window::BeginFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList)
+{
+	m_currentBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = m_buffers[m_currentBufferIndex];
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+	cmdList->ResourceBarrier(1, &barrier);
+}
+
+void D3D12Window::EndFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList)
+{
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = m_buffers[m_currentBufferIndex];
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+
+	cmdList->ResourceBarrier(1, &barrier);
+}
+
 LRESULT D3D12Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)

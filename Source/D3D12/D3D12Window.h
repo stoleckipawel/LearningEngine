@@ -12,6 +12,9 @@ public:
 	void Resize();
 	void SetFullScreen(bool bSetFullScreen);
 
+	void BeginFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList);
+	void EndFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList);
+
 	inline bool GetShouldClose() { return bShouldClose; };
 	inline bool GetShouldResize() { return bShouldResize; };
 	inline bool IsFullScreen() { return bIsFullScreen; };
@@ -30,6 +33,7 @@ private:
 	UINT m_width = 1;
 	UINT m_height = 1;
 	static constexpr size_t m_FrameCount = 2;
+	size_t m_currentBufferIndex = 0;
 
 	ComPointer<IDXGISwapChain3> m_swapChain;
 	ComPointer<ID3D12Resource2> m_buffers[m_FrameCount];
