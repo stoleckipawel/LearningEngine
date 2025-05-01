@@ -36,6 +36,7 @@ private:
 	size_t m_currentBufferIndex = 0;
 
 	ComPointer<ID3D12DescriptorHeap> m_rtvDescHeap;
+	D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[m_FrameCount];
 
 	ComPointer<IDXGISwapChain3> m_swapChain;
 	ComPointer<ID3D12Resource2> m_buffers[m_FrameCount];

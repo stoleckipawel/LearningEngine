@@ -81,6 +81,15 @@ bool D3D12Window::Initialize()
 		return false;
 	}
 
+	//Create Handles for views
+	auto firstHandle = m_rtvDescHeap->GetCPUDescriptorHandleForHeapStart();
+	auto rtvDescriptorSize = D3D12Context::Get().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	
+	for (size_t i = 0; i < GetFrameCount(); i++)
+	{
+		m_rtvHandles[i] = { firstHandle.ptr + (rtvDescriptorSize * i) };
+	}
+
 	if (!GetBuffers())
 	{
 		return false;
@@ -249,6 +258,13 @@ bool D3D12Window::GetBuffers()
 		{
 			return false;
 		}
+
+		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+		rtvDesc.Texture2D.MipSlice = 0;
+		rtvDesc.Texture2D.PlaneSlice = 0;
+		D3D12Context::Get().GetDevice()->CreateRenderTargetView(m_buffers[0].Get(), nullptr, m_rtvHandles[i]);
 	}
 	return true;
 }
