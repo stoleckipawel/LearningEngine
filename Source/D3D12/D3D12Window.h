@@ -35,6 +35,8 @@ private:
 	static constexpr size_t m_FrameCount = 2;
 	size_t m_currentBufferIndex = 0;
 
+	ComPointer<ID3D12DescriptorHeap> m_rtvDescHeap;
+
 	ComPointer<IDXGISwapChain3> m_swapChain;
 	ComPointer<ID3D12Resource2> m_buffers[m_FrameCount];
 

@@ -70,6 +70,17 @@ bool D3D12Window::Initialize()
 		return false;
 	}
 
+	//Create Descriptor Heap
+	D3D12_DESCRIPTOR_HEAP_DESC rtvDescHeapDesc{};
+	rtvDescHeapDesc.NumDescriptors = GetFrameCount();
+	rtvDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	rtvDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	rtvDescHeapDesc.NodeMask = 0;
+	if(FAILED(D3D12Context::Get().GetDevice()->CreateDescriptorHeap(&rtvDescHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap))))
+	{
+		return false;
+	}
+
 	if (!GetBuffers())
 	{
 		return false;
@@ -81,6 +92,8 @@ bool D3D12Window::Initialize()
 void D3D12Window::Shutdown()
 {
 	ReleaseBuffers();
+	
+	m_rtvDescHeap.Release();
 
 	m_swapChain.Release();
 
@@ -181,10 +194,13 @@ void D3D12Window::BeginFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList)
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	barrier.Transition.pResource = m_buffers[m_currentBufferIndex];
+	barrier.Transition.Subresource = 0;
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
 	cmdList->ResourceBarrier(1, &barrier);
+
+	//cmdList->OMSetRenderTargets(
 }
 
 void D3D12Window::EndFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList)
@@ -193,11 +209,12 @@ void D3D12Window::EndFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList)
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	barrier.Transition.pResource = m_buffers[m_currentBufferIndex];
+	barrier.Transition.Subresource = 0;
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 
 	cmdList->ResourceBarrier(1, &barrier);
-}
+} 
 
 LRESULT D3D12Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
