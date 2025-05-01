@@ -149,6 +149,7 @@
     <ClCompile Include="Source\D3D12\D3D12Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Application.h" />
     <ClInclude Include="Source\D3D12\D3D12Context.h" />
     <ClInclude Include="Source\Debug\D3D12DebugLayer.h" />
     <ClInclude Include="Source\D3D12\D3D12Window.h" />
