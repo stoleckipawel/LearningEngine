@@ -27,6 +27,9 @@
     <ClCompile Include="Source\D3D12\D3D12Window.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Shader\Shader.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Debug\D3D12DebugLayer.h">
@@ -41,5 +44,12 @@
     <ClInclude Include="Source\Application.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Shader\Shader.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\VertexShader.hlsl" />
+    <FxCompile Include="Shaders\PixelShader.hlsl" />
   </ItemGroup>
 </Project>

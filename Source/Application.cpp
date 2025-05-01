@@ -14,7 +14,6 @@ int main()
 	{
 		D3D12Window::Get().SetFullScreen(true);
 
-		const char* hello = "Hello World!";
 
 		// CPU BUFFER 
 		D3D12_HEAP_PROPERTIES heapUploadProperties = {};
@@ -32,6 +31,7 @@ int main()
 		heapDefaultProperties.CreationNodeMask = 0;
 		heapDefaultProperties.VisibleNodeMask = 0;
 
+		//Upload & Vertex Buffer Desc
 		D3D12_RESOURCE_DESC resourceDesc = {};
 		resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 		resourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
@@ -45,12 +45,33 @@ int main()
 		resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 		resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-		ComPointer<ID3D12Resource2> uploadBuffer, vertexBuffer;
-		D3D12Context::D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
+		ComPointer<ID3D12Resource2> uploadBuffer;
+		D3D12Context::D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapUploadProperties, D3D12_HEAP_FLAG_NONE,
 			&resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&uploadBuffer));
 
+		ComPointer<ID3D12Resource2> vertexBuffer;
 		D3D12Context::D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
 			&resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&vertexBuffer));
+
+		//Vertex Data
+		struct Vertex
+		{
+			float position[3];
+		};
+
+		Vertex vertecies[] =
+		{
+			//T1
+			{{-1.0, -1.0, 0.0}},
+			{{0.0, 1.0, 0.0}},
+			{{1.0, -1.0, 0.0}}
+		};
+
+		D3D12_INPUT_ELEMENT_DESC vertexLayout[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		};
+
 
 		//Copy void** -> CPU RESOURCE
 		void* uploadBufferAddress;
@@ -58,13 +79,40 @@ int main()
 		uploadRange.Begin = 0;
 		uploadRange.End = 1023;
 		uploadBuffer->Map(0, &uploadRange, &uploadBufferAddress);
-		//memcpy(uploadBufferAddress, hello, strlen(hello) + 1);
+		memcpy(uploadBufferAddress, vertecies, sizeof(Vertex));
 		uploadBuffer->Unmap(0, nullptr);
 
 		// Copy CPU Resource -> GPU Resource
 		auto cmdList = D3D12Context::Get().InitializeCommandList();
 		cmdList->CopyBufferRegion(vertexBuffer, 0, uploadBuffer, 0, 1024);
 		D3D12Context::Get().ExecuteCommandList();
+
+		//Vertex
+		D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
+		inputLayoutDesc.NumElements = _countof(vertexLayout);
+		inputLayoutDesc.pInputElementDescs = vertexLayout;
+
+		//Shaders
+		Shader vertexShader("VertexShader.cso");
+		Shader pixelShader("PixelShader.cso");
+
+
+		//Pipeline state
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+		psoDesc.InputLayout = inputLayoutDesc;
+		psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+		psoDesc.VS.pShaderBytecode = vertexShader.GetBuffer();
+		psoDesc.VS.BytecodeLength = vertexShader.GetSize();
+		//ToDo Rasterizer
+		psoDesc.PS.pShaderBytecode = pixelShader.GetBuffer();
+		psoDesc.PS.BytecodeLength = pixelShader.GetSize();
+		//ToDo Output Merger
+		//D3D12Context::Get().GetDevice()->CreatePipelineState() 
+
+		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
+		vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+		vertexBufferView.SizeInBytes = sizeof(vertecies);
+		vertexBufferView.StrideInBytes = sizeof(Vertex);
 
 		while (!D3D12Window::Get().GetShouldClose())
 		{
@@ -84,7 +132,12 @@ int main()
 			//Draw To Window
 			D3D12Window::Get().BeginFrame(cmdList);
 
-			//#ToDo: Draw
+			//Input Assembler
+			cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
+			cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+			//Draw
+			cmdList->DrawInstanced(_countof(vertecies), 1, 0, 0);
 			D3D12Window::Get().EndFrame(cmdList);
 
 			//Finish Drawing & Present
@@ -95,6 +148,8 @@ int main()
 		
 		D3D12Context::Get().Flush(D3D12Window::Get().GetFrameCount());
 
+		vertexBuffer->Release();
+		uploadBuffer->Release();
 		D3D12Window::Get().Shutdown();
 		D3D12Context::Get().Shutdown();
 	}

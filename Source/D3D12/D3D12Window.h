@@ -1,6 +1,7 @@
 #pragma once
 #include "../Vendor/Windows/WinInclude.h"
 #include "D3D12Context.h"
+#include "../Shader/Shader.h"
 
 class D3D12Window
 {

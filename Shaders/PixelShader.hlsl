@@ -1,0 +1,9 @@
+struct PSInput
+{
+    float4 position : SV_Position;
+};
+
+float4 main(in PSInput Input) : SV_Target
+{
+	return float4(0.5f, 0.5f, 1.0f, 1.0f);
+}
