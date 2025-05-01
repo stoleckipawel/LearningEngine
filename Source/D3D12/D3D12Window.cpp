@@ -84,10 +84,10 @@ bool D3D12Window::Initialize()
 	//Create Handles for views
 	auto firstHandle = m_rtvDescHeap->GetCPUDescriptorHandleForHeapStart();
 	auto rtvDescriptorSize = D3D12Context::Get().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	
 	for (size_t i = 0; i < GetFrameCount(); i++)
 	{
-		m_rtvHandles[i] = { firstHandle.ptr + (rtvDescriptorSize * i) };
+		m_rtvHandles[i] = firstHandle;
+		m_rtvHandles[i].ptr += (rtvDescriptorSize * i);
 	}
 
 	if (!GetBuffers())
@@ -209,7 +209,9 @@ void D3D12Window::BeginFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList)
 
 	cmdList->ResourceBarrier(1, &barrier);
 
-	//cmdList->OMSetRenderTargets(
+	float clearColor[4] = { 0.5f, 1.0f, 0.5f, 1.0f };
+	cmdList->ClearRenderTargetView(m_rtvHandles[m_currentBufferIndex], clearColor, 0, nullptr);
+	cmdList->OMSetRenderTargets(1, &m_rtvHandles[m_currentBufferIndex], false, nullptr);
 }
 
 void D3D12Window::EndFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList)
@@ -264,7 +266,7 @@ bool D3D12Window::GetBuffers()
 		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 		rtvDesc.Texture2D.MipSlice = 0;
 		rtvDesc.Texture2D.PlaneSlice = 0;
-		D3D12Context::Get().GetDevice()->CreateRenderTargetView(m_buffers[0].Get(), nullptr, m_rtvHandles[i]);
+		D3D12Context::Get().GetDevice()->CreateRenderTargetView(m_buffers[i].Get(), nullptr, m_rtvHandles[i]);
 	}
 	return true;
 }
