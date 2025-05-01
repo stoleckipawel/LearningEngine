@@ -52,6 +52,20 @@ int main()
 		D3D12Context::D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
 			&resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&vertexBuffer));
 
+		//Copy void** -> CPU RESOURCE
+		void* uploadBufferAddress;
+		D3D12_RANGE uploadRange;
+		uploadRange.Begin = 0;
+		uploadRange.End = 1023;
+		uploadBuffer->Map(0, &uploadRange, &uploadBufferAddress);
+		//memcpy(uploadBufferAddress, hello, strlen(hello) + 1);
+		uploadBuffer->Unmap(0, nullptr);
+
+		// Copy CPU Resource -> GPU Resource
+		auto cmdList = D3D12Context::Get().InitializeCommandList();
+		cmdList->CopyBufferRegion(vertexBuffer, 0, uploadBuffer, 0, 1024);
+		D3D12Context::Get().ExecuteCommandList();
+
 		while (!D3D12Window::Get().GetShouldClose())
 		{
 			// Process pending window messages
@@ -65,7 +79,7 @@ int main()
 			}
 
 			//Begin Drawing
-			auto cmdList = D3D12Context::Get().InitializeCommandList();
+			cmdList = D3D12Context::Get().InitializeCommandList();
 			 
 			//Draw To Window
 			D3D12Window::Get().BeginFrame(cmdList);
