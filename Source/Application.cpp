@@ -145,7 +145,7 @@ int main()
 		psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;//DXGI_FORMAT_D24_UNORM_S8_UINT;
 		//Blend State
 		psoDesc.BlendState.AlphaToCoverageEnable = false;
-		psoDesc.BlendState.IndependentBlendEnable = true;//Multiple RenderTarget Varied Blending
+		psoDesc.BlendState.IndependentBlendEnable = false;//Multiple RenderTarget Varied Blending
 		psoDesc.BlendState.RenderTarget[0].BlendEnable = false;
 		psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
 		psoDesc.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
@@ -216,6 +216,27 @@ int main()
 			//Input Assembler
 			cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+			//Rasterizer State: Viewport
+			D3D12_VIEWPORT vp;
+			vp.TopLeftX = 0;
+			vp.TopLeftY = 0;
+			vp.Width = D3D12Window::Get().GetWidth();
+			vp.Height = D3D12Window::Get().GetHeight();
+			vp.MinDepth = 1.0f;
+			vp.MaxDepth = 0.0f;
+			cmdList->RSSetViewports(1, &vp);
+			//Rasterizer State: Scissor  
+			D3D12_RECT scissorRect;
+			scissorRect.left = 0;
+			scissorRect.top = 0;
+			scissorRect.right = D3D12Window::Get().GetWidth();
+			scissorRect.bottom = D3D12Window::Get().GetHeight();
+			cmdList->RSSetScissorRects(1, &scissorRect);
+
+			//ROOT Arguments
+			float color[] = { 1.0f, 0.0f, 0.0f };
+			cmdList->SetGraphicsRoot32BitConstants(0, 3, color, 0);
 
 			//Draw
 			cmdList->DrawInstanced(_countof(vertecies), 1, 0, 0);

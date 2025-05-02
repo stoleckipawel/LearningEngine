@@ -5,6 +5,8 @@ struct PSInput
     float4 position : SV_Position;
 };
 
+float3 Color : register(b0);
+
 [RootSignature(ROOT_SIGNATURE)]
 float4 main(in PSInput Input) : SV_Target
 {

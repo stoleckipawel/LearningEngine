@@ -19,6 +19,8 @@ public:
 	inline bool GetShouldClose() { return bShouldClose; };
 	inline bool GetShouldResize() { return bShouldResize; };
 	inline bool IsFullScreen() { return bIsFullScreen; };
+	inline UINT GetWidth() { return m_width; }
+	inline UINT GetHeight() { return m_height; }
 
 	static constexpr size_t GetFrameCount() { return m_FrameCount; };//2:Vsync OFF, 3: Vsync ON
 private:
