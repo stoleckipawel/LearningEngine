@@ -4,6 +4,7 @@
 #include "Debug/D3D12DebugLayer.h"
 #include "D3D12/D3D12Context.h"
 #include "D3D12/D3D12Window.h"
+#include "D3D12/D3D12ImageLoader.h"
 
 int main()
 {
@@ -49,41 +50,104 @@ int main()
 			{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 		};
 
+		//Texture
+		D3D12ImageLoader::ImageData textureData;
+		D3D12ImageLoader::LoadImageFromDisk("Assets/Textures/ColorCheckerBoard.png", textureData);
+
+		uint32_t textureStride = textureData.width * ((textureData.bitsPerPixel + 7) / 8);
+		uint32_t textureSize = textureStride * textureData.height;
+
 		//Upload & Vertex Buffer Desc
-		D3D12_RESOURCE_DESC resourceDesc = {};
-		resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-		resourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-		resourceDesc.Width = sizeof(vertecies);
-		resourceDesc.Height = 1;
-		resourceDesc.DepthOrArraySize = 1;
-		resourceDesc.MipLevels = 1;
-		resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
-		resourceDesc.SampleDesc.Count = 1;
-		resourceDesc.SampleDesc.Quality = 0;
-		resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-		resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+		D3D12_RESOURCE_DESC rdv = {};
+		rdv.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+		rdv.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+		rdv.Width = 1024;
+		rdv.Height = 1;
+		rdv.DepthOrArraySize = 1;
+		rdv.MipLevels = 1;
+		rdv.Format = DXGI_FORMAT_UNKNOWN;
+		rdv.SampleDesc.Count = 1;
+		rdv.SampleDesc.Quality = 0;
+		rdv.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+		rdv.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+		D3D12_RESOURCE_DESC rdu{};
+		rdu.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+		rdu.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+		rdu.Width = textureSize + 1024;
+		rdu.Height = 1;
+		rdu.DepthOrArraySize = 1;
+		rdu.MipLevels = 1;
+		rdu.Format = DXGI_FORMAT_UNKNOWN;
+		rdu.SampleDesc.Count = 1;
+		rdu.SampleDesc.Quality = 0;
+		rdu.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+		rdu.Flags = D3D12_RESOURCE_FLAG_NONE;
 
 		ComPointer<ID3D12Resource2> uploadBuffer;
 		D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapUploadProperties, D3D12_HEAP_FLAG_NONE,
-			&resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&uploadBuffer));
+			&rdu, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&uploadBuffer));
 
 		ComPointer<ID3D12Resource2> vertexBuffer;
 		D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
-			&resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&vertexBuffer));
+			&rdv, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&vertexBuffer));
+
+
+		// === Texture ===
+		D3D12_RESOURCE_DESC rdt{};
+		rdt.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		rdt.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+		rdt.Width = textureData.width;
+		rdt.Height = textureData.height;
+		rdt.DepthOrArraySize = 1;
+		rdt.MipLevels = 1;
+		rdt.Format = textureData.dxgiPixelFormat;
+		rdt.SampleDesc.Count = 1;
+		rdt.SampleDesc.Quality = 0;
+		rdt.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+		rdt.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+		ComPointer<ID3D12Resource2> textureBuffer;
+		D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
+			&rdt, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&textureBuffer));
+
 
 		//Copy void** -> CPU RESOURCE
-		void* uploadBufferAddress;
+		char* uploadBufferAddress;
 		D3D12_RANGE uploadRange;
 		uploadRange.Begin = 0;
-		uploadRange.End = sizeof(vertecies);
-		uploadBuffer->Map(0, &uploadRange, &uploadBufferAddress);
-		memcpy(uploadBufferAddress, vertecies, sizeof(vertecies));
-		uploadBuffer->Unmap(0, nullptr);
+		uploadRange.End = 1024 + textureSize;
+		uploadBuffer->Map(0, &uploadRange, (void**)&uploadBufferAddress);
+		memcpy(&uploadBufferAddress[0], textureData.data.data(), textureSize);
+		memcpy(&uploadBufferAddress[textureSize], vertecies, sizeof(vertecies));
+		uploadBuffer->Unmap(0, &uploadRange);
 
 		// Copy CPU Resource -> GPU Resource
 		auto cmdList = D3D12Context::Get().InitializeCommandList();
-		cmdList->CopyBufferRegion(vertexBuffer, 0, uploadBuffer, 0, sizeof(vertecies));
+		cmdList->CopyBufferRegion(vertexBuffer, 0, uploadBuffer, textureSize, 1024);
 
+		D3D12_BOX textureSizeAsBox;
+		textureSizeAsBox.left = textureSizeAsBox.top = textureSizeAsBox.front = 0;
+		textureSizeAsBox.right = textureData.width;
+		textureSizeAsBox.bottom = textureData.height;
+		textureSizeAsBox.back = 1;
+
+		D3D12_TEXTURE_COPY_LOCATION txtcSrc;
+		
+		txtcSrc.pResource = uploadBuffer;
+		txtcSrc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+		txtcSrc.PlacedFootprint.Offset = 0;
+		txtcSrc.PlacedFootprint.Footprint.Width = textureData.width;
+		txtcSrc.PlacedFootprint.Footprint.Height = textureData.height;
+		txtcSrc.PlacedFootprint.Footprint.Depth = 1;
+		txtcSrc.PlacedFootprint.Footprint.RowPitch = textureStride;
+		txtcSrc.PlacedFootprint.Footprint.Format = textureData.dxgiPixelFormat;
+		
+		D3D12_TEXTURE_COPY_LOCATION	txtcDst;
+		txtcDst.pResource = textureBuffer;
+		txtcDst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+		txtcDst.SubresourceIndex = 0;
+		cmdList->CopyTextureRegion(&txtcDst, 0, 0, 0, &txtcSrc, &textureSizeAsBox);
 
 		D3D12Context::Get().ExecuteCommandList();
 
@@ -232,7 +296,7 @@ int main()
 			cmdList->RSSetScissorRects(1, &scissorRect);
 
 			//ROOT Arguments
-			float color[] = { 1.0f, 0.0f, 0.0f };
+			float color[] = { 1.0f, 1.0f, 0.0f };
 			cmdList->SetGraphicsRoot32BitConstants(0, 3, color, 0);
 
 			//Draw
@@ -247,10 +311,9 @@ int main()
 		
 		D3D12Context::Get().Flush(D3D12Window::Get().GetFrameCount());
 
-		//vertexBuffer->Release();
-		//uploadBuffer->Release();
+		vertexBuffer->Release();
+		uploadBuffer->Release();
 		//pso->Release();
-
 		//D3D12Window::Get().Shutdown();
 		//D3D12Context::Get().Shutdown();
 	}
