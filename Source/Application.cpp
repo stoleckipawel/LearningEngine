@@ -322,9 +322,26 @@ int main()
 			//Update
 			float color[] = { 1.0f, 1.0f, 0.0f };
 
-			//ROOT Arguments
+			static float angle = 0.0f;
+			angle += 0.1;
+			struct Correction
+			{
+				float AspectRatio;
+				float Zoom;
+				float sinAngle;
+				float cosAngle;
+			};
+			Correction correctionData;
+			correctionData.AspectRatio = (float)D3D12Window::Get().GetWidth() / (float)D3D12Window::Get().GetHeight();
+			correctionData.Zoom = 0.8f;
+			correctionData.sinAngle = sinf(angle);
+			correctionData.sinAngle = cosf(angle);
+
+
+			//ROOT 
 			cmdList->SetGraphicsRoot32BitConstants(0, 3, color, 0);
-			cmdList->SetGraphicsRootDescriptorTable(1, descHeap->GetGPUDescriptorHandleForHeapStart());
+			cmdList->SetGraphicsRoot32BitConstants(1, 4, &correctionData, 0);
+			cmdList->SetGraphicsRootDescriptorTable(2, descHeap->GetGPUDescriptorHandleForHeapStart());
 			cmdList->SetDescriptorHeaps(1, &descHeap);
 
 			//Draw

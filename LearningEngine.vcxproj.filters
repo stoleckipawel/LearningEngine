@@ -59,4 +59,7 @@
     <FxCompile Include="Shaders\PixelShader.hlsl" />
     <FxCompile Include="Shaders\RootSignature.hlsl" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\Pipeline.hlsli" />
+  </ItemGroup>
 </Project>
