@@ -1,8 +1,6 @@
 #include "Shader.h"
 #include <iostream>
 
-
-
 Shader::Shader(std::string_view name)
 {
 	std::filesystem::path shaderDir;
@@ -25,7 +23,6 @@ Shader::Shader(std::string_view name)
 		if (m_data)
 		{
 			shaderIn.read(static_cast<char*>(m_data), m_size);
-			shaderIn.close();
 		}
 		else
 		{
@@ -39,6 +36,5 @@ Shader::~Shader()
 	if (m_data)
 	{
 		free(m_data);
-		m_data = nullptr;
 	}
 }

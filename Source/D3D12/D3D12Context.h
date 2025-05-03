@@ -6,6 +6,7 @@ class D3D12Context
 public:
 	bool Initialize();
 	void Shutdown();
+
 	void SignalAndWait();
 	ComPointer<ID3D12GraphicsCommandList7>& InitializeCommandList();
 	void ExecuteCommandList();

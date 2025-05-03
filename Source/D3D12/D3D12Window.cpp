@@ -76,6 +76,7 @@ bool D3D12Window::Initialize()
 	rtvDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	rtvDescHeapDesc.NodeMask = 0;
+
 	if(FAILED(D3D12Context::Get().GetDevice()->CreateDescriptorHeap(&rtvDescHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap))))
 	{
 		return false;
@@ -169,8 +170,8 @@ void D3D12Window::SetFullScreen(bool bSetFullScreen)
 		exStyle = WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW;
 	}
 
-	SetWindowLong(m_window, GWL_STYLE, style);
-	SetWindowLong(m_window, GWL_EXSTYLE, exStyle);
+	SetWindowLongW(m_window, GWL_STYLE, style);
+	SetWindowLongW(m_window, GWL_EXSTYLE, exStyle);
 
 	if (bSetFullScreen)
 	{
@@ -211,6 +212,7 @@ void D3D12Window::BeginFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList)
 
 	float clearColor[4] = { 0.5f, 1.0f, 0.5f, 1.0f };
 	cmdList->ClearRenderTargetView(m_rtvHandles[m_currentBufferIndex], clearColor, 0, nullptr);
+
 	cmdList->OMSetRenderTargets(1, &m_rtvHandles[m_currentBufferIndex], false, nullptr);
 }
 
@@ -238,15 +240,15 @@ LRESULT D3D12Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 			Get().SetFullScreen(!Get().IsFullScreen());
 		}
 		break;
-	case WM_CLOSE:
-		Get().bShouldClose = true;
-		break;
 	case WM_SIZE:
 		if (lParam && (HIWORD(lParam) != Get().m_height && LOWORD(lParam) != Get().m_width))
 		{
 			Get().bShouldResize = true;
 		}
 		break;
+	case WM_CLOSE:
+		Get().bShouldClose = true;
+		return 0;
     }
 	return DefWindowProcW(wnd, msg, wParam, lParam);
 }

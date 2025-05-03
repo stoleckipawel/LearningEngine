@@ -1,12 +1,7 @@
 #include "RootSignature.hlsl"
 
-struct VSInput
+[RootSignature(ROOTSIG)]
+float4 main(float3 pos : Position) : SV_Position
 {
-    float3 pos : POSITION;
-};
-
-[RootSignature(ROOT_SIGNATURE)]
-float4 main(in VSInput Input) : SV_Position
-{
-    return float4(Input.pos, 1.0);
+    return float4(pos.xy, 0.0f, 1.0f);
 }

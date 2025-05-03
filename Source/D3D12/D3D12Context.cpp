@@ -7,7 +7,7 @@ bool D3D12Context::Initialize()
 		return false;
 	}
 
-	if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&m_device))))
+	if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_1, IID_PPV_ARGS(&m_device))))
 	{
 		return false;
 	}
@@ -24,6 +24,12 @@ bool D3D12Context::Initialize()
 	}
 			
 	if (FAILED(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence))))
+	{
+		return false;
+	}
+
+	m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
+	if (!m_fenceEvent)
 	{
 		return false;
 	}
@@ -63,24 +69,18 @@ void D3D12Context::SignalAndWait()
 {
    m_cmdQueue->Signal(m_fence, ++m_fenceValue);
 
-   // Wait until the fence is completed (CPU & GPU synchronization)
-   if (m_fence->GetCompletedValue() < m_fenceValue)
+   if (SUCCEEDED(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent)))
    {
-       m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
-       if (SUCCEEDED(m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent)))
-       {
-		   if (WaitForSingleObject(m_fenceEvent, 20000) != WAIT_OBJECT_0)
-		   {
-			   OutputDebugStringW(L"Timeout waiting for fence completion.\n");
-			   std::exit(-1);
-		   }
-       }
-       else
-       {
-           OutputDebugStringW(L"Failed to set event on fence completion.\n");
-           std::exit(-1); 
-       }
+	   if (WaitForSingleObject(m_fenceEvent, 20000) != WAIT_OBJECT_0)
+	   {
+		   std::exit(-1);
+	   }
    }
+   else
+   {
+	   std::exit(-1);
+   }
+
 }
 
 ComPointer<ID3D12GraphicsCommandList7>& D3D12Context::InitializeCommandList()

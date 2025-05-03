@@ -1,7 +1,6 @@
 #include <iostream>
 
 #include "Vendor/Windows/WinInclude.h"
-
 #include "Debug/D3D12DebugLayer.h"
 #include "D3D12/D3D12Context.h"
 #include "D3D12/D3D12Window.h"
@@ -10,7 +9,7 @@ int main()
 {
     D3D12DebugLayer::Get().Initialize();
 
-	if(D3D12Context::Get().Initialize() && D3D12Window::Get().Initialize());
+	if(D3D12Context::Get().Initialize() && D3D12Window::Get().Initialize())
 	{
 		D3D12Window::Get().SetFullScreen(false);
 
@@ -30,6 +29,27 @@ int main()
 		heapDefaultProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 		heapDefaultProperties.CreationNodeMask = 0;
 		heapDefaultProperties.VisibleNodeMask = 0;
+
+		//Vertex Data
+		struct Vertex
+		{
+			
+			float x;
+			float y;
+		};
+
+		Vertex vertecies[] =
+		{
+			//T1
+			{-1.0, -1.0},
+			{0.0, 1.0},
+			{1.0, -1.0}
+		};
+
+		D3D12_INPUT_ELEMENT_DESC vertexLayout[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		};
 
 		//Upload & Vertex Buffer Desc
 		D3D12_RESOURCE_DESC resourceDesc = {};
@@ -53,26 +73,6 @@ int main()
 		D3D12Context::D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
 			&resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&vertexBuffer));
 
-		//Vertex Data
-		struct Vertex
-		{
-			float position[3];
-		};
-
-		Vertex vertecies[] =
-		{
-			//T1
-			{{-1.0, -1.0, 0.0}},
-			{{0.0, 1.0, 0.0}},
-			{{1.0, -1.0, 0.0}}
-		};
-
-		D3D12_INPUT_ELEMENT_DESC vertexLayout[] =
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-		};
-
-
 		//Copy void** -> CPU RESOURCE
 		void* uploadBufferAddress;
 		D3D12_RANGE uploadRange;
@@ -87,23 +87,20 @@ int main()
 		cmdList->CopyBufferRegion(vertexBuffer, 0, uploadBuffer, 0, 1024);
 		D3D12Context::Get().ExecuteCommandList();
 
-		//Vertex
-		D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
-		inputLayoutDesc.NumElements = _countof(vertexLayout);
-		inputLayoutDesc.pInputElementDescs = vertexLayout;
-
 		//Shaders
 		Shader rootSignatureShader("RootSignature.cso");
 		Shader vertexShader("VertexShader.cso");
 		Shader pixelShader("PixelShader.cso");
-		
+
+		//Create Root Signature
 		ComPointer<ID3D12RootSignature> rootSignature;
 		D3D12Context::Get().GetDevice()->CreateRootSignature(0, rootSignatureShader.GetBuffer(), rootSignatureShader.GetSize(), IID_PPV_ARGS(&rootSignature));
 
 		//Pipeline state
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 		psoDesc.pRootSignature = rootSignature;
-		psoDesc.InputLayout = inputLayoutDesc;
+		psoDesc.InputLayout.NumElements = _countof(vertexLayout);
+		psoDesc.InputLayout.pInputElementDescs = vertexLayout;
 		psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
 		//VS
 		psoDesc.VS.pShaderBytecode = vertexShader.GetBuffer();
@@ -150,28 +147,27 @@ int main()
 		psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
 		psoDesc.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
 		psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
-		psoDesc.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
 		psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_ZERO;
+		psoDesc.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
 		psoDesc.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 		psoDesc.BlendState.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
 		psoDesc.BlendState.RenderTarget[0].LogicOpEnable = false;
 		psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 		//Depth Testing
 		psoDesc.DepthStencilState.DepthEnable = false;
-		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
 		//Stencil Testing
 		psoDesc.DepthStencilState.StencilEnable = false;
-		psoDesc.DepthStencilState.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
-		psoDesc.DepthStencilState.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
+		psoDesc.DepthStencilState.StencilReadMask = 0;
+		psoDesc.DepthStencilState.StencilWriteMask = 0;
+		psoDesc.DepthStencilState.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
 		psoDesc.DepthStencilState.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
 		psoDesc.DepthStencilState.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
 		psoDesc.DepthStencilState.FrontFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
-		psoDesc.DepthStencilState.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
 		psoDesc.DepthStencilState.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
 		psoDesc.DepthStencilState.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
 		psoDesc.DepthStencilState.BackFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
-		psoDesc.DepthStencilState.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
 		//NodeMask
 		psoDesc.NodeMask = 0;
 		//Cached Pso
@@ -180,7 +176,7 @@ int main()
 		//Flags
 		psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 		//Sample Mask
-		psoDesc.SampleMask = UINT_MAX;	
+		psoDesc.SampleMask = 0xFFFFFFFF;
 		psoDesc.SampleDesc.Count = 1;
 		psoDesc.SampleDesc.Quality = 0;
 		ComPointer<ID3D12PipelineState> pso;
@@ -188,8 +184,9 @@ int main()
 
 		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
 		vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-		vertexBufferView.SizeInBytes = sizeof(vertecies);
+		vertexBufferView.SizeInBytes = sizeof(Vertex) * _countof(vertecies);
 		vertexBufferView.StrideInBytes = sizeof(Vertex);
+
 
 		while (!D3D12Window::Get().GetShouldClose())
 		{
@@ -250,13 +247,13 @@ int main()
 		
 		D3D12Context::Get().Flush(D3D12Window::Get().GetFrameCount());
 
-		vertexBuffer->Release();
-		uploadBuffer->Release();
-		D3D12Window::Get().Shutdown();
+		//vertexBuffer->Release();
+		//uploadBuffer->Release();
+		//pso->Release();
+
+		//D3D12Window::Get().Shutdown();
 		//D3D12Context::Get().Shutdown();
 	}
 
 	//D3D12DebugLayer::Get().Shutdown();
-
-    return 0;
 }
