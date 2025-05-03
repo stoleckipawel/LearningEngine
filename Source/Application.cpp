@@ -35,19 +35,22 @@ int main()
 		{
 			float x;
 			float y;
+			float u;
+			float v;
 		};
 
 		Vertex vertecies[] =
 		{
 			//T1
-			{-1.0, -1.0},
-			{0.0, 1.0},
-			{1.0, -1.0}
+			{-1.0, -1.0, 0.0, 1.0},
+			{0.0, 1.0, 0.5, 0.0},
+			{1.0, -1.0, 1.0, 1.0}
 		};
 
 		D3D12_INPUT_ELEMENT_DESC vertexLayout[] =
 		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+			{ "Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "TexCoord", 0, DXGI_FORMAT_R32G32_FLOAT, 0, sizeof(float) * 2, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 		};
 
 		//Texture
@@ -111,6 +114,27 @@ int main()
 		D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
 			&rdt, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&textureBuffer));
 
+		//Descriptor Heap for Textures
+		D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
+		descHeapDesc.NumDescriptors = 8;
+		descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		descHeapDesc.NodeMask = 0;
+
+		ComPointer<ID3D12DescriptorHeap> descHeap;
+		D3D12Context::Get().GetDevice()->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&descHeap));
+
+		//SRV
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Format = textureData.dxgiPixelFormat;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+		srvDesc.Texture2D.PlaneSlice = 0;
+		D3D12Context::Get().GetDevice()->CreateShaderResourceView(textureBuffer, &srvDesc, descHeap->GetCPUDescriptorHandleForHeapStart());
+		
 
 		//Copy void** -> CPU RESOURCE
 		char* uploadBufferAddress;
@@ -295,9 +319,13 @@ int main()
 			scissorRect.bottom = D3D12Window::Get().GetHeight();
 			cmdList->RSSetScissorRects(1, &scissorRect);
 
-			//ROOT Arguments
+			//Update
 			float color[] = { 1.0f, 1.0f, 0.0f };
+
+			//ROOT Arguments
 			cmdList->SetGraphicsRoot32BitConstants(0, 3, color, 0);
+			cmdList->SetGraphicsRootDescriptorTable(1, descHeap->GetGPUDescriptorHandleForHeapStart());
+			cmdList->SetDescriptorHeaps(1, &descHeap);
 
 			//Draw
 			cmdList->DrawInstanced(_countof(vertecies), 1, 0, 0);

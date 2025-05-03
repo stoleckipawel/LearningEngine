@@ -1,7 +1,14 @@
 #include "RootSignature.hlsl"
 
 [RootSignature(ROOTSIG)]
-float4 main(float2 pos : Position) : SV_Position
+void main(
+          in float2 pos : Position,
+          in float2 uv : TexCoord,
+
+          out float2 OutUv : TexCoord,
+          out float4 OutPos : SV_Position
+) 
 {
-    return float4(pos.xy, 0.0f, 1.0f);
+    OutUv = uv.xy;
+    OutPos = float4(pos.xy, 0.0f, 1.0f);
 }
