@@ -13,7 +13,6 @@ int main()
 	{
 		D3D12Window::Get().SetFullScreen(false);
 
-
 		// CPU BUFFER 
 		D3D12_HEAP_PROPERTIES heapUploadProperties = {};
 		heapUploadProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -33,7 +32,6 @@ int main()
 		//Vertex Data
 		struct Vertex
 		{
-			
 			float x;
 			float y;
 		};
@@ -55,7 +53,7 @@ int main()
 		D3D12_RESOURCE_DESC resourceDesc = {};
 		resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 		resourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-		resourceDesc.Width = 1024; 
+		resourceDesc.Width = sizeof(vertecies);
 		resourceDesc.Height = 1;
 		resourceDesc.DepthOrArraySize = 1;
 		resourceDesc.MipLevels = 1;
@@ -66,25 +64,27 @@ int main()
 		resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
 		ComPointer<ID3D12Resource2> uploadBuffer;
-		D3D12Context::D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapUploadProperties, D3D12_HEAP_FLAG_NONE,
+		D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapUploadProperties, D3D12_HEAP_FLAG_NONE,
 			&resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&uploadBuffer));
 
 		ComPointer<ID3D12Resource2> vertexBuffer;
-		D3D12Context::D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
+		D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
 			&resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&vertexBuffer));
 
 		//Copy void** -> CPU RESOURCE
 		void* uploadBufferAddress;
 		D3D12_RANGE uploadRange;
 		uploadRange.Begin = 0;
-		uploadRange.End = 1023;
+		uploadRange.End = sizeof(vertecies);
 		uploadBuffer->Map(0, &uploadRange, &uploadBufferAddress);
-		memcpy(uploadBufferAddress, vertecies, sizeof(Vertex));
+		memcpy(uploadBufferAddress, vertecies, sizeof(vertecies));
 		uploadBuffer->Unmap(0, nullptr);
 
 		// Copy CPU Resource -> GPU Resource
 		auto cmdList = D3D12Context::Get().InitializeCommandList();
-		cmdList->CopyBufferRegion(vertexBuffer, 0, uploadBuffer, 0, 1024);
+		cmdList->CopyBufferRegion(vertexBuffer, 0, uploadBuffer, 0, sizeof(vertecies));
+
+
 		D3D12Context::Get().ExecuteCommandList();
 
 		//Shaders
