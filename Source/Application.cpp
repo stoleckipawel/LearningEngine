@@ -1,19 +1,15 @@
 #include <iostream>
-
 #include "Vendor/Windows/WinInclude.h"
-#include "Debug/D3D12DebugLayer.h"
+#include "D3D12/D3D12DebugLayer.h"
 #include "D3D12/D3D12Context.h"
 #include "D3D12/D3D12Window.h"
 #include "D3D12/D3D12ImageLoader.h"
+#include "D3D12/D3D12Renderer.h"
 
 int main()
 {
-    D3D12DebugLayer::Get().Initialize();
-
-	if(D3D12Context::Get().Initialize() && D3D12Window::Get().Initialize())
+	if(D3D12Renderer::Get().Initialize())
 	{
-		D3D12Window::Get().SetFullScreen(false);
-
 		// CPU BUFFER 
 		D3D12_HEAP_PROPERTIES heapUploadProperties = {};
 		heapUploadProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -30,15 +26,6 @@ int main()
 		heapDefaultProperties.CreationNodeMask = 0;
 		heapDefaultProperties.VisibleNodeMask = 0;
 
-		//Vertex Data
-		struct Vertex
-		{
-			float x;
-			float y;
-			float u;
-			float v;
-		};
-
 		Vertex vertecies[] =
 		{
 			//T1
@@ -47,11 +34,7 @@ int main()
 			{1.0, -1.0, 1.0, 1.0}
 		};
 
-		D3D12_INPUT_ELEMENT_DESC vertexLayout[] =
-		{
-			{ "Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "TexCoord", 0, DXGI_FORMAT_R32G32_FLOAT, 0, sizeof(float) * 2, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-		};
+		std::vector<D3D12_INPUT_ELEMENT_DESC> vertexLayout = D3D12Renderer::Get().GetVertexLayout();
 
 		//Texture
 		D3D12ImageLoader::ImageData textureData;
@@ -187,8 +170,8 @@ int main()
 		//Pipeline state
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 		psoDesc.pRootSignature = rootSignature;
-		psoDesc.InputLayout.NumElements = _countof(vertexLayout);
-		psoDesc.InputLayout.pInputElementDescs = vertexLayout;
+		psoDesc.InputLayout.NumElements = vertexLayout.size();
+		psoDesc.InputLayout.pInputElementDescs = vertexLayout.data();
 		psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
 		//VS
 		psoDesc.VS.pShaderBytecode = vertexShader.GetBuffer();
