@@ -37,3 +37,101 @@ std::vector<D3D12_INPUT_ELEMENT_DESC> D3D12Renderer::GetVertexLayout()
 		{ "TexCoord",  0, DXGI_FORMAT_R32G32_FLOAT, 0, sizeof(float) * 2,           D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 }
+
+
+
+D3D12_RESOURCE_DESC D3D12Renderer::CreateVertexBufferDesc(uint32_t VertexCount)
+{
+	D3D12_RESOURCE_DESC vertexResourceDesc = {};
+	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	vertexResourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+	vertexResourceDesc.Width = VertexCount;
+	vertexResourceDesc.Height = 1;
+	vertexResourceDesc.DepthOrArraySize = 1;
+	vertexResourceDesc.MipLevels = 1;
+	vertexResourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+	vertexResourceDesc.SampleDesc.Count = 1;
+	vertexResourceDesc.SampleDesc.Quality = 0;
+	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	vertexResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	return vertexResourceDesc;
+}
+
+D3D12_RESOURCE_DESC D3D12Renderer::CreateTextureResourceDesc(D3D12ImageLoader::ImageData& textureData)
+{
+	D3D12_RESOURCE_DESC textureDesc{};
+	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	textureDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+	textureDesc.Width = textureData.width;
+	textureDesc.Height = textureData.height;
+	textureDesc.DepthOrArraySize = 1;
+	textureDesc.MipLevels = 1;//#ToDo compute mip count
+	textureDesc.Format = textureData.dxgiPixelFormat;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	return textureDesc;
+}
+
+void D3D12Renderer::SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc)
+{
+	psoDesc.StreamOutput.NumEntries = 0;
+	psoDesc.StreamOutput.pSODeclaration = nullptr;
+	psoDesc.StreamOutput.NumStrides = 0;
+	psoDesc.StreamOutput.pBufferStrides = nullptr;
+	psoDesc.StreamOutput.RasterizedStream = 0;
+}
+
+void D3D12Renderer::SetRasterizerState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, bool bRenderWireframe, D3D12_CULL_MODE cullMode)
+{
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.RasterizerState.FillMode = bRenderWireframe ? D3D12_FILL_MODE_WIREFRAME : D3D12_FILL_MODE_SOLID;
+	psoDesc.RasterizerState.CullMode = cullMode;
+	psoDesc.RasterizerState.FrontCounterClockwise = false;
+	psoDesc.RasterizerState.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
+	psoDesc.RasterizerState.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
+	psoDesc.RasterizerState.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
+	psoDesc.RasterizerState.DepthClipEnable = true;
+	psoDesc.RasterizerState.MultisampleEnable = false;
+	psoDesc.RasterizerState.AntialiasedLineEnable = false;
+	psoDesc.RasterizerState.ForcedSampleCount = 0;
+	psoDesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+}
+
+void D3D12Renderer::SetRenderTargetBlendState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_RENDER_TARGET_BLEND_DESC blendDesc)
+{
+	psoDesc.BlendState.RenderTarget[0].BlendEnable = blendDesc.BlendEnable;
+	psoDesc.BlendState.RenderTarget[0].BlendOp = blendDesc.BlendOp;
+	psoDesc.BlendState.RenderTarget[0].BlendOpAlpha = blendDesc.BlendOpAlpha;
+	psoDesc.BlendState.RenderTarget[0].SrcBlend = blendDesc.SrcBlend;
+	psoDesc.BlendState.RenderTarget[0].DestBlend = blendDesc.DestBlend;
+	psoDesc.BlendState.RenderTarget[0].SrcBlendAlpha = blendDesc.SrcBlendAlpha;
+	psoDesc.BlendState.RenderTarget[0].DestBlendAlpha = blendDesc.DestBlendAlpha;
+	psoDesc.BlendState.RenderTarget[0].LogicOp = blendDesc.LogicOp;
+	psoDesc.BlendState.RenderTarget[0].LogicOpEnable = blendDesc.LogicOpEnable;
+	psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = blendDesc.RenderTargetWriteMask;
+}
+
+void D3D12Renderer::SetDepthTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_DEPTH_TEST_DESC depthDesc)
+{
+	psoDesc.DepthStencilState.DepthEnable = depthDesc.DepthEnable;
+	psoDesc.DepthStencilState.DepthWriteMask = depthDesc.DepthWriteMask;
+	psoDesc.DepthStencilState.DepthFunc = depthDesc.DepthFunc;
+}
+
+void D3D12Renderer::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_STENCIL_TEST_DESC stencilDesc)
+{
+	psoDesc.DepthStencilState.StencilEnable = stencilDesc.StencilEnable;
+	psoDesc.DepthStencilState.StencilReadMask = stencilDesc.StencilReadMask;
+	psoDesc.DepthStencilState.StencilWriteMask = stencilDesc.StencilWriteMask;
+	psoDesc.DepthStencilState.FrontFace.StencilFunc = stencilDesc.FrontFaceStencilFunc;
+	psoDesc.DepthStencilState.FrontFace.StencilFailOp = stencilDesc.FrontFaceStencilFailOp;
+	psoDesc.DepthStencilState.FrontFace.StencilDepthFailOp = stencilDesc.FrontFaceStencilDepthFailOp;
+	psoDesc.DepthStencilState.FrontFace.StencilPassOp = stencilDesc.FrontFaceStencilPassOp;
+	psoDesc.DepthStencilState.BackFace.StencilFunc = stencilDesc.BackFaceStencilFunc;
+	psoDesc.DepthStencilState.BackFace.StencilFailOp = stencilDesc.BackFaceStencilFailOp;
+	psoDesc.DepthStencilState.BackFace.StencilDepthFailOp = stencilDesc.BackFaceStencilDepthFailOp;
+	psoDesc.DepthStencilState.BackFace.StencilPassOp = stencilDesc.BackFaceStencilPassOp;
+}
+

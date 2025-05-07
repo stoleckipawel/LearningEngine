@@ -44,18 +44,7 @@ int main()
 		uint32_t textureSize = textureStride * textureData.height;
 
 		//Upload & Vertex Buffer Desc
-		D3D12_RESOURCE_DESC rdv = {};
-		rdv.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-		rdv.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-		rdv.Width = 1024;
-		rdv.Height = 1;
-		rdv.DepthOrArraySize = 1;
-		rdv.MipLevels = 1;
-		rdv.Format = DXGI_FORMAT_UNKNOWN;
-		rdv.SampleDesc.Count = 1;
-		rdv.SampleDesc.Quality = 0;
-		rdv.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-		rdv.Flags = D3D12_RESOURCE_FLAG_NONE;
+		D3D12_RESOURCE_DESC vertexBufferDesc = D3D12Renderer::Get().CreateVertexBufferDesc(1024);
 
 		D3D12_RESOURCE_DESC rdu{};
 		rdu.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -76,26 +65,15 @@ int main()
 
 		ComPointer<ID3D12Resource2> vertexBuffer;
 		D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
-			&rdv, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&vertexBuffer));
+			&vertexBufferDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&vertexBuffer));
 
 
 		// === Texture ===
-		D3D12_RESOURCE_DESC rdt{};
-		rdt.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-		rdt.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-		rdt.Width = textureData.width;
-		rdt.Height = textureData.height;
-		rdt.DepthOrArraySize = 1;
-		rdt.MipLevels = 1;
-		rdt.Format = textureData.dxgiPixelFormat;
-		rdt.SampleDesc.Count = 1;
-		rdt.SampleDesc.Quality = 0;
-		rdt.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-		rdt.Flags = D3D12_RESOURCE_FLAG_NONE;
+		D3D12_RESOURCE_DESC textureResourceDesc = D3D12Renderer::Get().CreateTextureResourceDesc(textureData);
 
-		ComPointer<ID3D12Resource2> textureBuffer;
+		ComPointer<ID3D12Resource2> textureResource;
 		D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
-			&rdt, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&textureBuffer));
+			&textureResourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&textureResource));
 
 		//Descriptor Heap for Textures
 		D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
@@ -116,7 +94,7 @@ int main()
 		srvDesc.Texture2D.MipLevels = 1;
 		srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 		srvDesc.Texture2D.PlaneSlice = 0;
-		D3D12Context::Get().GetDevice()->CreateShaderResourceView(textureBuffer, &srvDesc, descHeap->GetCPUDescriptorHandleForHeapStart());
+		D3D12Context::Get().GetDevice()->CreateShaderResourceView(textureResource, &srvDesc, descHeap->GetCPUDescriptorHandleForHeapStart());
 		
 
 		//Copy void** -> CPU RESOURCE
@@ -151,7 +129,7 @@ int main()
 		txtcSrc.PlacedFootprint.Footprint.Format = textureData.dxgiPixelFormat;
 		
 		D3D12_TEXTURE_COPY_LOCATION	txtcDst;
-		txtcDst.pResource = textureBuffer;
+		txtcDst.pResource = textureResource;
 		txtcDst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
 		txtcDst.SubresourceIndex = 0;
 		cmdList->CopyTextureRegion(&txtcDst, 0, 0, 0, &txtcSrc, &textureSizeAsBox);
@@ -189,24 +167,9 @@ int main()
 		psoDesc.GS.pShaderBytecode = nullptr;
 		psoDesc.GS.BytecodeLength = 0;
 		//Rasterizer
-		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;//WireFrame mode here
-		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;//back face/ twosided
-		psoDesc.RasterizerState.FrontCounterClockwise = false;
-		psoDesc.RasterizerState.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
-		psoDesc.RasterizerState.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
-		psoDesc.RasterizerState.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
-		psoDesc.RasterizerState.DepthClipEnable = true;
-		psoDesc.RasterizerState.MultisampleEnable = false;
-		psoDesc.RasterizerState.AntialiasedLineEnable = false;
-		psoDesc.RasterizerState.ForcedSampleCount = 0;
-		psoDesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+		D3D12Renderer::Get().SetRasterizerState(psoDesc, false, D3D12_CULL_MODE_NONE);
 		//StreamOutput
-		psoDesc.StreamOutput.NumEntries = 0;
-		psoDesc.StreamOutput.pSODeclaration = nullptr;
-		psoDesc.StreamOutput.NumStrides = 0;
-		psoDesc.StreamOutput.pBufferStrides = nullptr;
-		psoDesc.StreamOutput.RasterizedStream = 0;
+		D3D12Renderer::Get().SetStreamOutput(psoDesc);
 		//NumRenderTargets
 		psoDesc.NumRenderTargets = 1;
 		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -214,31 +177,45 @@ int main()
 		//Blend State
 		psoDesc.BlendState.AlphaToCoverageEnable = false;
 		psoDesc.BlendState.IndependentBlendEnable = false;//Multiple RenderTarget Varied Blending
-		psoDesc.BlendState.RenderTarget[0].BlendEnable = false;
-		psoDesc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-		psoDesc.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-		psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
-		psoDesc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_ZERO;
-		psoDesc.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-		psoDesc.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-		psoDesc.BlendState.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
-		psoDesc.BlendState.RenderTarget[0].LogicOpEnable = false;
-		psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-		//Depth Testing
-		psoDesc.DepthStencilState.DepthEnable = false;
-		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		//Stencil Testing
-		psoDesc.DepthStencilState.StencilEnable = false;
-		psoDesc.DepthStencilState.StencilReadMask = 0;
-		psoDesc.DepthStencilState.StencilWriteMask = 0;
-		psoDesc.DepthStencilState.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		psoDesc.DepthStencilState.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
-		psoDesc.DepthStencilState.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
-		psoDesc.DepthStencilState.FrontFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
-		psoDesc.DepthStencilState.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
-		psoDesc.DepthStencilState.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
-		psoDesc.DepthStencilState.BackFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+
+		D3D12_RENDER_TARGET_BLEND_DESC renderTargetBlendDesc;
+		{
+			renderTargetBlendDesc.BlendEnable = false;
+			renderTargetBlendDesc.BlendOp = D3D12_BLEND_OP_ADD;
+			renderTargetBlendDesc.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+			renderTargetBlendDesc.SrcBlend = D3D12_BLEND_ONE;
+			renderTargetBlendDesc.DestBlend = D3D12_BLEND_ZERO;
+			renderTargetBlendDesc.SrcBlendAlpha = D3D12_BLEND_ONE;
+			renderTargetBlendDesc.DestBlendAlpha = D3D12_BLEND_ZERO;
+			renderTargetBlendDesc.LogicOp = D3D12_LOGIC_OP_NOOP;
+			renderTargetBlendDesc.LogicOpEnable = false;
+			renderTargetBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+		}
+		D3D12Renderer::Get().SetRenderTargetBlendState(psoDesc, renderTargetBlendDesc);
+		
+		D3D12_DEPTH_TEST_DESC depthTestDesc;
+		{
+			depthTestDesc.DepthEnable = false;
+			depthTestDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+			depthTestDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		}
+		D3D12Renderer::Get().SetDepthTestState(psoDesc, depthTestDesc);
+
+		D3D12_STENCIL_TEST_DESC stencilTestDesc;
+		{
+			stencilTestDesc.StencilEnable = false;
+			stencilTestDesc.StencilReadMask = 0;
+			stencilTestDesc.StencilWriteMask = 0;
+			stencilTestDesc.FrontFaceStencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+			stencilTestDesc.FrontFaceStencilFailOp = D3D12_STENCIL_OP_KEEP;
+			stencilTestDesc.FrontFaceStencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+			stencilTestDesc.FrontFaceStencilPassOp = D3D12_STENCIL_OP_KEEP;
+			stencilTestDesc.BackFaceStencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+			stencilTestDesc.BackFaceStencilFailOp = D3D12_STENCIL_OP_KEEP;
+			stencilTestDesc.BackFaceStencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+			stencilTestDesc.BackFaceStencilPassOp = D3D12_STENCIL_OP_KEEP;
+		}
+		D3D12Renderer::Get().SetStencilTestState(psoDesc, stencilTestDesc);
 		//NodeMask
 		psoDesc.NodeMask = 0;
 		//Cached Pso
