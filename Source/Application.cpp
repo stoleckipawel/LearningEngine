@@ -78,23 +78,7 @@ int main()
 			IID_PPV_ARGS(&descHeap));
 		*/
 
-		// CPU BUFFER 
-		D3D12_HEAP_PROPERTIES heapUploadProperties = {};
-		heapUploadProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-		heapUploadProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-		heapUploadProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-		heapUploadProperties.CreationNodeMask = 0;
-		heapUploadProperties.VisibleNodeMask = 0;
-
-		//GPU Buffer
-		D3D12_HEAP_PROPERTIES heapDefaultProperties = {};
-		heapDefaultProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
-		heapDefaultProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-		heapDefaultProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-		heapDefaultProperties.CreationNodeMask = 0;
-		heapDefaultProperties.VisibleNodeMask = 0;
-
-		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = D3D12Renderer::Get().LoadVertecies(heapDefaultProperties, heapUploadProperties);
+		D3D12Renderer::Get().UploadVertecies();
 
 		//Shaders
 		Shader rootSignatureShader("RootSignature.cso");
@@ -212,7 +196,7 @@ int main()
 			cmdList->SetPipelineState(pso);
 			cmdList->SetGraphicsRootSignature(rootSignature);
 			//Input Assembler
-			cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
+			cmdList->IASetVertexBuffers(0, 1, &D3D12Renderer::Get().vertexBufferView);
 			cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			//Rasterizer State: Viewport
 			D3D12_VIEWPORT viewport = D3D12Window::Get().GetDefaultViewport();
@@ -229,7 +213,7 @@ int main()
 			//cmdList->SetDescriptorHeaps(1, &descHeap);
 
 			//Draw
-			cmdList->DrawInstanced(vertexBufferView.SizeInBytes / vertexBufferView.StrideInBytes, 1, 0, 0);
+			cmdList->DrawInstanced(D3D12Renderer::Get().vertexBufferView.SizeInBytes / D3D12Renderer::Get().vertexBufferView.StrideInBytes, 1, 0, 0);
 			D3D12Window::Get().EndFrame(cmdList);
 
 			//Finish Drawing & Present
