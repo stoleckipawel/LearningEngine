@@ -94,67 +94,7 @@ int main()
 		heapDefaultProperties.CreationNodeMask = 0;
 		heapDefaultProperties.VisibleNodeMask = 0;
 
-		Vertex vertecies[] =
-		{
-			//T1
-			{-1.0, -1.0, 0.0, 0.0, 1.0},
-			{0.0, 1.0, 0.0, 0.5, 0.0},
-			{1.0, -1.0, 0.0, 1.0, 1.0}
-		};
-		uint32_t verteciesDataSize = sizeof(Vertex) * _countof(vertecies);
-		std::vector<D3D12_INPUT_ELEMENT_DESC> vertexLayout = D3D12Renderer::Get().GetVertexLayout();
-
-		D3D12_RESOURCE_DESC vertexBufferDesc = D3D12Renderer::Get().CreateVertexBufferDesc(verteciesDataSize);
-
-		ComPointer<ID3D12Resource2> vertexBuffer;
-		D3D12Context::Get().GetDevice()->CreateCommittedResource(
-			&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
-			&vertexBufferDesc,
-			D3D12_RESOURCE_STATE_COMMON,
-			nullptr,
-			IID_PPV_ARGS(&vertexBuffer));
-
-		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
-		vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-		vertexBufferView.SizeInBytes = verteciesDataSize;
-		vertexBufferView.StrideInBytes = sizeof(Vertex);
-
-		D3D12_RESOURCE_DESC uploadResourceDesc{};
-		uploadResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-		uploadResourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-		uploadResourceDesc.Width = verteciesDataSize;
-		uploadResourceDesc.Height = 1;
-		uploadResourceDesc.DepthOrArraySize = 1;
-		uploadResourceDesc.MipLevels = 1;
-		uploadResourceDesc.Format = DXGI_FORMAT_UNKNOWN;
-		uploadResourceDesc.SampleDesc.Count = 1;
-		uploadResourceDesc.SampleDesc.Quality = 0;
-		uploadResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-		uploadResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-		ComPointer<ID3D12Resource2> uploadBuffer;
-		D3D12Context::Get().GetDevice()->CreateCommittedResource(
-			&heapUploadProperties, 
-			D3D12_HEAP_FLAG_NONE,
-			&uploadResourceDesc, 
-			D3D12_RESOURCE_STATE_COMMON, 
-			nullptr, 
-			IID_PPV_ARGS(&uploadBuffer));
-
-		//Copy void** -> CPU RESOURCE
-		char* uploadBufferAddress;
-		D3D12_RANGE uploadRange;
-		uploadRange.Begin = 0;
-		uploadRange.End = verteciesDataSize;
-		uploadBuffer->Map(0, &uploadRange, (void**)&uploadBufferAddress);
-		memcpy(&uploadBufferAddress[0], vertecies, verteciesDataSize);
-		uploadBuffer->Unmap(0, &uploadRange);
-
-		// Copy CPU Resource -> GPU Resource
-		auto cmdList = D3D12Context::Get().InitializeCommandList();
-		cmdList->CopyBufferRegion(vertexBuffer, 0, uploadBuffer, 0, verteciesDataSize);
-
-		D3D12Context::Get().ExecuteCommandList();
+		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = D3D12Renderer::Get().LoadVertecies(heapDefaultProperties, heapUploadProperties);
 
 		//Shaders
 		Shader rootSignatureShader("RootSignature.cso");
@@ -172,6 +112,8 @@ int main()
 		//Pipeline state
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 		psoDesc.pRootSignature = rootSignature;
+		//Vertex Layout
+		std::vector<D3D12_INPUT_ELEMENT_DESC> vertexLayout = D3D12Renderer::Get().GetVertexLayout();
 		psoDesc.InputLayout.NumElements = vertexLayout.size();
 		psoDesc.InputLayout.pInputElementDescs = vertexLayout.data();
 		psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
@@ -261,7 +203,7 @@ int main()
 			}
 
 			//Begin Drawing
-			cmdList = D3D12Context::Get().InitializeCommandList();
+			auto cmdList = D3D12Context::Get().InitializeCommandList();
 			 
 			//Draw To Window
 			D3D12Window::Get().BeginFrame(cmdList);
@@ -287,7 +229,7 @@ int main()
 			//cmdList->SetDescriptorHeaps(1, &descHeap);
 
 			//Draw
-			cmdList->DrawInstanced(_countof(vertecies), 1, 0, 0);
+			cmdList->DrawInstanced(vertexBufferView.SizeInBytes / vertexBufferView.StrideInBytes, 1, 0, 0);
 			D3D12Window::Get().EndFrame(cmdList);
 
 			//Finish Drawing & Present

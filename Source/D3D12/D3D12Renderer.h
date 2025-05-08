@@ -51,6 +51,14 @@ public:
 	void SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_STENCIL_TEST_DESC stencilDesc);
 
 	void LoadAssets();
+	D3D12_VERTEX_BUFFER_VIEW LoadVertecies(D3D12_HEAP_PROPERTIES& heapDefaultProperties, D3D12_HEAP_PROPERTIES& heapUploadProperties);
+
+
+public:
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+	ComPointer<ID3D12Resource2> vertexBuffer;
+	ComPointer<ID3D12Resource2> uploadBuffer;
+
 
 	//Singleton pattern to ensure only one instance of the debug layer exists
 public:

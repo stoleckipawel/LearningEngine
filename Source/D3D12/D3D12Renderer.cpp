@@ -140,3 +140,62 @@ void D3D12Renderer::LoadAssets()
 
 }
 
+D3D12_VERTEX_BUFFER_VIEW D3D12Renderer::LoadVertecies(D3D12_HEAP_PROPERTIES& heapDefaultProperties, D3D12_HEAP_PROPERTIES& heapUploadProperties)
+{
+	Vertex vertecies[] =
+	{
+		//T1
+		{-1.0, -1.0, 0.0, 0.0, 1.0},
+		{0.0, 1.0, 0.0, 0.5, 0.0},
+		{1.0, -1.0, 0.0, 1.0, 1.0}
+	};
+	uint32_t verteciesDataSize = sizeof(Vertex) * _countof(vertecies);
+	D3D12_RESOURCE_DESC vertexBufferDesc = D3D12Renderer::Get().CreateVertexBufferDesc(verteciesDataSize);
+	D3D12Context::Get().GetDevice()->CreateCommittedResource(
+		&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
+		&vertexBufferDesc,
+		D3D12_RESOURCE_STATE_COMMON,
+		nullptr,
+		IID_PPV_ARGS(&vertexBuffer));
+
+	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+	vertexBufferView.SizeInBytes = verteciesDataSize;
+	vertexBufferView.StrideInBytes = sizeof(Vertex);
+
+	D3D12_RESOURCE_DESC uploadResourceDesc{};
+	uploadResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	uploadResourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+	uploadResourceDesc.Width = verteciesDataSize;
+	uploadResourceDesc.Height = 1;
+	uploadResourceDesc.DepthOrArraySize = 1;
+	uploadResourceDesc.MipLevels = 1;
+	uploadResourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+	uploadResourceDesc.SampleDesc.Count = 1;
+	uploadResourceDesc.SampleDesc.Quality = 0;
+	uploadResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	uploadResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	D3D12Context::Get().GetDevice()->CreateCommittedResource(
+		&heapUploadProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&uploadResourceDesc,
+		D3D12_RESOURCE_STATE_COMMON,
+		nullptr,
+		IID_PPV_ARGS(&uploadBuffer));
+
+	//Copy void** -> CPU RESOURCE
+	char* uploadBufferAddress;
+	D3D12_RANGE uploadRange;
+	uploadRange.Begin = 0;
+	uploadRange.End = verteciesDataSize;
+	uploadBuffer->Map(0, &uploadRange, (void**)&uploadBufferAddress);
+	memcpy(&uploadBufferAddress[0], vertecies, verteciesDataSize);
+	uploadBuffer->Unmap(0, &uploadRange);
+
+	// Copy CPU Resource -> GPU Resource
+	auto cmdList = D3D12Context::Get().InitializeCommandList();
+	cmdList->CopyBufferRegion(vertexBuffer, 0, uploadBuffer, 0, verteciesDataSize);
+	D3D12Context::Get().ExecuteCommandList();
+
+	return vertexBufferView;
+}
+
