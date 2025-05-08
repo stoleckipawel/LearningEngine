@@ -135,40 +135,16 @@ void D3D12Renderer::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoD
 	psoDesc.DepthStencilState.BackFace.StencilPassOp = stencilDesc.BackFaceStencilPassOp;
 }
 
-void D3D12Renderer::LoadAssets()
+
+void UploadBuffer(ComPointer<ID3D12Resource2>& buffer, ComPointer<ID3D12Resource2>& uploadBuffer, void* data, uint32_t dataSize)
 {
-
-}
-
-void D3D12Renderer::UploadVertecies()
-{
-	Vertex vertecies[] =
-	{
-		//T1
-		{-1.0, -1.0, 0.0, 0.0, 1.0},
-		{0.0, 1.0, 0.0, 0.5, 0.0},
-		{1.0, -1.0, 0.0, 1.0, 1.0}
-	};
-
+	//Heaps
 	D3D12_HEAP_PROPERTIES heapDefaultProperties = {};
 	heapDefaultProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
 	heapDefaultProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 	heapDefaultProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 	heapDefaultProperties.CreationNodeMask = 0;
 	heapDefaultProperties.VisibleNodeMask = 0;
-
-	uint32_t verteciesDataSize = sizeof(Vertex) * _countof(vertecies);
-	D3D12_RESOURCE_DESC vertexBufferDesc = D3D12Renderer::Get().CreateVertexBufferDesc(verteciesDataSize);
-	D3D12Context::Get().GetDevice()->CreateCommittedResource(
-		&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
-		&vertexBufferDesc,
-		D3D12_RESOURCE_STATE_COMMON,
-		nullptr,
-		IID_PPV_ARGS(&vertexBuffer));
-
-	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-	vertexBufferView.SizeInBytes = verteciesDataSize;
-	vertexBufferView.StrideInBytes = sizeof(Vertex);
 
 	D3D12_HEAP_PROPERTIES heapUploadProperties = {};
 	heapUploadProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -177,10 +153,24 @@ void D3D12Renderer::UploadVertecies()
 	heapUploadProperties.CreationNodeMask = 0;
 	heapUploadProperties.VisibleNodeMask = 0;
 
+	//Resource Descs
+	D3D12_RESOURCE_DESC resourceDesc = {};
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+	resourceDesc.Width = dataSize;
+	resourceDesc.Height = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.SampleDesc.Quality = 0;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
 	D3D12_RESOURCE_DESC uploadResourceDesc{};
 	uploadResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	uploadResourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-	uploadResourceDesc.Width = verteciesDataSize;
+	uploadResourceDesc.Width = dataSize;
 	uploadResourceDesc.Height = 1;
 	uploadResourceDesc.DepthOrArraySize = 1;
 	uploadResourceDesc.MipLevels = 1;
@@ -189,6 +179,15 @@ void D3D12Renderer::UploadVertecies()
 	uploadResourceDesc.SampleDesc.Quality = 0;
 	uploadResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	uploadResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	//Create Commited Resources
+	D3D12Context::Get().GetDevice()->CreateCommittedResource(
+		&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_COMMON,
+		nullptr,
+		IID_PPV_ARGS(&buffer));
+
 	D3D12Context::Get().GetDevice()->CreateCommittedResource(
 		&heapUploadProperties,
 		D3D12_HEAP_FLAG_NONE,
@@ -197,19 +196,39 @@ void D3D12Renderer::UploadVertecies()
 		nullptr,
 		IID_PPV_ARGS(&uploadBuffer));
 
-	//Copy void** -> CPU RESOURCE
+	//Copy data -> CPU RESOURCE
 	char* uploadBufferAddress;
 	D3D12_RANGE uploadRange;
 	uploadRange.Begin = 0;
-	uploadRange.End = verteciesDataSize;
+	uploadRange.End = dataSize;
 	uploadBuffer->Map(0, &uploadRange, (void**)&uploadBufferAddress);
-	memcpy(&uploadBufferAddress[0], vertecies, verteciesDataSize);
+	memcpy(&uploadBufferAddress[0], data, dataSize);
 	uploadBuffer->Unmap(0, &uploadRange);
 
 	// Copy CPU Resource -> GPU Resource
 	auto cmdList = D3D12Context::Get().InitializeCommandList();
-	cmdList->CopyBufferRegion(vertexBuffer, 0, uploadBuffer, 0, verteciesDataSize);
+	cmdList->CopyBufferRegion(buffer, 0, uploadBuffer, 0, dataSize);
 	D3D12Context::Get().ExecuteCommandList();
+}
+void D3D12Renderer::UploadVertecies()
+{
+	Vertex verts[] =
+	{
+		//T1
+		{-1.0, -1.0, 0.0, 0.0, 1.0},
+		{0.0, 1.0, 0.0, 0.5, 0.0},
+		{1.0, -1.0, 0.0, 1.0, 1.0}
+	};
+
+	uint32_t vertsDataSize = sizeof(Vertex) * _countof(verts);
+	UploadBuffer(vertexBuffer, uploadBuffer, verts, vertsDataSize);
+
+	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+	vertexBufferView.SizeInBytes = vertsDataSize;
+	vertexBufferView.StrideInBytes = sizeof(Vertex);
+
+
+
 
 }
 
