@@ -10,14 +10,13 @@ int main()
 {
 	if(D3D12Renderer::Get().Initialize())
 	{
+		/*
 		//Texture
 		D3D12ImageLoader::ImageData textureData;
 		D3D12ImageLoader::LoadImageFromDisk("Assets/Textures/ColorCheckerBoard.png", textureData);
 
 		uint32_t textureStride = textureData.width * ((textureData.bitsPerPixel + 7) / 8);
 		uint32_t textureSize = textureStride * textureData.height;
-
-		/*
 		// === Texture ===
 		D3D12_RESOURCE_DESC textureResourceDesc = D3D12Renderer::Get().CreateTextureResourceDesc(textureData);
 
@@ -98,11 +97,11 @@ int main()
 		Vertex vertecies[] =
 		{
 			//T1
-			{-1.0, -1.0, 0.0, 1.0},
-			{0.0, 1.0, 0.5, 0.0},
-			{1.0, -1.0, 1.0, 1.0}
+			{-1.0, -1.0, 0.0, 0.0, 1.0},
+			{0.0, 1.0, 0.0, 0.5, 0.0},
+			{1.0, -1.0, 0.0, 1.0, 1.0}
 		};
-		uint32_t verteciesDataSize = _countof(vertecies) * sizeof(float) * 4.0;
+		uint32_t verteciesDataSize = sizeof(Vertex) * _countof(vertecies);
 		std::vector<D3D12_INPUT_ELEMENT_DESC> vertexLayout = D3D12Renderer::Get().GetVertexLayout();
 
 		D3D12_RESOURCE_DESC vertexBufferDesc = D3D12Renderer::Get().CreateVertexBufferDesc(verteciesDataSize);
@@ -117,7 +116,7 @@ int main()
 
 		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
 		vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-		vertexBufferView.SizeInBytes = sizeof(Vertex) * _countof(vertecies);
+		vertexBufferView.SizeInBytes = verteciesDataSize;
 		vertexBufferView.StrideInBytes = sizeof(Vertex);
 
 		D3D12_RESOURCE_DESC uploadResourceDesc{};
@@ -270,11 +269,9 @@ int main()
 			//PSO
 			cmdList->SetPipelineState(pso);
 			cmdList->SetGraphicsRootSignature(rootSignature);
-
 			//Input Assembler
 			cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
 			//Rasterizer State: Viewport
 			D3D12_VIEWPORT viewport = D3D12Window::Get().GetDefaultViewport();
 			cmdList->RSSetViewports(1, &viewport);
@@ -282,36 +279,16 @@ int main()
 			D3D12_RECT scissorRect = D3D12Window::Get().GetDefaultScissorRect();
 			cmdList->RSSetScissorRects(1, &scissorRect);
 
-			//Update
-			float color[] = { 1.0f, 1.0f, 0.0f };
-
-			static float angle = 0.0f;
-			angle += 0.1;
-			struct Correction
-			{
-				float AspectRatio;
-				float Zoom;
-				float sinAngle;
-				float cosAngle;
-			};
-			Correction correctionData;
-			correctionData.AspectRatio = (float)D3D12Window::Get().GetWidth() / (float)D3D12Window::Get().GetHeight();
-			correctionData.Zoom = 0.8f;
-			correctionData.sinAngle = sinf(angle);
-			correctionData.sinAngle = cosf(angle);
-
 
 			//ROOT 
+			float color[] = { 1.0f, 1.0f, 0.0f };
 			cmdList->SetGraphicsRoot32BitConstants(0, 3, color, 0);
-			cmdList->SetGraphicsRoot32BitConstants(1, 4, &correctionData, 0);
-			//cmdList->SetGraphicsRootDescriptorTable(2, descHeap->GetGPUDescriptorHandleForHeapStart());
+			//cmdList->SetGraphicsRootDescriptorTable(1, descHeap->GetGPUDescriptorHandleForHeapStart());
 			//cmdList->SetDescriptorHeaps(1, &descHeap);
 
 			//Draw
 			cmdList->DrawInstanced(_countof(vertecies), 1, 0, 0);
 			D3D12Window::Get().EndFrame(cmdList);
-
-
 
 			//Finish Drawing & Present
 			D3D12Context::Get().ExecuteCommandList();
