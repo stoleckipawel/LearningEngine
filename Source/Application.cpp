@@ -102,8 +102,10 @@ int main()
 			{0.0, 1.0, 0.5, 0.0},
 			{1.0, -1.0, 1.0, 1.0}
 		};
+		uint32_t verteciesDataSize = _countof(vertecies) * sizeof(float) * 4.0;
 		std::vector<D3D12_INPUT_ELEMENT_DESC> vertexLayout = D3D12Renderer::Get().GetVertexLayout();
-		D3D12_RESOURCE_DESC vertexBufferDesc = D3D12Renderer::Get().CreateVertexBufferDesc(1024);
+
+		D3D12_RESOURCE_DESC vertexBufferDesc = D3D12Renderer::Get().CreateVertexBufferDesc(verteciesDataSize);
 
 		ComPointer<ID3D12Resource2> vertexBuffer;
 		D3D12Context::Get().GetDevice()->CreateCommittedResource(
@@ -113,11 +115,15 @@ int main()
 			nullptr,
 			IID_PPV_ARGS(&vertexBuffer));
 
+		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
+		vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+		vertexBufferView.SizeInBytes = sizeof(Vertex) * _countof(vertecies);
+		vertexBufferView.StrideInBytes = sizeof(Vertex);
 
 		D3D12_RESOURCE_DESC uploadResourceDesc{};
 		uploadResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 		uploadResourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-		uploadResourceDesc.Width = textureSize + 1024;
+		uploadResourceDesc.Width = verteciesDataSize;
 		uploadResourceDesc.Height = 1;
 		uploadResourceDesc.DepthOrArraySize = 1;
 		uploadResourceDesc.MipLevels = 1;
@@ -140,15 +146,14 @@ int main()
 		char* uploadBufferAddress;
 		D3D12_RANGE uploadRange;
 		uploadRange.Begin = 0;
-		uploadRange.End = 1024 + textureSize;
+		uploadRange.End = verteciesDataSize;
 		uploadBuffer->Map(0, &uploadRange, (void**)&uploadBufferAddress);
-		memcpy(&uploadBufferAddress[0], textureData.data.data(), textureSize);
-		memcpy(&uploadBufferAddress[textureSize], vertecies, sizeof(vertecies));
+		memcpy(&uploadBufferAddress[0], vertecies, verteciesDataSize);
 		uploadBuffer->Unmap(0, &uploadRange);
 
 		// Copy CPU Resource -> GPU Resource
 		auto cmdList = D3D12Context::Get().InitializeCommandList();
-		cmdList->CopyBufferRegion(vertexBuffer, 0, uploadBuffer, textureSize, 1024);
+		cmdList->CopyBufferRegion(vertexBuffer, 0, uploadBuffer, 0, verteciesDataSize);
 
 		D3D12Context::Get().ExecuteCommandList();
 
@@ -243,12 +248,6 @@ int main()
 		D3D12Context::Get().GetDevice()->CreateGraphicsPipelineState(
 			&psoDesc, 
 			IID_PPV_ARGS(&pso));
-
-		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
-		vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-		vertexBufferView.SizeInBytes = sizeof(Vertex) * _countof(vertecies);
-		vertexBufferView.StrideInBytes = sizeof(Vertex);
-
 
 		while (!D3D12Window::Get().GetShouldClose())
 		{
