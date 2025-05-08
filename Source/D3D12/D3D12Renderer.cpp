@@ -135,14 +135,8 @@ void D3D12Renderer::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoD
 	psoDesc.DepthStencilState.BackFace.StencilPassOp = stencilDesc.BackFaceStencilPassOp;
 }
 
-void D3D12Renderer::LoadContent()
+void D3D12Renderer::LoadAssets()
 {
-	Vertex vertecies[] =
-	{
-		//T1
-		{-1.0, -1.0, 0.0, 1.0},
-		{0.0, 1.0, 0.5, 0.0},
-		{1.0, -1.0, 1.0, 1.0}
-	};
+
 }
 
