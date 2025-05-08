@@ -10,6 +10,7 @@ void main(
             out float4 OutColor0 : SV_Target
 )
 {
+    //float4 texel = textures[0].Sample(texturesSampler, uv);
     float4 texel = textures[0].Sample(texturesSampler, uv);
     OutColor0 = float4(texel.rgb, 1.0f);
 }

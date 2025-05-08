@@ -7,6 +7,7 @@ struct Vertex
 {
 	float x;
 	float y;
+	float z;
 	float u;
 	float v;
 };
@@ -37,6 +38,7 @@ class D3D12Renderer
 {
 public:
 	bool Initialize();
+
 	void Shutdown();
 	std::vector<D3D12_INPUT_ELEMENT_DESC> GetVertexLayout();
 
@@ -48,6 +50,7 @@ public:
 	void SetDepthTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_DEPTH_TEST_DESC depthDesc);
 	void SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_STENCIL_TEST_DESC stencilDesc);
 
+	void LoadContent();
 
 	//Singleton pattern to ensure only one instance of the debug layer exists
 public:

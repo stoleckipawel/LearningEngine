@@ -25,6 +25,8 @@ bool D3D12Renderer::Initialize()
 	return true;
 }
 
+
+
 void D3D12Renderer::Shutdown()
 {
 }
@@ -33,12 +35,10 @@ std::vector<D3D12_INPUT_ELEMENT_DESC> D3D12Renderer::GetVertexLayout()
 {
 	return
 	{
-		{ "Position",  0, DXGI_FORMAT_R32G32_FLOAT, 0, 0,                          D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TexCoord",  0, DXGI_FORMAT_R32G32_FLOAT, 0, sizeof(float) * 2,           D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		{ "Position",  0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TexCoord",  0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 }
-
-
 
 D3D12_RESOURCE_DESC D3D12Renderer::CreateVertexBufferDesc(uint32_t VertexCount)
 {
@@ -133,5 +133,16 @@ void D3D12Renderer::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoD
 	psoDesc.DepthStencilState.BackFace.StencilFailOp = stencilDesc.BackFaceStencilFailOp;
 	psoDesc.DepthStencilState.BackFace.StencilDepthFailOp = stencilDesc.BackFaceStencilDepthFailOp;
 	psoDesc.DepthStencilState.BackFace.StencilPassOp = stencilDesc.BackFaceStencilPassOp;
+}
+
+void D3D12Renderer::LoadContent()
+{
+	Vertex vertecies[] =
+	{
+		//T1
+		{-1.0, -1.0, 0.0, 1.0},
+		{0.0, 1.0, 0.5, 0.0},
+		{1.0, -1.0, 1.0, 1.0}
+	};
 }
 

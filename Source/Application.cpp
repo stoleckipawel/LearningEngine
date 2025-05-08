@@ -60,20 +60,34 @@ int main()
 		rdu.Flags = D3D12_RESOURCE_FLAG_NONE;
 
 		ComPointer<ID3D12Resource2> uploadBuffer;
-		D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapUploadProperties, D3D12_HEAP_FLAG_NONE,
-			&rdu, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&uploadBuffer));
+		D3D12Context::Get().GetDevice()->CreateCommittedResource(
+			&heapUploadProperties, 
+			D3D12_HEAP_FLAG_NONE,
+			&rdu, 
+			D3D12_RESOURCE_STATE_COMMON, 
+			nullptr, 
+			IID_PPV_ARGS(&uploadBuffer));
 
 		ComPointer<ID3D12Resource2> vertexBuffer;
-		D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
-			&vertexBufferDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&vertexBuffer));
+		D3D12Context::Get().GetDevice()->CreateCommittedResource(
+			&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
+			&vertexBufferDesc, 
+			D3D12_RESOURCE_STATE_COMMON, 
+			nullptr, 
+			IID_PPV_ARGS(&vertexBuffer));
 
 
 		// === Texture ===
 		D3D12_RESOURCE_DESC textureResourceDesc = D3D12Renderer::Get().CreateTextureResourceDesc(textureData);
 
 		ComPointer<ID3D12Resource2> textureResource;
-		D3D12Context::Get().GetDevice()->CreateCommittedResource(&heapDefaultProperties, D3D12_HEAP_FLAG_NONE,
-			&textureResourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&textureResource));
+		D3D12Context::Get().GetDevice()->CreateCommittedResource(
+			&heapDefaultProperties, 
+			D3D12_HEAP_FLAG_NONE,
+			&textureResourceDesc, 
+			D3D12_RESOURCE_STATE_COMMON, 
+			nullptr, 
+			IID_PPV_ARGS(&textureResource));
 
 		//Descriptor Heap for Textures
 		D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
@@ -83,7 +97,9 @@ int main()
 		descHeapDesc.NodeMask = 0;
 
 		ComPointer<ID3D12DescriptorHeap> descHeap;
-		D3D12Context::Get().GetDevice()->CreateDescriptorHeap(&descHeapDesc, IID_PPV_ARGS(&descHeap));
+		D3D12Context::Get().GetDevice()->CreateDescriptorHeap(
+			&descHeapDesc, 
+			IID_PPV_ARGS(&descHeap));
 
 		//SRV
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -94,7 +110,10 @@ int main()
 		srvDesc.Texture2D.MipLevels = 1;
 		srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 		srvDesc.Texture2D.PlaneSlice = 0;
-		D3D12Context::Get().GetDevice()->CreateShaderResourceView(textureResource, &srvDesc, descHeap->GetCPUDescriptorHandleForHeapStart());
+		D3D12Context::Get().GetDevice()->CreateShaderResourceView(
+			textureResource, 
+			&srvDesc, 
+			descHeap->GetCPUDescriptorHandleForHeapStart());
 		
 
 		//Copy void** -> CPU RESOURCE
@@ -143,7 +162,11 @@ int main()
 
 		//Create Root Signature
 		ComPointer<ID3D12RootSignature> rootSignature;
-		D3D12Context::Get().GetDevice()->CreateRootSignature(0, rootSignatureShader.GetBuffer(), rootSignatureShader.GetSize(), IID_PPV_ARGS(&rootSignature));
+		D3D12Context::Get().GetDevice()->CreateRootSignature(
+			0, 
+			rootSignatureShader.GetBuffer(), 
+			rootSignatureShader.GetSize(), 
+			IID_PPV_ARGS(&rootSignature));
 
 		//Pipeline state
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -157,15 +180,6 @@ int main()
 		//PS
 		psoDesc.PS.pShaderBytecode = pixelShader.GetBuffer();
 		psoDesc.PS.BytecodeLength = pixelShader.GetSize();
-		//DS
-		psoDesc.DS.pShaderBytecode = nullptr;
-		psoDesc.DS.BytecodeLength = 0;
-		//HS
-		psoDesc.HS.pShaderBytecode = nullptr;	
-		psoDesc.HS.BytecodeLength = 0;
-		//GS
-		psoDesc.GS.pShaderBytecode = nullptr;
-		psoDesc.GS.BytecodeLength = 0;
 		//Rasterizer
 		D3D12Renderer::Get().SetRasterizerState(psoDesc, false, D3D12_CULL_MODE_NONE);
 		//StreamOutput
@@ -227,8 +241,11 @@ int main()
 		psoDesc.SampleMask = 0xFFFFFFFF;
 		psoDesc.SampleDesc.Count = 1;
 		psoDesc.SampleDesc.Quality = 0;
+		//Create PSO
 		ComPointer<ID3D12PipelineState> pso;
-		D3D12Context::Get().GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pso));
+		D3D12Context::Get().GetDevice()->CreateGraphicsPipelineState(
+			&psoDesc, 
+			IID_PPV_ARGS(&pso));
 
 		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
 		vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
@@ -263,20 +280,10 @@ int main()
 			cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			//Rasterizer State: Viewport
-			D3D12_VIEWPORT vp;
-			vp.TopLeftX = 0;
-			vp.TopLeftY = 0;
-			vp.Width = D3D12Window::Get().GetWidth();
-			vp.Height = D3D12Window::Get().GetHeight();
-			vp.MinDepth = 1.0f;
-			vp.MaxDepth = 0.0f;
-			cmdList->RSSetViewports(1, &vp);
+			D3D12_VIEWPORT viewport = D3D12Window::Get().GetDefaultViewport();
+			cmdList->RSSetViewports(1, &viewport);
 			//Rasterizer State: Scissor  
-			D3D12_RECT scissorRect;
-			scissorRect.left = 0;
-			scissorRect.top = 0;
-			scissorRect.right = D3D12Window::Get().GetWidth();
-			scissorRect.bottom = D3D12Window::Get().GetHeight();
+			D3D12_RECT scissorRect = D3D12Window::Get().GetDefaultScissorRect();
 			cmdList->RSSetScissorRects(1, &scissorRect);
 
 			//Update
@@ -308,6 +315,8 @@ int main()
 			cmdList->DrawInstanced(_countof(vertecies), 1, 0, 0);
 			D3D12Window::Get().EndFrame(cmdList);
 
+
+
 			//Finish Drawing & Present
 			D3D12Context::Get().ExecuteCommandList();
 			D3D12Window::Get().Present();
@@ -316,8 +325,8 @@ int main()
 		
 		D3D12Context::Get().Flush(D3D12Window::Get().GetFrameCount());
 
-		vertexBuffer->Release();
-		uploadBuffer->Release();
+		//vertexBuffer->Release();
+		//uploadBuffer->Release();
 		//pso->Release();
 		//D3D12Window::Get().Shutdown();
 		//D3D12Context::Get().Shutdown();

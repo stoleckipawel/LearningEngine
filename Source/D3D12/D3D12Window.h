@@ -22,6 +22,9 @@ public:
 	inline UINT GetWidth() { return m_width; }
 	inline UINT GetHeight() { return m_height; }
 
+	D3D12_VIEWPORT GetDefaultViewport();
+	D3D12_RECT GetDefaultScissorRect();
+
 	static constexpr size_t GetFrameCount() { return m_FrameCount; };//2:Vsync OFF, 3: Vsync ON
 private:
 	static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);

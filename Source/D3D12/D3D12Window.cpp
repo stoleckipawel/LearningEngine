@@ -229,6 +229,28 @@ void D3D12Window::EndFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList)
 	cmdList->ResourceBarrier(1, &barrier);
 } 
 
+D3D12_VIEWPORT D3D12Window::GetDefaultViewport()
+{
+	D3D12_VIEWPORT vp;
+	vp.TopLeftX = 0;
+	vp.TopLeftY = 0;
+	vp.Width = D3D12Window::Get().GetWidth();
+	vp.Height = D3D12Window::Get().GetHeight();
+	vp.MinDepth = 1.0f;
+	vp.MaxDepth = 0.0f;
+	return vp;
+}
+
+D3D12_RECT D3D12Window::GetDefaultScissorRect()
+{
+	D3D12_RECT scissorRect;
+	scissorRect.left = 0;
+	scissorRect.top = 0;
+	scissorRect.right = GetWidth();
+	scissorRect.bottom = GetHeight();
+	return scissorRect;
+}
+
 LRESULT D3D12Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)

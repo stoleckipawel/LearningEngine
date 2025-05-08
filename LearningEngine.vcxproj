@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\D3D12\D3D12Texture.cpp" />
     <ClCompile Include="Source\D3D12\D3D12Renderer.cpp" />
     <ClCompile Include="Source\D3D12\D3D12ImageLoader.cpp" />
     <ClCompile Include="Source\Shader\Shader.cpp" />
@@ -152,6 +153,7 @@
     <ClCompile Include="Source\D3D12\D3D12Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\D3D12\D3D12Texture.h" />
     <ClInclude Include="Source\D3D12\D3D12Renderer.h" />
     <ClInclude Include="Source\D3D12\D3D12ImageLoader.h" />
     <ClInclude Include="Source\Shader\Shader.h" />
