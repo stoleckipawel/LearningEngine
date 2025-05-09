@@ -136,7 +136,7 @@ void D3D12Renderer::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoD
 }
 
 
-void UploadBuffer(ComPointer<ID3D12Resource2>& buffer, ComPointer<ID3D12Resource2>& uploadBuffer, void* data, uint32_t dataSize)
+void UploadBuffer(ComPointer<ID3D12Resource2>& buffer, void* data, uint32_t dataSize)
 {
 	//Heaps
 	D3D12_HEAP_PROPERTIES heapDefaultProperties = {};
@@ -188,6 +188,7 @@ void UploadBuffer(ComPointer<ID3D12Resource2>& buffer, ComPointer<ID3D12Resource
 		nullptr,
 		IID_PPV_ARGS(&buffer));
 
+	ComPointer<ID3D12Resource2> uploadBuffer;
 	D3D12Context::Get().GetDevice()->CreateCommittedResource(
 		&heapUploadProperties,
 		D3D12_HEAP_FLAG_NONE,
@@ -209,6 +210,8 @@ void UploadBuffer(ComPointer<ID3D12Resource2>& buffer, ComPointer<ID3D12Resource
 	auto cmdList = D3D12Context::Get().InitializeCommandList();
 	cmdList->CopyBufferRegion(buffer, 0, uploadBuffer, 0, dataSize);
 	D3D12Context::Get().ExecuteCommandList();
+
+	//uploadBuffer->Release();
 }
 void D3D12Renderer::UploadVertecies()
 {
@@ -221,7 +224,7 @@ void D3D12Renderer::UploadVertecies()
 	};
 
 	uint32_t vertsDataSize = sizeof(Vertex) * _countof(verts);
-	UploadBuffer(vertexBuffer, uploadBuffer, verts, vertsDataSize);
+	UploadBuffer(vertexBuffer, verts, vertsDataSize);
 
 	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
 	vertexBufferView.SizeInBytes = vertsDataSize;

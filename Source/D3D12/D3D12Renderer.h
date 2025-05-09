@@ -56,7 +56,6 @@ public:
 public:
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 	ComPointer<ID3D12Resource2> vertexBuffer;
-	ComPointer<ID3D12Resource2> uploadBuffer;
 
 
 	//Singleton pattern to ensure only one instance of the debug layer exists
