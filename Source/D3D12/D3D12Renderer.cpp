@@ -27,10 +27,21 @@ bool D3D12Renderer::Initialize()
 	return true;
 }
 
-
+void D3D12Renderer::Setup()
+{
+	CreatePSO();
+}
 
 void D3D12Renderer::Shutdown()
 {
+	D3D12Context::Get().Flush(D3D12Window::Get().GetFrameCount());
+
+	//vertexBuffer->Release();
+	//uploadBuffer->Release();
+	//pso->Release();
+	//D3D12Window::Get().Shutdown();
+	//D3D12Context::Get().Shutdown();
+	//D3D12DebugLayer::Get().Shutdown();
 }
 
 std::vector<D3D12_INPUT_ELEMENT_DESC> D3D12Renderer::GetVertexLayout()
@@ -364,3 +375,41 @@ void D3D12Renderer::SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 	D3D12_RECT scissorRect = D3D12Window::Get().GetDefaultScissorRect();
 	cmdList->RSSetScissorRects(1, &scissorRect);
 }
+
+void D3D12Renderer::Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
+{
+	float clearColor[4] = { 0.5f, 1.0f, 0.5f, 1.0f };
+	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = D3D12Window::Get().GetBackbufferRTVHandle();
+	cmdList->ClearRenderTargetView(backBufferRTVHandle, clearColor, 0, nullptr);
+
+	SetPSO(cmdList);
+	SetViewport(cmdList);
+
+	//ROOT 
+	float color[] = { 1.0f, 1.0f, 0.0f };
+	cmdList->SetGraphicsRoot32BitConstants(0, 3, color, 0);
+	//cmdList->SetGraphicsRootDescriptorTable(1, descHeap->GetGPUDescriptorHandleForHeapStart());
+	//cmdList->SetDescriptorHeaps(1, &descHeap);
+
+	//Draw
+	cmdList->OMSetRenderTargets(1, &backBufferRTVHandle, true, nullptr);
+	cmdList->DrawInstanced(vertexBufferView.SizeInBytes / vertexBufferView.StrideInBytes, 1, 0, 0);
+}
+
+void D3D12Renderer::Update()
+{
+	//Begin Drawing
+	auto cmdList = D3D12Context::Get().InitializeCommandList();
+
+	//Draw To Window
+	D3D12Window::Get().BeginFrame(cmdList);
+
+	Draw(cmdList);
+
+	D3D12Window::Get().EndFrame(cmdList);
+
+	//Finish Drawing & Present
+	D3D12Context::Get().ExecuteCommandList();
+	D3D12Window::Get().Present();
+}
+

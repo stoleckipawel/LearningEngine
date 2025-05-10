@@ -121,11 +121,19 @@ void D3D12Window::Shutdown()
 
 void D3D12Window::Update()
 {
+	// Process pending window messages
 	MSG msg;
 	while (PeekMessageW(&msg, m_window, 0, 0, PM_REMOVE))
 	{
 		TranslateMessage(&msg);
 		DispatchMessageW(&msg);
+	}
+
+	//Handle Resizing
+	if (D3D12Window::Get().GetShouldResize())
+	{
+		D3D12Context::Get().Flush(D3D12Window::Get().GetFrameCount());
+		D3D12Window::Get().Resize();
 	}
 }
 

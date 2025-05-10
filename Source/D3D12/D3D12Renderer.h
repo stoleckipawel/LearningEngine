@@ -40,8 +40,10 @@ class D3D12Renderer
 {
 public:
 	bool Initialize();
-
+	void Setup();
 	void Shutdown();
+	void Update();
+
 	std::vector<D3D12_INPUT_ELEMENT_DESC> GetVertexLayout();
 
 	D3D12_RESOURCE_DESC CreateVertexBufferDesc(uint32_t VertexCount);
@@ -57,6 +59,7 @@ public:
 	void CreatePSO();
 	void SetPSO(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
+	void Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 
 public:
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
