@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\D3D12\D3D12DescriptorHeap.cpp" />
     <ClCompile Include="Source\D3D12\D3D12PSO.cpp" />
     <ClCompile Include="Source\D3D12\D3D12Geometry.cpp" />
     <ClCompile Include="Source\D3D12\D3D12Texture.cpp" />
@@ -155,6 +156,7 @@
     <ClCompile Include="Source\D3D12\D3D12Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\D3D12\D3D12DescriptorHeap.h" />
     <ClInclude Include="Source\D3D12\D3D12PSO.h" />
     <ClInclude Include="Source\D3D12\D3D12Geometry.h" />
     <ClInclude Include="Source\D3D12\D3D12Texture.h" />

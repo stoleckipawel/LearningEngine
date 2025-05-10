@@ -24,6 +24,16 @@ bool D3D12Renderer::Initialize()
 	return true;
 }
 
+
+void D3D12Renderer::SetDescriptorHeaps(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
+{
+	ID3D12DescriptorHeap* heaps[] = { srvHeap.heap.Get(), samplerHeap.heap.Get() };
+	cmdList->SetDescriptorHeaps(_countof(heaps), heaps);
+
+	cmdList->SetGraphicsRootDescriptorTable(1, srvHeap.heap->GetGPUDescriptorHandleForHeapStart());
+	//cmdList->SetGraphicsRootDescriptorTable(2, samplerHeap->GetGPUDescriptorHandleForHeapStart());
+}
+
 void D3D12Renderer::CreateRootSignature()
 {
 	D3D12Shader rootSignatureShader = D3D12Shader("RootSignature.cso");
@@ -37,15 +47,24 @@ void D3D12Renderer::CreateRootSignature()
 
 void D3D12Renderer::Load()
 {
+	//Geometry
 	vertecies.Upload();	
+
+	//Textures
 	texture.Load("Assets/Textures/ColorCheckerBoard.png");
 
+	//Shaders
 	D3D12Shader vertexShader = D3D12Shader("VertexShader.cso");
 	D3D12Shader pixelShader = D3D12Shader("PixelShader.cso");
 	CreateRootSignature();
+
+	//Descriptor Heaps	
+	srvHeap = D3D12DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 32);
+	samplerHeap = D3D12DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 32);
+
+	//PSO
 	pso.Create(vertecies, rootSignature, vertexShader, pixelShader);
 }
-
 
 void D3D12Renderer::SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 {
@@ -77,8 +96,7 @@ void D3D12Renderer::SetShaderParams(ComPointer<ID3D12GraphicsCommandList7>& cmdL
 
 	float color[] = { 1.0f, 1.0f, 0.0f };
 	cmdList->SetGraphicsRoot32BitConstants(0, 3, color, 0);
-	//cmdList->SetGraphicsRootDescriptorTable(1, descHeap->GetGPUDescriptorHandleForHeapStart());
-	//cmdList->SetDescriptorHeaps(1, &descHeap);
+	SetDescriptorHeaps(cmdList);
 }
 
 void D3D12Renderer::Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList)

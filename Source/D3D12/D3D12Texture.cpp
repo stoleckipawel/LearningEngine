@@ -6,6 +6,14 @@ void D3D12Texture::Load(const std::filesystem::path& imagePath)
 	D3D12ImageLoader::LoadImageFromDisk("Assets/Textures/ColorCheckerBoard.png", textureData);
 }
 
+UINT D3D12Texture::ComputeMipCount(UINT width, UINT height)
+{
+	return 1;
+
+	//ToDo activate when mip generation is done
+	return 1 + static_cast<UINT>(floor(log2(static_cast<float>(std::max(width, height)))));
+}
+
 D3D12_RESOURCE_DESC D3D12Texture::CreateResourceDesc()
 {
 	D3D12_RESOURCE_DESC texResourceDesc = {};
@@ -26,48 +34,44 @@ D3D12_RESOURCE_DESC D3D12Texture::CreateResourceDesc()
 void D3D12Texture::CreateResource()
 {
 	D3D12_RESOURCE_DESC texResourceDesc = CreateResourceDesc();
+
+	D3D12_HEAP_PROPERTIES heapDefaultProperties = {};
+	heapDefaultProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+	heapDefaultProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	heapDefaultProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	heapDefaultProperties.CreationNodeMask = 0;
+	heapDefaultProperties.VisibleNodeMask = 0;
+
+	D3D12Context::Get().GetDevice()->CreateCommittedResource(
+		&heapDefaultProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&texResourceDesc,
+		D3D12_RESOURCE_STATE_COMMON,
+		nullptr,
+		IID_PPV_ARGS(&textureResource));
 }
 
-UINT D3D12Texture::ComputeMipCount(UINT width, UINT height)
+void D3D12Texture::CreateSRV(ComPointer<ID3D12DescriptorHeap> srvHeap)
 {
-	return 1;
+	srvDesc.Format = textureData.dxgiPixelFormat;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = ComputeMipCount(textureData.width, textureData.height);
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+	srvDesc.Texture2D.PlaneSlice = 0;
 
-	//ToDo activate when mip generation is done
-	return 1 + static_cast<UINT>(floor(log2(static_cast<float>(std::max(width, height)))));
+	D3D12Context::Get().GetDevice()->CreateShaderResourceView(
+		textureResource,
+		&srvDesc,
+		srvHeap->GetCPUDescriptorHandleForHeapStart());
 }
-
 
 /*
-//Texture
+	uint32_t textureStride = textureData.width * ((textureData.bitsPerPixel + 7) / 8);
+	uint32_t textureSize = textureStride * textureData.height;
 
 
-uint32_t textureStride = textureData.width * ((textureData.bitsPerPixel + 7) / 8);
-uint32_t textureSize = textureStride * textureData.height;
-// === Texture ===
-D3D12_RESOURCE_DESC textureResourceDesc = D3D12Renderer::Get().CreateTextureResourceDesc(textureData);
-
-ComPointer<ID3D12Resource2> textureResource;
-D3D12Context::Get().GetDevice()->CreateCommittedResource(
-	&heapDefaultProperties,
-	D3D12_HEAP_FLAG_NONE,
-	&textureResourceDesc,
-	D3D12_RESOURCE_STATE_COMMON,
-	nullptr,
-	IID_PPV_ARGS(&textureResource));
-
-//SRV
-D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-srvDesc.Format = textureData.dxgiPixelFormat;
-srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-srvDesc.Texture2D.MostDetailedMip = 0;
-srvDesc.Texture2D.MipLevels = 1;
-srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-srvDesc.Texture2D.PlaneSlice = 0;
-D3D12Context::Get().GetDevice()->CreateShaderResourceView(
-	textureResource,
-	&srvDesc,
-	descHeap->GetCPUDescriptorHandleForHeapStart());
 D3D12_BOX textureSizeAsBox;
 textureSizeAsBox.left = textureSizeAsBox.top = textureSizeAsBox.front = 0;
 textureSizeAsBox.right = textureData.width;
@@ -91,16 +95,6 @@ txtcDst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
 txtcDst.SubresourceIndex = 0;
 cmdList->CopyTextureRegion(&txtcDst, 0, 0, 0, &txtcSrc, &textureSizeAsBox);
 
-//Descriptor Heap for Textures
-D3D12_DESCRIPTOR_HEAP_DESC descHeapDesc = {};
-descHeapDesc.NumDescriptors = 8;
-descHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-descHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-descHeapDesc.NodeMask = 0;
 
-ComPointer<ID3D12DescriptorHeap> descHeap;
-D3D12Context::Get().GetDevice()->CreateDescriptorHeap(
-	&descHeapDesc,
-	IID_PPV_ARGS(&descHeap));Copyright(c) 2003 - 2019 Jason Perkins and individual contributors.
 */
 

@@ -6,6 +6,7 @@
 #include "D3D12Texture.h"
 #include "D3D12Geometry.h"
 #include "D3D12PSO.h"
+#include "D3D12DescriptorHeap.h"
 
 class D3D12Renderer
 {
@@ -16,16 +17,16 @@ public:
 	void Render();
 
 private:
-	void Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
-	//Texture
-	D3D12_RESOURCE_DESC CreateTextureResourceDesc(D3D12ImageLoader::ImageData& textureData);
 	void CreateRootSignature();
+
+
+	void SetDescriptorHeaps(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
-	
-	//Misc
 	void ClearBackBuffer(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetBackBufferRTV(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetShaderParams(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
+
+	void Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 
 private:
 	ComPointer<ID3D12RootSignature> rootSignature = nullptr;
@@ -33,5 +34,7 @@ private:
 	D3D12Texture texture;
 	D3D12Geometry vertecies;
 	D3D12PSO pso;
+	D3D12DescriptorHeap srvHeap;
+	D3D12DescriptorHeap samplerHeap;
 };
 
