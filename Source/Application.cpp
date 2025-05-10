@@ -8,7 +8,7 @@ int main()
 
 	if(renderer.Initialize())
 	{		
-		renderer.Setup();
+		renderer.Load();
 
 		while (!D3D12Window::Get().GetShouldClose())
 		{

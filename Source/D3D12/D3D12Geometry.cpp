@@ -96,6 +96,13 @@ void D3D12Geometry::Upload()
 	vertexBufferView.StrideInBytes = sizeof(Vertex);
 }
 
+void D3D12Geometry::Set(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
+{
+	//Input Assembler
+	cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
 std::vector<D3D12_INPUT_ELEMENT_DESC> D3D12Geometry::GetVertexLayout()
 {
 	return

@@ -143,22 +143,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\D3D12\D3D12PSO.cpp" />
     <ClCompile Include="Source\D3D12\D3D12Geometry.cpp" />
     <ClCompile Include="Source\D3D12\D3D12Texture.cpp" />
     <ClCompile Include="Source\D3D12\D3D12Renderer.cpp" />
     <ClCompile Include="Source\D3D12\D3D12ImageLoader.cpp" />
-    <ClCompile Include="Source\Shader\Shader.cpp" />
+    <ClCompile Include="Source\D3D12\D3D12Shader.cpp" />
     <ClCompile Include="Source\D3D12\D3D12Context.cpp" />
     <ClCompile Include="Source\Application.cpp" />
     <ClCompile Include="Source\D3D12\D3D12DebugLayer.cpp" />
     <ClCompile Include="Source\D3D12\D3D12Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\D3D12\D3D12PSO.h" />
     <ClInclude Include="Source\D3D12\D3D12Geometry.h" />
     <ClInclude Include="Source\D3D12\D3D12Texture.h" />
     <ClInclude Include="Source\D3D12\D3D12Renderer.h" />
     <ClInclude Include="Source\D3D12\D3D12ImageLoader.h" />
-    <ClInclude Include="Source\Shader\Shader.h" />
+    <ClInclude Include="Source\D3D12\D3D12Shader.h" />
     <ClInclude Include="Source\Application.h" />
     <ClInclude Include="Source\D3D12\D3D12Context.h" />
     <ClInclude Include="Source\D3D12\D3D12DebugLayer.h" />
