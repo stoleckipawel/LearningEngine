@@ -209,11 +209,6 @@ void D3D12Window::BeginFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList)
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
 	cmdList->ResourceBarrier(1, &barrier);
-
-	float clearColor[4] = { 0.5f, 1.0f, 0.5f, 1.0f };
-	cmdList->ClearRenderTargetView(m_rtvHandles[m_currentBufferIndex], clearColor, 0, nullptr);
-
-	cmdList->OMSetRenderTargets(1, &m_rtvHandles[m_currentBufferIndex], false, nullptr);
 }
 
 void D3D12Window::EndFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList)

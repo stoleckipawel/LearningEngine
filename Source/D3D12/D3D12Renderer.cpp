@@ -3,6 +3,8 @@
 #include "D3D12Context.h"
 #include "D3D12Window.h"
 
+
+
 bool D3D12Renderer::Initialize()
 {
 	if (FAILED(D3D12DebugLayer::Get().Initialize()))
@@ -235,3 +237,130 @@ void D3D12Renderer::UploadVertecies()
 
 }
 
+void D3D12Renderer::CreateRootSignature()
+{
+	Shader rootSignatureShader = Shader("RootSignature.cso");
+
+	D3D12Context::Get().GetDevice()->CreateRootSignature(
+		0,
+		rootSignatureShader.GetBuffer(),
+		rootSignatureShader.GetSize(),
+		IID_PPV_ARGS(&rootSignature));
+}
+
+
+void D3D12Renderer::CreatePSO()
+{
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+
+	// -- Vertex Data
+	UploadVertecies();
+	std::vector<D3D12_INPUT_ELEMENT_DESC> vertexLayout = GetVertexLayout();
+	psoDesc.InputLayout.NumElements = vertexLayout.size();
+	psoDesc.InputLayout.pInputElementDescs = vertexLayout.data();
+	psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+
+
+	// -- Root Signature
+	CreateRootSignature();
+	psoDesc.pRootSignature = rootSignature;
+
+	//VS	
+	Shader vertexShader = Shader("VertexShader.cso");
+	psoDesc.VS.pShaderBytecode = vertexShader.GetBuffer();
+	psoDesc.VS.BytecodeLength = vertexShader.GetSize();
+	//PS
+	Shader pixelShader = Shader("PixelShader.cso");
+	psoDesc.PS.pShaderBytecode = pixelShader.GetBuffer();
+	psoDesc.PS.BytecodeLength = pixelShader.GetSize();
+
+	// -- Rasterizer
+	SetRasterizerState(psoDesc, false, D3D12_CULL_MODE_NONE);
+
+	//StreamOutput
+	SetStreamOutput(psoDesc);
+
+	//Blend State
+	psoDesc.BlendState.AlphaToCoverageEnable = false;
+	psoDesc.BlendState.IndependentBlendEnable = false;//Multiple RenderTarget Varied Blending
+
+	D3D12_RENDER_TARGET_BLEND_DESC renderTargetBlendDesc;
+	{
+		renderTargetBlendDesc.BlendEnable = false;
+		renderTargetBlendDesc.BlendOp = D3D12_BLEND_OP_ADD;
+		renderTargetBlendDesc.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		renderTargetBlendDesc.SrcBlend = D3D12_BLEND_ONE;
+		renderTargetBlendDesc.DestBlend = D3D12_BLEND_ZERO;
+		renderTargetBlendDesc.SrcBlendAlpha = D3D12_BLEND_ONE;
+		renderTargetBlendDesc.DestBlendAlpha = D3D12_BLEND_ZERO;
+		renderTargetBlendDesc.LogicOp = D3D12_LOGIC_OP_NOOP;
+		renderTargetBlendDesc.LogicOpEnable = false;
+		renderTargetBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	}
+	SetRenderTargetBlendState(psoDesc, renderTargetBlendDesc);
+
+
+	D3D12_DEPTH_TEST_DESC depthTestDesc;
+	{
+		depthTestDesc.DepthEnable = false;
+		depthTestDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+		depthTestDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	}
+	SetDepthTestState(psoDesc, depthTestDesc);
+
+	D3D12_STENCIL_TEST_DESC stencilTestDesc;
+	{
+		stencilTestDesc.StencilEnable = false;
+		stencilTestDesc.StencilReadMask = 0;
+		stencilTestDesc.StencilWriteMask = 0;
+		stencilTestDesc.FrontFaceStencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		stencilTestDesc.FrontFaceStencilFailOp = D3D12_STENCIL_OP_KEEP;
+		stencilTestDesc.FrontFaceStencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+		stencilTestDesc.FrontFaceStencilPassOp = D3D12_STENCIL_OP_KEEP;
+		stencilTestDesc.BackFaceStencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		stencilTestDesc.BackFaceStencilFailOp = D3D12_STENCIL_OP_KEEP;
+		stencilTestDesc.BackFaceStencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+		stencilTestDesc.BackFaceStencilPassOp = D3D12_STENCIL_OP_KEEP;
+	}
+	SetStencilTestState(psoDesc, stencilTestDesc);
+
+	// -- NumRenderTargets
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;//DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+	//Misc
+	psoDesc.NodeMask = 0;
+	psoDesc.CachedPSO.CachedBlobSizeInBytes = 0;
+	psoDesc.CachedPSO.pCachedBlob = nullptr;
+	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	psoDesc.SampleMask = 0xFFFFFFFF;
+	psoDesc.SampleDesc.Count = 1;
+	psoDesc.SampleDesc.Quality = 0;
+
+	// -- Create PSO
+	D3D12Context::Get().GetDevice()->CreateGraphicsPipelineState(
+		&psoDesc,
+		IID_PPV_ARGS(&pso));
+}
+
+void D3D12Renderer::SetPSO(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
+{
+	//PSO
+	cmdList->SetPipelineState(pso);
+	cmdList->SetGraphicsRootSignature(rootSignature);
+	//Input Assembler
+	cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+}
+
+void D3D12Renderer::SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
+{
+	//Rasterizer State: Viewport
+	D3D12_VIEWPORT viewport = D3D12Window::Get().GetDefaultViewport();
+	cmdList->RSSetViewports(1, &viewport);
+	//Rasterizer State: Scissor  
+	D3D12_RECT scissorRect = D3D12Window::Get().GetDefaultScissorRect();
+	cmdList->RSSetScissorRects(1, &scissorRect);
+}

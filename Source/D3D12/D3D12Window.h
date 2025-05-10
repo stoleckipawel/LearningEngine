@@ -21,6 +21,9 @@ public:
 	inline bool IsFullScreen() { return bIsFullScreen; };
 	inline UINT GetWidth() { return m_width; }
 	inline UINT GetHeight() { return m_height; }
+	inline size_t GetCurrentBufferIndex() { return m_currentBufferIndex; }
+
+	D3D12_CPU_DESCRIPTOR_HANDLE GetBackbufferRTVHandle() { return m_rtvHandles[m_currentBufferIndex]; }
 
 	D3D12_VIEWPORT GetDefaultViewport();
 	D3D12_RECT GetDefaultScissorRect();

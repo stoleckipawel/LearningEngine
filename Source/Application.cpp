@@ -8,7 +8,9 @@
 
 int main()
 {
-	if(D3D12Renderer::Get().Initialize())
+	D3D12Renderer renderer;
+
+	if(renderer.Initialize())
 	{
 		/*
 		//Texture
@@ -77,102 +79,8 @@ int main()
 			&descHeapDesc,
 			IID_PPV_ARGS(&descHeap));
 		*/
-
-		D3D12Renderer::Get().UploadVertecies();
-
-		//Shaders
-		Shader rootSignatureShader("RootSignature.cso");
-		Shader vertexShader("VertexShader.cso");
-		Shader pixelShader("PixelShader.cso");
-
-		//Create Root Signature
-		ComPointer<ID3D12RootSignature> rootSignature;
-		D3D12Context::Get().GetDevice()->CreateRootSignature(
-			0, 
-			rootSignatureShader.GetBuffer(), 
-			rootSignatureShader.GetSize(), 
-			IID_PPV_ARGS(&rootSignature));
-
-		//Pipeline state
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-		psoDesc.pRootSignature = rootSignature;
-		//Vertex Layout
-		std::vector<D3D12_INPUT_ELEMENT_DESC> vertexLayout = D3D12Renderer::Get().GetVertexLayout();
-		psoDesc.InputLayout.NumElements = vertexLayout.size();
-		psoDesc.InputLayout.pInputElementDescs = vertexLayout.data();
-		psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-		//VS
-		psoDesc.VS.pShaderBytecode = vertexShader.GetBuffer();
-		psoDesc.VS.BytecodeLength = vertexShader.GetSize();
-		//PS
-		psoDesc.PS.pShaderBytecode = pixelShader.GetBuffer();
-		psoDesc.PS.BytecodeLength = pixelShader.GetSize();
-		//Rasterizer
-		D3D12Renderer::Get().SetRasterizerState(psoDesc, false, D3D12_CULL_MODE_NONE);
-		//StreamOutput
-		D3D12Renderer::Get().SetStreamOutput(psoDesc);
-		//NumRenderTargets
-		psoDesc.NumRenderTargets = 1;
-		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-		psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;//DXGI_FORMAT_D24_UNORM_S8_UINT;
-		//Blend State
-		psoDesc.BlendState.AlphaToCoverageEnable = false;
-		psoDesc.BlendState.IndependentBlendEnable = false;//Multiple RenderTarget Varied Blending
-
-		D3D12_RENDER_TARGET_BLEND_DESC renderTargetBlendDesc;
-		{
-			renderTargetBlendDesc.BlendEnable = false;
-			renderTargetBlendDesc.BlendOp = D3D12_BLEND_OP_ADD;
-			renderTargetBlendDesc.BlendOpAlpha = D3D12_BLEND_OP_ADD;
-			renderTargetBlendDesc.SrcBlend = D3D12_BLEND_ONE;
-			renderTargetBlendDesc.DestBlend = D3D12_BLEND_ZERO;
-			renderTargetBlendDesc.SrcBlendAlpha = D3D12_BLEND_ONE;
-			renderTargetBlendDesc.DestBlendAlpha = D3D12_BLEND_ZERO;
-			renderTargetBlendDesc.LogicOp = D3D12_LOGIC_OP_NOOP;
-			renderTargetBlendDesc.LogicOpEnable = false;
-			renderTargetBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-		}
-		D3D12Renderer::Get().SetRenderTargetBlendState(psoDesc, renderTargetBlendDesc);
 		
-		D3D12_DEPTH_TEST_DESC depthTestDesc;
-		{
-			depthTestDesc.DepthEnable = false;
-			depthTestDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-			depthTestDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		}
-		D3D12Renderer::Get().SetDepthTestState(psoDesc, depthTestDesc);
-
-		D3D12_STENCIL_TEST_DESC stencilTestDesc;
-		{
-			stencilTestDesc.StencilEnable = false;
-			stencilTestDesc.StencilReadMask = 0;
-			stencilTestDesc.StencilWriteMask = 0;
-			stencilTestDesc.FrontFaceStencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-			stencilTestDesc.FrontFaceStencilFailOp = D3D12_STENCIL_OP_KEEP;
-			stencilTestDesc.FrontFaceStencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
-			stencilTestDesc.FrontFaceStencilPassOp = D3D12_STENCIL_OP_KEEP;
-			stencilTestDesc.BackFaceStencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-			stencilTestDesc.BackFaceStencilFailOp = D3D12_STENCIL_OP_KEEP;
-			stencilTestDesc.BackFaceStencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
-			stencilTestDesc.BackFaceStencilPassOp = D3D12_STENCIL_OP_KEEP;
-		}
-		D3D12Renderer::Get().SetStencilTestState(psoDesc, stencilTestDesc);
-		//NodeMask
-		psoDesc.NodeMask = 0;
-		//Cached Pso
-		psoDesc.CachedPSO.CachedBlobSizeInBytes = 0;
-		psoDesc.CachedPSO.pCachedBlob = nullptr;
-		//Flags
-		psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
-		//Sample Mask
-		psoDesc.SampleMask = 0xFFFFFFFF;
-		psoDesc.SampleDesc.Count = 1;
-		psoDesc.SampleDesc.Quality = 0;
-		//Create PSO
-		ComPointer<ID3D12PipelineState> pso;
-		D3D12Context::Get().GetDevice()->CreateGraphicsPipelineState(
-			&psoDesc, 
-			IID_PPV_ARGS(&pso));
+		renderer.CreatePSO();
 
 		while (!D3D12Window::Get().GetShouldClose())
 		{
@@ -192,19 +100,13 @@ int main()
 			//Draw To Window
 			D3D12Window::Get().BeginFrame(cmdList);
 
-			//PSO
-			cmdList->SetPipelineState(pso);
-			cmdList->SetGraphicsRootSignature(rootSignature);
-			//Input Assembler
-			cmdList->IASetVertexBuffers(0, 1, &D3D12Renderer::Get().vertexBufferView);
-			cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			//Rasterizer State: Viewport
-			D3D12_VIEWPORT viewport = D3D12Window::Get().GetDefaultViewport();
-			cmdList->RSSetViewports(1, &viewport);
-			//Rasterizer State: Scissor  
-			D3D12_RECT scissorRect = D3D12Window::Get().GetDefaultScissorRect();
-			cmdList->RSSetScissorRects(1, &scissorRect);
+			float clearColor[4] = { 0.5f, 1.0f, 0.5f, 1.0f };
+			D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = D3D12Window::Get().GetBackbufferRTVHandle();
+			cmdList->ClearRenderTargetView(backBufferRTVHandle, clearColor, 0, nullptr);
+			cmdList->OMSetRenderTargets(1, &backBufferRTVHandle, true, nullptr);
 
+			renderer.SetPSO(cmdList);
+			renderer.SetViewport(cmdList);
 
 			//ROOT 
 			float color[] = { 1.0f, 1.0f, 0.0f };
@@ -213,7 +115,7 @@ int main()
 			//cmdList->SetDescriptorHeaps(1, &descHeap);
 
 			//Draw
-			cmdList->DrawInstanced(D3D12Renderer::Get().vertexBufferView.SizeInBytes / D3D12Renderer::Get().vertexBufferView.StrideInBytes, 1, 0, 0);
+			cmdList->DrawInstanced(renderer.vertexBufferView.SizeInBytes / renderer.vertexBufferView.StrideInBytes, 1, 0, 0);
 			D3D12Window::Get().EndFrame(cmdList);
 
 			//Finish Drawing & Present

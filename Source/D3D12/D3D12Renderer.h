@@ -2,6 +2,8 @@
 #include "../Vendor/Windows/WinInclude.h"
 #include "D3D12ImageLoader.h"
 #include <vector>
+#include "../Shader/Shader.h"
+
 
 struct Vertex
 {
@@ -51,24 +53,15 @@ public:
 	void SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_STENCIL_TEST_DESC stencilDesc);
 
 	void UploadVertecies();
-
+	void CreateRootSignature();
+	void CreatePSO();
+	void SetPSO(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
+	void SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 
 public:
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-	ComPointer<ID3D12Resource2> vertexBuffer;
-
-
-	//Singleton pattern to ensure only one instance of the debug layer exists
-public:
-	D3D12Renderer(const D3D12Renderer&) = delete;
-	D3D12Renderer& operator=(const D3D12Renderer&) = delete;
-
-	inline static D3D12Renderer& Get()
-	{
-		static D3D12Renderer instance;
-		return instance;
-	}
-private:
-	D3D12Renderer() = default;
+	ComPointer<ID3D12Resource2> vertexBuffer = nullptr;
+	ComPointer<ID3D12RootSignature> rootSignature = nullptr;
+	ComPointer<ID3D12PipelineState> pso = nullptr;
 };
 
