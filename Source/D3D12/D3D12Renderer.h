@@ -66,6 +66,11 @@ private:
 	void SetPSO(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	
+	//Misc
+	void ClearBackBuffer(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
+	void SetBackBufferRTV(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
+	void SetShaderParams(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
+	
 
 private:
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;

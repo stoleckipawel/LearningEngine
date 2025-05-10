@@ -372,24 +372,36 @@ void D3D12Renderer::SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 	cmdList->RSSetScissorRects(1, &scissorRect);
 }
 
-void D3D12Renderer::Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
+void D3D12Renderer::ClearBackBuffer(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 {
 	//Clear backbuffer 
-	float clearColor[4] = { 0.5f, 1.0f, 0.5f, 1.0f };
+	float clearColor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
 	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = D3D12Window::Get().GetBackbufferRTVHandle();
 	cmdList->ClearRenderTargetView(backBufferRTVHandle, clearColor, 0, nullptr);
+}
 
-	SetPSO(cmdList);
-	SetViewport(cmdList);
+void D3D12Renderer::SetBackBufferRTV(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
+{
+	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = D3D12Window::Get().GetBackbufferRTVHandle();
+	cmdList->OMSetRenderTargets(1, &backBufferRTVHandle, true, nullptr);
+}
 
-	//ROOT 
+void SetShaderParams(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
+{
 	float color[] = { 1.0f, 1.0f, 0.0f };
 	cmdList->SetGraphicsRoot32BitConstants(0, 3, color, 0);
 	//cmdList->SetGraphicsRootDescriptorTable(1, descHeap->GetGPUDescriptorHandleForHeapStart());
 	//cmdList->SetDescriptorHeaps(1, &descHeap);
+}
 
-	//Draw
-	cmdList->OMSetRenderTargets(1, &backBufferRTVHandle, true, nullptr);
+void D3D12Renderer::Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
+{
+	ClearBackBuffer(cmdList);
+
+	SetPSO(cmdList);
+	SetShaderParams(cmdList);
+	SetViewport(cmdList);
+	SetBackBufferRTV(cmdList);
 	cmdList->DrawInstanced(vertexBufferView.SizeInBytes / vertexBufferView.StrideInBytes, 1, 0, 0);
 }
 
