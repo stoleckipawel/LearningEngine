@@ -3,16 +3,9 @@
 #include "D3D12ImageLoader.h"
 #include <vector>
 #include "../Shader/Shader.h"
+#include "D3D12Texture.h"
+#include "D3D12Geometry.h"
 
-
-struct Vertex
-{
-	float x;
-	float y;
-	float z;
-	float u;
-	float v;
-};
 
 struct D3D12_DEPTH_TEST_DESC
 {
@@ -42,13 +35,12 @@ public:
 	bool Initialize();
 	void Setup();
 	void Shutdown();
-	void Update();
+	void Render();
 
 private:
 	void Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	
 	//Vertex
-	void UploadVertecies();
 	D3D12_RESOURCE_DESC CreateVertexBufferDesc(uint32_t VertexCount);
 	std::vector<D3D12_INPUT_ELEMENT_DESC> GetVertexLayout();
 
@@ -63,6 +55,7 @@ private:
 	void SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_STENCIL_TEST_DESC stencilDesc);
 	void CreateRootSignature();
 	void CreatePSO();
+	void SetGeometry(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetPSO(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	
@@ -70,12 +63,11 @@ private:
 	void ClearBackBuffer(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetBackBufferRTV(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetShaderParams(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
-	
 
 private:
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-	ComPointer<ID3D12Resource2> vertexBuffer = nullptr;
 	ComPointer<ID3D12RootSignature> rootSignature = nullptr;
 	ComPointer<ID3D12PipelineState> pso = nullptr;
+	D3D12Texture texture;
+	D3D12Geometry vertecies;
 };
 

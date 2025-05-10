@@ -1,9 +1,45 @@
 #include "D3D12Texture.h"
 
+
+void D3D12Texture::Load(const std::filesystem::path& imagePath)
+{
+	D3D12ImageLoader::LoadImageFromDisk("Assets/Textures/ColorCheckerBoard.png", textureData);
+}
+
+D3D12_RESOURCE_DESC D3D12Texture::CreateResourceDesc()
+{
+	D3D12_RESOURCE_DESC texResourceDesc = {};
+	texResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	texResourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+	texResourceDesc.Width = textureData.width;
+	texResourceDesc.Height = textureData.height;
+	texResourceDesc.DepthOrArraySize = 1;
+	texResourceDesc.MipLevels = ComputeMipCount(textureData.width, textureData.height);
+	texResourceDesc.Format = textureData.dxgiPixelFormat;
+	texResourceDesc.SampleDesc.Count = 1;
+	texResourceDesc.SampleDesc.Quality = 0;
+	texResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	texResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	return texResourceDesc;
+}
+
+void D3D12Texture::CreateResource()
+{
+	D3D12_RESOURCE_DESC texResourceDesc = CreateResourceDesc();
+}
+
+UINT D3D12Texture::ComputeMipCount(UINT width, UINT height)
+{
+	return 1;
+
+	//ToDo activate when mip generation is done
+	return 1 + static_cast<UINT>(floor(log2(static_cast<float>(std::max(width, height)))));
+}
+
+
 /*
 //Texture
-D3D12ImageLoader::ImageData textureData;
-D3D12ImageLoader::LoadImageFromDisk("Assets/Textures/ColorCheckerBoard.png", textureData);
+
 
 uint32_t textureStride = textureData.width * ((textureData.bitsPerPixel + 7) / 8);
 uint32_t textureSize = textureStride * textureData.height;
@@ -67,3 +103,4 @@ D3D12Context::Get().GetDevice()->CreateDescriptorHeap(
 	&descHeapDesc,
 	IID_PPV_ARGS(&descHeap));Copyright(c) 2003 - 2019 Jason Perkins and individual contributors.
 */
+
