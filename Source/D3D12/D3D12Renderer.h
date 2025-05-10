@@ -44,24 +44,30 @@ public:
 	void Shutdown();
 	void Update();
 
+private:
+	void Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
+	
+	//Vertex
+	void UploadVertecies();
+	D3D12_RESOURCE_DESC CreateVertexBufferDesc(uint32_t VertexCount);
 	std::vector<D3D12_INPUT_ELEMENT_DESC> GetVertexLayout();
 
-	D3D12_RESOURCE_DESC CreateVertexBufferDesc(uint32_t VertexCount);
+	//Texture
 	D3D12_RESOURCE_DESC CreateTextureResourceDesc(D3D12ImageLoader::ImageData& textureData);
+
+	//PSO
 	void SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc);
 	void SetRasterizerState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, bool bRenderWireframe, D3D12_CULL_MODE cullMode);
 	void SetRenderTargetBlendState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_RENDER_TARGET_BLEND_DESC blendDesc);
 	void SetDepthTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_DEPTH_TEST_DESC depthDesc);
 	void SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_STENCIL_TEST_DESC stencilDesc);
-
-	void UploadVertecies();
 	void CreateRootSignature();
 	void CreatePSO();
 	void SetPSO(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
-	void Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
+	
 
-public:
+private:
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 	ComPointer<ID3D12Resource2> vertexBuffer = nullptr;
 	ComPointer<ID3D12RootSignature> rootSignature = nullptr;

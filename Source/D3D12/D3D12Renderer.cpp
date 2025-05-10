@@ -242,10 +242,6 @@ void D3D12Renderer::UploadVertecies()
 	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
 	vertexBufferView.SizeInBytes = vertsDataSize;
 	vertexBufferView.StrideInBytes = sizeof(Vertex);
-
-
-
-
 }
 
 void D3D12Renderer::CreateRootSignature()
@@ -378,6 +374,7 @@ void D3D12Renderer::SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 
 void D3D12Renderer::Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 {
+	//Clear backbuffer 
 	float clearColor[4] = { 0.5f, 1.0f, 0.5f, 1.0f };
 	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = D3D12Window::Get().GetBackbufferRTVHandle();
 	cmdList->ClearRenderTargetView(backBufferRTVHandle, clearColor, 0, nullptr);
