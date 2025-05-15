@@ -1,5 +1,6 @@
 #pragma once
 #include "../Vendor/Windows/WinInclude.h"
+;
 
 class D3D12DebugLayer
 {
@@ -25,4 +26,4 @@ public:
 	}
 private:
 	D3D12DebugLayer() = default;
-}; 
+};

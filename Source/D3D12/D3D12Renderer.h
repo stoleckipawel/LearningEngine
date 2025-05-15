@@ -17,8 +17,12 @@ public:
 	void Render();
 
 private:
+	void LoadGeometry();
+	void LoadTextures();
+	void LoadShaders();
 	void CreateRootSignature();
-
+	void CreateDescriptorHeaps();
+	void CreatePSO();
 
 	void SetDescriptorHeaps(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
@@ -30,11 +34,14 @@ private:
 
 private:
 	ComPointer<ID3D12RootSignature> rootSignature = nullptr;
-	
+
 	D3D12Texture texture;
 	D3D12Geometry vertecies;
 	D3D12PSO pso;
 	D3D12DescriptorHeap srvHeap;
 	D3D12DescriptorHeap samplerHeap;
-};
 
+	D3D12Shader vertexShader;
+	D3D12Shader pixelShader;
+	D3D12Shader rootSignatureShader;
+};

@@ -24,7 +24,6 @@ bool D3D12Renderer::Initialize()
 	return true;
 }
 
-
 void D3D12Renderer::SetDescriptorHeaps(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 {
 	ID3D12DescriptorHeap* heaps[] = { srvHeap.heap.Get(), samplerHeap.heap.Get() };
@@ -34,10 +33,25 @@ void D3D12Renderer::SetDescriptorHeaps(ComPointer<ID3D12GraphicsCommandList7>& c
 	//cmdList->SetGraphicsRootDescriptorTable(2, samplerHeap->GetGPUDescriptorHandleForHeapStart());
 }
 
+void D3D12Renderer::LoadGeometry()
+{
+	vertecies.Upload();
+}
+
+void D3D12Renderer::LoadTextures()
+{
+	texture.Load("Assets/Textures/ColorCheckerBoard.png");
+}
+
+void D3D12Renderer::LoadShaders()
+{
+	vertexShader = D3D12Shader("VertexShader.cso");
+	pixelShader = D3D12Shader("PixelShader.cso");
+	rootSignatureShader = D3D12Shader("RootSignature.cso");
+}
+
 void D3D12Renderer::CreateRootSignature()
 {
-	D3D12Shader rootSignatureShader = D3D12Shader("RootSignature.cso");
-
 	D3D12Context::Get().GetDevice()->CreateRootSignature(
 		0,
 		rootSignatureShader.GetBuffer(),
@@ -45,25 +59,25 @@ void D3D12Renderer::CreateRootSignature()
 		IID_PPV_ARGS(&rootSignature));
 }
 
-void D3D12Renderer::Load()
+void D3D12Renderer::CreateDescriptorHeaps()
 {
-	//Geometry
-	vertecies.Upload();	
-
-	//Textures
-	texture.Load("Assets/Textures/ColorCheckerBoard.png");
-
-	//Shaders
-	D3D12Shader vertexShader = D3D12Shader("VertexShader.cso");
-	D3D12Shader pixelShader = D3D12Shader("PixelShader.cso");
-	CreateRootSignature();
-
-	//Descriptor Heaps	
 	srvHeap = D3D12DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 32);
 	samplerHeap = D3D12DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 32);
+}
 
-	//PSO
+void D3D12Renderer::CreatePSO()
+{
 	pso.Create(vertecies, rootSignature, vertexShader, pixelShader);
+}
+
+void D3D12Renderer::Load()
+{
+	LoadGeometry();
+	LoadTextures();
+	LoadShaders();
+	CreateRootSignature();
+	CreatePSO();
+	CreateDescriptorHeaps();
 }
 
 void D3D12Renderer::SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList)

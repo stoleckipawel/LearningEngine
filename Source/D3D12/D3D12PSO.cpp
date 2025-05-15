@@ -1,7 +1,4 @@
 #include "D3D12PSO.h"
-#include "D3D12Renderer.h"
-
-
 
 void D3D12PSO::SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc)
 {

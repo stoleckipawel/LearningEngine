@@ -85,7 +85,7 @@ bool D3D12Window::Initialize()
 	//Create Handles for views
 	auto firstHandle = m_rtvDescHeap->GetCPUDescriptorHandleForHeapStart();
 	auto rtvDescriptorSize = D3D12Context::Get().GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	for (size_t i = 0; i < GetFrameCount(); i++)
+	for (UINT i = 0; i < GetFrameCount(); i++)
 	{
 		m_rtvHandles[i] = firstHandle;
 		m_rtvHandles[i].ptr += (rtvDescriptorSize * i);
@@ -281,7 +281,7 @@ LRESULT D3D12Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM l
 bool D3D12Window::GetBuffers()
 {
 	//Get Swap Buffers
-	for (size_t i = 0; i < m_FrameCount; i++)
+	for (UINT i = 0; i < m_FrameCount; i++)
 	{
 		if (FAILED(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i]))))
 		{
@@ -300,7 +300,7 @@ bool D3D12Window::GetBuffers()
 
 void D3D12Window::ReleaseBuffers()
 {
-	for (size_t i = 0; i < m_FrameCount; i++)
+	for (UINT i = 0; i < m_FrameCount; i++)
 	{
 		m_buffers[i].Release();
 	}

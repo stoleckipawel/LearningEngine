@@ -20,14 +20,14 @@ public:
 	inline bool IsFullScreen() { return bIsFullScreen; };
 	inline UINT GetWidth() { return m_width; }
 	inline UINT GetHeight() { return m_height; }
-	inline size_t GetCurrentBufferIndex() { return m_currentBufferIndex; }
+	inline UINT GetCurrentBufferIndex() { return m_currentBufferIndex; }
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetBackbufferRTVHandle() { return m_rtvHandles[m_currentBufferIndex]; }
 
 	D3D12_VIEWPORT GetDefaultViewport();
 	D3D12_RECT GetDefaultScissorRect();
 
-	static constexpr size_t GetFrameCount() { return m_FrameCount; };//2:Vsync OFF, 3: Vsync ON
+	static constexpr UINT GetFrameCount() { return m_FrameCount; };//2:Vsync OFF, 3: Vsync ON
 private:
 	static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	bool GetBuffers();
@@ -40,8 +40,8 @@ private:
 	bool bIsFullScreen = false;
 	UINT m_width = 1;
 	UINT m_height = 1;
-	static constexpr size_t m_FrameCount = 2;
-	size_t m_currentBufferIndex = 0;
+	static constexpr UINT m_FrameCount = 2;
+	UINT m_currentBufferIndex = 0;
 
 	ComPointer<ID3D12DescriptorHeap> m_rtvDescHeap;
 	D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[m_FrameCount];

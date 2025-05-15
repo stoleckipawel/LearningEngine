@@ -4,6 +4,7 @@
 
 int main()
 {
+
 	D3D12Renderer renderer;
 
 	if(renderer.Initialize())
@@ -18,4 +19,6 @@ int main()
 
 		renderer.Shutdown();
 	}	
+
+	return 0;
 }

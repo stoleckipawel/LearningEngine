@@ -10,6 +10,7 @@
 class D3D12Shader
 {
 public:
+	D3D12Shader() = default;
 	D3D12Shader(std::string_view name);
 	~D3D12Shader();
 
