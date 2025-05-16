@@ -4,7 +4,7 @@
 
 struct PsInput
 {
-    float2 UV0 : TEXCOORD;
+    float4 Color : COLOR;
 };
 
 struct PsOutput
@@ -16,5 +16,5 @@ void main(in PsInput Input, out PsOutput Output)
 {
     //float4 texel = textures[0].Sample(texturesSampler, Input.UV0);
     //float4 texel = textures[0].Sample(texturesSampler, Input.UV0);
-    Output.Color0 = float4(float3(1.0, 0.0, 0.0), 1.0f);
+    Output.Color0 = float4(Input.Color.xyz, 1.0f);
 }

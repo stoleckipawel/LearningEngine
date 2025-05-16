@@ -3,12 +3,12 @@
 struct VsInput
 {
     float3 Position : POSITION;
-    float2 UV0 : TEXCOORD;
+    float4 Color : COLOR;
 };
 
 struct VsOutput
 {
-    float2 UV0 : TEXCOORD;
+    float4 Color : COLOR;
     float4 Position : SV_Position;
 };
 
@@ -26,5 +26,5 @@ struct VSConstants
 void main(in VsInput Input, out VsOutput Output) 
 {
     Output.Position = float4(Input.Position.xyz, 1.0f);
-    Output.UV0 = Input.UV0;
+    Output.Color = Input.Color;
 }

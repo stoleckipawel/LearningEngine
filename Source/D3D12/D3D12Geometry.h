@@ -6,8 +6,8 @@
 
 struct Vertex
 {
-	DirectX::XMFLOAT3 position;
-	DirectX::XMFLOAT2 uv;
+	XMFLOAT3 position;
+	XMFLOAT4 color;
 };
 
 
