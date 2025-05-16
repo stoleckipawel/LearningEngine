@@ -176,6 +176,7 @@ void D3D12Renderer::Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 	SetBackBufferRTV(cmdList);
 
 	cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+	cmdList->DrawIndexedInstanced(6, 1, 0, 4, 0); // draw second quad
 }
 
 void D3D12Renderer::CreateFrameBuffers()
