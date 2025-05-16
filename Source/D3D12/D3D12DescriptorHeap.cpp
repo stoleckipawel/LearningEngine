@@ -1,16 +1,11 @@
 #include "D3D12DescriptorHeap.h"
 
-D3D12DescriptorHeap::D3D12DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE Type, UINT NumDescriptors)
-{
-	Create(Type, NumDescriptors);
-}
-
-void D3D12DescriptorHeap::Create(D3D12_DESCRIPTOR_HEAP_TYPE Type, UINT NumDescriptors)
+void D3D12DescriptorHeap::Create(D3D12_DESCRIPTOR_HEAP_TYPE Type, UINT NumDescriptors, LPCWSTR Name)
 {
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	heapDesc.NumDescriptors = NumDescriptors;
 	heapDesc.Type = Type;
-	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;//D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	heapDesc.NodeMask = 0;
 
 	
@@ -18,4 +13,5 @@ void D3D12DescriptorHeap::Create(D3D12_DESCRIPTOR_HEAP_TYPE Type, UINT NumDescri
 		&heapDesc,
 		IID_PPV_ARGS(&heap));
 
+	heap->SetName(Name);
 }

@@ -112,9 +112,9 @@ void D3D12PSO::Create(D3D12Geometry& vertecies,
 
 	D3D12_DEPTH_TEST_DESC depthTestDesc;
 	{
-		depthTestDesc.DepthEnable = false;
+		depthTestDesc.DepthEnable = true;
 		depthTestDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-		depthTestDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		depthTestDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS; //D3D12_COMPARISON_FUNC_ALWAYS;
 	}
 	SetDepthTestState(psoDesc, depthTestDesc);
 
@@ -137,7 +137,7 @@ void D3D12PSO::Create(D3D12Geometry& vertecies,
 	// -- NumRenderTargets
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	psoDesc.DSVFormat = DXGI_FORMAT_UNKNOWN;//DXGI_FORMAT_D24_UNORM_S8_UINT;
+	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	//Misc
 	psoDesc.NodeMask = 0;

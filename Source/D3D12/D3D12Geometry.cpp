@@ -77,10 +77,17 @@ void D3D12Geometry::UploadBuffer(ComPointer<ID3D12Resource2>& buffer, void* data
 void D3D12Geometry::UploadVertexBuffer()
 {
 	std::vector<Vertex> vertexList;
+	//First Quad
 	vertexList.push_back({ {-0.5f, 0.5f, 0.5f}, {1.0, 0.0, 1.0, 1.0} });
 	vertexList.push_back({ {0.5f,  -0.5f,  0.5f}, {0.0, 1.0, 1.0, 1.0} });
 	vertexList.push_back({ {-0.5f, -0.5f,  0.5f}, {1.0, 1.0, 0.0, 1.0} });
 	vertexList.push_back({ {0.5f, 0.5f,  0.5f}, {1.0, 1.0, 1.0, 1.0} });
+	
+	//Second Quad
+	vertexList.push_back({ {-0.75f, 0.75f, 0.75f}, {1.0, 1.0, 1.0, 1.0} });
+	vertexList.push_back({ {0.0f,  0.0f,  0.75f}, {1.0, 1.0, 1.0, 1.0} });
+	vertexList.push_back({ {-0.75f, 0.0f,  0.75f}, {1.0, 1.0, 1.0, 1.0} });
+	vertexList.push_back({ {0.0f, 0.75f,  0.75f}, {1.0, 1.0, 1.0, 1.0} });
 
 	uint32_t vertsDataSize = sizeof(Vertex) * vertexList.size();
 	UploadBuffer(vertexBuffer, vertexList.data(), vertsDataSize);

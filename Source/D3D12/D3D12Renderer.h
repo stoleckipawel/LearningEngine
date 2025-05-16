@@ -25,6 +25,8 @@ private:
 	void CreateDescriptorHeaps();
 	void CreatePSO();
 
+	void CreateDepthStencilBuffer();
+
 	void SetDescriptorHeaps(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void ClearBackBuffer(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
@@ -32,15 +34,29 @@ private:
 	void SetShaderParams(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 
 	void Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
+	void CreateFrameBuffers();
 
 private:
 	D3D12Texture texture;
+
 	D3D12Geometry vertecies;
+
 	D3D12PSO pso;
-	D3D12DescriptorHeap srvHeap;
-	D3D12DescriptorHeap samplerHeap;
+
 	D3D12RootSignature rootSignature;
+
+	D3D12DescriptorHeap srvHeap = D3D12DescriptorHeap();
+	D3D12DescriptorHeap samplerHeap = D3D12DescriptorHeap();
+	D3D12DescriptorHeap dsvHeap = D3D12DescriptorHeap();
+
+	D3D12_RESOURCE_DESC depthStencilResourceDesc;
+	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc;
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
+	ComPointer<ID3D12Resource> depthStencilBuffer;
+
 
 	D3D12ShaderCompiler vertexShader;
 	D3D12ShaderCompiler pixelShader;
 };
+
+
