@@ -31,7 +31,7 @@ void D3D12Renderer::SetDescriptorHeaps(ComPointer<ID3D12GraphicsCommandList7>& c
 	ID3D12DescriptorHeap* heaps[] = { srvHeap.heap.Get(), samplerHeap.heap.Get() };
 	cmdList->SetDescriptorHeaps(_countof(heaps), heaps);
 
-	cmdList->SetGraphicsRootDescriptorTable(1, srvHeap.heap->GetGPUDescriptorHandleForHeapStart());
+	//cmdList->SetGraphicsRootDescriptorTable(1, srvHeap.heap->GetGPUDescriptorHandleForHeapStart());
 	//cmdList->SetGraphicsRootDescriptorTable(2, samplerHeap->GetGPUDescriptorHandleForHeapStart());
 }
 
@@ -118,15 +118,13 @@ void D3D12Renderer::Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 	vertecies.Set(cmdList);
 
 	pso.Set(cmdList);
-	/*
+
 	SetShaderParams(cmdList);
 
 	SetViewport(cmdList);
 	SetBackBufferRTV(cmdList);
 
 	cmdList->DrawInstanced(vertecies.vertexBufferView.SizeInBytes / vertecies.vertexBufferView.StrideInBytes, 1, 0, 0);
-
-	*/
 }
 
 void D3D12Renderer::Render()
