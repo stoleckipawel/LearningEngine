@@ -3,8 +3,10 @@
 #include "D3D12Context.h"
 #include "D3D12Window.h"
 
+
 bool D3D12Renderer::Initialize()
 {
+
 	if (FAILED(D3D12DebugLayer::Get().Initialize()))
 	{
 		return false;
@@ -45,18 +47,14 @@ void D3D12Renderer::LoadTextures()
 
 void D3D12Renderer::LoadShaders()
 {
-	vertexShader = D3D12Shader("VertexShader.cso");
-	pixelShader = D3D12Shader("PixelShader.cso");
-	rootSignatureShader = D3D12Shader("RootSignature.cso");
+	vertexShader = D3D12ShaderCompiler(L"Shaders/VertShader.hlsl", "vs_5_0", "main");
+	pixelShader = D3D12ShaderCompiler(L"Shaders/PixShader.hlsl", "ps_5_0", "main");
 }
 
-void D3D12Renderer::CreateRootSignature()
+void D3D12Renderer::LoadRootSignature()
 {
-	D3D12Context::Get().GetDevice()->CreateRootSignature(
-		0,
-		rootSignatureShader.GetBuffer(),
-		rootSignatureShader.GetSize(),
-		IID_PPV_ARGS(&rootSignature));
+	rootSignature = D3D12RootSignature();
+	rootSignature.Create();
 }
 
 void D3D12Renderer::CreateDescriptorHeaps()
@@ -67,7 +65,7 @@ void D3D12Renderer::CreateDescriptorHeaps()
 
 void D3D12Renderer::CreatePSO()
 {
-	pso.Create(vertecies, rootSignature, vertexShader, pixelShader);
+	pso.Create(vertecies, rootSignature.rootSignature, vertexShader, pixelShader);
 }
 
 void D3D12Renderer::Load()
@@ -75,7 +73,7 @@ void D3D12Renderer::Load()
 	LoadGeometry();
 	LoadTextures();
 	LoadShaders();
-	CreateRootSignature();
+	LoadRootSignature();
 	CreatePSO();
 	CreateDescriptorHeaps();
 }
@@ -106,10 +104,10 @@ void D3D12Renderer::SetBackBufferRTV(ComPointer<ID3D12GraphicsCommandList7>& cmd
 
 void D3D12Renderer::SetShaderParams(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 {
-	cmdList->SetGraphicsRootSignature(rootSignature);
+	cmdList->SetGraphicsRootSignature(rootSignature.rootSignature);
 
-	float color[] = { 1.0f, 1.0f, 0.0f };
-	cmdList->SetGraphicsRoot32BitConstants(0, 3, color, 0);
+	//float color[] = { 1.0f, 1.0f, 0.0f };
+	//cmdList->SetGraphicsRoot32BitConstants(0, 3, color, 0);
 	SetDescriptorHeaps(cmdList);
 }
 
@@ -120,28 +118,34 @@ void D3D12Renderer::Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 	vertecies.Set(cmdList);
 
 	pso.Set(cmdList);
-
+	/*
 	SetShaderParams(cmdList);
 
 	SetViewport(cmdList);
 	SetBackBufferRTV(cmdList);
 
 	cmdList->DrawInstanced(vertecies.vertexBufferView.SizeInBytes / vertecies.vertexBufferView.StrideInBytes, 1, 0, 0);
+
+	*/
 }
 
 void D3D12Renderer::Render()
 {
-	//Begin Drawing
+	//On Frame Begin
 	auto cmdList = D3D12Context::Get().InitializeCommandList();
+	D3D12Window::Get().SetBackBufferStateToRT(cmdList);
 
-	//Draw To Window
-	D3D12Window::Get().BeginFrame(cmdList);
+	//#ToDo: scene.Update();: 
+	// Camera Update 
+	// Models Update, 
+	// Particle Update
+	
+	//ToDo: Load/Release Resources (Textures Models)
 
 	Draw(cmdList);
 
-	D3D12Window::Get().EndFrame(cmdList);
-
-	//Finish Drawing & Present
+	//On Frame End
+	D3D12Window::Get().SetBackBufferStateToPresent(cmdList);
 	D3D12Context::Get().ExecuteCommandList();
 	D3D12Window::Get().Present();
 }

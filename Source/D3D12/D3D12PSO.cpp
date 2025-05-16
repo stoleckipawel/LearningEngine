@@ -63,8 +63,8 @@ void D3D12PSO::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, 
 
 void D3D12PSO::Create(D3D12Geometry& vertecies, 
 					ID3D12RootSignature* rootSignature,
-					D3D12Shader& vertexShader,
-					D3D12Shader& pixelShader)
+					D3D12ShaderCompiler& vertexShader,
+					D3D12ShaderCompiler& pixelShader)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
@@ -149,9 +149,13 @@ void D3D12PSO::Create(D3D12Geometry& vertecies,
 	psoDesc.SampleDesc.Quality = 0;
 
 	// -- Create PSO
-	D3D12Context::Get().GetDevice()->CreateGraphicsPipelineState(
+	if (FAILED(D3D12Context::Get().GetDevice()->CreateGraphicsPipelineState(
 		&psoDesc,
-		IID_PPV_ARGS(&pso));
+		IID_PPV_ARGS(&pso))))
+	{
+		std::string message = "PSO Create: Failed To Create PSO";
+		LogError(message);
+	}
 }
 
 void D3D12PSO::Set(ComPointer<ID3D12GraphicsCommandList7>& cmdList)

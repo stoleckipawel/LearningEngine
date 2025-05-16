@@ -13,6 +13,8 @@ bool D3D12ImageLoader::LoadImageFromDisk(const std::filesystem::path& imagePath,
 	ComPointer<IWICImagingFactory> wicFactory;
 	if (FAILED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&wicFactory))))
 	{
+		std::string message = "ImageLoader: Failed To Create Factory";
+		LogError(message);
 		return false;
 	}
 
@@ -20,17 +22,23 @@ bool D3D12ImageLoader::LoadImageFromDisk(const std::filesystem::path& imagePath,
 	ComPointer<IWICStream> wicFileStream;
 	if (FAILED(wicFactory->CreateStream(&wicFileStream)))
 	{
+		std::string message = "ImageLoader: Failed To Create Stream";
+		LogError(message);
 		return false;
 	}
 
 	if (FAILED(wicFileStream->InitializeFromFilename(imagePath.wstring().c_str(), GENERIC_READ)))
 	{
+		std::string message = "ImageLoader: Failed To Initialize From Name";
+		LogError(message);
 		return false;
 	}
 
 	ComPointer<IWICBitmapDecoder> wicDecoder;
 	if (FAILED(wicFactory->CreateDecoderFromStream(wicFileStream, nullptr, WICDecodeMetadataCacheOnDemand, &wicDecoder)))
 	{
+		std::string message = "ImageLoader: Failed To Create Decoder From Stream";
+		LogError(message);
 		return false;
 	}
 
@@ -38,17 +46,23 @@ bool D3D12ImageLoader::LoadImageFromDisk(const std::filesystem::path& imagePath,
 	ComPointer<IWICBitmapFrameDecode> wicFrame;
 	if (FAILED(wicDecoder->GetFrame(0, &wicFrame)))
 	{
+		std::string message = "ImageLoader: Failed To Get Frame";
+		LogError(message);
 		return false;
 	}
 
 	// Image MetaData
 	if (FAILED(wicFrame->GetSize(&data.width, &data.height)))
 	{
+		std::string message = "ImageLoader: Failed To Get Size";
+		LogError(message);
 		return false;
 	}
 
 	if (FAILED(wicFrame->GetPixelFormat(&data.wicPixelFormat)))
 	{
+		std::string message = "ImageLoader: Failed To Get Pixel Format";
+		LogError(message);
 		return false;
 	}
 
@@ -56,24 +70,32 @@ bool D3D12ImageLoader::LoadImageFromDisk(const std::filesystem::path& imagePath,
 	ComPointer<IWICComponentInfo> wicComponentInfo;
 	if (FAILED(wicFactory->CreateComponentInfo(data.wicPixelFormat, &wicComponentInfo)))
 	{
+		std::string message = "ImageLoader: Failed To Get Component Info";
+		LogError(message);
 		return false;
 	}
 
 	ComPointer<IWICPixelFormatInfo> wicPixelFormatInfo;
 	if (FAILED(wicComponentInfo->QueryInterface(IID_PPV_ARGS(&wicPixelFormatInfo))))
 	{
+		std::string message = "ImageLoader: Failed To Querry Interface";
+		LogError(message);
 		return false;
 	}
 
 	// Get Bits Per Pixel
 	if (FAILED(wicPixelFormatInfo->GetBitsPerPixel(&data.bitsPerPixel)))
 	{
+		std::string message = "ImageLoader: Failed To Get Bits Per Pixel";
+		LogError(message);
 		return false;
 	}
 
 	// Get Channel Count
 	if (FAILED(wicPixelFormatInfo->GetChannelCount(&data.channelCount)))
 	{
+		std::string message = "ImageLoader: Failed To Get Channel Count";
+		LogError(message);
 		return false;
 	}
 
@@ -102,6 +124,8 @@ bool D3D12ImageLoader::LoadImageFromDisk(const std::filesystem::path& imagePath,
 	copyRect.Height = data.height;
 	if (FAILED(wicFrame->CopyPixels(&copyRect, stride, size, reinterpret_cast<BYTE*>(data.data.data()))))
 	{
+		std::string message = "ImageLoader: Failed To Copy Pixels";
+		LogError(message);
 		return false;
 	}
 

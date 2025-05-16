@@ -2,14 +2,12 @@
 #include <vector>
 #include "../Vendor/Windows/WinInclude.h"
 #include "D3D12Context.h"
+#include <DirectXMath.h>
 
 struct Vertex
 {
-	float x;
-	float y;
-	float z;
-	float u;
-	float v;
+	DirectX::XMFLOAT3 position;
+	DirectX::XMFLOAT2 uv;
 };
 
 

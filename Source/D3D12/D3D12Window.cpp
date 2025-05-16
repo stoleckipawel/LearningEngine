@@ -42,7 +42,6 @@ bool D3D12Window::Initialize()
 
 	//Describe Swapchain
 	DXGI_SWAP_CHAIN_DESC1 swd{};
-
 	RECT rect;
 	GetClientRect(m_window, &rect);
 	swd.Width = rect.right - rect.left;
@@ -204,7 +203,7 @@ void D3D12Window::SetFullScreen(bool bSetFullScreen)
 	bIsFullScreen = bSetFullScreen;	
 }
 
-void D3D12Window::BeginFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList)
+void D3D12Window::SetBackBufferStateToRT(ComPointer<ID3D12GraphicsCommandList7> cmdList)
 {
 	m_currentBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
 
@@ -219,7 +218,7 @@ void D3D12Window::BeginFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList)
 	cmdList->ResourceBarrier(1, &barrier);
 }
 
-void D3D12Window::EndFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList)
+void D3D12Window::SetBackBufferStateToPresent(ComPointer<ID3D12GraphicsCommandList7> cmdList)
 {
 	D3D12_RESOURCE_BARRIER barrier{};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;

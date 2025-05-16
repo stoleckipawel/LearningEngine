@@ -12,8 +12,8 @@ public:
 	void Resize();
 	void SetFullScreen(bool bSetFullScreen);
 
-	void BeginFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList);
-	void EndFrame(ComPointer<ID3D12GraphicsCommandList7> cmdList);
+	void SetBackBufferStateToRT(ComPointer<ID3D12GraphicsCommandList7> cmdList);
+	void SetBackBufferStateToPresent(ComPointer<ID3D12GraphicsCommandList7> cmdList);
 
 	inline bool GetShouldClose() { return bShouldClose; };
 	inline bool GetShouldResize() { return bShouldResize; };
@@ -40,7 +40,7 @@ private:
 	bool bIsFullScreen = false;
 	UINT m_width = 1;
 	UINT m_height = 1;
-	static constexpr UINT m_FrameCount = 2;
+	static constexpr UINT m_FrameCount = 3;;//2:Vsync OFF, 3: Vsync ON
 	UINT m_currentBufferIndex = 0;
 
 	ComPointer<ID3D12DescriptorHeap> m_rtvDescHeap;

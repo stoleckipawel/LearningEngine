@@ -1,6 +1,6 @@
 #pragma once
 #include "../Vendor/Windows/WinInclude.h"
-#include "D3D12Shader.h"
+#include "D3D12ShaderCompiler.h"
 #include "D3D12Geometry.h"
 
 struct D3D12_DEPTH_TEST_DESC
@@ -28,7 +28,7 @@ struct D3D12_STENCIL_TEST_DESC
 class D3D12PSO
 {
 public:
-	void Create(D3D12Geometry& vertecies, ID3D12RootSignature* rootSignature, D3D12Shader& vertexShader, D3D12Shader& pixelShader);
+	void Create(D3D12Geometry& vertecies, ID3D12RootSignature* rootSignature, D3D12ShaderCompiler& vertexShader, D3D12ShaderCompiler& pixelShader);
 	void Set(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 
 	ComPointer<ID3D12PipelineState> pso = nullptr;

@@ -4,11 +4,15 @@ bool D3D12Context::Initialize()
 {
 	if (FAILED(CreateDXGIFactory2(0, IID_PPV_ARGS(&m_dxgiFactory))))
 	{
+		std::string message = "Context: Failed To Create Factory";
+		LogError(message);
 		return false;
 	}
 
 	if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_1, IID_PPV_ARGS(&m_device))))
 	{
+		std::string message = "Context: Failed To Create Device";
+		LogError(message);
 		return false;
 	}
 
@@ -20,30 +24,39 @@ bool D3D12Context::Initialize()
 
 	if (FAILED(m_device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&m_cmdQueue))))
 	{
+		std::string message = "Context: Failed To Create Command Queue";
+		LogError(message);
 		return false;
 	}
 			
 	if (FAILED(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence))))
 	{
+		std::string message = "Context: Failed To Create Fence";
+		LogError(message);
 		return false;
 	}
 
 	m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
 	if (!m_fenceEvent)
 	{
+		std::string message = "Context: Failed To Create Fence Event";
+		LogError(message);
 		return false;
 	}
 
 	if (FAILED(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_cmdAllocator))))
 	{
+		std::string message = "Context: Failed To Create Command Allocator";
+		LogError(message);
 		return false;
 	}
 
 	if (FAILED(m_device->CreateCommandList1(0, D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_LIST_FLAG_NONE, IID_PPV_ARGS(&m_cmdList))))
 	{
+		std::string message = "Context: Failed To Create Command List";
+		LogError(message);
 		return false;
 	}
-
 
     return true;
 }

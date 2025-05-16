@@ -27,7 +27,7 @@
     <ClCompile Include="Source\D3D12\D3D12Window.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Source\D3D12\D3D12Shader.cpp">
+    <ClCompile Include="Source\D3D12\D3D12ShaderCompiler.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
     <ClCompile Include="Source\D3D12\D3D12ImageLoader.cpp">
@@ -48,6 +48,9 @@
     <ClCompile Include="Source\D3D12\D3D12DescriptorHeap.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="Source\D3D12\D3D12RootSignature.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\D3D12\D3D12DebugLayer.h">
@@ -62,7 +65,7 @@
     <ClInclude Include="Source\Application.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="Source\D3D12\D3D12Shader.h">
+    <ClInclude Include="Source\D3D12\D3D12ShaderCompiler.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
     <ClInclude Include="Source\D3D12\D3D12ImageLoader.h">
@@ -83,13 +86,12 @@
     <ClInclude Include="Source\D3D12\D3D12DescriptorHeap.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
+    <ClInclude Include="Source\D3D12\D3D12RootSignature.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\VertexShader.hlsl" />
-    <FxCompile Include="Shaders\PixelShader.hlsl" />
-    <FxCompile Include="Shaders\RootSignature.hlsl" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Shaders\Pipeline.hlsli" />
+    <FxCompile Include="Shaders\PixShader.hlsl" />
+    <FxCompile Include="Shaders\VertShader.hlsl" />
   </ItemGroup>
 </Project>
