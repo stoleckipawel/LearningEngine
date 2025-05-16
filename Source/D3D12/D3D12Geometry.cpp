@@ -80,22 +80,12 @@ void D3D12Geometry::UploadBuffer(ComPointer<ID3D12Resource2>& buffer, void* data
 
 void D3D12Geometry::Upload()
 {
-	/*
 	Vertex verts[] =
 	{
 		// T1
 		{{-1.0f, -1.0f, 0.0f}, {0.0f, 1.0f}},
 		{{0.0f,  1.0f,  0.0f}, {0.5f, 0.0f}},
 		{{1.0f, -1.0f,  0.0f}, {1.0f, 1.0f}}
-	};
-	*/
-
-	Vertex verts[] =
-	{
-		// T1
-		{ { -1.0f, -1.0f, 0.0f }},
-		{ {0.0f,  1.0f,  0.0f}},
-		{ {1.0f, -1.0f,  0.0f}}
 	};
 
 	uint32_t vertsDataSize = sizeof(Vertex) * _countof(verts);
@@ -115,17 +105,10 @@ void D3D12Geometry::Set(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 
 std::vector<D3D12_INPUT_ELEMENT_DESC> D3D12Geometry::GetVertexLayout()
 {
-	/*
-	return
-	{
-		{ "Position",  0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TexCoord",  0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-	};
-	*/
-
 	return
 	{
 		{ "POSITION",  0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 }
 
