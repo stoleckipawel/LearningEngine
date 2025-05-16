@@ -124,7 +124,7 @@ void D3D12Renderer::Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 	SetViewport(cmdList);
 	SetBackBufferRTV(cmdList);
 
-	cmdList->DrawInstanced(vertecies.vertexBufferView.SizeInBytes / vertecies.vertexBufferView.StrideInBytes, 1, 0, 0);
+	cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }
 
 void D3D12Renderer::Render()

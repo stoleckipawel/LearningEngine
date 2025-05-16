@@ -74,27 +74,51 @@ void D3D12Geometry::UploadBuffer(ComPointer<ID3D12Resource2>& buffer, void* data
 	//uploadBuffer->Release();
 }
 
-void D3D12Geometry::Upload()
+void D3D12Geometry::UploadVertexBuffer()
 {
-	Vertex verts[] =
-	{
-		{{-1.0f, -1.0f, 0.0f}, {1.0, 0.0, 1.0, 1.0}},
-		{{0.0f,  1.0f,  0.0f}, {0.0, 1.0, 1.0, 1.0}},
-		{{1.0f, -1.0f,  0.0f}, {1.0, 1.0, 0.0, 1.0}}
-	};
+	std::vector<Vertex> vertexList;
+	vertexList.push_back({ {-0.5f, 0.5f, 0.5f}, {1.0, 0.0, 1.0, 1.0} });
+	vertexList.push_back({ {0.5f,  -0.5f,  0.5f}, {0.0, 1.0, 1.0, 1.0} });
+	vertexList.push_back({ {-0.5f, -0.5f,  0.5f}, {1.0, 1.0, 0.0, 1.0} });
+	vertexList.push_back({ {0.5f, 0.5f,  0.5f}, {1.0, 1.0, 1.0, 1.0} });
 
-	uint32_t vertsDataSize = sizeof(Vertex) * _countof(verts);
-	UploadBuffer(vertexBuffer, verts, vertsDataSize);
+	uint32_t vertsDataSize = sizeof(Vertex) * vertexList.size();
+	UploadBuffer(vertexBuffer, vertexList.data(), vertsDataSize);
 
 	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
 	vertexBufferView.SizeInBytes = vertsDataSize;
 	vertexBufferView.StrideInBytes = sizeof(Vertex);
 }
 
+void D3D12Geometry::UploadIndexBuffer()
+{
+	std::vector<DWORD> indexList;
+	indexList.push_back(0);
+	indexList.push_back(1);
+	indexList.push_back(2);
+	indexList.push_back(0);
+	indexList.push_back(3);
+	indexList.push_back(1);
+
+	uint32_t indexDataSize = sizeof(DWORD) * indexList.size();
+	UploadBuffer(indexBuffer, indexList.data(), indexDataSize);
+
+	indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+	indexBufferView.SizeInBytes = indexDataSize;
+	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+}
+
+void D3D12Geometry::Upload()
+{
+	UploadIndexBuffer();
+	UploadVertexBuffer();
+}
+
 void D3D12Geometry::Set(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 {
 	//Input Assembler
 	cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
+	cmdList->IASetIndexBuffer(&indexBufferView);
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
