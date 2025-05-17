@@ -10,4 +10,3 @@ public:
 public:
 	ComPointer<ID3D12RootSignature> rootSignature = nullptr;
 };
-

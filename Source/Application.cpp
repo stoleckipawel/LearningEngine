@@ -15,7 +15,7 @@ int main()
 		{
 			D3D12Window::Get().Update();
 
-			renderer.Render();
+			renderer.OnRender();
 		}
 
 		renderer.Shutdown();

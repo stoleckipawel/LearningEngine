@@ -8,6 +8,7 @@
 #include "D3D12PSO.h"
 #include "D3D12DescriptorHeap.h"
 #include "D3D12RootSignature.h"
+#include "D3D12ConstantBuffer.h"
 
 class D3D12Renderer
 {
@@ -15,7 +16,7 @@ public:
 	bool Initialize();
 	void Load();
 	void Shutdown();
-	void Render();
+	void OnRender();
 
 private:
 	void LoadGeometry();
@@ -24,17 +25,18 @@ private:
 	void LoadRootSignature();
 	void CreateDescriptorHeaps();
 	void CreatePSO();
-
 	void CreateDepthStencilBuffer();
+	void LoadConstantBuffers(D3D12DescriptorHeap& descriptorHeap);
 
-	void SetDescriptorHeaps(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void ClearBackBuffer(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetBackBufferRTV(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetShaderParams(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 
-	void Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
+	void PopulateCommandList();
 	void CreateFrameBuffers();
+
+	void OnUpdate();
 
 private:
 	D3D12Texture texture;
@@ -45,7 +47,7 @@ private:
 
 	D3D12RootSignature rootSignature;
 
-	D3D12DescriptorHeap srvHeap = D3D12DescriptorHeap();
+	D3D12DescriptorHeap cbvHeap = D3D12DescriptorHeap();
 	D3D12DescriptorHeap samplerHeap = D3D12DescriptorHeap();
 	D3D12DescriptorHeap dsvHeap = D3D12DescriptorHeap();
 
@@ -54,6 +56,7 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
 	ComPointer<ID3D12Resource> depthStencilBuffer;
 
+	D3D12ConstantBuffer constantBuffer;
 
 	D3D12ShaderCompiler vertexShader;
 	D3D12ShaderCompiler pixelShader;

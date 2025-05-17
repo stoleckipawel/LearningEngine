@@ -143,6 +143,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\D3D12\D3D12UploadBuffer.cpp" />
+    <ClCompile Include="Source\D3D12\D3D12ConstantBuffer.cpp" />
     <ClCompile Include="Source\D3D12\D3D12RootSignature.cpp" />
     <ClCompile Include="Source\D3D12\D3D12DescriptorHeap.cpp" />
     <ClCompile Include="Source\D3D12\D3D12PSO.cpp" />
@@ -157,6 +159,8 @@
     <ClCompile Include="Source\D3D12\D3D12Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\D3D12\D3D12UploadBuffer.h" />
+    <ClInclude Include="Source\D3D12\D3D12ConstantBuffer.h" />
     <ClInclude Include="Source\D3D12\D3D12RootSignature.h" />
     <ClInclude Include="Source\D3D12\D3D12DescriptorHeap.h" />
     <ClInclude Include="Source\D3D12\D3D12PSO.h" />

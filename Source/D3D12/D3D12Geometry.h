@@ -4,6 +4,7 @@
 #include "D3D12Context.h"
 #include <DirectXMath.h>
 
+
 struct Vertex
 {
 	XMFLOAT3 position;
@@ -14,8 +15,6 @@ struct Vertex
 class D3D12Geometry
 {
 public:
-
-	void UploadBuffer(ComPointer<ID3D12Resource2>& buffer, void* data, uint32_t dataSize);
 	void UploadVertexBuffer();
 	void UploadIndexBuffer();
 	void Upload();

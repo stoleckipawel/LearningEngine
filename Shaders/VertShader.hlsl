@@ -13,18 +13,14 @@ struct VsOutput
 };
 
 /*
-struct VSConstants
+cbuffer ConstantBuffer : register(b0)
 {
-    //Make sure to allign to 4x 32 bits
-    float4x4 ModelViewProjection_XFORM;
+    float4 color;
 };
-
-
-//ConstantBuffer<VSConstants> VsConstantBuffer : register(b4);
 */
 
 void main(in VsInput Input, out VsOutput Output) 
 {
     Output.Position = float4(Input.Position.xyz, 1.0f);
-    Output.Color = Input.Color;
+    Output.Color = Input.Color;// * color;
 }

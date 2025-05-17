@@ -26,15 +26,6 @@ bool D3D12Renderer::Initialize()
 	return true;
 }
 
-void D3D12Renderer::SetDescriptorHeaps(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
-{
-	ID3D12DescriptorHeap* heaps[] = { srvHeap.heap.Get(), samplerHeap.heap.Get(), dsvHeap.heap.Get()};
-	//cmdList->SetDescriptorHeaps(_countof(heaps), heaps);
-
-	//cmdList->SetGraphicsRootDescriptorTable(1, srvHeap.heap->GetGPUDescriptorHandleForHeapStart());
-	//cmdList->SetGraphicsRootDescriptorTable(2, samplerHeap->GetGPUDescriptorHandleForHeapStart());
-}
-
 void D3D12Renderer::LoadGeometry()
 {
 	vertecies.Upload();
@@ -59,9 +50,9 @@ void D3D12Renderer::LoadRootSignature()
 
 void D3D12Renderer::CreateDescriptorHeaps()
 {
-	srvHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 32, L"SRVHeap");
-	samplerHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 32, L"SamplerHeap");
-	dsvHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, L"DepthStencilHeap");
+	cbvHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 32, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"cbvHeap");
+	samplerHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 32, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"SamplerHeap");
+	dsvHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, L"DepthStencilHeap");
 }
 
 void D3D12Renderer::CreatePSO()
@@ -117,6 +108,12 @@ void D3D12Renderer::CreateDepthStencilBuffer()
 	D3D12Context::Get().GetDevice()->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, dsvHandle);
 }
 
+void D3D12Renderer::LoadConstantBuffers(D3D12DescriptorHeap& descriptorHeap)
+{
+	constantBuffer.Create();
+	constantBuffer.CreateConstantBufferView(cbvHeap);
+}
+
 void D3D12Renderer::Load()
 {
 	LoadGeometry();
@@ -125,6 +122,7 @@ void D3D12Renderer::Load()
 	LoadRootSignature();
 	CreatePSO();
 	CreateDescriptorHeaps();
+	LoadConstantBuffers(cbvHeap);
 }
 
 void D3D12Renderer::SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
@@ -157,13 +155,18 @@ void D3D12Renderer::SetShaderParams(ComPointer<ID3D12GraphicsCommandList7>& cmdL
 {
 	cmdList->SetGraphicsRootSignature(rootSignature.rootSignature);
 
-	//float color[] = { 1.0f, 1.0f, 0.0f };
-	//cmdList->SetGraphicsRoot32BitConstants(0, 3, color, 0);
-	SetDescriptorHeaps(cmdList);
+	ID3D12DescriptorHeap* heaps[] = { cbvHeap.heap.Get()};
+	cmdList->SetDescriptorHeaps(_countof(heaps), heaps);
+
+	cmdList->SetGraphicsRootDescriptorTable(0, cbvHeap.heap->GetGPUDescriptorHandleForHeapStart());
 }
 
-void D3D12Renderer::Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
+void D3D12Renderer::PopulateCommandList()
 {
+	auto cmdList = D3D12Context::Get().InitializeCommandList();
+
+	D3D12Window::Get().SetBackBufferStateToRT(cmdList);
+
 	ClearBackBuffer(cmdList);
 
 	vertecies.Set(cmdList);
@@ -177,6 +180,8 @@ void D3D12Renderer::Draw(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 
 	cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 	cmdList->DrawIndexedInstanced(6, 1, 0, 4, 0); // draw second quad
+
+	D3D12Window::Get().SetBackBufferStateToPresent(cmdList);
 }
 
 void D3D12Renderer::CreateFrameBuffers()
@@ -184,25 +189,31 @@ void D3D12Renderer::CreateFrameBuffers()
 	CreateDepthStencilBuffer();
 }
 
-void D3D12Renderer::Render()
+
+void D3D12Renderer::OnUpdate()
+{
+	//Update Const Buffer Data
+}
+
+// Render the scene.
+void D3D12Renderer::OnRender()
 {
 	//On Frame Begin
 	CreateFrameBuffers();
-	auto cmdList = D3D12Context::Get().InitializeCommandList();
-	D3D12Window::Get().SetBackBufferStateToRT(cmdList);
-
+	
 	//#ToDo: scene.Update();: 
 	// Camera Update 
 	// Models Update, 
 	// Particle Update
-	
 	//ToDo: Load/Release Resources (Textures Models)
 
-	Draw(cmdList);
+	// Record all the commands we need to render the scene into the command list.
+	PopulateCommandList();
 
-	//On Frame End
-	D3D12Window::Get().SetBackBufferStateToPresent(cmdList);
+	// Execute the command list.
 	D3D12Context::Get().ExecuteCommandList();
+
+	// Present the frame.
 	D3D12Window::Get().Present();
 }
 
