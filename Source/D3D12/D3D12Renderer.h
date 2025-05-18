@@ -10,6 +10,11 @@
 #include "D3D12RootSignature.h"
 #include "D3D12ConstantBuffer.h"
 
+struct ConstantBufferData
+{
+	XMFLOAT4 color;
+};
+
 class D3D12Renderer
 {
 public:
@@ -17,7 +22,7 @@ public:
 	void Load();
 	void Shutdown();
 	void OnRender();
-
+	void OnResize();
 private:
 	void LoadGeometry();
 	void LoadTextures();
@@ -31,12 +36,12 @@ private:
 	void SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void ClearBackBuffer(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetBackBufferRTV(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
-	void SetShaderParams(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 
 	void PopulateCommandList();
 	void CreateFrameBuffers();
 
 	void OnUpdate();
+
 
 private:
 	D3D12Texture texture;
@@ -56,10 +61,11 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
 	ComPointer<ID3D12Resource> depthStencilBuffer;
 
-	D3D12ConstantBuffer constantBuffer;
-
+	D3D12ConstantBuffer<ConstantBufferData> constantBuffer;
 	D3D12ShaderCompiler vertexShader;
 	D3D12ShaderCompiler pixelShader;
+
+	UINT frameIndex = 0;
 };
 
 

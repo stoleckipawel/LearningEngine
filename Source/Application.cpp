@@ -13,7 +13,7 @@ int main()
 
 		while (!D3D12Window::Get().GetShouldClose())
 		{
-			D3D12Window::Get().Update();
+			D3D12Window::Get().Update(renderer);
 
 			renderer.OnRender();
 		}

@@ -6,7 +6,6 @@
 
 bool D3D12Renderer::Initialize()
 {
-
 	if (FAILED(D3D12DebugLayer::Get().Initialize()))
 	{
 		return false;
@@ -142,6 +141,7 @@ void D3D12Renderer::ClearBackBuffer(ComPointer<ID3D12GraphicsCommandList7>& cmdL
 	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = D3D12Window::Get().GetBackbufferRTVHandle();
 	cmdList->ClearRenderTargetView(backBufferRTVHandle, clearColor, 0, nullptr);
 
+	dsvHandle = dsvHeap.heap->GetCPUDescriptorHandleForHeapStart();
 	cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 }
 
@@ -149,16 +149,6 @@ void D3D12Renderer::SetBackBufferRTV(ComPointer<ID3D12GraphicsCommandList7>& cmd
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = D3D12Window::Get().GetBackbufferRTVHandle();
 	cmdList->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &dsvHandle);
-}
-
-void D3D12Renderer::SetShaderParams(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
-{
-	cmdList->SetGraphicsRootSignature(rootSignature.rootSignature);
-
-	ID3D12DescriptorHeap* heaps[] = { cbvHeap.heap.Get()};
-	cmdList->SetDescriptorHeaps(_countof(heaps), heaps);
-
-	cmdList->SetGraphicsRootDescriptorTable(0, cbvHeap.heap->GetGPUDescriptorHandleForHeapStart());
 }
 
 void D3D12Renderer::PopulateCommandList()
@@ -173,7 +163,10 @@ void D3D12Renderer::PopulateCommandList()
 
 	pso.Set(cmdList);
 
-	SetShaderParams(cmdList);
+	cmdList->SetGraphicsRootSignature(rootSignature.rootSignature);
+	ID3D12DescriptorHeap* heaps[] = { cbvHeap.heap.Get() };
+	cmdList->SetDescriptorHeaps(_countof(heaps), heaps);
+	cmdList->SetGraphicsRootDescriptorTable(0, cbvHeap.heap->GetGPUDescriptorHandleForHeapStart());
 
 	SetViewport(cmdList);
 	SetBackBufferRTV(cmdList);
@@ -189,18 +182,27 @@ void D3D12Renderer::CreateFrameBuffers()
 	CreateDepthStencilBuffer();
 }
 
-
 void D3D12Renderer::OnUpdate()
 {
-	//Update Const Buffer Data
+	frameIndex++;
+
+	ConstantBufferData data;
+	data.color.x = 0.5f + 0.5f * sinf(frameIndex);
+	data.color.y = 0.5f + 0.5f * sinf(frameIndex + 2.0f);
+	data.color.z = 0.5f + 0.5f * sinf(frameIndex + 4.0f);
+	data.color.w = 1.0f;
+	constantBuffer.Update(data);
+}
+
+void D3D12Renderer::OnResize()
+{
+	CreateFrameBuffers();
 }
 
 // Render the scene.
 void D3D12Renderer::OnRender()
 {
-	//On Frame Begin
-	CreateFrameBuffers();
-	
+	OnUpdate();
 	//#ToDo: scene.Update();: 
 	// Camera Update 
 	// Models Update, 

@@ -118,7 +118,7 @@ void D3D12Window::Shutdown()
 	}
 }
 
-void D3D12Window::Update()
+void D3D12Window::Update(D3D12Renderer& renderer)
 {
 	// Process pending window messages
 	MSG msg;
@@ -133,6 +133,7 @@ void D3D12Window::Update()
 	{
 		D3D12Context::Get().Flush(D3D12Window::Get().GetFrameCount());
 		D3D12Window::Get().Resize();
+		renderer.OnResize();
 	}
 }
 

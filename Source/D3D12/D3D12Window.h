@@ -1,13 +1,14 @@
 #pragma once
 #include "../Vendor/Windows/WinInclude.h"
 #include "D3D12Context.h"
+#include "D3D12Renderer.h"
 
 class D3D12Window
 {
 public:
 	bool Initialize();
 	void Shutdown();
-	void Update();
+	void Update(D3D12Renderer& renderer);
 	void Present();
 	void Resize();
 	void SetFullScreen(bool bSetFullScreen);
