@@ -1,0 +1,15 @@
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\Camera.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\Camera.obj
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12UploadBuffer.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\D3D12UploadBuffer.obj
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12ConstantBuffer.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\D3D12ConstantBuffer.obj
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12RootSignature.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\D3D12RootSignature.obj
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12DescriptorHeap.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\D3D12DescriptorHeap.obj
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12PSO.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\D3D12PSO.obj
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12Geometry.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\D3D12Geometry.obj
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12Texture.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\D3D12Texture.obj
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12Renderer.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\D3D12Renderer.obj
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12ImageLoader.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\D3D12ImageLoader.obj
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12ShaderCompiler.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\D3D12ShaderCompiler.obj
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12Context.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\D3D12Context.obj
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\Application.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\Application.obj
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12DebugLayer.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\D3D12DebugLayer.obj
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12Window.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\D3D12Window.obj

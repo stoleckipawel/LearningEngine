@@ -1,0 +1,29 @@
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(519,5): warning MSB8004: Intermediate Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Intermediate Directory.
+C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(520,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
+FXC : warning : no output provided for debug - embedding PDB in shader container.  Use -Qembed_debug to silence this warning.
+  
+FXC : warning : no output provided for debug - embedding PDB in shader container.  Use -Qembed_debug to silence this warning.
+  
+  Camera.cpp
+  D3D12UploadBuffer.cpp
+  D3D12ConstantBuffer.cpp
+  D3D12RootSignature.cpp
+  D3D12DescriptorHeap.cpp
+  D3D12PSO.cpp
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12PSO.cpp(73,53): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
+  D3D12Geometry.cpp
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12Geometry.cpp(19,25): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12Geometry.cpp(37,25): warning C4267: 'initializing': conversion from 'size_t' to 'uint32_t', possible loss of data
+  D3D12Texture.cpp
+  D3D12Renderer.cpp
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12Renderer.cpp(190,36): warning C4244: 'argument': conversion from 'UINT' to 'float', possible loss of data
+  D3D12ImageLoader.cpp
+  D3D12ShaderCompiler.cpp
+  D3D12Context.cpp
+  Application.cpp
+  D3D12DebugLayer.cpp
+  D3D12Window.cpp
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12Window.cpp(240,40): warning C4244: '=': conversion from 'UINT' to 'FLOAT', possible loss of data
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\D3D12Window.cpp(241,42): warning C4244: '=': conversion from 'UINT' to 'FLOAT', possible loss of data
+  Generating Code...
+  LearningEngine.vcxproj -> C:\Users\stole\Documents\GitHub\LearningEngine\Build\bin\x64\Debug\LearningEngine.exe
