@@ -40,6 +40,8 @@ private:
 	void PopulateCommandList();
 	void CreateFrameBuffers();
 
+	void UpdateRainbowColor();
+
 	void OnUpdate();
 
 

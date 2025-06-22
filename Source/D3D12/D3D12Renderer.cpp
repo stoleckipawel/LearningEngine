@@ -182,16 +182,22 @@ void D3D12Renderer::CreateFrameBuffers()
 	CreateDepthStencilBuffer();
 }
 
+void D3D12Renderer::UpdateRainbowColor()
+{
+	float speed = frameIndex * 0.03f; // Speed of the color change
+
+	ConstantBufferData data;
+	data.color.x = 0.5f + 0.5f * sinf(speed);
+	data.color.y = 0.5f + 0.5f * sinf(speed + 2.0f);
+	data.color.z = 0.5f + 0.5f * sinf(speed + 4.0f);
+	data.color.w = 1.0f;
+	constantBuffer.Update(data);
+}
+
 void D3D12Renderer::OnUpdate()
 {
 	frameIndex++;
-
-	ConstantBufferData data;
-	data.color.x = 0.5f + 0.5f * sinf(frameIndex);
-	data.color.y = 0.5f + 0.5f * sinf(frameIndex + 2.0f);
-	data.color.z = 0.5f + 0.5f * sinf(frameIndex + 4.0f);
-	data.color.w = 1.0f;
-	constantBuffer.Update(data);
+	UpdateRainbowColor();
 }
 
 void D3D12Renderer::OnResize()
