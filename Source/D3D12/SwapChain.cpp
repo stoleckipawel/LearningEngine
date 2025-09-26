@@ -1,0 +1,137 @@
+#include "SwapChain.h"
+#include "Window.h"
+#include "RHI.h"
+
+FSwapChain GSwapChain;
+
+void FSwapChain::Initialize()	
+{
+	//Create Swap Chain
+	{
+		//Describe Swapchain
+		DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
+		{
+			swapChainDesc.Width = GWindow.GetWidth();
+			swapChainDesc.Height = GWindow.GetHeight();
+			swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			swapChainDesc.Stereo = false;
+			swapChainDesc.SampleDesc.Quality = 0;
+			swapChainDesc.SampleDesc.Count = 1;
+			swapChainDesc.BufferUsage = DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_RENDER_TARGET_OUTPUT;
+			swapChainDesc.BufferCount = GetBufferingCount();
+			swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
+			swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+			swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
+			swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+		}
+
+		DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullsceenDesc{};
+		{
+			swapChainFullsceenDesc.Windowed = true;
+		}
+
+		ComPointer<IDXGISwapChain1> swapChain;
+		ThrowIfFailed(GRHI.DxgiFactory->CreateSwapChainForHwnd(GRHI.CmdQueue, GWindow.m_window, &swapChainDesc, &swapChainFullsceenDesc, nullptr, &swapChain), " Failed To Create Swap Chain for HWND");
+		ThrowIfFailed(swapChain.QueryInterface(m_swapChain), "Failed to Query Swap Chain Interface");
+	}
+
+	//Create Descriptor Heap
+	D3D12_DESCRIPTOR_HEAP_DESC rtvDescHeapDesc{};
+	{
+		rtvDescHeapDesc.NumDescriptors = GetBufferingCount();
+		rtvDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		rtvDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		rtvDescHeapDesc.NodeMask = 0;
+		ThrowIfFailed(GRHI.Device->CreateDescriptorHeap(&rtvDescHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap)), "Failed to Create Descriptor Heap for Window");
+	}
+
+	//Create RenderTarget View & View Handles
+	{
+		auto firstHandle = m_rtvDescHeap->GetCPUDescriptorHandleForHeapStart();
+		auto rtvDescriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		for (UINT i = 0; i < GetBufferingCount(); i++)
+		{
+			m_rtvHandles[i] = firstHandle;
+			m_rtvHandles[i].ptr += (rtvDescriptorSize * i);
+		}
+
+		CreateRenderTargetViews();
+	}
+}
+
+void FSwapChain::Resize()
+{
+	ReleaseBuffers();
+
+	m_swapChain->ResizeBuffers(GetBufferingCount(),
+		GWindow.GetWidth(), GWindow.GetHeight(),
+		DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH |
+		DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING);
+
+	CreateRenderTargetViews();
+}
+
+void FSwapChain::CreateRenderTargetViews()
+{
+	//Get Swap Buffers
+	for (UINT i = 0; i < GetBufferingCount(); i++)
+	{
+		ThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])), "Failed To get Swapchain Buffer!");
+		
+		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+		rtvDesc.Texture2D.MipSlice = 0;
+		rtvDesc.Texture2D.PlaneSlice = 0;
+		GRHI.Device->CreateRenderTargetView(m_buffers[i].Get(), nullptr, m_rtvHandles[i]);
+	}
+}
+
+ID3D12Resource* FSwapChain::GetBackBufferResource()
+{
+	return m_buffers[m_currentBufferIndex];
+}
+
+D3D12_VIEWPORT FSwapChain::GetDefaultViewport()
+{
+	D3D12_VIEWPORT vp;
+	vp.TopLeftX = 0;
+	vp.TopLeftY = 0;
+	vp.Width = float(GWindow.GetWidth());
+	vp.Height = float(GWindow.GetHeight());
+	vp.MinDepth = 1.0f;
+	vp.MaxDepth = 0.0f;
+	return vp;
+}
+
+D3D12_RECT FSwapChain::GetDefaultScissorRect()
+{
+	D3D12_RECT scissorRect;
+	scissorRect.left = 0;
+	scissorRect.top = 0;
+	scissorRect.right = GWindow.GetWidth();
+	scissorRect.bottom = GWindow.GetHeight();
+	return scissorRect;
+}
+
+void FSwapChain::Present()
+{
+	m_swapChain->Present(1, 0);
+}
+
+void FSwapChain::ReleaseBuffers()
+{
+	for (UINT i = 0; i < GetBufferingCount(); i++)
+	{
+		m_buffers[i].Release();
+	}
+}
+
+void FSwapChain::Shutdown()
+{
+	ReleaseBuffers();
+
+	m_rtvDescHeap.Release();
+
+	m_swapChain.Release();
+}

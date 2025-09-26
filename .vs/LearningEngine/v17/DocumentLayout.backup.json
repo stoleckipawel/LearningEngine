@@ -1,12 +1,122 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Renderer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\Renderer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\RHI.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\RHI.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Window.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\Window.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Renderer.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\Renderer.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\RHI.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\RHI.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\Application.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\Application.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 319,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Renderer.h",
+              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Renderer.h",
+              "RelativeDocumentMoniker": "Source\\D3D12\\Renderer.h",
+              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Renderer.h",
+              "RelativeToolTip": "Source\\D3D12\\Renderer.h",
+              "ViewState": "AgIAADkAAAAAAAAAAAAAAE8AAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-09-26T20:27:49.796Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "RHI.h",
+              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\RHI.h",
+              "RelativeDocumentMoniker": "Source\\D3D12\\RHI.h",
+              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\RHI.h",
+              "RelativeToolTip": "Source\\D3D12\\RHI.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-09-26T20:26:08.144Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Renderer.cpp",
+              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Renderer.cpp",
+              "RelativeDocumentMoniker": "Source\\D3D12\\Renderer.cpp",
+              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Renderer.cpp",
+              "RelativeToolTip": "Source\\D3D12\\Renderer.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-09-26T20:17:52.054Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Application.cpp",
+              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\Application.cpp",
+              "RelativeDocumentMoniker": "Source\\Application.cpp",
+              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\Application.cpp",
+              "RelativeToolTip": "Source\\Application.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-09-26T20:17:38.081Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Window.cpp",
+              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Window.cpp",
+              "RelativeDocumentMoniker": "Source\\D3D12\\Window.cpp",
+              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Window.cpp",
+              "RelativeToolTip": "Source\\D3D12\\Window.cpp",
+              "ViewState": "AgIAAIUAAAAAAAAAAAAYwJ0AAAAPAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-09-26T20:09:36.588Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "RHI.cpp",
+              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\RHI.cpp",
+              "RelativeDocumentMoniker": "Source\\D3D12\\RHI.cpp",
+              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\RHI.cpp",
+              "RelativeToolTip": "Source\\D3D12\\RHI.cpp",
+              "ViewState": "AgIAAEQAAAAAAAAAAAAAAF0AAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-09-25T21:07:23.017Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }

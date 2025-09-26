@@ -1,24 +1,20 @@
 
-#include "D3D12/D3D12Window.h"
-#include "D3D12/D3D12Renderer.h"
+#include "D3D12/Renderer.h"
+#include "D3D12/Window.h"
 
 int main()
 {
-
-	D3D12Renderer renderer;
-
-	if(renderer.Initialize())
+	if(GRenderer.Initialize())
 	{		
-		renderer.Load();
+		GRenderer.Load();
 
-		while (!D3D12Window::Get().GetShouldClose())
+		while (!GWindow.ShouldClose())
 		{
-			D3D12Window::Get().Update(renderer);
+			GWindow.Update();
 
-			renderer.OnRender();
+			GRenderer.OnRender();
 		}
-
-		renderer.Shutdown();
+		GRenderer.Shutdown();
 	}	
 
 	return 0;

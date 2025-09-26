@@ -9,7 +9,7 @@ struct VsInput
 struct VsOutput
 {
     float4 Color : COLOR;
-    float4 Position : SV_Position;
+    float4 Position : SV_POSITION;
 };
 
 

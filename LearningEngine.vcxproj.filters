@@ -18,84 +18,84 @@
     <ClCompile Include="Source\Application.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Source\D3D12\D3D12DebugLayer.cpp">
+    <ClCompile Include="Source\D3D12\DebugLayer.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Source\D3D12\D3D12Context.cpp">
+    <ClCompile Include="Source\D3D12\Window.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Source\D3D12\D3D12Window.cpp">
+    <ClCompile Include="Source\D3D12\ShaderCompiler.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Source\D3D12\D3D12ShaderCompiler.cpp">
+    <ClCompile Include="Source\D3D12\ImageLoader.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Source\D3D12\D3D12ImageLoader.cpp">
+    <ClCompile Include="Source\D3D12\Renderer.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Source\D3D12\D3D12Renderer.cpp">
+    <ClCompile Include="Source\D3D12\Texture.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Source\D3D12\D3D12Texture.cpp">
+    <ClCompile Include="Source\D3D12\Geometry.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Source\D3D12\D3D12Geometry.cpp">
+    <ClCompile Include="Source\D3D12\PSO.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Source\D3D12\D3D12PSO.cpp">
+    <ClCompile Include="Source\D3D12\DescriptorHeap.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Source\D3D12\D3D12DescriptorHeap.cpp">
+    <ClCompile Include="Source\D3D12\RootSignature.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Source\D3D12\D3D12RootSignature.cpp">
+    <ClCompile Include="Source\D3D12\ConstantBuffer.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Source\D3D12\D3D12ConstantBuffer.cpp">
-      <Filter>Pliki źródłowe</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\D3D12\D3D12UploadBuffer.cpp">
+    <ClCompile Include="Source\D3D12\UploadBuffer.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
     <ClCompile Include="Source\D3D12\Camera.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="Source\D3D12\SamplerDesc.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\D3D12\RHI.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\D3D12\SwapChain.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\D3D12\D3D12DebugLayer.h">
+    <ClInclude Include="Source\D3D12\DebugLayer.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="Source\D3D12\D3D12Context.h">
+    <ClInclude Include="Source\D3D12\Window.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="Source\D3D12\D3D12Window.h">
+    <ClInclude Include="Source\D3D12\ShaderCompiler.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Application.h">
+    <ClInclude Include="Source\D3D12\ImageLoader.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="Source\D3D12\D3D12ShaderCompiler.h">
+    <ClInclude Include="Source\D3D12\Renderer.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="Source\D3D12\D3D12ImageLoader.h">
+    <ClInclude Include="Source\D3D12\Texture.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="Source\D3D12\D3D12Renderer.h">
+    <ClInclude Include="Source\D3D12\Geometry.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="Source\D3D12\D3D12Texture.h">
+    <ClInclude Include="Source\D3D12\PSO.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="Source\D3D12\D3D12Geometry.h">
+    <ClInclude Include="Source\D3D12\DescriptorHeap.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="Source\D3D12\D3D12PSO.h">
-      <Filter>Pliki nagłówkowe</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\D3D12\D3D12DescriptorHeap.h">
-      <Filter>Pliki nagłówkowe</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\D3D12\D3D12RootSignature.h">
+    <ClInclude Include="Source\D3D12\RootSignature.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
     <ClInclude Include="Source\Vendor\Windows\d3dx12.h">
@@ -107,13 +107,22 @@
     <ClInclude Include="Source\Vendor\Windows\ComPointer.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="Source\D3D12\D3D12ConstantBuffer.h">
+    <ClInclude Include="Source\D3D12\ConstantBuffer.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="Source\D3D12\D3D12UploadBuffer.h">
+    <ClInclude Include="Source\D3D12\UploadBuffer.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
     <ClInclude Include="Source\D3D12\Camera.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\D3D12\SamplerDesc.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\D3D12\RHI.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\D3D12\SwapChain.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
   </ItemGroup>
