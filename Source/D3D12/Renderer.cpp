@@ -44,6 +44,13 @@ void FRenderer::LoadShaders()
 	pixelShader = FShaderCompiler(L"Shaders/PixShader.hlsl", "ps_5_0", "main");
 }
 
+void FRenderer::LoadAssets()
+{
+	LoadGeometry();
+	LoadTextures();
+	LoadShaders();
+}
+
 void FRenderer::CreateRootSignatures()
 {
 	rootSignature = FRootSignature();
@@ -139,9 +146,7 @@ void FRenderer::ReleaseConstantBuffers()
 
 void FRenderer::Load()
 {
-	LoadGeometry();
-	LoadTextures();
-	LoadShaders();
+	LoadAssets();
 
 	CreateRootSignatures();
 	CreatePSOs();
@@ -281,8 +286,12 @@ void FRenderer::OnRender()
 	// Particle Update
 	// Load/Release Resources (Textures Models)
 
+	GRHI.InitializeCommandList();//Reset Command List & Command Allocator
+
 	// Record all the commands we need to render the scene into the command list.
 	PopulateCommandList();
+
+	GRHI.CmdList->Close();
 
 	// Execute the command list.
 	//FRHI::Get().ExecuteCommandList();

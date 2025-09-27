@@ -17,23 +17,13 @@ bool FRHI::Initialize(bool RequireDXRSupport)
 #else
 		UINT dxgiFactoryFlags = 0;
 #endif
-		if (FAILED(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&GRHI.DxgiFactory))))
-		{
-			std::string message = "RHI: Failed To Create Factory";
-			LogError(message, ELogType::Fatal);
-			return false;
-		}
+		ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&GRHI.DxgiFactory)), "RHI: Failed To Create Factory");
 	}
 
 	//Create Device
 	{
 		//ToDo: Explicit Adapter, for Diagnostics
-		if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_1, IID_PPV_ARGS(&GRHI.Device))))
-		{
-			std::string message = "RHI: Failed To Create Device";
-			LogError(message, ELogType::Fatal);
-			return false;
-		}
+		ThrowIfFailed(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_1, IID_PPV_ARGS(&GRHI.Device)), "RHI: Failed To Create Device");
 	}
 	
 	//Create Command Queue
@@ -43,35 +33,14 @@ bool FRHI::Initialize(bool RequireDXRSupport)
 		cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_HIGH;
 		cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 		cmdQueueDesc.NodeMask = 0;
-		
-		if (FAILED(GRHI.Device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&GRHI.CmdQueue))))
-		{
-			std::string message = "RHI: Failed To Create Command Queue";
-			LogError(message, ELogType::Fatal);
-			return false;
-		}
+		ThrowIfFailed(GRHI.Device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&GRHI.CmdQueue)), "RHI: Failed To Create Command Queue");
 	}
 
 	GSwapChain.Initialize();
-
-	//Create Command Allocator
-	{
-		if (FAILED(GRHI.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&GRHI.CmdAllocator))))
-		{
-			std::string message = "RHI: Failed To Create Command Allocator";
-			LogError(message, ELogType::Fatal);
-			return false;
-		}
-	}
 	
 	//Create Fence
 	{
-		if (FAILED(GRHI.Device->CreateFence(FenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence))))
-		{
-			std::string message = "RHI: Failed To Create Fence";
-			LogError(message, ELogType::Fatal);
-			return false;
-		}
+		ThrowIfFailed(GRHI.Device->CreateFence(FenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)), "RHI: Failed To Create Fence");
 
 		FenceEvent = CreateEvent(nullptr, false, false, nullptr);
 		if (!FenceEvent)
@@ -82,15 +51,11 @@ bool FRHI::Initialize(bool RequireDXRSupport)
 		}
 	}
 
+	//Create Command Allocator
+	ThrowIfFailed(GRHI.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&GRHI.CmdAllocator)), "RHI: Failed To Create Command Allocator");
+	
 	//Create Command List
-	{
-		if (FAILED(GRHI.Device->CreateCommandList1(0, D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_LIST_FLAG_NONE, IID_PPV_ARGS(&GRHI.CmdList))))
-		{
-			std::string message = "RHI: Failed To Create Command List";
-			LogError(message, ELogType::Fatal);
-			return false;
-		}
-	}
+	ThrowIfFailed(GRHI.Device->CreateCommandList1(0, D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_LIST_FLAG_NONE, IID_PPV_ARGS(&GRHI.CmdList)), "RHI: Failed To Create Command List");
 
 	return true;
 }

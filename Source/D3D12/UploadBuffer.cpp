@@ -68,6 +68,8 @@ void FUploadBuffer::Upload(ComPointer<ID3D12Resource2>& buffer, void* data, uint
 	subResourceData.SlicePitch = dataSize;
 	UpdateSubresources(GRHI.CmdList, buffer, uploadBuffer, 0, 0, 1, &subResourceData);
 
+	//	GRHI.CmdList->Close();
+	
 	GRHI.ExecuteCommandList();
 
 	//uploadBuffer->Release();

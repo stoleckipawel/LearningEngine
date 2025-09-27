@@ -31,6 +31,7 @@ private:
 	void UnloadTextures();
 
 	void LoadShaders();
+	void LoadAssets();
 
 	void CreateRootSignatures();
 	void ReleaseRootSignatures();
