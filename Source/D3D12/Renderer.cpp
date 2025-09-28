@@ -6,18 +6,6 @@
 
 FRenderer GRenderer;
 
-bool FRenderer::Initialize()
-{
-	//Initialize Window
-	ThrowIfFailed(GWindow.Initialize(), "Failed To Initialize Window");
-
-	// Initialize RHI
-	ThrowIfFailed(GRHI.Initialize(), "Failed To Initialize RHI");
-
-	bInitialized = true;
-	return true;
-}
-
 void FRenderer::LoadGeometry()
 {
 	vertecies.Upload();
@@ -129,6 +117,7 @@ void FRenderer::CreateDepthStencilBuffer()
 		std::string message = "Create Depth Stencil Buffer: Failed to Create Resource";
 		LogError(message, ELogType::Warning);
 	}
+
 	dsvHandle = dsvHeap.heap->GetCPUDescriptorHandleForHeapStart();
 	GRHI.Device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, dsvHandle);
 }
@@ -152,6 +141,8 @@ void FRenderer::Load()
 	CreatePSOs();
 	CreateDescriptorHeaps();
 	CreateConstantBuffers(cbvHeap);
+
+	CreateFrameBuffers();
 }
 
 void FRenderer::Unload()
@@ -195,31 +186,23 @@ void FRenderer::ClearBackBuffer(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 void FRenderer::SetBackBufferRTV(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GSwapChain.GetBackbufferRTVHandle();
+	dsvHandle = dsvHeap.heap->GetCPUDescriptorHandleForHeapStart();
 	cmdList->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &dsvHandle);
 }
-void FRenderer::OnFrameBegin()
-{
-	//Sets BackBuffer to Render Target State
-	GRHI.SetBarrier(
-		GSwapChain.GetBackBufferResource(),
-		D3D12_RESOURCE_STATE_PRESENT,
-		D3D12_RESOURCE_STATE_RENDER_TARGET);
-}
 
-void FRenderer::OnFrameEnd()
+void FRenderer::PopulateCommandList()
 {
 	//Sets BackbBuffer to Present State
 	GRHI.SetBarrier(
 		GSwapChain.GetBackBufferResource(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET,
-		D3D12_RESOURCE_STATE_PRESENT);
-}
-void FRenderer::PopulateCommandList()
-{
-	OnFrameBegin();
-	/*
-	ClearBackBuffer(GRHI.CmdList);
+		D3D12_RESOURCE_STATE_PRESENT,
+		D3D12_RESOURCE_STATE_RENDER_TARGET);
+		
 	
+	//SetBackBufferRTV(GRHI.CmdList);	
+
+	ClearBackBuffer(GRHI.CmdList);
+/*	
 	vertecies.Set(GRHI.CmdList);
 
 	pso.Set(GRHI.CmdList);
@@ -230,14 +213,18 @@ void FRenderer::PopulateCommandList()
 	GRHI.CmdList->SetGraphicsRootDescriptorTable(0, cbvHeap.heap->GetGPUDescriptorHandleForHeapStart());
 	
 	SetViewport(GRHI.CmdList);
-	SetBackBufferRTV(GRHI.CmdList);
+
 
 	//GRHI.CmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 	//GRHI.CmdList->DrawIndexedInstanced(6, 1, 0, 4, 0); // draw second quad
 
 	
 	*/
-	OnFrameEnd();
+	//Sets BackbBuffer to Present State
+	GRHI.SetBarrier(
+		GSwapChain.GetBackBufferResource(),
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_PRESENT);
 }
 
 void FRenderer::CreateFrameBuffers()
@@ -259,9 +246,10 @@ void FRenderer::UpdateRainbowColor()
 	data.color.y = 0.5f + 0.5f * sinf(speed + 2.0f);
 	data.color.z = 0.5f + 0.5f * sinf(speed + 4.0f);
 	data.color.w = 1.0f;
-	ConstantBuffer.Update(data);
+	//ConstantBuffer.Update(data);
 }
 
+// Update frame-based values.
 void FRenderer::OnUpdate()
 {
 	FrameIndex++;
@@ -275,29 +263,46 @@ void FRenderer::OnResize()
 	CreateFrameBuffers();
 }
 
+void FRenderer::WaitForPreviousFrame()
+{
+    // WAITING FOR THE FRAME TO COMPLETE BEFORE CONTINUING IS NOT BEST PRACTICE.
+    // This is code implemented as such for simplicity. The D3D12HelloFrameBuffering
+    // sample illustrates how to use fences for efficient resource usage and to
+    // maximize GPU utilization.	
+	const UINT64 fenceValueTmp = GRHI.FenceValue;
+	ThrowIfFailed(GRHI.CmdQueue->Signal(GRHI.Fence, fenceValueTmp), "RHI: Failed To Signal Command Queue");
+	GRHI.FenceValue++;
+    // Wait until the previous frame is finished.
+    if (GRHI.Fence->GetCompletedValue() < fenceValueTmp)
+    {
+        ThrowIfFailed(GRHI.Fence->SetEventOnCompletion(fenceValueTmp, GRHI.FenceEvent), "RHI: Failed To Signal Command Queue");
+        WaitForSingleObject(GRHI.FenceEvent, INFINITE);
+    }
+	GSwapChain.UpdateBackBufferIndex();
+}
+
 // Render the scene.
 void FRenderer::OnRender()
 {
 	OnUpdate();
 
-	//#ToDo: scene.Update(); 
-	// Camera Update 
-	// Models Update, 
-	// Particle Update
-	// Load/Release Resources (Textures Models)
-
-	GRHI.InitializeCommandList();//Reset Command List & Command Allocator
+	// Prepare the command list to render a new frame.
+    ThrowIfFailed(GRHI.CmdAllocator->Reset(), "Renderer: Failed To Reset Command Allocator");
+    ThrowIfFailed(GRHI.CmdList->Reset(GRHI.CmdAllocator.Get(), nullptr), "Renderer: Failed To Reset Command List");
 
 	// Record all the commands we need to render the scene into the command list.
 	PopulateCommandList();
 
-	GRHI.CmdList->Close();
+	// Finalize the command list.
+	ThrowIfFailed(GRHI.CmdList->Close(), "Failed To Close Command List");
 
 	// Execute the command list.
-	//FRHI::Get().ExecuteCommandList();
+	GRHI.ExecuteCommandList();
 
 	// Present the frame.
 	GSwapChain.Present();
+
+	WaitForPreviousFrame();
 }
 
 void FRenderer::Shutdown()

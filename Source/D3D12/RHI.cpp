@@ -38,6 +38,12 @@ bool FRHI::Initialize(bool RequireDXRSupport)
 
 	GSwapChain.Initialize();
 	
+	//Create Command Allocator
+	ThrowIfFailed(GRHI.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&GRHI.CmdAllocator)), "RHI: Failed To Create Command Allocator");
+	
+	//Create Command List
+	ThrowIfFailed(GRHI.Device->CreateCommandList1(0, D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_LIST_FLAG_NONE, IID_PPV_ARGS(&GRHI.CmdList)), "RHI: Failed To Create Command List");
+
 	//Create Fence
 	{
 		ThrowIfFailed(GRHI.Device->CreateFence(FenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)), "RHI: Failed To Create Fence");
@@ -50,12 +56,6 @@ bool FRHI::Initialize(bool RequireDXRSupport)
 			return false;
 		}
 	}
-
-	//Create Command Allocator
-	ThrowIfFailed(GRHI.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&GRHI.CmdAllocator)), "RHI: Failed To Create Command Allocator");
-	
-	//Create Command List
-	ThrowIfFailed(GRHI.Device->CreateCommandList1(0, D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_LIST_FLAG_NONE, IID_PPV_ARGS(&GRHI.CmdList)), "RHI: Failed To Create Command List");
 
 	return true;
 }
@@ -78,7 +78,7 @@ void FRHI::Shutdown()
 
 void FRHI::Flush()
 {
-	for (size_t i = 0; i < GSwapChain.GetBufferingCount(); ++i) 
+	for (size_t i = 0; i < GSwapChain.GetFrameBufferingCount(); ++i) 
 	{ 
 		SignalAndWait(); 
 	}
@@ -86,7 +86,7 @@ void FRHI::Flush()
 
 void FRHI::SignalAndWait()
 {
-	GRHI.CmdQueue->Signal(Fence, ++FenceValue);
+	ThrowIfFailed(GRHI.CmdQueue->Signal(Fence, ++FenceValue), "RHI: Failed To Signal Command Queue");
 
 	if (SUCCEEDED(Fence->SetEventOnCompletion(FenceValue, FenceEvent)))
 	{
@@ -100,20 +100,12 @@ void FRHI::SignalAndWait()
 		std::exit(-1);
 	}
 }
-void FRHI::InitializeCommandList()
-{
-	GRHI.CmdAllocator->Reset();
-	GRHI.CmdList->Reset(GRHI.CmdAllocator, nullptr);
-}
 
 void FRHI::ExecuteCommandList()
 {
-	if (SUCCEEDED(GRHI.CmdList->Close()))
-	{
-		ID3D12CommandList* commandLists[] = { GRHI.CmdList };
-		GRHI.CmdQueue->ExecuteCommandLists(1, commandLists);
-		SignalAndWait();
-	};
+	ID3D12CommandList* ppcommandLists[] = { GRHI.CmdList.Get() };
+	GRHI.CmdQueue->ExecuteCommandLists(1, ppcommandLists);
+	SignalAndWait();
 }
 
 void FRHI::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter)

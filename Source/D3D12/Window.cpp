@@ -148,11 +148,11 @@ LRESULT FWindow::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lPara
 		case WM_SIZE:
 			if (lParam && (HIWORD(lParam) != GWindow.GetHeight() && LOWORD(lParam) != GWindow.GetWidth()))
 			{
-				if (GRenderer.bInitialized)
+				if (GRHI.Device != nullptr)
 				{
 					GRenderer.OnResize();
 				}
-			}
+			}	
 			return 0;
 		case WM_CLOSE:
 		case WM_QUIT:

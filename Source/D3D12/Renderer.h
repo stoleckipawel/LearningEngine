@@ -16,7 +16,6 @@ struct FConstantBufferData
 class FRenderer
 {
 public:
-	bool Initialize();
 	void Load();
 	void Unload();
 	void Release();
@@ -53,9 +52,8 @@ private:
 	void ClearBackBuffer(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 	void SetBackBufferRTV(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
 
-	void OnFrameBegin();
-	void OnFrameEnd();
 	void PopulateCommandList();
+	void WaitForPreviousFrame();
 	
 	void UpdateRainbowColor();
 	void OnUpdate();
@@ -77,8 +75,6 @@ private:
 	FShaderCompiler pixelShader;
 
 	UINT FrameIndex = 0;
-public:
-	bool bInitialized = false;
 };
 
 extern FRenderer GRenderer;

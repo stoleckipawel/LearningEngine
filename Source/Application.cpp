@@ -4,18 +4,19 @@
 
 int main()
 {
-	if(GRenderer.Initialize())
-	{		
-		GRenderer.Load();
+	ThrowIfFailed(GWindow.Initialize(), "Failed To Initialize Window");
 
-		while (!GWindow.ShouldClose())
-		{
-			GWindow.Update();
+	ThrowIfFailed(GRHI.Initialize(), "Failed To Initialize RHI");
 
-			GRenderer.OnRender();
-		}
-		GRenderer.Shutdown();
-	}	
+	GRenderer.Load();
+
+	while (!GWindow.ShouldClose())
+	{
+		GWindow.Update();
+		GRenderer.OnRender();
+	}
+	
+	GRenderer.Shutdown();
 
 	return 0;
 }

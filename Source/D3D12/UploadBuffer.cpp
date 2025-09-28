@@ -60,7 +60,8 @@ void FUploadBuffer::Upload(ComPointer<ID3D12Resource2>& buffer, void* data, uint
 		nullptr,
 		IID_PPV_ARGS(&uploadBuffer));
 
-	GRHI.InitializeCommandList();
+	GRHI.CmdAllocator->Reset();
+	GRHI.CmdList->Reset(GRHI.CmdAllocator, nullptr);
 
 	D3D12_SUBRESOURCE_DATA subResourceData = {};
 	subResourceData.pData = reinterpret_cast<BYTE*>(data);
@@ -68,7 +69,7 @@ void FUploadBuffer::Upload(ComPointer<ID3D12Resource2>& buffer, void* data, uint
 	subResourceData.SlicePitch = dataSize;
 	UpdateSubresources(GRHI.CmdList, buffer, uploadBuffer, 0, 0, 1, &subResourceData);
 
-	//	GRHI.CmdList->Close();
+	GRHI.CmdList->Close();
 	
 	GRHI.ExecuteCommandList();
 

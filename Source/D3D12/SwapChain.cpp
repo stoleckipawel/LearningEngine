@@ -18,7 +18,7 @@ void FSwapChain::Initialize()
 			swapChainDesc.SampleDesc.Quality = 0;
 			swapChainDesc.SampleDesc.Count = 1;
 			swapChainDesc.BufferUsage = DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_RENDER_TARGET_OUTPUT;
-			swapChainDesc.BufferCount = GetBufferingCount();
+			swapChainDesc.BufferCount = GetFrameBufferingCount();
 			swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
 			swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 			swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
@@ -32,27 +32,30 @@ void FSwapChain::Initialize()
 
 		ComPointer<IDXGISwapChain1> swapChain;
 		ThrowIfFailed(GRHI.DxgiFactory->CreateSwapChainForHwnd(GRHI.CmdQueue, GWindow.m_window, &swapChainDesc, &swapChainFullsceenDesc, nullptr, &swapChain), " Failed To Create Swap Chain for HWND");
+		
 		ThrowIfFailed(swapChain.QueryInterface(m_swapChain), "Failed to Query Swap Chain Interface");
 	}
+
+	UpdateBackBufferIndex();
 
 	//Create Descriptor Heap
 	D3D12_DESCRIPTOR_HEAP_DESC rtvDescHeapDesc{};
 	{
-		rtvDescHeapDesc.NumDescriptors = GetBufferingCount();
+		rtvDescHeapDesc.NumDescriptors = GetFrameBufferingCount();
 		rtvDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 		rtvDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-		rtvDescHeapDesc.NodeMask = 0;
-		ThrowIfFailed(GRHI.Device->CreateDescriptorHeap(&rtvDescHeapDesc, IID_PPV_ARGS(&m_rtvDescHeap)), "Failed to Create Descriptor Heap for Window");
+		ThrowIfFailed(GRHI.Device->CreateDescriptorHeap(&rtvDescHeapDesc, IID_PPV_ARGS(&m_rtvHeap)), "Failed to Create Descriptor Heap for Window");
+
+		m_rtvDescriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	}
 
 	//Create RenderTarget View & View Handles
 	{
-		auto firstHandle = m_rtvDescHeap->GetCPUDescriptorHandleForHeapStart();
-		auto rtvDescriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-		for (UINT i = 0; i < GetBufferingCount(); i++)
+		CD3DX12_CPU_DESCRIPTOR_HANDLE firstHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+		for (UINT i = 0; i < GetFrameBufferingCount(); i++)
 		{
 			m_rtvHandles[i] = firstHandle;
-			m_rtvHandles[i].ptr += (rtvDescriptorSize * i);
+			m_rtvHandles[i].ptr += m_rtvDescriptorSize * i;
 		}
 
 		CreateRenderTargetViews();
@@ -63,7 +66,7 @@ void FSwapChain::Resize()
 {
 	ReleaseBuffers();
 
-	m_swapChain->ResizeBuffers(GetBufferingCount(),
+	m_swapChain->ResizeBuffers(GetFrameBufferingCount(),
 		GWindow.GetWidth(), GWindow.GetHeight(),
 		DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH |
 		DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING);
@@ -74,7 +77,7 @@ void FSwapChain::Resize()
 void FSwapChain::CreateRenderTargetViews()
 {
 	//Get Swap Buffers
-	for (UINT i = 0; i < GetBufferingCount(); i++)
+	for (UINT i = 0; i < GetFrameBufferingCount(); i++)
 	{
 		ThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])), "Failed To get Swapchain Buffer!");
 		
@@ -116,12 +119,12 @@ D3D12_RECT FSwapChain::GetDefaultScissorRect()
 
 void FSwapChain::Present()
 {
-	m_swapChain->Present(1, 0);
+	ThrowIfFailed(m_swapChain->Present(1, 0), "Failed to Present Swap Chain");
 }
 
 void FSwapChain::ReleaseBuffers()
 {
-	for (UINT i = 0; i < GetBufferingCount(); i++)
+	for (UINT i = 0; i < GetFrameBufferingCount(); i++)
 	{
 		m_buffers[i].Release();
 	}
@@ -131,7 +134,7 @@ void FSwapChain::Shutdown()
 {
 	ReleaseBuffers();
 
-	m_rtvDescHeap.Release();
+	m_rtvHeap.Release();
 
 	m_swapChain.Release();
 }

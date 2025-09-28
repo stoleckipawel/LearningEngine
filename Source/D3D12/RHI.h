@@ -9,7 +9,6 @@ public:
 	void Shutdown();
 	void SignalAndWait();
 	void Flush();
-	void InitializeCommandList();
 	void ExecuteCommandList();
 	void SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter);
 
@@ -24,6 +23,7 @@ public:
 	ComPointer<ID3D12Fence1> Fence = nullptr;;
 	UINT64 FenceValue = 0;
 	HANDLE FenceEvent = nullptr;
+public:
 };
 
 extern FRHI GRHI;
