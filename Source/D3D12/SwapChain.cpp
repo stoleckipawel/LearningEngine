@@ -51,10 +51,10 @@ void FSwapChain::Initialize()
 
 	//Create RenderTarget View & View Handles
 	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE firstHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
 		for (UINT i = 0; i < GetFrameBufferingCount(); i++)
 		{
-			m_rtvHandles[i] = firstHandle;
+			m_rtvHandles[i] = rtvHandle;
 			m_rtvHandles[i].ptr += m_rtvDescriptorSize * i;
 		}
 
@@ -82,11 +82,14 @@ void FSwapChain::CreateRenderTargetViews()
 		ThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])), "Failed To get Swapchain Buffer!");
 		
 		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
-		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-		rtvDesc.Texture2D.MipSlice = 0;
-		rtvDesc.Texture2D.PlaneSlice = 0;
-		GRHI.Device->CreateRenderTargetView(m_buffers[i].Get(), nullptr, m_rtvHandles[i]);
+		{
+			rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+			rtvDesc.Texture2D.MipSlice = 0;
+			rtvDesc.Texture2D.PlaneSlice = 0;
+		}
+
+		GRHI.Device->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, m_rtvHandles[i]);
 	}
 }
 
