@@ -141,7 +141,6 @@ void FRenderer::Load()
 	CreatePSOs();
 	CreateDescriptorHeaps();
 	CreateConstantBuffers(cbvHeap);
-
 	CreateFrameBuffers();
 }
 
@@ -197,11 +196,10 @@ void FRenderer::PopulateCommandList()
 		GSwapChain.GetBackBufferResource(),
 		D3D12_RESOURCE_STATE_PRESENT,
 		D3D12_RESOURCE_STATE_RENDER_TARGET);
-		
 	
-	//SetBackBufferRTV(GRHI.CmdList);	
-
 	ClearBackBuffer(GRHI.CmdList);
+
+	//SetBackBufferRTV(GRHI.CmdList);
 /*	
 	vertecies.Set(GRHI.CmdList);
 

@@ -6,6 +6,53 @@
 FRHI GRHI;
 
 
+void FRHI::SelectAdapter()
+{
+	bool bHighPerformancePreference = true;
+	enum DXGI_GPU_PREFERENCE GpuPreference = bHighPerformancePreference ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE : DXGI_GPU_PREFERENCE_MINIMUM_POWER;
+
+	// Try to find an adapter that meets the required GPU preference.
+	for(UINT AdapterIndex = 0; SUCCEEDED(GRHI.DxgiFactory->EnumAdapterByGpuPreference(AdapterIndex, GpuPreference, IID_PPV_ARGS(&GRHI.Adapter)));++AdapterIndex)
+	{
+		DXGI_ADAPTER_DESC1 desc;
+		GRHI.Adapter->GetDesc1(&desc);
+
+		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+		{
+			// Reject software adapters.
+			continue;
+		}
+
+		// Check to see if the adapter supports Direct3D 12, but don't create the actual device yet.
+		if (SUCCEEDED(D3D12CreateDevice(GRHI.Adapter, DesiredD3DFeatureLevel, _uuidof(ID3D12Device), nullptr)))
+		{
+			break;
+		}
+	}
+
+	// If the above failed, fall back to the default adapter.
+    if(GRHI.Adapter.Get() == nullptr)
+    {
+        for (UINT adapterIndex = 0; SUCCEEDED(GRHI.DxgiFactory->EnumAdapters1(adapterIndex, &GRHI.Adapter)); ++adapterIndex)
+        {
+            DXGI_ADAPTER_DESC1 desc;
+            GRHI.Adapter->GetDesc1(&desc);
+
+            if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+            {
+				// Reject software adapters.
+                continue;
+            }
+
+            // Check to see whether the adapter supports Direct3D 12, but don't create the actual device yet.
+            if (SUCCEEDED(D3D12CreateDevice(GRHI.Adapter.Get(), DesiredD3DFeatureLevel, _uuidof(ID3D12Device), nullptr)))
+            {
+                break;
+            }
+        }
+    }	
+}
+
 bool FRHI::Initialize(bool RequireDXRSupport)
 {
 	GDebugLayer.Initialize();
@@ -22,8 +69,8 @@ bool FRHI::Initialize(bool RequireDXRSupport)
 
 	//Create Device
 	{
-		//ToDo: Explicit Adapter, for Diagnostics
-		ThrowIfFailed(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_1, IID_PPV_ARGS(&GRHI.Device)), "RHI: Failed To Create Device");
+		SelectAdapter();
+		ThrowIfFailed(D3D12CreateDevice(GRHI.Adapter.Get(), DesiredD3DFeatureLevel, IID_PPV_ARGS(&GRHI.Device)), "RHI: Failed To Create Device");
 	}
 	
 	//Create Command Queue

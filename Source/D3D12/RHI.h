@@ -6,6 +6,7 @@ class FRHI
 {
 public:
 	bool Initialize(bool RequireDXRSupport = false);
+	void SelectAdapter();
 	void Shutdown();
 	void SignalAndWait();
 	void Flush();
@@ -23,6 +24,8 @@ public:
 	ComPointer<ID3D12Fence1> Fence = nullptr;;
 	UINT64 FenceValue = 0;
 	HANDLE FenceEvent = nullptr;
+
+	enum D3D_FEATURE_LEVEL DesiredD3DFeatureLevel = D3D_FEATURE_LEVEL_12_1;
 public:
 };
 
