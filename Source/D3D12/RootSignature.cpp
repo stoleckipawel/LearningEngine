@@ -1,6 +1,6 @@
 #include "RootSignature.h"
 
-bool FRootSignature::Create()
+void FRootSignature::Create()
 {
     D3D12_DESCRIPTOR_RANGE descriptorTableRanges[1];
     descriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
@@ -30,23 +30,7 @@ bool FRootSignature::Create()
         D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 
     ID3DBlob* signature;
-    HRESULT hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, nullptr);
-
-    if (FAILED(hr))
-    {
-        std::string message = "Root Signature Create: Failed To Serialize Root Signature";
-        LogError(message, ELogType::Fatal);
-        return false;
-    }
-
-    hr = GRHI.Device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
-
-    if (FAILED(hr))
-    {
-        std::string message = "Root Signature Create: Failed To Create Root Signature";    
-        LogError(message, ELogType::Fatal);
-        return false;
-    }
-
-    return true;
+    ID3DBlob* error;
+    ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error), "Failed To Serialize Root Signature");
+    ThrowIfFailed(GRHI.Device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature)), "Failed To Create Root Signature");
 }

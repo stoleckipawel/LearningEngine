@@ -1,12 +1,54 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Renderer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\Renderer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Geometry.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\Geometry.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 319,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Geometry.cpp",
+              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Geometry.cpp",
+              "RelativeDocumentMoniker": "Source\\D3D12\\Geometry.cpp",
+              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Geometry.cpp",
+              "RelativeToolTip": "Source\\D3D12\\Geometry.cpp",
+              "ViewState": "AgIAABEAAAAAAAAAAAASwC4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-10-01T20:30:00.26Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Renderer.cpp",
+              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Renderer.cpp",
+              "RelativeDocumentMoniker": "Source\\D3D12\\Renderer.cpp",
+              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Renderer.cpp",
+              "RelativeToolTip": "Source\\D3D12\\Renderer.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-10-01T20:27:44.479Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }

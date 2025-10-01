@@ -7,13 +7,19 @@ FShaderCompiler::FShaderCompiler(LPCWSTR name, const std::string& model, const s
 	ID3DBlob* blob = nullptr;
 	ID3DBlob* errorBlob = nullptr;
 
+#if defined(_DEBUG)
+	UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#else
+	UINT compileFlags = 0;
+#endif
+
 	HRESULT hr = D3DCompileFromFile(
 		name,
 		nullptr,
 		nullptr,
 		entryPoint.c_str(),
 		model.c_str(),
-		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+		compileFlags,
 		0,
 		&blob,
 		&errorBlob);

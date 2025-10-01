@@ -12,15 +12,15 @@ struct VsOutput
     float4 Position : SV_POSITION;
 };
 
-
+/*
 cbuffer ConstantBuffer : register(b0)
 {
     float4 color;
 };
-
+*/
 
 void main(in VsInput Input, out VsOutput Output) 
 {
     Output.Position = float4(Input.Position.xyz, 1.0f);
-    Output.Color = Input.Color * color;
+    Output.Color = Input.Color;// * color;
 }

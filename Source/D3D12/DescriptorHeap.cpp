@@ -9,9 +9,9 @@ void FDescriptorHeap::Create(D3D12_DESCRIPTOR_HEAP_TYPE Type, UINT NumDescriptor
 	heapDesc.NodeMask = 0;
 
 	
-	GRHI.Device->CreateDescriptorHeap(
+	ThrowIfFailed(GRHI.Device->CreateDescriptorHeap(
 		&heapDesc,
-		IID_PPV_ARGS(&heap));
+		IID_PPV_ARGS(&heap)), "DescriptorHeap: Failed To Create Descriptor Heap");
 
 	heap->SetName(Name);
 }

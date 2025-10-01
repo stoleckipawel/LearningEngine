@@ -16,8 +16,8 @@ void FGeometry::UploadVertexBuffer()
 	vertexList.push_back({ {-0.75f, 0.0f,  0.75f}, {1.0, 1.0, 1.0, 1.0} });
 	vertexList.push_back({ {0.0f, 0.75f,  0.75f}, {1.0, 1.0, 1.0, 1.0} });
 
-	UINT vertsDataSize = sizeof(Vertex) * vertexList.size();
-	FUploadBuffer::Upload(vertexBuffer, vertexList.data(), vertsDataSize);
+	const UINT vertsDataSize = sizeof(vertexList);
+	vertexBuffer = FUploadBuffer::Upload(vertexList.data(), vertsDataSize);
 
 	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
 	vertexBufferView.SizeInBytes = vertsDataSize;
@@ -35,7 +35,7 @@ void FGeometry::UploadIndexBuffer()
 	indexList.push_back(1);
 
 	UINT indexDataSize = sizeof(DWORD) * indexList.size();
-	FUploadBuffer::Upload(indexBuffer, indexList.data(), indexDataSize);
+	indexBuffer = FUploadBuffer::Upload(indexList.data(), indexDataSize);
 
 	indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
 	indexBufferView.SizeInBytes = indexDataSize;

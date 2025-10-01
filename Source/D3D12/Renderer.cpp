@@ -28,7 +28,7 @@ void FRenderer::UnloadTextures()
 
 void FRenderer::LoadShaders()
 {
-	vertexShader = FShaderCompiler(L"Shaders/VertShader.hlsl", "vs_5_0", "main");
+	vertexShader = FShaderCompiler(L"Shaders/VertShader.hlsl", "vs_5_0", "main");//To Do check 6.0 shaders
 	pixelShader = FShaderCompiler(L"Shaders/PixShader.hlsl", "ps_5_0", "main");
 }
 
@@ -124,13 +124,13 @@ void FRenderer::CreateDepthStencilBuffer()
 
 void FRenderer::CreateConstantBuffers(FDescriptorHeap& descriptorHeap)
 {
-	ConstantBuffer.Create();
-	ConstantBuffer.CreateConstantBufferView(cbvHeap);
+	//ConstantBuffer.Create();
+	//ConstantBuffer.CreateConstantBufferView(cbvHeap);
 }
 
 void FRenderer::ReleaseConstantBuffers()
 {
-	ConstantBuffer.Resource.Release();
+	//ConstantBuffer.Resource.Release();
 }
 
 void FRenderer::Load()
@@ -140,7 +140,7 @@ void FRenderer::Load()
 	CreateRootSignatures();
 	CreatePSOs();
 	CreateDescriptorHeaps();
-	CreateConstantBuffers(cbvHeap);
+	//CreateConstantBuffers(cbvHeap);
 	CreateFrameBuffers();
 }
 
@@ -158,7 +158,7 @@ void FRenderer::Release()
 	ReleasePSOs();
 	ReleaseFrameBuffers();
 	ReleaseDescriptorHeaps();
-	ReleaseConstantBuffers();
+	//ReleaseConstantBuffers();
 }
 
 void FRenderer::SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
@@ -197,27 +197,26 @@ void FRenderer::PopulateCommandList()
 		D3D12_RESOURCE_STATE_PRESENT,
 		D3D12_RESOURCE_STATE_RENDER_TARGET);
 	
+	
+	//GRHI.CmdList->SetGraphicsRootSignature(rootSignature.rootSignature);
+	//SetViewport(GRHI.CmdList);
+
+	//SetBackBufferRTV(GRHI.CmdList);	
+
 	ClearBackBuffer(GRHI.CmdList);
 
-	//SetBackBufferRTV(GRHI.CmdList);
-/*	
-	vertecies.Set(GRHI.CmdList);
-
-	pso.Set(GRHI.CmdList);
-
-	GRHI.CmdList->SetGraphicsRootSignature(rootSignature.rootSignature);
-	ID3D12DescriptorHeap* heaps[] = { cbvHeap.heap.Get() };
-	GRHI.CmdList->SetDescriptorHeaps(_countof(heaps), heaps);
-	GRHI.CmdList->SetGraphicsRootDescriptorTable(0, cbvHeap.heap->GetGPUDescriptorHandleForHeapStart());
-	
-	SetViewport(GRHI.CmdList);
-
+	//vertecies.Set(GRHI.CmdList);
 
 	//GRHI.CmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 	//GRHI.CmdList->DrawIndexedInstanced(6, 1, 0, 4, 0); // draw second quad
-
 	
+	/*	
+	pso.Set(GRHI.CmdList);
+	ID3D12DescriptorHeap* heaps[] = { cbvHeap.heap.Get() };
+	GRHI.CmdList->SetDescriptorHeaps(_countof(heaps), heaps);
+	GRHI.CmdList->SetGraphicsRootDescriptorTable(0, cbvHeap.heap->GetGPUDescriptorHandleForHeapStart());
 	*/
+
 	//Sets BackbBuffer to Present State
 	GRHI.SetBarrier(
 		GSwapChain.GetBackBufferResource(),
@@ -283,10 +282,10 @@ void FRenderer::WaitForPreviousFrame()
 void FRenderer::OnRender()
 {
 	OnUpdate();
-
+	//GRHI.CmdList->Close();
 	// Prepare the command list to render a new frame.
     ThrowIfFailed(GRHI.CmdAllocator->Reset(), "Renderer: Failed To Reset Command Allocator");
-    ThrowIfFailed(GRHI.CmdList->Reset(GRHI.CmdAllocator.Get(), nullptr), "Renderer: Failed To Reset Command List");
+    ThrowIfFailed(GRHI.CmdList->Reset(GRHI.CmdAllocator.Get(), pso.pso.Get()), "Renderer: Failed To Reset Command List");
 
 	// Record all the commands we need to render the scene into the command list.
 	PopulateCommandList();

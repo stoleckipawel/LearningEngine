@@ -6,7 +6,7 @@
 class FRootSignature
 {
 public:
-	bool Create();
+	void Create();
 public:
 	ComPointer<ID3D12RootSignature> rootSignature = nullptr;
 };

@@ -5,5 +5,5 @@
 class FUploadBuffer
 {
 public:
-	static void Upload(ComPointer<ID3D12Resource2>& buffer, void* data, uint32_t dataSize);
+	static ComPointer<ID3D12Resource2> Upload(void* data, uint32_t dataSize);
 };
