@@ -142,6 +142,9 @@ void FRenderer::Load()
 	CreateDescriptorHeaps();
 	//CreateConstantBuffers(cbvHeap);
 	CreateFrameBuffers();
+
+	//W8 single frame for resources to be ready for rendering
+	WaitForPreviousFrame();
 }
 
 void FRenderer::Unload()
@@ -198,17 +201,17 @@ void FRenderer::PopulateCommandList()
 		D3D12_RESOURCE_STATE_RENDER_TARGET);
 	
 	
-	//GRHI.CmdList->SetGraphicsRootSignature(rootSignature.rootSignature);
-	//SetViewport(GRHI.CmdList);
+	GRHI.CmdList->SetGraphicsRootSignature(rootSignature.rootSignature);
+	SetViewport(GRHI.CmdList);
 
-	//SetBackBufferRTV(GRHI.CmdList);	
+	SetBackBufferRTV(GRHI.CmdList);	
 
 	ClearBackBuffer(GRHI.CmdList);
 
-	//vertecies.Set(GRHI.CmdList);
+	vertecies.Set(GRHI.CmdList);
 
-	//GRHI.CmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
-	//GRHI.CmdList->DrawIndexedInstanced(6, 1, 0, 4, 0); // draw second quad
+	GRHI.CmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+	GRHI.CmdList->DrawIndexedInstanced(6, 1, 0, 4, 0); // draw second quad
 	
 	/*	
 	pso.Set(GRHI.CmdList);
@@ -282,7 +285,7 @@ void FRenderer::WaitForPreviousFrame()
 void FRenderer::OnRender()
 {
 	OnUpdate();
-	//GRHI.CmdList->Close();
+
 	// Prepare the command list to render a new frame.
     ThrowIfFailed(GRHI.CmdAllocator->Reset(), "Renderer: Failed To Reset Command Allocator");
     ThrowIfFailed(GRHI.CmdList->Reset(GRHI.CmdAllocator.Get(), pso.pso.Get()), "Renderer: Failed To Reset Command List");
