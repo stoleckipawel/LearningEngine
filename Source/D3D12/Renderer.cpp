@@ -210,7 +210,7 @@ void FRenderer::PopulateCommandList()
 
 	vertecies.Set(GRHI.CmdList);
 
-	GRHI.CmdList->DrawInstanced(3, 1, 0, 0);
+	GRHI.CmdList->DrawIndexedInstanced(3, 1, 0, 0, 0);
 	
 	/*	
 	pso.Set(GRHI.CmdList);
