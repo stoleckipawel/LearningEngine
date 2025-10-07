@@ -41,6 +41,8 @@ private:
 	void CreatePSOs();
 	void ReleasePSOs();
 
+	void CreateCommandList();
+
 	void CreateDepthStencilBuffer();
 	void CreateFrameBuffers();
 	void ReleaseFrameBuffers();

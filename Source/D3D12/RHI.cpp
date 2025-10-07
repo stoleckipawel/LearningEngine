@@ -88,9 +88,6 @@ bool FRHI::Initialize(bool RequireDXRSupport)
 	//Create Command Allocator
 	ThrowIfFailed(GRHI.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&GRHI.CmdAllocator)), "RHI: Failed To Create Command Allocator");
 	
-	//Create Command List
-	ThrowIfFailed(GRHI.Device->CreateCommandList1(0, D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_LIST_FLAG_NONE, IID_PPV_ARGS(&GRHI.CmdList)), "RHI: Failed To Create Command List");
-
 	//Create Fence
 	{
 		ThrowIfFailed(GRHI.Device->CreateFence(FenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)), "RHI: Failed To Create Fence");
@@ -109,7 +106,6 @@ bool FRHI::Initialize(bool RequireDXRSupport)
 
 void FRHI::Shutdown()
 {
-	GRHI.CmdList.Release();
 	GRHI.CmdAllocator.Release();
 
 	if (FenceEvent)

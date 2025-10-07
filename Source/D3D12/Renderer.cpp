@@ -73,6 +73,16 @@ void FRenderer::ReleasePSOs()
 	pso.pso.Release();
 }
 
+void FRenderer::CreateCommandList()
+{
+	// Create the command list.
+	ThrowIfFailed(GRHI.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, GRHI.CmdAllocator.Get(), pso.pso.Get(), IID_PPV_ARGS(&GRHI.CmdList)), "RHI: Failed To Create Command List");
+
+	// Command lists are created in the recording state, but there is nothing
+	// to record yet. The main loop expects it to be closed, so close it now.
+	ThrowIfFailed(GRHI.CmdList->Close(), "RHI: Failed To Close Command List");
+}
+
 void FRenderer::CreateDepthStencilBuffer()
 {
 	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -139,6 +149,7 @@ void FRenderer::Load()
 
 	CreateRootSignatures();
 	CreatePSOs();
+	CreateCommandList();
 	CreateDescriptorHeaps();
 	//CreateConstantBuffers(cbvHeap);
 	CreateFrameBuffers();
@@ -157,10 +168,12 @@ void FRenderer::Unload()
 void FRenderer::Release()
 {
 	GRHI.Flush();
+	GRHI.CmdList.Release();
 	ReleaseRootSignatures();
 	ReleasePSOs();
 	ReleaseFrameBuffers();
 	ReleaseDescriptorHeaps();
+	
 	//ReleaseConstantBuffers();
 }
 
