@@ -4,10 +4,11 @@
 void FGeometry::UploadVertexBuffer()
 {
 	std::vector<Vertex> vertexList;
-	//First Quad
-	vertexList.push_back({ {0.0f, 0.5f, 0.5f}, {1.0, 0.0, 1.0, 1.0} });
-	vertexList.push_back({ {0.5f,  -0.5f,  0.5f}, {0.0, 1.0, 1.0, 1.0} });
-	vertexList.push_back({ {-0.5f, -0.5f,  0.5f}, {1.0, 1.0, 0.0, 1.0} });
+    // Plane (Quad) vertices
+    vertexList.push_back({ { -0.5f,  0.5f, 0.0f }, { 1.0, 0.0, 0.0, 1.0 } }); // Top-left
+    vertexList.push_back({ {  0.5f,  0.5f, 0.0f }, { 0.0, 1.0, 0.0, 1.0 } }); // Top-right
+    vertexList.push_back({ {  0.5f, -0.5f, 0.0f }, { 0.0, 0.0, 1.0, 1.0 } }); // Bottom-right
+    vertexList.push_back({ { -0.5f, -0.5f, 0.0f }, { 1.0, 1.0, 0.0, 1.0 } }); // Bottom-left
 
 	const UINT vertsDataSize = sizeof(Vertex) * vertexList.size();
 	vertexBuffer = FUploadBuffer::Upload(vertexList.data(), vertsDataSize);
@@ -20,9 +21,14 @@ void FGeometry::UploadVertexBuffer()
 void FGeometry::UploadIndexBuffer()
 {
 	std::vector<DWORD> indexList;
-	indexList.push_back(0);
-	indexList.push_back(1);
-	indexList.push_back(2);
+    // Two triangles for the quad
+    indexList.push_back(0); // Top-left
+    indexList.push_back(1); // Top-right
+    indexList.push_back(2); // Bottom-right
+
+    indexList.push_back(0); // Top-left
+    indexList.push_back(2); // Bottom-right
+    indexList.push_back(3); // Bottom-left
 
 	UINT indexDataSize = sizeof(DWORD) * indexList.size();
 	indexBuffer = FUploadBuffer::Upload(indexList.data(), indexDataSize);

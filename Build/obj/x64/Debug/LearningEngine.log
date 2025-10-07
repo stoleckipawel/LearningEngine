@@ -1,9 +1,9 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(523,5): warning MSB8004: Intermediate Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Intermediate Directory.
 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(524,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
   Geometry.cpp
-C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\Geometry.cpp(12,44): warning C4267: 'initializing': conversion from 'size_t' to 'UINT', possible loss of data
-C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\Geometry.cpp(12,27): warning C4267: 'initializing': conversion from 'size_t' to 'const UINT', possible loss of data
-C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\Geometry.cpp(27,21): warning C4267: 'initializing': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\Geometry.cpp(13,44): warning C4267: 'initializing': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\Geometry.cpp(13,27): warning C4267: 'initializing': conversion from 'size_t' to 'const UINT', possible loss of data
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\Geometry.cpp(33,21): warning C4267: 'initializing': conversion from 'size_t' to 'UINT', possible loss of data
   Renderer.cpp
   Generating Code...
   LearningEngine.vcxproj -> C:\Users\stole\Documents\GitHub\LearningEngine\Build\bin\x64\Debug\LearningEngine.exe
