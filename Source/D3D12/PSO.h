@@ -29,7 +29,7 @@ class FPSO
 {
 public:
 	void Create(FGeometry& vertecies, ID3D12RootSignature* rootSignature, FShaderCompiler& vertexShader, FShaderCompiler& pixelShader);
-	void Set(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
+	void Set(ID3D12GraphicsCommandList7* cmdList);
 
 	ComPointer<ID3D12PipelineState> pso = nullptr;
 	void SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc);

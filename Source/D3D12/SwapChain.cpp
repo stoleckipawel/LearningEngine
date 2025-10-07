@@ -18,7 +18,7 @@ void FSwapChain::Initialize()
 			swapChainDesc.SampleDesc.Quality = 0;
 			swapChainDesc.SampleDesc.Count = 1;
 			swapChainDesc.BufferUsage = DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_RENDER_TARGET_OUTPUT;
-			swapChainDesc.BufferCount = GetFrameBufferingCount();
+			swapChainDesc.BufferCount = BufferingCount;
 			swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
 			swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 			swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
@@ -36,12 +36,12 @@ void FSwapChain::Initialize()
 		ThrowIfFailed(swapChain.QueryInterface(m_swapChain), "Failed to Query Swap Chain Interface");
 	}
 
-	UpdateBackBufferIndex();
+	UpdateCurrentBackBufferIndex();
 
 	//Create Descriptor Heap
 	D3D12_DESCRIPTOR_HEAP_DESC rtvDescHeapDesc{};
 	{
-		rtvDescHeapDesc.NumDescriptors = GetFrameBufferingCount();
+		rtvDescHeapDesc.NumDescriptors = BufferingCount;
 		rtvDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 		rtvDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 		ThrowIfFailed(GRHI.Device->CreateDescriptorHeap(&rtvDescHeapDesc, IID_PPV_ARGS(&m_rtvHeap)), "Failed to Create Descriptor Heap for Window");
@@ -52,7 +52,7 @@ void FSwapChain::Initialize()
 	//Create RenderTarget View & View Handles
 	{
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
-		for (UINT i = 0; i < GetFrameBufferingCount(); i++)
+		for (UINT i = 0; i < BufferingCount; i++)
 		{
 			m_rtvHandles[i] = rtvHandle;
 			m_rtvHandles[i].ptr += m_rtvDescriptorSize * i;
@@ -66,7 +66,7 @@ void FSwapChain::Resize()
 {
 	ReleaseBuffers();
 
-	m_swapChain->ResizeBuffers(GetFrameBufferingCount(),
+	m_swapChain->ResizeBuffers(BufferingCount,
 		GWindow.GetWidth(), GWindow.GetHeight(),
 		DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH |
 		DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING);
@@ -77,7 +77,7 @@ void FSwapChain::Resize()
 void FSwapChain::CreateRenderTargetViews()
 {
 	//Get Swap Buffers
-	for (UINT i = 0; i < GetFrameBufferingCount(); i++)
+	for (UINT i = 0; i < BufferingCount; i++)
 	{
 		ThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])), "Failed To get Swapchain Buffer!");
 		
@@ -127,7 +127,7 @@ void FSwapChain::Present()
 
 void FSwapChain::ReleaseBuffers()
 {
-	for (UINT i = 0; i < GetFrameBufferingCount(); i++)
+	for (UINT i = 0; i < BufferingCount; i++)
 	{
 		m_buffers[i].Release();
 	}

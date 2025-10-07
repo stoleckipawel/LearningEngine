@@ -50,7 +50,7 @@ void FGeometry::Release()
 	vertexBuffer.Release();
 }
 
-void FGeometry::Set(ComPointer<ID3D12GraphicsCommandList7>& cmdList)
+void FGeometry::Set(ID3D12GraphicsCommandList7* cmdList)
 {
 	//Input Assembler
 	cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);

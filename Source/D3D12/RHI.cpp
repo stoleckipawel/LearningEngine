@@ -1,10 +1,24 @@
 #include "RHI.h"
 #include "DebugLayer.h"
 #include "Window.h"
-#include "SwapChain.h"
+
 
 FRHI GRHI;
 
+ComPointer<ID3D12GraphicsCommandList7> FRHI::GetCurrentCommandList()
+{
+	return GRHI.CmdList[GSwapChain.GetCurrentBackBufferIndex()];
+}
+
+ComPointer<ID3D12CommandAllocator> FRHI::GetCurrentCommandAllocator()
+{
+	return GRHI.CmdAllocator[GSwapChain.GetCurrentBackBufferIndex()];
+}
+
+UINT64 FRHI::GetCurrentFenceValue()
+{
+	return GRHI.FenceValues[GSwapChain.GetCurrentBackBufferIndex()];
+}
 
 void FRHI::SelectAdapter()
 {
@@ -85,13 +99,19 @@ bool FRHI::Initialize(bool RequireDXRSupport)
 
 	GSwapChain.Initialize();
 	
-	//Create Command Allocator
-	ThrowIfFailed(GRHI.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&GRHI.CmdAllocator)), "RHI: Failed To Create Command Allocator");
+	//Create Command Allocators (Frame Buffered)
+	{
+		for (size_t i = 0; i < BufferingCount; ++i) 
+		{ 
+			ThrowIfFailed(GRHI.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&GRHI.CmdAllocator[i])), "RHI: Failed To Create Command Allocator"); 
+		}
+	}
 	
 	//Create Fence
 	{
-		ThrowIfFailed(GRHI.Device->CreateFence(FenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence)), "RHI: Failed To Create Fence");
-
+		ThrowIfFailed(GRHI.Device->CreateFence(GRHI.GetCurrentFenceValue(), D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&GRHI.Fence)), "RHI: Failed To Create Fence");
+		GRHI.FenceValues[GSwapChain.GetCurrentBackBufferIndex()]++;
+	
 		FenceEvent = CreateEvent(nullptr, false, false, nullptr);
 		if (!FenceEvent)
 		{
@@ -106,7 +126,10 @@ bool FRHI::Initialize(bool RequireDXRSupport)
 
 void FRHI::Shutdown()
 {
-	GRHI.CmdAllocator.Release();
+	for(size_t i = 0; i < BufferingCount; ++i) 
+	{ 
+		GRHI.CmdAllocator[i].Release();
+	}
 
 	if (FenceEvent)
 	{
@@ -119,36 +142,10 @@ void FRHI::Shutdown()
 	GRHI.DxgiFactory.Release();
 }
 
-void FRHI::Flush()
-{
-	for (size_t i = 0; i < GSwapChain.GetFrameBufferingCount(); ++i) 
-	{ 
-		SignalAndWait(); 
-	}
-}
-
-void FRHI::SignalAndWait()
-{
-	ThrowIfFailed(GRHI.CmdQueue->Signal(Fence, ++FenceValue), "RHI: Failed To Signal Command Queue");
-
-	if (SUCCEEDED(Fence->SetEventOnCompletion(FenceValue, FenceEvent)))
-	{
-		if (WaitForSingleObject(FenceEvent, 20000) != WAIT_OBJECT_0)
-		{
-			std::exit(-1);
-		}
-	}
-	else
-	{
-		std::exit(-1);
-	}
-}
-
 void FRHI::ExecuteCommandList()
 {
-	ID3D12CommandList* ppcommandLists[] = { GRHI.CmdList.Get() };
+	ID3D12CommandList* ppcommandLists[] = { GRHI.GetCurrentCommandList().Get() };
 	GRHI.CmdQueue->ExecuteCommandLists(1, ppcommandLists);
-	SignalAndWait();
 }
 
 void FRHI::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter)
@@ -161,5 +158,5 @@ void FRHI::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefor
 	barrier.Transition.StateBefore = StateBefore;
 	barrier.Transition.StateAfter = StateAfter;
 
-	GRHI.CmdList->ResourceBarrier(1, &barrier);
+	GRHI.GetCurrentCommandList()->ResourceBarrier(1, &barrier);
 }

@@ -41,7 +41,8 @@ private:
 	void CreatePSOs();
 	void ReleasePSOs();
 
-	void CreateCommandList();
+	void CreateCommandLists();
+	void ReleaseCommandLists();
 
 	void CreateDepthStencilBuffer();
 	void CreateFrameBuffers();
@@ -50,12 +51,13 @@ private:
 	void CreateConstantBuffers(FDescriptorHeap& descriptorHeap);
 	void ReleaseConstantBuffers();
 
-	void SetViewport(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
-	void ClearBackBuffer(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
-	void SetBackBufferRTV(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
+	void SetViewport(ID3D12GraphicsCommandList7* cmdList);
+	void ClearBackBuffer(ID3D12GraphicsCommandList7* cmdList);
+	void SetBackBufferRTV(ID3D12GraphicsCommandList7* cmdList);
 
 	void PopulateCommandList();
-	void WaitForPreviousFrame();
+	void WaitForGPU();
+	void MoveToNextFrame();
 	
 	void UpdateRainbowColor();
 	void OnUpdate();

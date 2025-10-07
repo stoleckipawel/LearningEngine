@@ -19,7 +19,7 @@ public:
 	void UploadIndexBuffer();
 	void Upload();
 	void Release();
-	void Set(ComPointer<ID3D12GraphicsCommandList7>& cmdList);
+	void Set(ID3D12GraphicsCommandList7* cmdList);
 	std::vector<D3D12_INPUT_ELEMENT_DESC> GetVertexLayout();
 	D3D12_RESOURCE_DESC CreateVertexBufferDesc(uint32_t VertexCount);
 
