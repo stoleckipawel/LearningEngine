@@ -22,7 +22,7 @@ void FSwapChain::Initialize()
 			swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
 			swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 			swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
-			swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+			swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 		}
 
 		DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullsceenDesc{};
@@ -36,13 +36,11 @@ void FSwapChain::Initialize()
 		ThrowIfFailed(swapChain.QueryInterface(m_swapChain), "Failed to Query Swap Chain Interface");
 	}
 
-	UpdateCurrentBackBufferIndex();
-
 	//Create Descriptor Heap
 	D3D12_DESCRIPTOR_HEAP_DESC rtvDescHeapDesc{};
 	{
-		rtvDescHeapDesc.NumDescriptors = BufferingCount;
 		rtvDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		rtvDescHeapDesc.NumDescriptors = BufferingCount;
 		rtvDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 		ThrowIfFailed(GRHI.Device->CreateDescriptorHeap(&rtvDescHeapDesc, IID_PPV_ARGS(&m_rtvHeap)), "Failed to Create Descriptor Heap for Window");
 

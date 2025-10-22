@@ -51,16 +51,16 @@ void FRenderer::ReleaseRootSignatures()
 
 void FRenderer::CreateDescriptorHeaps()
 {
-	cbvHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 32, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"CBVHeap");
-	samplerHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 32, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"SamplerHeap");
-	dsvHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, L"DepthStencilHeap");
+	ConstantBufferHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, BufferingCount * NumConstantBuffers, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"ConstantBufferHeap");
+	SamplerHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 32, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"SamplerHeap");
+	DepthStencilViewHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, L"DepthStencilHeap");
 }
 
 void FRenderer::ReleaseDescriptorHeaps()
 {
-	cbvHeap.heap.Release();
-	samplerHeap.heap.Release();
-	dsvHeap.heap.Release();
+	ConstantBufferHeap.heap.Release();
+	SamplerHeap.heap.Release();
+	DepthStencilViewHeap.heap.Release();
 }
 
 void FRenderer::CreatePSOs()
@@ -138,19 +138,35 @@ void FRenderer::CreateDepthStencilBuffer()
 		LogError(message, ELogType::Warning);
 	}
 
-	dsvHandle = dsvHeap.heap->GetCPUDescriptorHandleForHeapStart();
-	GRHI.Device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, dsvHandle);
+	DepthStencilHandle = DepthStencilViewHeap.heap->GetCPUDescriptorHandleForHeapStart();
+	GRHI.Device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, DepthStencilHandle);
 }
 
-void FRenderer::CreateConstantBuffers(FDescriptorHeap& descriptorHeap)
+void FRenderer::CreateConstantBuffers()
 {
-	//ConstantBuffer.Create();
-	//ConstantBuffer.CreateConstantBufferView(cbvHeap);
+	for (size_t i = 0; i < BufferingCount; ++i)
+	{
+		//Create Vertex Constant Buffer
+		FConstantBuffer<FVertexConstantBuffer> vertexConstantBuffer;
+		vertexConstantBuffer.Initialize(0);
+		vertexConstantBuffer.CreateConstantBufferView(ConstantBufferHeap.GetCPUHandle(i, vertexConstantBuffer.HandleIndex));
+		VertexConstantBuffers[i] = vertexConstantBuffer;
+
+		//Create Pixel Constant Buffer
+		FConstantBuffer<FPixelConstantBuffer> pixelConstantBuffer;
+		pixelConstantBuffer.Initialize(1);
+		pixelConstantBuffer.CreateConstantBufferView(ConstantBufferHeap.GetCPUHandle(i, pixelConstantBuffer.HandleIndex));
+		PixelConstantBuffers[i] = pixelConstantBuffer;
+	}
 }
 
 void FRenderer::ReleaseConstantBuffers()
 {
-	//ConstantBuffer.Resource.Release();
+	for (size_t i = 0; i < BufferingCount; ++i)
+	{
+		VertexConstantBuffers[i].Resource.Release();
+		PixelConstantBuffers[i].Resource.Release();
+	}
 }
 
 void FRenderer::Load()
@@ -161,11 +177,10 @@ void FRenderer::Load()
 	CreatePSOs();
 	CreateCommandLists();
 	CreateDescriptorHeaps();
-	//CreateConstantBuffers(cbvHeap);
+	CreateConstantBuffers();
 	CreateFrameBuffers();
 
-	//W8 single frame for resources to be ready for rendering
-	WaitForGPU();
+	GRHI.Flush();
 }
 
 void FRenderer::Unload()
@@ -182,35 +197,52 @@ void FRenderer::Release()
 	ReleasePSOs();
 	ReleaseFrameBuffers();
 	ReleaseDescriptorHeaps();
-	//ReleaseConstantBuffers();
+	ReleaseConstantBuffers();
 }
 
-void FRenderer::SetViewport(ID3D12GraphicsCommandList7* cmdList)
+void FRenderer::SetViewport()
 {
 	//Rasterizer State: Viewport
 	D3D12_VIEWPORT viewport = GSwapChain.GetDefaultViewport();
-	cmdList->RSSetViewports(1, &viewport);
+	GRHI.GetCurrentCommandList()->RSSetViewports(1, &viewport);
+
 	//Rasterizer State: Scissor  
 	D3D12_RECT scissorRect = GSwapChain.GetDefaultScissorRect();
-	cmdList->RSSetScissorRects(1, &scissorRect);
+	GRHI.GetCurrentCommandList()->RSSetScissorRects(1, &scissorRect);
 }
 
-void FRenderer::ClearBackBuffer(ID3D12GraphicsCommandList7* cmdList)
+void FRenderer::ClearBackBuffer()
 {
 	//Clear backbuffer 
 	float clearColor[4] = {255.0f, 0.5f, 0.5f, 1.0f };
 	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GSwapChain.GetBackbufferRTVHandle();
-	cmdList->ClearRenderTargetView(backBufferRTVHandle, clearColor, 0, nullptr);
-
-	dsvHandle = dsvHeap.heap->GetCPUDescriptorHandleForHeapStart();
-	cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	GRHI.GetCurrentCommandList()->ClearRenderTargetView(backBufferRTVHandle, clearColor, 0, nullptr);
 }
 
-void FRenderer::SetBackBufferRTV(ID3D12GraphicsCommandList7* cmdList)
+void FRenderer::ClearDepthStencilBuffer()
+{
+	DepthStencilHandle = DepthStencilViewHeap.heap->GetCPUDescriptorHandleForHeapStart();
+	GRHI.GetCurrentCommandList()->ClearDepthStencilView(DepthStencilHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+}
+
+void FRenderer::SetBackBufferRTV()
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GSwapChain.GetBackbufferRTVHandle();
-	dsvHandle = dsvHeap.heap->GetCPUDescriptorHandleForHeapStart();
-	cmdList->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &dsvHandle);
+	DepthStencilHandle = DepthStencilViewHeap.heap->GetCPUDescriptorHandleForHeapStart();
+	GRHI.GetCurrentCommandList()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &DepthStencilHandle);
+}
+
+void FRenderer::SetDescriptorHeaps()
+{
+	ID3D12DescriptorHeap* heaps[] = { ConstantBufferHeap.heap.Get() };
+	GRHI.GetCurrentCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
+}
+
+void FRenderer::BindDescriptorTables()
+{
+	ConstantBufferHeap.GetCurrentFrameGPUHandle(0);
+	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(0, ConstantBufferHeap.GetCurrentFrameGPUHandle(VertexConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].HandleIndex));
+	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(1, ConstantBufferHeap.GetCurrentFrameGPUHandle(PixelConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].HandleIndex));
 }
 
 void FRenderer::PopulateCommandList()
@@ -222,22 +254,22 @@ void FRenderer::PopulateCommandList()
 		D3D12_RESOURCE_STATE_RENDER_TARGET);
 	
 	GRHI.GetCurrentCommandList()->SetGraphicsRootSignature(rootSignature.rootSignature);
-	SetViewport(GRHI.GetCurrentCommandList());
 
-	SetBackBufferRTV(GRHI.GetCurrentCommandList());
+	SetViewport();
 
-	ClearBackBuffer(GRHI.GetCurrentCommandList());
+	SetBackBufferRTV();
 
-	vertecies.Set(GRHI.GetCurrentCommandList());
+	ClearBackBuffer();
+	ClearDepthStencilBuffer();
+
+	vertecies.Set();
+
+	SetDescriptorHeaps();
+	BindDescriptorTables();
+
+	pso.Set();
 
 	GRHI.GetCurrentCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
-
-	/*	
-	pso.Set(GRHI.GetCurrentCommandList());
-	ID3D12DescriptorHeap* heaps[] = { cbvHeap.heap.Get() };
-	GRHI.GetCurrentCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
-	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(0, cbvHeap.heap->GetGPUDescriptorHandleForHeapStart());
-	*/
 
 	//Sets BackbBuffer to Present State
 	GRHI.SetBarrier(
@@ -260,12 +292,20 @@ void FRenderer::UpdateRainbowColor()
 {
 	float speed = FrameIndex * 0.02f; // Speed of the color change
 
-	FConstantBufferData data;
-	data.color.x = 0.5f + 0.5f * sinf(speed);
-	data.color.y = 0.5f + 0.5f * sinf(speed + 2.0f);
-	data.color.z = 0.5f + 0.5f * sinf(speed + 4.0f);
-	data.color.w = 1.0f;
-	//ConstantBuffer.Update(data);
+	//Update Vertex Constant Buffers
+	FVertexConstantBuffer vertexData;
+	vertexData.WorldMTX = XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f);
+	vertexData.ViewMTX = XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f);
+	vertexData.ProjectionMTX = XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f);
+	VertexConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].Update(vertexData);
+
+	//Update Pixel Constant Buffers
+	FPixelConstantBuffer pixelData;
+	pixelData.Color.x = 0.5f + 0.5f * sinf(speed);
+	pixelData.Color.y = 0.5f + 0.5f * sinf(speed + 2.0f);
+	pixelData.Color.z = 0.5f + 0.5f * sinf(speed + 4.0f);
+	pixelData.Color.w = 1.0f;
+	PixelConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].Update(pixelData);
 }
 
 // Update frame-based values.
@@ -277,50 +317,17 @@ void FRenderer::OnUpdate()
 
 void FRenderer::OnResize()
 {
-	//Wait for GPU to finish with all resources?
+	GRHI.Flush();
 	ReleaseFrameBuffers();
 	CreateFrameBuffers();
-}
-
-// Wait for pending GPU work to complete.
-void FRenderer::WaitForGPU()
-{	
-	// Schedule a Signal command in the queue.
-	ThrowIfFailed(GRHI.CmdQueue->Signal(GRHI.Fence, GRHI.GetCurrentFenceValue()), "RHI: Failed To Signal Command Queue");
-
-    // Wait until the fence has been processed.
-    ThrowIfFailed(GRHI.Fence->SetEventOnCompletion(GRHI.GetCurrentFenceValue(), GRHI.FenceEvent), "RHI: Failed To Signal Command Queue");
-    WaitForSingleObjectEx(GRHI.FenceEvent, INFINITE, FALSE);
-
-	// Increment the fence value for the current frame.
-	GRHI.FenceValues[GSwapChain.GetCurrentBackBufferIndex()]++;
-}
-
-// Prepare to render the next frame.
-void FRenderer::MoveToNextFrame()
-{
-    // Schedule a Signal command in the queue.
-    const UINT64 currentFenceValue = GRHI.GetCurrentFenceValue();
-	ThrowIfFailed(GRHI.CmdQueue->Signal(GRHI.Fence, currentFenceValue), "RHI: Failed To Signal Command Queue");
-
-	// Update the frame index.
-	GSwapChain.UpdateCurrentBackBufferIndex();
-
-	// If the next frame is not ready to be rendered yet, wait until it is ready.
-	if (GRHI.Fence->GetCompletedValue() < GRHI.GetCurrentFenceValue())
-	{
-		ThrowIfFailed(GRHI.Fence->SetEventOnCompletion(GRHI.GetCurrentFenceValue(), GRHI.FenceEvent), "RHI: Failed To Signal Command Queue");
-		WaitForSingleObjectEx(GRHI.FenceEvent, INFINITE, FALSE);
-	}
-
-	// Set the fence value for the next frame.
-	GRHI.FenceValues[GSwapChain.GetCurrentBackBufferIndex()] = currentFenceValue + 1;
 }
 
 // Render the scene.
 void FRenderer::OnRender()
 {
 	OnUpdate();
+
+	GRHI.WaitForGPU();
 
 	// Prepare the command list to render a new frame.
     ThrowIfFailed(GRHI.GetCurrentCommandAllocator()->Reset(), "Renderer: Failed To Reset Command Allocator");
@@ -335,18 +342,19 @@ void FRenderer::OnRender()
 	// Execute the command list.
 	GRHI.ExecuteCommandList();
 
+	// Update Fence Value when GPU completes work
+	GRHI.Signal();
+
 	// Present the frame.
 	GSwapChain.Present();
 
-	// Prepare to render the next frame.
-	MoveToNextFrame();
+	// Update the frame index.
+	GSwapChain.UpdateCurrentBackBufferIndex();
 }
 
 void FRenderer::Shutdown()
 {
-	// Ensure that the GPU is no longer referencing resources that are about to be
-    // cleaned up by the destructor.
-    WaitForGPU();
+	GRHI.Flush();
 
 	// Release all resources.
 	FRenderer::Release();

@@ -152,8 +152,7 @@ void FPSO::Create(FGeometry& vertecies,
 	ThrowIfFailed(GRHI.Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pso)), "Failed To Create PSO");
 }
 
-void FPSO::Set(ID3D12GraphicsCommandList7* cmdList)
+void FPSO::Set()
 {
-	//PSO
-	cmdList->SetPipelineState(pso);
+	GRHI.GetCurrentCommandList()->SetPipelineState(pso);
 }

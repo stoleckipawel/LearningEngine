@@ -3,12 +3,38 @@
 
 void FGeometry::UploadVertexBuffer()
 {
+	//Position
+	//UV
+	//Color
+
 	std::vector<Vertex> vertexList;
     // Plane (Quad) vertices
-    vertexList.push_back({ { -0.5f,  0.5f, 0.0f }, { 1.0, 0.0, 0.0, 1.0 } }); // Top-left
-    vertexList.push_back({ {  0.5f,  0.5f, 0.0f }, { 0.0, 1.0, 0.0, 1.0 } }); // Top-right
-    vertexList.push_back({ {  0.5f, -0.5f, 0.0f }, { 0.0, 0.0, 1.0, 1.0 } }); // Bottom-right
-    vertexList.push_back({ { -0.5f, -0.5f, 0.0f }, { 1.0, 1.0, 0.0, 1.0 } }); // Bottom-left
+    vertexList.push_back({ 
+		{ -0.5f,  0.5f, 0.0f }, 
+		{ 0.0f, 0.0f},
+		{ 1.0, 0.0, 0.0, 1.0 } 
+		}); 
+
+
+    vertexList.push_back({ 
+		{  0.5f,  0.5f, 0.0f }, 
+		{ 1.0f, 0.0f},
+		{ 0.0, 1.0, 0.0, 1.0 } 
+		}); 
+
+
+    vertexList.push_back({ 
+		{  0.5f, -0.5f, 0.0f }, 
+		{ 1.0f, 1.0f},
+		{ 0.0, 0.0, 1.0, 1.0 } 
+		}); 
+
+
+    vertexList.push_back({ 
+		{ -0.5f, -0.5f, 0.0f }, 
+		{ 0.0f, 1.0f},
+		{ 1.0, 1.0, 0.0, 1.0 } 
+		}); 
 
 	const UINT vertsDataSize = sizeof(Vertex) * vertexList.size();
 	vertexBuffer = FUploadBuffer::Upload(vertexList.data(), vertsDataSize);
@@ -50,12 +76,12 @@ void FGeometry::Release()
 	vertexBuffer.Release();
 }
 
-void FGeometry::Set(ID3D12GraphicsCommandList7* cmdList)
+void FGeometry::Set()
 {
 	//Input Assembler
-	cmdList->IASetVertexBuffers(0, 1, &vertexBufferView);
-	cmdList->IASetIndexBuffer(&indexBufferView);
-	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	GRHI.GetCurrentCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	GRHI.GetCurrentCommandList()->IASetIndexBuffer(&indexBufferView);
+	GRHI.GetCurrentCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 std::vector<D3D12_INPUT_ELEMENT_DESC> FGeometry::GetVertexLayout()
@@ -63,6 +89,7 @@ std::vector<D3D12_INPUT_ELEMENT_DESC> FGeometry::GetVertexLayout()
 	return
 	{
 		{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "COLOR",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 }

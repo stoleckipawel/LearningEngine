@@ -8,6 +8,7 @@
 struct Vertex
 {
 	XMFLOAT3 position;
+	XMFLOAT2 uv;
 	XMFLOAT4 color;
 };
 
@@ -19,7 +20,7 @@ public:
 	void UploadIndexBuffer();
 	void Upload();
 	void Release();
-	void Set(ID3D12GraphicsCommandList7* cmdList);
+	void Set();
 	std::vector<D3D12_INPUT_ELEMENT_DESC> GetVertexLayout();
 	D3D12_RESOURCE_DESC CreateVertexBufferDesc(uint32_t VertexCount);
 

@@ -109,10 +109,15 @@ bool FRHI::Initialize(bool RequireDXRSupport)
 	
 	//Create Fence
 	{
-		ThrowIfFailed(GRHI.Device->CreateFence(GRHI.GetCurrentFenceValue(), D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&GRHI.Fence)), "RHI: Failed To Create Fence");
-		GRHI.FenceValues[GSwapChain.GetCurrentBackBufferIndex()]++;
+		for (size_t i = 0; i < BufferingCount; ++i)
+		{
+			GRHI.FenceValues[i] = 0;
+		}
+		
+
+		ThrowIfFailed(GRHI.Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&GRHI.Fence)), "RHI: Failed To Create Fence");
 	
-		FenceEvent = CreateEvent(nullptr, false, false, nullptr);
+		FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 		if (!FenceEvent)
 		{
 			std::string message = "RHI: Failed To Create Fence Event";
@@ -159,4 +164,32 @@ void FRHI::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefor
 	barrier.Transition.StateAfter = StateAfter;
 
 	GRHI.GetCurrentCommandList()->ResourceBarrier(1, &barrier);
+}
+
+void FRHI::WaitForGPU()
+{
+	UINT FenceCurrentValue = GetCurrentFenceValue();
+	UINT FenceCompletedValue = Fence->GetCompletedValue();
+
+	if (FenceCompletedValue < FenceCurrentValue)
+	{
+		ThrowIfFailed(Fence->SetEventOnCompletion(FenceCurrentValue, FenceEvent), "RHI: Failed To Signal Command Queue");
+		WaitForSingleObject(FenceEvent, INFINITE);
+	}
+}
+
+void FRHI::Signal()
+{
+	// Schedule a Signal command in the queue. -> Updates Fence Completed Value
+	UINT64 currentFenceValue = NextFenceValue++;
+	ThrowIfFailed(CmdQueue->Signal(Fence.Get(), currentFenceValue), "RHI: Failed To Signal Command Queue");
+
+	// Set the fence value for the next frame.
+	FenceValues[GSwapChain.GetCurrentBackBufferIndex()] = currentFenceValue;
+}
+
+void FRHI::Flush()
+{
+	Signal();
+	WaitForGPU();
 }

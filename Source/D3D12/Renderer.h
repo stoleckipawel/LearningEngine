@@ -8,9 +8,16 @@
 #include "RootSignature.h"
 #include "ConstantBuffer.h"
 
-struct FConstantBufferData
+struct alignas(256) FVertexConstantBuffer
 {
-	XMFLOAT4 color;
+	XMFLOAT4X4 WorldMTX;
+	XMFLOAT4X4 ViewMTX;
+	XMFLOAT4X4 ProjectionMTX;
+};
+
+struct alignas(256) FPixelConstantBuffer
+{
+	XMFLOAT4 Color;
 };
 
 class FRenderer
@@ -48,16 +55,20 @@ private:
 	void CreateFrameBuffers();
 	void ReleaseFrameBuffers();
 	
-	void CreateConstantBuffers(FDescriptorHeap& descriptorHeap);
+	void CreateConstantBuffers();
 	void ReleaseConstantBuffers();
 
-	void SetViewport(ID3D12GraphicsCommandList7* cmdList);
-	void ClearBackBuffer(ID3D12GraphicsCommandList7* cmdList);
-	void SetBackBufferRTV(ID3D12GraphicsCommandList7* cmdList);
+	void SetViewport();
+
+	void SetBackBufferRTV();
+
+	void ClearBackBuffer();
+	void ClearDepthStencilBuffer();
+
+	void SetDescriptorHeaps();
+	void BindDescriptorTables();
 
 	void PopulateCommandList();
-	void WaitForGPU();
-	void MoveToNextFrame();
 	
 	void UpdateRainbowColor();
 	void OnUpdate();
@@ -66,17 +77,21 @@ private:
 	FGeometry vertecies;
 	FPSO pso;
 	FRootSignature rootSignature;
-	FDescriptorHeap cbvHeap = FDescriptorHeap();
-	FDescriptorHeap samplerHeap = FDescriptorHeap();
-	FDescriptorHeap dsvHeap = FDescriptorHeap();
+	FDescriptorHeap ConstantBufferHeap = FDescriptorHeap();
+	FDescriptorHeap SamplerHeap = FDescriptorHeap();
+	FDescriptorHeap DepthStencilViewHeap = FDescriptorHeap();
+
 	D3D12_RESOURCE_DESC depthStencilResourceDesc = {};
 	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = {};
+	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilHandle = {};
 	ComPointer<ID3D12Resource> depthStencilBuffer = nullptr;
 
-	FConstantBuffer<FConstantBufferData> ConstantBuffer;
+	FConstantBuffer<FVertexConstantBuffer> VertexConstantBuffers[BufferingCount];
+	FConstantBuffer<FPixelConstantBuffer> PixelConstantBuffers[BufferingCount];
+
 	FShaderCompiler vertexShader;
 	FShaderCompiler pixelShader;
+	UINT NumConstantBuffers = 2;
 
 	UINT FrameIndex = 0;
 };

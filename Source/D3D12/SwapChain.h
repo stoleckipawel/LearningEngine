@@ -2,7 +2,7 @@
 
 #include "../Vendor/Windows/WinInclude.h"
 
-static const UINT BufferingCount = 2;
+static const UINT BufferingCount = 3;
 
 class FSwapChain
 {
@@ -23,7 +23,6 @@ public:
 	D3D12_RECT GetDefaultScissorRect();
 
 public:
-	static constexpr UINT BufferingCount = 3;;//2:Vsync OFF, 3: Vsync ON
 	ComPointer<ID3D12DescriptorHeap> m_rtvHeap = nullptr;
 	UINT m_rtvDescriptorSize;
 	D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[BufferingCount];

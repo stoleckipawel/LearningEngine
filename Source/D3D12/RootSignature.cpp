@@ -2,30 +2,18 @@
 
 void FRootSignature::Create()
 {
-    /*
-    D3D12_DESCRIPTOR_RANGE descriptorTableRanges[1];
-    descriptorTableRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-    descriptorTableRanges[0].NumDescriptors = 1;
-    descriptorTableRanges[0].BaseShaderRegister = 0;
-    descriptorTableRanges[0].RegisterSpace = 0;
-    descriptorTableRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    CD3DX12_DESCRIPTOR_RANGE vertexRange;
+    vertexRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, BufferingCount, 0); //b0 -> Vertex Constant Buffer
 
-    D3D12_ROOT_DESCRIPTOR_TABLE descriptorTable = {};
-    descriptorTable.NumDescriptorRanges = 1;
-    descriptorTable.pDescriptorRanges = descriptorTableRanges;
+    CD3DX12_DESCRIPTOR_RANGE pixelRange;
+    pixelRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, BufferingCount, 0); //b0 -> Pixel Constant Buffer
 
-    D3D12_ROOT_PARAMETER rootParameters[1] = {};
-    rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameters[0].DescriptorTable = descriptorTable;
-    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-    */
+    CD3DX12_ROOT_PARAMETER rootParameters[2];
+    rootParameters[0].InitAsDescriptorTable(1, &vertexRange, D3D12_SHADER_VISIBILITY_VERTEX);
+    rootParameters[1].InitAsDescriptorTable(1, &pixelRange, D3D12_SHADER_VISIBILITY_PIXEL);
 
-    D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-    rootSignatureDesc.NumParameters = 0;
-    rootSignatureDesc.pParameters = nullptr;
-    rootSignatureDesc.NumStaticSamplers = 0;
-    rootSignatureDesc.pStaticSamplers = nullptr;
-    rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+    CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
+    rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
     ID3DBlob* signature;
     ID3DBlob* error;

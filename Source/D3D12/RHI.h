@@ -11,6 +11,10 @@ public:
 	void ExecuteCommandList();
 	void SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter);
 
+	void WaitForGPU();
+	void Signal();
+	void Flush();
+
 	ComPointer<ID3D12GraphicsCommandList7> GetCurrentCommandList();
 	ComPointer<ID3D12CommandAllocator> GetCurrentCommandAllocator();
 	UINT64 GetCurrentFenceValue();
@@ -23,6 +27,7 @@ public:
 	ComPointer<ID3D12GraphicsCommandList7> CmdList[BufferingCount] = {};
 
 	UINT64 FenceValues[BufferingCount] = { 0 };
+	UINT64 NextFenceValue = 1;
 	ComPointer<ID3D12Fence1> Fence = nullptr;
 	HANDLE FenceEvent = nullptr;
 

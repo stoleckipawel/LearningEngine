@@ -3,24 +3,28 @@
 struct VsInput
 {
     float3 Position : POSITION;
+    float2 TexCoord : TEXCOORD;
     float4 Color : COLOR;
 };
 
 struct VsOutput
 {
-    float4 Color : COLOR;
+    float2 TexCoord : TEXCOORD;
+    float4 Color : COLOR;   
     float4 Position : SV_POSITION;
 };
 
-/*
-cbuffer ConstantBuffer : register(b0)
+cbuffer VertexConstantBuffer : register(b0)
 {
-    float4 color;
+    float4x4 WorldMTX;
+    float4x4 ViewMTX;
+    float4x4 ProjectionMTX;
 };
-*/
 
 void main(in VsInput Input, out VsOutput Output) 
 {
     Output.Position = float4(Input.Position.xyz, 1.0f);
-    Output.Color = Input.Color;// * color;
+    Output.TexCoord = Input.TexCoord;
+    Output.Color = Input.Color;
+
 }

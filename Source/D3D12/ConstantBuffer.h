@@ -7,25 +7,29 @@ template <typename T>
 class FConstantBuffer
 {
 public:
-	void Create();
+	void Initialize(UINT HandleIndex);
 	void Update(const T& data);
 	void Release();
-	void CreateConstantBufferView(FDescriptorHeap& descriptorHeap);
+	void CreateConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE handle);
 public:
-	D3D12_CONSTANT_BUFFER_VIEW_DESC constantBufferViewDesc;
+    D3D12_CONSTANT_BUFFER_VIEW_DESC ConstantBufferViewDesc = {};
 	ComPointer<ID3D12Resource2> Resource = nullptr;
-	T constantBufferData;
-	UINT constantBufferSize = 0;
+	T ConstantBufferData;
+	UINT ConstantBufferSize = 0;
+    void* MappedData = nullptr;
+    UINT HandleIndex = 0;
 };
 
 template <typename T>
-void FConstantBuffer<T>::Create()
+void FConstantBuffer<T>::Initialize(UINT HandleIndex)
 {
+    this->HandleIndex = HandleIndex;
+
     //Initialize constant Buffer Data members
-    ZeroMemory(&constantBufferData, sizeof(T));
+    ZeroMemory(&ConstantBufferData, sizeof(T));
 
     // Calculate the aligned size (256-byte alignment)
-    constantBufferSize = (sizeof(T) + 255) & ~255;
+    ConstantBufferSize = (sizeof(T) + 255) & ~255;
 
     // Describe the constant buffer resource
     D3D12_HEAP_PROPERTIES heapProperties = {};
@@ -36,7 +40,7 @@ void FConstantBuffer<T>::Create()
     D3D12_RESOURCE_DESC resourceDesc = {};
     resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     resourceDesc.Alignment = 0;
-    resourceDesc.Width = constantBufferSize;
+    resourceDesc.Width = ConstantBufferSize;
     resourceDesc.Height = 1;
     resourceDesc.DepthOrArraySize = 1;
     resourceDesc.MipLevels = 1;
@@ -47,58 +51,41 @@ void FConstantBuffer<T>::Create()
     resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
     // Create the resource
-    HRESULT hr = GRHI.Device->CreateCommittedResource(
+    ThrowIfFailed(GRHI.Device->CreateCommittedResource(
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &resourceDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ, // State for upload heap
+        D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
-        IID_PPV_ARGS(&Resource)
-    );
-    ThrowIfFailed(hr, "Failed to create constant buffer resource.");
+        IID_PPV_ARGS(&Resource)),
+        "Failed to create constant buffer resource.");
 
     // Map the resource and copy the initial data
-    void* mappedData = nullptr;
     D3D12_RANGE readRange = { 0, 0 }; // We do not intend to read from this resource
-    hr = Resource->Map(0, &readRange, &mappedData);
-    ThrowIfFailed(hr, "Failed to map constant buffer resource.");
-
-    memcpy(mappedData, &constantBufferData, constantBufferSize);
-    Resource->Unmap(0, nullptr);
-
+    ThrowIfFailed(Resource->Map(0, &readRange, &MappedData), "Failed to map constant buffer resource.");
 }
 
 template <typename T>
 void FConstantBuffer<T>::Update(const T& data)
 {
-    constantBufferData = data;
-    // Map the constant buffer resource
-    void* mappedData = nullptr;
-    D3D12_RANGE readRange = { 0, 0 }; // We do not intend to read from this resource on the CPU
-    HRESULT hr = Resource->Map(0, &readRange, &mappedData);
-    if (SUCCEEDED(hr))
-    {
-        // Copy the updated data to the mapped memory
-        memcpy(mappedData, &constantBufferData, sizeof(T));
-        Resource->Unmap(0, nullptr);
-    }
-    else
-    {
-        LogError("Failed to map constant buffer resource.", ELogType::Warning);
-    }
+  ConstantBufferData = data;
+
+  // Copy the updated data to the mapped memory
+  memcpy(MappedData, &ConstantBufferData, sizeof(T));
 }
 
 template <typename T>
-void FConstantBuffer<T>::CreateConstantBufferView(FDescriptorHeap& descriptorHeap)
+void FConstantBuffer<T>::CreateConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE handle)
 {
-    constantBufferViewDesc.BufferLocation = Resource->GetGPUVirtualAddress();
-    constantBufferViewDesc.SizeInBytes = static_cast<UINT>(constantBufferSize);
-    GRHI.Device->CreateConstantBufferView(&constantBufferViewDesc, descriptorHeap.heap->GetCPUDescriptorHandleForHeapStart());
+    ConstantBufferViewDesc.BufferLocation = Resource->GetGPUVirtualAddress();
+    ConstantBufferViewDesc.SizeInBytes = static_cast<UINT>(ConstantBufferSize);
+    GRHI.Device->CreateConstantBufferView(&ConstantBufferViewDesc, handle);
 }
 
 template <typename T>
 void FConstantBuffer<T>::Release()
 {
-
+    Resource->Unmap(0, nullptr);
+    Resource.Release();
 }
 
