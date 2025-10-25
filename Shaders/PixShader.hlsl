@@ -1,6 +1,5 @@
 
-//Texture2D<float4> textures[] : register(t0);
-//sampler texturesSampler : register(s0);
+
 
 struct PsInput
 {
@@ -17,6 +16,9 @@ cbuffer PixelConstantBuffer : register(b0)
 {
     float4 color;
 };
+
+//Texture2D<float4> texture : register(t0);
+sampler texturesSampler : register(s0);
 
 void main(in PsInput Input, out PsOutput Output)
 {

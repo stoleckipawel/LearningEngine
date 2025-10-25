@@ -78,6 +78,7 @@ private:
 	FPSO pso;
 	FRootSignature rootSignature;
 	FDescriptorHeap ConstantBufferHeap = FDescriptorHeap();
+	FDescriptorHeap ShaderResourceViewHeap = FDescriptorHeap();
 	FDescriptorHeap SamplerHeap = FDescriptorHeap();
 	FDescriptorHeap DepthStencilViewHeap = FDescriptorHeap();
 
