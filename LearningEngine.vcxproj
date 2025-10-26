@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\D3D12\ConstantBufferManager.cpp" />
     <ClCompile Include="Source\D3D12\DescriptorHeapManager.cpp" />
     <ClCompile Include="Source\D3D12\RHI.cpp" />
     <ClCompile Include="Source\D3D12\SamplerDesc.cpp" />
@@ -163,6 +164,7 @@
     <ClCompile Include="Source\D3D12\SwapChain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\D3D12\ConstantBufferManager.h" />
     <ClInclude Include="Source\D3D12\DescriptorHeapManager.h" />
     <ClInclude Include="Source\D3D12\RHI.h" />
     <ClInclude Include="Source\D3D12\SamplerDesc.h" />

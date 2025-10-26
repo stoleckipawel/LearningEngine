@@ -9,17 +9,7 @@
 #include "SamplerDesc.h"
 
 
-struct alignas(256) FVertexConstantBuffer
-{
-	XMFLOAT4X4 WorldMTX;
-	XMFLOAT4X4 ViewMTX;
-	XMFLOAT4X4 ProjectionMTX;
-};
 
-struct alignas(256) FPixelConstantBuffer
-{
-	XMFLOAT4 Color;
-};
 
 class Renderer
 {
@@ -55,12 +45,8 @@ private:
 	void CreateDepthStencilBuffer();
 	void CreateFrameBuffers();
 	void ReleaseFrameBuffers();
-	
-	void CreateConstantBuffers();
-	void ReleaseConstantBuffers();
 
 	void SetViewport();
-
 	void SetBackBufferRTV();
 
 	void ClearBackBuffer();
@@ -83,9 +69,6 @@ private:
 	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
 	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilHandle = {};
 	ComPointer<ID3D12Resource> depthStencilBuffer = nullptr;
-
-	FConstantBuffer<FVertexConstantBuffer> VertexConstantBuffers[BufferingCount];
-	FConstantBuffer<FPixelConstantBuffer> PixelConstantBuffers[BufferingCount];
 
 	FShaderCompiler vertexShader;
 	FShaderCompiler pixelShader;

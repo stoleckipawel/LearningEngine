@@ -2,8 +2,7 @@
 #include "DebugLayer.h"
 #include "RHI.h"
 #include "Window.h"
-#include "SwapChain.h"
-#include "DescriptorHeapManager.h"
+#include "ConstantBufferManager.h"
 
 Renderer GRenderer;
 
@@ -127,33 +126,6 @@ void Renderer::CreateDepthStencilBuffer()
 	GRHI.Device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, DepthStencilHandle);
 }
 
-void Renderer::CreateConstantBuffers()
-{
-	for (size_t i = 0; i < BufferingCount; ++i)
-	{
-		//Create Vertex Constant Buffer
-		FConstantBuffer<FVertexConstantBuffer> vertexConstantBuffer;
-		vertexConstantBuffer.Initialize(0);
-		vertexConstantBuffer.CreateConstantBufferView(GDescriptorHeapManager.GetConstantBufferHeap().GetCPUHandle(i, vertexConstantBuffer.HandleIndex));
-		VertexConstantBuffers[i] = vertexConstantBuffer;
-
-		//Create Pixel Constant Buffer
-		FConstantBuffer<FPixelConstantBuffer> pixelConstantBuffer;
-		pixelConstantBuffer.Initialize(1);
-		pixelConstantBuffer.CreateConstantBufferView(GDescriptorHeapManager.GetConstantBufferHeap().GetCPUHandle(i, pixelConstantBuffer.HandleIndex));
-		PixelConstantBuffers[i] = pixelConstantBuffer;
-	}
-}
-
-void Renderer::ReleaseConstantBuffers()
-{
-	for (size_t i = 0; i < BufferingCount; ++i)
-	{
-		VertexConstantBuffers[i].Resource.Release();
-		PixelConstantBuffers[i].Resource.Release();
-	}
-}
-
 void Renderer::Load()
 {
 	LoadGeometry();
@@ -165,7 +137,7 @@ void Renderer::Load()
 	CreatePSOs();
 	CreateCommandLists();
 	GDescriptorHeapManager.Initialize();
-	CreateConstantBuffers();
+	GConstantBufferManager.Initialize();
 	CreateFrameBuffers();
 
 	GRHI.Flush();
@@ -185,7 +157,7 @@ void Renderer::Release()
 	ReleasePSOs();
 	ReleaseFrameBuffers();
 	GDescriptorHeapManager.Release();
-	ReleaseConstantBuffers();
+	GConstantBufferManager.Release();
 }
 
 void Renderer::SetViewport()
@@ -222,8 +194,16 @@ void Renderer::SetBackBufferRTV()
 
 void Renderer::BindDescriptorTables()
 {
-	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(0, GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameGPUHandle(VertexConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].HandleIndex));
-	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(1, GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameGPUHandle(PixelConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].HandleIndex));
+	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(
+		0, 
+		GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameGPUHandle(
+			GConstantBufferManager.VertexConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].HandleIndex));
+
+	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(
+		1, 
+		GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameGPUHandle(
+			GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].HandleIndex));
+
 	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(2, GDescriptorHeapManager.GetTextureHeap().GetCurrentFrameGPUHandle(texture.HandleIndex));
 	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(3, GDescriptorHeapManager.GetSamplerHeap().GetCurrentFrameGPUHandle(sampler.HandleIndex));
 }
@@ -280,7 +260,7 @@ void Renderer::UpdateRainbowColor()
 	vertexData.WorldMTX = XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f);
 	vertexData.ViewMTX = XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f);
 	vertexData.ProjectionMTX = XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f);
-	VertexConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].Update(vertexData);
+	GConstantBufferManager.UpdateVertexConstantBuffer(vertexData);
 
 	//Update Pixel Constant Buffers
 	FPixelConstantBuffer pixelData;
@@ -288,7 +268,7 @@ void Renderer::UpdateRainbowColor()
 	pixelData.Color.y = 0.5f + 0.5f * sinf(speed + 2.0f);
 	pixelData.Color.z = 0.5f + 0.5f * sinf(speed + 4.0f);
 	pixelData.Color.w = 1.0f;
-	PixelConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].Update(pixelData);
+	GConstantBufferManager.UpdatePixelConstantBuffer(pixelData);
 }
 
 // Update frame-based values.
