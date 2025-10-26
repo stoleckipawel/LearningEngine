@@ -1,4 +1,12 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(523,5): warning MSB8004: Intermediate Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Intermediate Directory.
 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(524,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
+  ConstantBufferManager.cpp
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\ConstantBufferManager.cpp(12,109): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\ConstantBufferManager.cpp(18,108): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
+  RootSignature.cpp
+  DescriptorHeap.cpp
+  Renderer.cpp
+  Application.cpp
   Window.cpp
+  Generating Code...
   LearningEngine.vcxproj -> C:\Users\stole\Documents\GitHub\LearningEngine\Build\bin\x64\Debug\LearningEngine.exe

@@ -59,7 +59,7 @@ void Renderer::ReleasePSOs()
 
 void Renderer::CreateCommandLists()
 {
-	for (size_t i = 0; i < BufferingCount; ++i) 
+	for (size_t i = 0; i < FrameCount; ++i) 
 	{ 
 		// Create the command list.
 		ThrowIfFailed(GRHI.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, GRHI.CmdAllocator[i].Get(), pso.pso.Get(), IID_PPV_ARGS(&GRHI.CmdList[i])), "RHI: Failed To Create Command List");
@@ -71,7 +71,7 @@ void Renderer::CreateCommandLists()
 
 void Renderer::ReleaseCommandLists()
 {
-	for (size_t i = 0; i < BufferingCount; ++i) 
+	for (size_t i = 0; i < FrameCount; ++i) 
 	{ 
 		GRHI.CmdAllocator[i].Release();
 	}
@@ -259,8 +259,8 @@ void Renderer::ReleaseFrameBuffers()
 
 void Renderer::OnUpdate()
 {
-	FrameIndex++;
-	GConstantBufferManager.Update(FrameIndex);
+	BackBufferFrameIndex++;
+	GConstantBufferManager.Update(BackBufferFrameIndex);
 }
 
 void Renderer::OnResize()

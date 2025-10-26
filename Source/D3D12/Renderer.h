@@ -73,7 +73,7 @@ private:
 	ShaderCompiler vertexShader;
 	ShaderCompiler pixelShader;
 
-	UINT FrameIndex = 0;
+	UINT BackBufferFrameIndex = 0;
 };
 
 extern Renderer GRenderer;

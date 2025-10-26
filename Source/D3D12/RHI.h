@@ -23,10 +23,10 @@ public:
 	ComPointer<IDXGIAdapter1> Adapter = nullptr;
 	ComPointer<ID3D12Device10> Device = nullptr;
 	ComPointer<ID3D12CommandQueue> CmdQueue = nullptr;
-	ComPointer<ID3D12CommandAllocator> CmdAllocator[BufferingCount] = {};
-	ComPointer<ID3D12GraphicsCommandList7> CmdList[BufferingCount] = {};
+	ComPointer<ID3D12CommandAllocator> CmdAllocator[FrameCount] = {};
+	ComPointer<ID3D12GraphicsCommandList7> CmdList[FrameCount] = {};
 
-	UINT64 FenceValues[BufferingCount] = { 0 };
+	UINT64 FenceValues[FrameCount] = { 0 };
 	UINT64 NextFenceValue = 1;
 	ComPointer<ID3D12Fence1> Fence = nullptr;
 	HANDLE FenceEvent = nullptr;

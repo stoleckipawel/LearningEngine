@@ -3,8 +3,16 @@
   "WorkspaceRootPath": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Window.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\Window.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\ConstantBufferManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\ConstantBufferManager.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\ConstantBufferManager.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\ConstantBufferManager.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\SwapChain.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\SwapChain.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -14,19 +22,45 @@
       "DocumentGroups": [
         {
           "DockedWidth": 319,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "SwapChain.h",
+              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\SwapChain.h",
+              "RelativeDocumentMoniker": "Source\\D3D12\\SwapChain.h",
+              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\SwapChain.h",
+              "RelativeToolTip": "Source\\D3D12\\SwapChain.h",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAAAQAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-10-26T18:21:12.569Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ConstantBufferManager.h",
+              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\ConstantBufferManager.h",
+              "RelativeDocumentMoniker": "Source\\D3D12\\ConstantBufferManager.h",
+              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\ConstantBufferManager.h",
+              "RelativeToolTip": "Source\\D3D12\\ConstantBufferManager.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAABNAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-10-26T18:18:18.119Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "Window.cpp",
-              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Window.cpp",
-              "RelativeDocumentMoniker": "Source\\D3D12\\Window.cpp",
-              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Window.cpp",
-              "RelativeToolTip": "Source\\D3D12\\Window.cpp",
-              "ViewState": "AgIAAI4AAAAAAAAAAAD4v6UAAAAAAAAAAAAAAA==",
+              "Title": "ConstantBufferManager.cpp",
+              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\ConstantBufferManager.cpp",
+              "RelativeDocumentMoniker": "Source\\D3D12\\ConstantBufferManager.cpp",
+              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\ConstantBufferManager.cpp",
+              "RelativeToolTip": "Source\\D3D12\\ConstantBufferManager.cpp",
+              "ViewState": "AgIAAB8AAAAAAAAAAAD4vy8AAAAnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-10-26T16:52:51.182Z",
+              "WhenOpened": "2025-10-26T18:18:02.147Z",
               "EditorCaption": ""
             }
           ]

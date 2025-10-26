@@ -4,30 +4,20 @@ ConstantBufferManager GConstantBufferManager;
 
 void ConstantBufferManager::Initialize()
 {
-	for (size_t i = 0; i < BufferingCount; ++i)
+	for (size_t i = 0; i < FrameCount; ++i)
 	{
 		//Create Vertex Constant Buffer
-		ConstantBuffer<FVertexConstantBuffer> vertexConstantBuffer;
+		ConstantBuffer<FVertexConstantBufferData> vertexConstantBuffer;
 		vertexConstantBuffer.Initialize(0);
 		vertexConstantBuffer.CreateConstantBufferView(GDescriptorHeapManager.GetConstantBufferHeap().GetCPUHandle(i, vertexConstantBuffer.DescriptorHandleIndex));
 		VertexConstantBuffers[i] = vertexConstantBuffer;
 
 		//Create Pixel Constant Buffer
-		ConstantBuffer<PixelConstantBuffer> pixelConstantBuffer;
+		ConstantBuffer<PixelConstantBufferData> pixelConstantBuffer;
 		pixelConstantBuffer.Initialize(1);
 		pixelConstantBuffer.CreateConstantBufferView(GDescriptorHeapManager.GetConstantBufferHeap().GetCPUHandle(i, pixelConstantBuffer.DescriptorHandleIndex));
 		PixelConstantBuffers[i] = pixelConstantBuffer;
 	}
-}
-
-void ConstantBufferManager::UpdateVertexConstantBuffer(const FVertexConstantBuffer& data)
-{
-	VertexConstantBuffers[GSwapChain.GetBackBufferIndex()].Update(data);
-}
-
-void ConstantBufferManager::UpdatePixelConstantBuffer(const PixelConstantBuffer& data)
-{
-	PixelConstantBuffers[GSwapChain.GetBackBufferIndex()].Update(data);
 }
 
 void ConstantBufferManager::Update(size_t FrameIndex)
@@ -35,24 +25,24 @@ void ConstantBufferManager::Update(size_t FrameIndex)
 	float speed = FrameIndex * 0.02f; 
 
 	//Update Vertex Constant Buffers
-	FVertexConstantBuffer vertexData;
+	FVertexConstantBufferData vertexData;
 	vertexData.WorldMTX = XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f);
 	vertexData.ViewMTX = XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f);
 	vertexData.ProjectionMTX = XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f);
-	GConstantBufferManager.UpdateVertexConstantBuffer(vertexData);
+	VertexConstantBuffers[GSwapChain.GetBackBufferIndex()].Update(vertexData);
 
 	//Update Pixel Constant Buffers
-	PixelConstantBuffer pixelData;
+	PixelConstantBufferData pixelData;
 	pixelData.Color.x = 0.5f + 0.5f * sinf(speed);
 	pixelData.Color.y = 0.5f + 0.5f * sinf(speed + 2.0f);
 	pixelData.Color.z = 0.5f + 0.5f * sinf(speed + 4.0f);
 	pixelData.Color.w = 1.0f;
-	GConstantBufferManager.UpdatePixelConstantBuffer(pixelData);	
+	PixelConstantBuffers[GSwapChain.GetBackBufferIndex()].Update(pixelData);
 }
 
 void ConstantBufferManager::Release()
 {
-	for (size_t i = 0; i < BufferingCount; ++i)
+	for (size_t i = 0; i < FrameCount; ++i)
 	{
 		VertexConstantBuffers[i].Resource.Release();
 		PixelConstantBuffers[i].Resource.Release();

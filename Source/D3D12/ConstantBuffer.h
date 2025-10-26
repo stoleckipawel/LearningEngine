@@ -12,12 +12,13 @@ public:
 	void Release();
 	void CreateConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE Handle);
 public:
-    D3D12_CONSTANT_BUFFER_VIEW_DESC ConstantBufferViewDesc = {};
 	ComPointer<ID3D12Resource2> Resource = nullptr;
-	T ConstantBufferData;
-	UINT ConstantBufferSize = 0;
-    void* MappedData = nullptr;
     UINT DescriptorHandleIndex = 0;
+private:
+	T m_ConstantBufferData;
+    D3D12_CONSTANT_BUFFER_VIEW_DESC m_ConstantBufferViewDesc = {};
+    void* m_MappedData = nullptr;
+	UINT m_ConstantBufferSize = 0;    
 };
 
 template <typename T>
@@ -26,10 +27,10 @@ void ConstantBuffer<T>::Initialize(UINT DescriptorHandleIndex)
     this->DescriptorHandleIndex = DescriptorHandleIndex;
 
     //Initialize constant Buffer Data members
-    ZeroMemory(&ConstantBufferData, sizeof(T));
+    ZeroMemory(&m_ConstantBufferData, sizeof(T));
 
     // Calculate the aligned size (256-byte alignment)
-    ConstantBufferSize = (sizeof(T) + 255) & ~255;
+    m_ConstantBufferSize = (sizeof(T) + 255) & ~255;
 
     // Describe the constant buffer resource
     D3D12_HEAP_PROPERTIES heapProperties = {};
@@ -40,7 +41,7 @@ void ConstantBuffer<T>::Initialize(UINT DescriptorHandleIndex)
     D3D12_RESOURCE_DESC resourceDesc = {};
     resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     resourceDesc.Alignment = 0;
-    resourceDesc.Width = ConstantBufferSize;
+    resourceDesc.Width = m_ConstantBufferSize;
     resourceDesc.Height = 1;
     resourceDesc.DepthOrArraySize = 1;
     resourceDesc.MipLevels = 1;
@@ -62,24 +63,24 @@ void ConstantBuffer<T>::Initialize(UINT DescriptorHandleIndex)
 
     // Map the resource and copy the initial data
     D3D12_RANGE readRange = { 0, 0 }; // We do not intend to read from this resource
-    ThrowIfFailed(Resource->Map(0, &readRange, &MappedData), "Failed to map constant buffer resource.");
+    ThrowIfFailed(Resource->Map(0, &readRange, &m_MappedData), "Failed to map constant buffer resource.");
 }
 
 template <typename T>
 void ConstantBuffer<T>::Update(const T& Data)
 {
-  ConstantBufferData = Data;
+  m_ConstantBufferData = Data;
 
   // Copy the updated data to the mapped memory
-  memcpy(MappedData, &ConstantBufferData, sizeof(T));
+  memcpy(m_MappedData, &m_ConstantBufferData, sizeof(T));
 }
 
 template <typename T>
 void ConstantBuffer<T>::CreateConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE Handle)
 {
-    ConstantBufferViewDesc.BufferLocation = Resource->GetGPUVirtualAddress();
-    ConstantBufferViewDesc.SizeInBytes = static_cast<UINT>(ConstantBufferSize);
-    GRHI.Device->CreateConstantBufferView(&ConstantBufferViewDesc, Handle);
+    m_ConstantBufferViewDesc.BufferLocation = Resource->GetGPUVirtualAddress();
+    m_ConstantBufferViewDesc.SizeInBytes = static_cast<UINT>(m_ConstantBufferSize);
+    GRHI.Device->CreateConstantBufferView(&m_ConstantBufferViewDesc, Handle);
 }
 
 template <typename T>

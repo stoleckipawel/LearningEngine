@@ -3,10 +3,10 @@
 void RootSignature::Create()
 {
     CD3DX12_DESCRIPTOR_RANGE cbvVertexRange;
-    cbvVertexRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, BufferingCount, 0); //b0 
+    cbvVertexRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, FrameCount, 0); //b0 
 
     CD3DX12_DESCRIPTOR_RANGE cbvPixelRange;
-    cbvPixelRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, BufferingCount, 0); //b0 
+    cbvPixelRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, FrameCount, 0); //b0 
 
     CD3DX12_DESCRIPTOR_RANGE textureRange;
     textureRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC); //t0 
