@@ -7,13 +7,13 @@ void ConstantBufferManager::Initialize()
 	for (size_t i = 0; i < BufferingCount; ++i)
 	{
 		//Create Vertex Constant Buffer
-		FConstantBuffer<FVertexConstantBuffer> vertexConstantBuffer;
+		ConstantBuffer<FVertexConstantBuffer> vertexConstantBuffer;
 		vertexConstantBuffer.Initialize(0);
 		vertexConstantBuffer.CreateConstantBufferView(GDescriptorHeapManager.GetConstantBufferHeap().GetCPUHandle(i, vertexConstantBuffer.DescriptorHandleIndex));
 		VertexConstantBuffers[i] = vertexConstantBuffer;
 
 		//Create Pixel Constant Buffer
-		FConstantBuffer<FPixelConstantBuffer> pixelConstantBuffer;
+		ConstantBuffer<PixelConstantBuffer> pixelConstantBuffer;
 		pixelConstantBuffer.Initialize(1);
 		pixelConstantBuffer.CreateConstantBufferView(GDescriptorHeapManager.GetConstantBufferHeap().GetCPUHandle(i, pixelConstantBuffer.DescriptorHandleIndex));
 		PixelConstantBuffers[i] = pixelConstantBuffer;
@@ -22,12 +22,12 @@ void ConstantBufferManager::Initialize()
 
 void ConstantBufferManager::UpdateVertexConstantBuffer(const FVertexConstantBuffer& data)
 {
-	VertexConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].Update(data);
+	VertexConstantBuffers[GSwapChain.GetBackBufferIndex()].Update(data);
 }
 
-void ConstantBufferManager::UpdatePixelConstantBuffer(const FPixelConstantBuffer& data)
+void ConstantBufferManager::UpdatePixelConstantBuffer(const PixelConstantBuffer& data)
 {
-	PixelConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].Update(data);
+	PixelConstantBuffers[GSwapChain.GetBackBufferIndex()].Update(data);
 }
 
 void ConstantBufferManager::Update(size_t FrameIndex)
@@ -42,7 +42,7 @@ void ConstantBufferManager::Update(size_t FrameIndex)
 	GConstantBufferManager.UpdateVertexConstantBuffer(vertexData);
 
 	//Update Pixel Constant Buffers
-	FPixelConstantBuffer pixelData;
+	PixelConstantBuffer pixelData;
 	pixelData.Color.x = 0.5f + 0.5f * sinf(speed);
 	pixelData.Color.y = 0.5f + 0.5f * sinf(speed + 2.0f);
 	pixelData.Color.z = 0.5f + 0.5f * sinf(speed + 4.0f);

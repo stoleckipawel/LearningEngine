@@ -2,7 +2,7 @@
 #include "../Vendor/Windows/WinInclude.h"
 #include "SwapChain.h"
 
-class FRHI
+class RHI
 {
 public:
 	bool Initialize(bool RequireDXRSupport = false);
@@ -35,4 +35,4 @@ public:
 public:
 };
 
-extern FRHI GRHI;
+extern RHI GRHI;

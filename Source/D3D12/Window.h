@@ -1,7 +1,7 @@
 #pragma once
 #include "../Vendor/Windows/WinInclude.h"
 
-class FWindow
+class Window
 {
 public:
 	bool Initialize();
@@ -26,4 +26,4 @@ private:
 	bool bIsFullScreen = false;
 };
 
-extern FWindow GWindow;
+extern Window GWindow;

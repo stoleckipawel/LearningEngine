@@ -25,10 +25,10 @@ struct D3D12_STENCIL_TEST_DESC
 	D3D12_STENCIL_OP BackFaceStencilPassOp;
 };
 
-class FPSO
+class PSO
 {
 public:
-	void Create(FGeometry& vertecies, ID3D12RootSignature* rootSignature, FShaderCompiler& vertexShader, FShaderCompiler& pixelShader);
+	void Create(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler& vertexShader, ShaderCompiler& pixelShader);
 	void Set();
 
 	ComPointer<ID3D12PipelineState> pso = nullptr;

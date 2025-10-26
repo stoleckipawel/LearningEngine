@@ -3,10 +3,10 @@
 #include "../Vendor/Windows/WinInclude.h"
 #include "RHI.h"
 
-class FSamplerDesc : public D3D12_STATIC_SAMPLER_DESC
+class SamplerDesc : public D3D12_STATIC_SAMPLER_DESC
 {
 public:
-    FSamplerDesc();
+    SamplerDesc();
     D3D12_CPU_DESCRIPTOR_HANDLE CreateDescriptor(void);
     D3D12_CPU_DESCRIPTOR_HANDLE Handle;  
     UINT DescriptorHandleIndex = 0;

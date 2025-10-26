@@ -1,10 +1,10 @@
 #pragma once
 #include "../Vendor/Windows/WinInclude.h"
 
-class FCamera
+class Camera
 {
 public:
-    FCamera();
+    Camera();
 
     // Set camera position and rotation (Euler angles in degrees)
     void SetPosition(const DirectX::XMFLOAT3& position);

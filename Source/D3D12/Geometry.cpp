@@ -1,7 +1,7 @@
 #include "Geometry.h"
 #include "UploadBuffer.h"
 
-void FGeometry::UploadVertexBuffer()
+void Geometry::UploadVertexBuffer()
 {
 	//Position
 	//UV
@@ -37,14 +37,14 @@ void FGeometry::UploadVertexBuffer()
 		}); 
 
 	const UINT vertsDataSize = sizeof(Vertex) * vertexList.size();
-	vertexBuffer = FUploadBuffer::Upload(vertexList.data(), vertsDataSize);
+	vertexBuffer = UploadBuffer::Upload(vertexList.data(), vertsDataSize);
 
 	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
 	vertexBufferView.SizeInBytes = vertsDataSize;
 	vertexBufferView.StrideInBytes = sizeof(Vertex);
 }
 
-void FGeometry::UploadIndexBuffer()
+void Geometry::UploadIndexBuffer()
 {
 	std::vector<DWORD> indexList;
     // Two triangles for the quad
@@ -57,26 +57,26 @@ void FGeometry::UploadIndexBuffer()
     indexList.push_back(3); // Bottom-left
 
 	UINT indexDataSize = sizeof(DWORD) * indexList.size();
-	indexBuffer = FUploadBuffer::Upload(indexList.data(), indexDataSize);
+	indexBuffer = UploadBuffer::Upload(indexList.data(), indexDataSize);
 
 	indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
 	indexBufferView.SizeInBytes = indexDataSize;
 	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 }
 
-void FGeometry::Upload()
+void Geometry::Upload()
 {
 	UploadIndexBuffer();
 	UploadVertexBuffer();
 }
 
-void FGeometry::Release()
+void Geometry::Release()
 {
 	indexBuffer.Release();
 	vertexBuffer.Release();
 }
 
-void FGeometry::Set()
+void Geometry::Set()
 {
 	//Input Assembler
 	GRHI.GetCurrentCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
@@ -84,7 +84,7 @@ void FGeometry::Set()
 	GRHI.GetCurrentCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-std::vector<D3D12_INPUT_ELEMENT_DESC> FGeometry::GetVertexLayout()
+std::vector<D3D12_INPUT_ELEMENT_DESC> Geometry::GetVertexLayout()
 {
 	return
 	{
@@ -94,7 +94,7 @@ std::vector<D3D12_INPUT_ELEMENT_DESC> FGeometry::GetVertexLayout()
 	};
 }
 
-D3D12_RESOURCE_DESC FGeometry::CreateVertexBufferDesc(uint32_t VertexCount)
+D3D12_RESOURCE_DESC Geometry::CreateVertexBufferDesc(uint32_t VertexCount)
 {
 	D3D12_RESOURCE_DESC vertexResourceDesc = {};
 	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;

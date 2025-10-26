@@ -1,6 +1,6 @@
 #include "UploadBuffer.h"
 
-ComPointer<ID3D12Resource2> FUploadBuffer::Upload(void* data, uint32_t dataSize)
+ComPointer<ID3D12Resource2> UploadBuffer::Upload(void* data, uint32_t dataSize)
 {
 	D3D12_RESOURCE_DESC resourceDesc = {};
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;

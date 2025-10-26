@@ -13,7 +13,7 @@ struct Vertex
 };
 
 
-class FGeometry
+class Geometry
 {
 public:
 	void UploadVertexBuffer();

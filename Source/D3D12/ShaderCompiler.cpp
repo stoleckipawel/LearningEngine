@@ -2,7 +2,7 @@
 #include "d3dcompiler.h"
 
 
-FShaderCompiler::FShaderCompiler(LPCWSTR name, const std::string& model, const std::string& entryPoint)
+ShaderCompiler::ShaderCompiler(LPCWSTR name, const std::string& model, const std::string& entryPoint)
 {
 	ID3DBlob* blob = nullptr;
 	ID3DBlob* errorBlob = nullptr;

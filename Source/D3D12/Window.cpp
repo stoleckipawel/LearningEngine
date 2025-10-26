@@ -1,34 +1,34 @@
 #include "Window.h"
 #include "Renderer.h"
 
-FWindow GWindow;
+Window GWindow;
 
-RECT FWindow::GetRect()
+RECT Window::GetRect()
 {
 	RECT rect;
 	GetClientRect(m_window, &rect);
 	return rect;
 }
 
-UINT FWindow::GetWidth()
+UINT Window::GetWidth()
 {
 	RECT rect = GetRect();
 	return rect.right - rect.left;
 }
 
-UINT FWindow::GetHeight()
+UINT Window::GetHeight()
 {
 	RECT rect = GetRect();
 	return rect.bottom - rect.top;
 }
 
-bool FWindow::Initialize()
+bool Window::Initialize()
 {
 	//Create Win Window Desc
 	WNDCLASSEXW windowClass{ 0 };
 	windowClass.cbSize = sizeof(windowClass);
 	windowClass.style = CS_OWNDC;// own device context
-	windowClass.lpfnWndProc = &FWindow::OnWindowMessage;
+	windowClass.lpfnWndProc = &Window::OnWindowMessage;
 	windowClass.hInstance = GetModuleHandle(nullptr);
 	windowClass.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
 	windowClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
@@ -67,7 +67,7 @@ bool FWindow::Initialize()
 	return true;
 }
 
-void FWindow::Shutdown()
+void Window::Shutdown()
 {
 	if (m_window)
 	{
@@ -81,7 +81,7 @@ void FWindow::Shutdown()
 	}
 }
 
-void FWindow::Update()
+void Window::Update()
 {
 	// Process pending window messages
 	MSG msg;
@@ -92,7 +92,7 @@ void FWindow::Update()
 	}
 }
 
-void FWindow::SetFullScreen(bool bSetFullScreen)
+void Window::SetFullScreen(bool bSetFullScreen)
 {
 	//Update Window Styles
 	DWORD style;
@@ -135,7 +135,7 @@ void FWindow::SetFullScreen(bool bSetFullScreen)
 }
 
 
-LRESULT FWindow::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {

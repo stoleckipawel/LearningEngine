@@ -4,7 +4,7 @@
 #include "RHI.h"
 
 
-class FTexture 
+class Texture 
 {
 public:
     void Load(const std::filesystem::path& imagePath,
@@ -22,7 +22,7 @@ public:
     ComPointer<ID3D12Resource> textureResource = nullptr;
     ComPointer<ID3D12Resource> uploadResource = nullptr;
 
-    FImageLoader::FImageData textureData;
+    ImageLoader::ImageData textureData;
     UINT DescriptorHandleIndex = 0;
 };
 

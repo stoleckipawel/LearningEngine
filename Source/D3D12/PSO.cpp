@@ -1,6 +1,6 @@
 #include "PSO.h"
 
-void FPSO::SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc)
+void PSO::SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc)
 {
 	psoDesc.StreamOutput.NumEntries = 0;
 	psoDesc.StreamOutput.pSODeclaration = nullptr;
@@ -9,7 +9,7 @@ void FPSO::SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc)
 	psoDesc.StreamOutput.RasterizedStream = 0;
 }
 
-void FPSO::SetRasterizerState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, bool bRenderWireframe, D3D12_CULL_MODE cullMode)
+void PSO::SetRasterizerState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, bool bRenderWireframe, D3D12_CULL_MODE cullMode)
 {
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.RasterizerState.FillMode = bRenderWireframe ? D3D12_FILL_MODE_WIREFRAME : D3D12_FILL_MODE_SOLID;
@@ -25,7 +25,7 @@ void FPSO::SetRasterizerState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, bool 
 	psoDesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 }
 
-void FPSO::SetRenderTargetBlendState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_RENDER_TARGET_BLEND_DESC blendDesc)
+void PSO::SetRenderTargetBlendState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_RENDER_TARGET_BLEND_DESC blendDesc)
 {
 	psoDesc.BlendState.RenderTarget[0].BlendEnable = blendDesc.BlendEnable;
 	psoDesc.BlendState.RenderTarget[0].BlendOp = blendDesc.BlendOp;
@@ -39,14 +39,14 @@ void FPSO::SetRenderTargetBlendState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc
 	psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = blendDesc.RenderTargetWriteMask;
 }
 
-void FPSO::SetDepthTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_DEPTH_TEST_DESC depthDesc)
+void PSO::SetDepthTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_DEPTH_TEST_DESC depthDesc)
 {
 	psoDesc.DepthStencilState.DepthEnable = depthDesc.DepthEnable;
 	psoDesc.DepthStencilState.DepthWriteMask = depthDesc.DepthWriteMask;
 	psoDesc.DepthStencilState.DepthFunc = depthDesc.DepthFunc;
 }
 
-void FPSO::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_STENCIL_TEST_DESC stencilDesc)
+void PSO::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_STENCIL_TEST_DESC stencilDesc)
 {
 	psoDesc.DepthStencilState.StencilEnable = stencilDesc.StencilEnable;
 	psoDesc.DepthStencilState.StencilReadMask = stencilDesc.StencilReadMask;
@@ -61,10 +61,10 @@ void FPSO::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D1
 	psoDesc.DepthStencilState.BackFace.StencilPassOp = stencilDesc.BackFaceStencilPassOp;
 }
 
-void FPSO::Create(FGeometry& vertecies, 
+void PSO::Create(Geometry& vertecies, 
 					ID3D12RootSignature* rootSignature,
-					FShaderCompiler& vertexShader,
-					FShaderCompiler& pixelShader)
+					ShaderCompiler& vertexShader,
+					ShaderCompiler& pixelShader)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
@@ -152,7 +152,7 @@ void FPSO::Create(FGeometry& vertecies,
 	ThrowIfFailed(GRHI.Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pso)), "Failed To Create PSO");
 }
 
-void FPSO::Set()
+void PSO::Set()
 {
 	GRHI.GetCurrentCommandList()->SetPipelineState(pso);
 }

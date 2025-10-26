@@ -1,6 +1,6 @@
 #include "RootSignature.h"
 
-void FRootSignature::Create()
+void RootSignature::Create()
 {
     CD3DX12_DESCRIPTOR_RANGE cbvVertexRange;
     cbvVertexRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, BufferingCount, 0); //b0 
@@ -20,7 +20,7 @@ void FRootSignature::Create()
     //rootParameters[2].InitAsDescriptorTable(1, &textureRange, D3D12_SHADER_VISIBILITY_PIXEL);
     //rootParameters[3].InitAsDescriptorTable(1, &samplerRange, D3D12_SHADER_VISIBILITY_PIXEL);
 
-    //FSamplerDesc samplerDesc;
+    //SamplerDesc samplerDesc;
 
     CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
     rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);

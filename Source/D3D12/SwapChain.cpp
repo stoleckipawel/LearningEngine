@@ -2,9 +2,9 @@
 #include "Window.h"
 #include "RHI.h"
 
-FSwapChain GSwapChain;
+SwapChain GSwapChain;
 
-void FSwapChain::Initialize()	
+void SwapChain::Initialize()	
 {
 	//Create Swap Chain
 	{
@@ -60,7 +60,7 @@ void FSwapChain::Initialize()
 	}
 }
 
-void FSwapChain::Resize()
+void SwapChain::Resize()
 {
 	ReleaseBuffers();
 
@@ -72,7 +72,7 @@ void FSwapChain::Resize()
 	CreateRenderTargetViews();
 }
 
-void FSwapChain::CreateRenderTargetViews()
+void SwapChain::CreateRenderTargetViews()
 {
 	//Get Swap Buffers
 	for (UINT i = 0; i < BufferingCount; i++)
@@ -91,12 +91,12 @@ void FSwapChain::CreateRenderTargetViews()
 	}
 }
 
-ID3D12Resource* FSwapChain::GetBackBufferResource()
+ID3D12Resource* SwapChain::GetBackBufferResource()
 {
 	return m_buffers[m_currentBufferIndex];
 }
 
-D3D12_VIEWPORT FSwapChain::GetDefaultViewport()
+D3D12_VIEWPORT SwapChain::GetDefaultViewport()
 {
 	D3D12_VIEWPORT vp;
 	vp.TopLeftX = 0;
@@ -108,7 +108,7 @@ D3D12_VIEWPORT FSwapChain::GetDefaultViewport()
 	return vp;
 }
 
-D3D12_RECT FSwapChain::GetDefaultScissorRect()
+D3D12_RECT SwapChain::GetDefaultScissorRect()
 {
 	D3D12_RECT scissorRect;
 	scissorRect.left = 0;
@@ -118,12 +118,12 @@ D3D12_RECT FSwapChain::GetDefaultScissorRect()
 	return scissorRect;
 }
 
-void FSwapChain::Present()
+void SwapChain::Present()
 {
 	ThrowIfFailed(m_swapChain->Present(1, 0), "Failed to Present Swap Chain");
 }
 
-void FSwapChain::ReleaseBuffers()
+void SwapChain::ReleaseBuffers()
 {
 	for (UINT i = 0; i < BufferingCount; i++)
 	{
@@ -131,7 +131,7 @@ void FSwapChain::ReleaseBuffers()
 	}
 }
 
-void FSwapChain::Shutdown()
+void SwapChain::Shutdown()
 {
 	ReleaseBuffers();
 

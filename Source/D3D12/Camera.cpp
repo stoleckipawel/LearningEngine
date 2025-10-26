@@ -4,17 +4,17 @@
 
 using namespace DirectX;
 
-FCamera::FCamera()
+Camera::Camera()
     : m_position{ 0.0f, 0.0f, 0.0f }, m_rotationDegrees{ 0.0f, 0.0f, 0.0f }
 {
 }
 
-void FCamera::SetPosition(const XMFLOAT3& position)
+void Camera::SetPosition(const XMFLOAT3& position)
 {
     m_position = position;
 }
 
-void FCamera::SetRotationDegrees(const XMFLOAT3& eulerDegrees)
+void Camera::SetRotationDegrees(const XMFLOAT3& eulerDegrees)
 {
     // Clamp or wrap angles to [0, 360)
     m_rotationDegrees.x = fmodf(eulerDegrees.x, 360.0f);
@@ -25,7 +25,7 @@ void FCamera::SetRotationDegrees(const XMFLOAT3& eulerDegrees)
     if (m_rotationDegrees.z < 0) m_rotationDegrees.z += 360.0f;
 }
 
-void FCamera::MoveForward(float distance)
+void Camera::MoveForward(float distance)
 {
     // Calculate forward vector from rotation
     XMMATRIX rot = GetRotationMatrix();
@@ -34,7 +34,7 @@ void FCamera::MoveForward(float distance)
     XMStoreFloat3(&m_position, pos);
 }
 
-void FCamera::MoveRight(float distance)
+void Camera::MoveRight(float distance)
 {
     XMMATRIX rot = GetRotationMatrix();
     XMVECTOR right = XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), rot);
@@ -42,7 +42,7 @@ void FCamera::MoveRight(float distance)
     XMStoreFloat3(&m_position, pos);
 }
 
-void FCamera::MoveUp(float distance)
+void Camera::MoveUp(float distance)
 {
     XMMATRIX rot = GetRotationMatrix();
     XMVECTOR up = XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rot);
@@ -50,17 +50,17 @@ void FCamera::MoveUp(float distance)
     XMStoreFloat3(&m_position, pos);
 }
 
-XMFLOAT3 FCamera::GetPosition() const
+XMFLOAT3 Camera::GetPosition() const
 {
     return m_position;
 }
 
-XMFLOAT3 FCamera::GetRotationDegrees() const
+XMFLOAT3 Camera::GetRotationDegrees() const
 {
     return m_rotationDegrees;
 }
 
-XMMATRIX FCamera::GetViewMatrix() const
+XMMATRIX Camera::GetViewMatrix() const
 {
     XMMATRIX rot = GetRotationMatrix();
     XMVECTOR forward = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rot);
@@ -71,7 +71,7 @@ XMMATRIX FCamera::GetViewMatrix() const
 }
 
 // Helper: Build rotation matrix from Euler angles in degrees
-XMMATRIX FCamera::GetRotationMatrix() const
+XMMATRIX Camera::GetRotationMatrix() const
 {
     float pitch = XMConvertToRadians(m_rotationDegrees.x);
     float yaw = XMConvertToRadians(m_rotationDegrees.y);

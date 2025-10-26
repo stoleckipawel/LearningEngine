@@ -4,7 +4,7 @@
 #include "UploadBuffer.h"
 
 template <typename T>
-class FConstantBuffer
+class ConstantBuffer
 {
 public:
 	void Initialize(UINT DescriptorHandleIndex);
@@ -21,7 +21,7 @@ public:
 };
 
 template <typename T>
-void FConstantBuffer<T>::Initialize(UINT DescriptorHandleIndex)
+void ConstantBuffer<T>::Initialize(UINT DescriptorHandleIndex)
 {
     this->DescriptorHandleIndex = DescriptorHandleIndex;
 
@@ -66,7 +66,7 @@ void FConstantBuffer<T>::Initialize(UINT DescriptorHandleIndex)
 }
 
 template <typename T>
-void FConstantBuffer<T>::Update(const T& Data)
+void ConstantBuffer<T>::Update(const T& Data)
 {
   ConstantBufferData = Data;
 
@@ -75,7 +75,7 @@ void FConstantBuffer<T>::Update(const T& Data)
 }
 
 template <typename T>
-void FConstantBuffer<T>::CreateConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE Handle)
+void ConstantBuffer<T>::CreateConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE Handle)
 {
     ConstantBufferViewDesc.BufferLocation = Resource->GetGPUVirtualAddress();
     ConstantBufferViewDesc.SizeInBytes = static_cast<UINT>(ConstantBufferSize);
@@ -83,7 +83,7 @@ void FConstantBuffer<T>::CreateConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE Ha
 }
 
 template <typename T>
-void FConstantBuffer<T>::Release()
+void ConstantBuffer<T>::Release()
 {
     Resource->Unmap(0, nullptr);
     Resource.Release();

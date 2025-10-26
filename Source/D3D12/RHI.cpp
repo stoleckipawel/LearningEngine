@@ -3,24 +3,24 @@
 #include "Window.h"
 
 
-FRHI GRHI;
+RHI GRHI;
 
-ComPointer<ID3D12GraphicsCommandList7> FRHI::GetCurrentCommandList()
+ComPointer<ID3D12GraphicsCommandList7> RHI::GetCurrentCommandList()
 {
-	return GRHI.CmdList[GSwapChain.GetCurrentBackBufferIndex()];
+	return GRHI.CmdList[GSwapChain.GetBackBufferIndex()];
 }
 
-ComPointer<ID3D12CommandAllocator> FRHI::GetCurrentCommandAllocator()
+ComPointer<ID3D12CommandAllocator> RHI::GetCurrentCommandAllocator()
 {
-	return GRHI.CmdAllocator[GSwapChain.GetCurrentBackBufferIndex()];
+	return GRHI.CmdAllocator[GSwapChain.GetBackBufferIndex()];
 }
 
-UINT64 FRHI::GetCurrentFenceValue()
+UINT64 RHI::GetCurrentFenceValue()
 {
-	return GRHI.FenceValues[GSwapChain.GetCurrentBackBufferIndex()];
+	return GRHI.FenceValues[GSwapChain.GetBackBufferIndex()];
 }
 
-void FRHI::SelectAdapter()
+void RHI::SelectAdapter()
 {
 	bool bHighPerformancePreference = true;
 	enum DXGI_GPU_PREFERENCE GpuPreference = bHighPerformancePreference ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE : DXGI_GPU_PREFERENCE_MINIMUM_POWER;
@@ -67,7 +67,7 @@ void FRHI::SelectAdapter()
     }	
 }
 
-bool FRHI::Initialize(bool RequireDXRSupport)
+bool RHI::Initialize(bool RequireDXRSupport)
 {
 	GDebugLayer.Initialize();
 	
@@ -129,7 +129,7 @@ bool FRHI::Initialize(bool RequireDXRSupport)
 	return true;
 }
 
-void FRHI::Shutdown()
+void RHI::Shutdown()
 {
 	for(size_t i = 0; i < BufferingCount; ++i) 
 	{ 
@@ -147,13 +147,13 @@ void FRHI::Shutdown()
 	GRHI.DxgiFactory.Release();
 }
 
-void FRHI::ExecuteCommandList()
+void RHI::ExecuteCommandList()
 {
 	ID3D12CommandList* ppcommandLists[] = { GRHI.GetCurrentCommandList().Get() };
 	GRHI.CmdQueue->ExecuteCommandLists(1, ppcommandLists);
 }
 
-void FRHI::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter)
+void RHI::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter)
 {
 	D3D12_RESOURCE_BARRIER barrier{};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -166,7 +166,7 @@ void FRHI::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefor
 	GRHI.GetCurrentCommandList()->ResourceBarrier(1, &barrier);
 }
 
-void FRHI::WaitForGPU()
+void RHI::WaitForGPU()
 {
 	UINT FenceCurrentValue = GetCurrentFenceValue();
 	UINT FenceCompletedValue = Fence->GetCompletedValue();
@@ -178,17 +178,17 @@ void FRHI::WaitForGPU()
 	}
 }
 
-void FRHI::Signal()
+void RHI::Signal()
 {
 	// Schedule a Signal command in the queue. -> Updates Fence Completed Value
 	UINT64 currentFenceValue = NextFenceValue++;
 	ThrowIfFailed(CmdQueue->Signal(Fence.Get(), currentFenceValue), "RHI: Failed To Signal Command Queue");
 
 	// Set the fence value for the next frame.
-	FenceValues[GSwapChain.GetCurrentBackBufferIndex()] = currentFenceValue;
+	FenceValues[GSwapChain.GetBackBufferIndex()] = currentFenceValue;
 }
 
-void FRHI::Flush()
+void RHI::Flush()
 {
 	Signal();
 	WaitForGPU();

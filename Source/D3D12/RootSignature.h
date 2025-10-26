@@ -3,7 +3,7 @@
 #include "RHI.h"
 #include "ShaderCompiler.h"
 
-class FRootSignature
+class RootSignature
 {
 public:
 	void Create();

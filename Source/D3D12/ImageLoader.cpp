@@ -1,12 +1,12 @@
 #include "ImageLoader.h"
 
-const std::vector<FImageLoader::GUID_to_DXGI> FImageLoader::s_lookupTable =
+const std::vector<ImageLoader::GUID_to_DXGI> ImageLoader::s_lookupTable =
 {
 	{ GUID_WICPixelFormat32bppRGBA, DXGI_FORMAT_R8G8B8A8_UNORM },
 	{ GUID_WICPixelFormat32bppBGRA, DXGI_FORMAT_B8G8R8A8_UNORM }
 };
 
-bool FImageLoader::LoadImageFromDisk(const std::filesystem::path& imagePath, FImageData& data)
+bool ImageLoader::LoadImageFromDisk(const std::filesystem::path& imagePath, ImageData& data)
 {
 	// Create Factory
 	ComPointer<IWICImagingFactory> wicFactory;

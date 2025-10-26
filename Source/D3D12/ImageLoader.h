@@ -4,10 +4,10 @@
 #include "../Vendor/Windows/WinInclude.h"
 #include <filesystem>
 
-class FImageLoader
+class ImageLoader
 {
 public:
-	struct FImageData
+	struct ImageData
 	{
 		std::vector<char> data;
 		uint32_t width = 1;
@@ -19,7 +19,7 @@ public:
 		DXGI_FORMAT dxgiPixelFormat = DXGI_FORMAT_UNKNOWN;
 	};
 
-	static bool LoadImageFromDisk(const std::filesystem::path& imagePath, FImageData& data);
+	static bool LoadImageFromDisk(const std::filesystem::path& imagePath, ImageData& data);
 private:
 	struct GUID_to_DXGI
 	{
@@ -29,8 +29,8 @@ private:
 
 	static const std::vector<GUID_to_DXGI> s_lookupTable;
 
-	FImageLoader() = default;
-	FImageLoader(const FImageLoader&) = default;
-	FImageLoader& operator=(const FImageLoader&) = default;
+	ImageLoader() = default;
+	ImageLoader(const ImageLoader&) = default;
+	ImageLoader& operator=(const ImageLoader&) = default;
 };
 

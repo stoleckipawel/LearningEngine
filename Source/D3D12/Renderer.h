@@ -59,19 +59,19 @@ private:
 	void UpdateRainbowColor();
 	void OnUpdate();
 private:
-	FTexture texture;
-	FSamplerDesc sampler;
-	FGeometry vertecies;
-	FPSO pso;
-	FRootSignature rootSignature;
+	Texture texture;
+	SamplerDesc sampler;
+	Geometry vertecies;
+	PSO pso;
+	RootSignature rootSignature;
 
 	D3D12_RESOURCE_DESC depthStencilResourceDesc = {};
 	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
 	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilHandle = {};
 	ComPointer<ID3D12Resource> depthStencilBuffer = nullptr;
 
-	FShaderCompiler vertexShader;
-	FShaderCompiler pixelShader;
+	ShaderCompiler vertexShader;
+	ShaderCompiler pixelShader;
 
 	UINT FrameIndex = 0;
 };

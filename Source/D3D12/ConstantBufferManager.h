@@ -13,7 +13,7 @@ struct alignas(256) FVertexConstantBuffer
 	XMFLOAT4X4 ProjectionMTX;
 };
 
-struct alignas(256) FPixelConstantBuffer
+struct alignas(256) PixelConstantBuffer
 {
 	XMFLOAT4 Color;
 };
@@ -26,10 +26,11 @@ public:
 	void Update(size_t FrameIndex);
 private:
 	void UpdateVertexConstantBuffer(const FVertexConstantBuffer& data);
-	void UpdatePixelConstantBuffer(const FPixelConstantBuffer& data);
+	void UpdatePixelConstantBuffer(const PixelConstantBuffer& data);
 public:
-	FConstantBuffer<FVertexConstantBuffer> VertexConstantBuffers[BufferingCount];
-	FConstantBuffer<FPixelConstantBuffer> PixelConstantBuffers[BufferingCount];
+	ConstantBuffer<FVertexConstantBuffer> VertexConstantBuffers[BufferingCount];
+	ConstantBuffer<PixelConstantBuffer> PixelConstantBuffers[BufferingCount];
+
 };
 
 extern ConstantBufferManager GConstantBufferManager;

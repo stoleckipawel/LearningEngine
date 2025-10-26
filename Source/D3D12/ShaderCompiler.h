@@ -8,11 +8,11 @@
 #include "../Vendor/Windows/WinInclude.h"
 #include <iostream>
 
-class FShaderCompiler
+class ShaderCompiler
 {
 public:
-    FShaderCompiler() = default;
-    FShaderCompiler(LPCWSTR name, const std::string& model, const std::string& entryPoint);
+    ShaderCompiler() = default;
+    ShaderCompiler(LPCWSTR name, const std::string& model, const std::string& entryPoint);
 	inline const void* GetBuffer() const { return shaderBytecode.pShaderBytecode; }
 	inline size_t GetSize() const { return shaderBytecode.BytecodeLength; }
 private:

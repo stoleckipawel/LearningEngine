@@ -28,18 +28,18 @@ void Renderer::UnloadTextures()
 
 void Renderer::LoadSamplers()
 {
-	//sampler = FSamplerDesc();
+	//sampler = SamplerDesc();
 }
 
 void Renderer::LoadShaders()
 {
-	vertexShader = FShaderCompiler(L"Shaders/VertShader.hlsl", "vs_5_0", "main");//To Do check 6.0 shaders
-	pixelShader = FShaderCompiler(L"Shaders/PixShader.hlsl", "ps_5_0", "main");
+	vertexShader = ShaderCompiler(L"Shaders/VertShader.hlsl", "vs_5_0", "main");//To Do check 6.0 shaders
+	pixelShader = ShaderCompiler(L"Shaders/PixShader.hlsl", "ps_5_0", "main");
 }
 
 void Renderer::CreateRootSignatures()
 {
-	rootSignature = FRootSignature();
+	rootSignature = RootSignature();
 	rootSignature.Create();
 }
 void Renderer::ReleaseRootSignatures()
@@ -79,33 +79,42 @@ void Renderer::ReleaseCommandLists()
 
 void Renderer::CreateDepthStencilBuffer()
 {
-	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-	depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+	{
+		depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+	}
 
 	D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
-	depthOptimizedClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
-	depthOptimizedClearValue.DepthStencil.Stencil = 0;
+	{
+		depthOptimizedClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+		depthOptimizedClearValue.DepthStencil.Stencil = 0;
+	}
 
 	D3D12_HEAP_PROPERTIES heapDefaultProperties = {};
-	heapDefaultProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
-	heapDefaultProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-	heapDefaultProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	heapDefaultProperties.CreationNodeMask = 0;
-	heapDefaultProperties.VisibleNodeMask = 0;
+	{
+		heapDefaultProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+		heapDefaultProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+		heapDefaultProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		heapDefaultProperties.CreationNodeMask = 0;
+		heapDefaultProperties.VisibleNodeMask = 0;
+	}
 
-	depthStencilResourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthStencilResourceDesc.MipLevels = 1;
-	depthStencilResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION::D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	depthStencilResourceDesc.Height = GWindow.GetHeight();
-	depthStencilResourceDesc.Width = GWindow.GetWidth();
-	depthStencilResourceDesc.DepthOrArraySize = 1;
-	depthStencilResourceDesc.SampleDesc.Count = 1;
-	depthStencilResourceDesc.SampleDesc.Quality = 0;
-	depthStencilResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-	depthStencilResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	depthStencilResourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+	{
+		depthStencilResourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		depthStencilResourceDesc.MipLevels = 1;
+		depthStencilResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION::D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		depthStencilResourceDesc.Height = GWindow.GetHeight();
+		depthStencilResourceDesc.Width = GWindow.GetWidth();
+		depthStencilResourceDesc.DepthOrArraySize = 1;
+		depthStencilResourceDesc.SampleDesc.Count = 1;
+		depthStencilResourceDesc.SampleDesc.Quality = 0;
+		depthStencilResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+		depthStencilResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+		depthStencilResourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;		
+	}
+
 
 	GRHI.Device->CreateCommittedResource(
 		&heapDefaultProperties,
@@ -145,7 +154,6 @@ void Renderer::Load()
 
 void Renderer::Unload()
 {
-	//Unloads previously loaded assets from disc
 	UnloadGeometry();
 	UnloadTextures();
 }
@@ -197,12 +205,12 @@ void Renderer::BindDescriptorTables()
 	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(
 		0, 
 		GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameGPUHandle(
-			GConstantBufferManager.VertexConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].DescriptorHandleIndex));
+			GConstantBufferManager.VertexConstantBuffers[GSwapChain.GetBackBufferIndex()].DescriptorHandleIndex));
 
 	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(
 		1, 
 		GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameGPUHandle(
-			GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].DescriptorHandleIndex));
+			GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetBackBufferIndex()].DescriptorHandleIndex));
 
 	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(2, GDescriptorHeapManager.GetTextureHeap().GetCurrentFrameGPUHandle(texture.DescriptorHandleIndex));
 	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(3, GDescriptorHeapManager.GetSamplerHeap().GetCurrentFrameGPUHandle(sampler.DescriptorHandleIndex));
@@ -210,7 +218,6 @@ void Renderer::BindDescriptorTables()
 
 void Renderer::PopulateCommandList()
 {
-	//Sets BackbBuffer to Present State
 	GRHI.SetBarrier(
 		GSwapChain.GetBackBufferResource(),
 		D3D12_RESOURCE_STATE_PRESENT,
@@ -234,7 +241,6 @@ void Renderer::PopulateCommandList()
 
 	GRHI.GetCurrentCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
-	//Sets BackbBuffer to Present State
 	GRHI.SetBarrier(
 		GSwapChain.GetBackBufferResource(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -279,7 +285,7 @@ void Renderer::OnRender()
 	PopulateCommandList();
 
 	// Finalize the command list.
-	ThrowIfFailed(GRHI.CmdList[GSwapChain.GetCurrentBackBufferIndex()]->Close(), "Failed To Close Command List");
+	ThrowIfFailed(GRHI.CmdList[GSwapChain.GetBackBufferIndex()]->Close(), "Failed To Close Command List");
 
 	// Execute the command list.
 	GRHI.ExecuteCommandList();
@@ -298,7 +304,6 @@ void Renderer::Shutdown()
 {
 	GRHI.Flush();
 
-	// Release all resources.
 	Renderer::Release();
 	Renderer::Unload();
 	GSwapChain.Shutdown();

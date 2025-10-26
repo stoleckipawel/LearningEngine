@@ -1,6 +1,6 @@
 #include "SamplerDesc.h"
 
-FSamplerDesc::FSamplerDesc()
+SamplerDesc::SamplerDesc()
 {
     Filter = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
     AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;

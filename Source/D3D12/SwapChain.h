@@ -4,7 +4,7 @@
 
 static const UINT BufferingCount = 3;
 
-class FSwapChain
+class SwapChain
 {
 public:
 	void Initialize();
@@ -16,7 +16,7 @@ public:
 	void Present();
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetBackbufferRTVHandle() { return m_rtvHandles[m_currentBufferIndex]; }
-	UINT GetCurrentBackBufferIndex() { return m_currentBufferIndex; }
+	UINT GetBackBufferIndex() { return m_currentBufferIndex; }
 	void UpdateCurrentBackBufferIndex() { m_currentBufferIndex = m_swapChain->GetCurrentBackBufferIndex(); }
 
 	D3D12_VIEWPORT GetDefaultViewport();
@@ -32,5 +32,5 @@ public:
 	ComPointer<ID3D12Resource2> m_buffers[BufferingCount];
 };
 
-extern FSwapChain GSwapChain; 
+extern SwapChain GSwapChain; 
 

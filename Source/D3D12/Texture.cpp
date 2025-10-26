@@ -1,17 +1,17 @@
 #include "Texture.h"
 
 
-void FTexture::Load(const std::filesystem::path& imagePath, ID3D12GraphicsCommandList* cmdList, ID3D12DescriptorHeap* srvHeap, UINT DescriptorHandleIndex)
+void Texture::Load(const std::filesystem::path& imagePath, ID3D12GraphicsCommandList* cmdList, ID3D12DescriptorHeap* srvHeap, UINT DescriptorHandleIndex)
 {
 	//ToDo:Switch to DirectXTex for better format support and mip generation
-	//FImageLoader::LoadImageFromDisk("Assets/Textures/ColorCheckerBoard.png", textureData);
+	//ImageLoader::LoadImageFromDisk("Assets/Textures/ColorCheckerBoard.png", textureData);
 
     //CreateResource();
     //UploadToGPU(cmdList);
     //CreateSRV(srvHeap, DescriptorHandleIndex);
 }
 
-void FTexture::CreateResource()
+void Texture::CreateResource()
 {
 	//Texture Resource Desc
 	D3D12_RESOURCE_DESC texResourceDesc = {};
@@ -66,7 +66,7 @@ void FTexture::CreateResource()
 		"Texture: Failed To Create Upload Buffer");	
 }
 
-void FTexture::UploadToGPU(ID3D12GraphicsCommandList* cmdList)
+void Texture::UploadToGPU(ID3D12GraphicsCommandList* cmdList)
 {
     D3D12_SUBRESOURCE_DATA sub = {};
 	{
@@ -86,7 +86,7 @@ void FTexture::UploadToGPU(ID3D12GraphicsCommandList* cmdList)
     cmdList->ResourceBarrier(1, &barrier);	
 }
 
-void FTexture::CreateSRV(ID3D12DescriptorHeap* srvHeap, UINT DescriptorHandleIndex)
+void Texture::CreateSRV(ID3D12DescriptorHeap* srvHeap, UINT DescriptorHandleIndex)
 {
     UINT descriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     D3D12_CPU_DESCRIPTOR_HANDLE cpuStart = srvHeap->GetCPUDescriptorHandleForHeapStart();
@@ -109,7 +109,7 @@ void FTexture::CreateSRV(ID3D12DescriptorHeap* srvHeap, UINT DescriptorHandleInd
     DescriptorHandleIndex = DescriptorHandleIndex;		
 }
 
-void FTexture::Release()
+void Texture::Release()
 {
     //textureResource.Release();
     //uploadResource.Release();

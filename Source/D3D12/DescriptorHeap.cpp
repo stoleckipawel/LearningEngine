@@ -34,7 +34,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCPUHandle(UINT FrameIndex, UINT I
 
 D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCurrentFrameCPUHandle(UINT Index)
 {
-	return GetCPUHandle(GSwapChain.GetCurrentBackBufferIndex(), Index);
+	return GetCPUHandle(GSwapChain.GetBackBufferIndex(), Index);
 }
 
 D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGPUHandle(UINT FrameIndex, UINT Index)
@@ -46,5 +46,5 @@ D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGPUHandle(UINT FrameIndex, UINT I
 
 D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCurrentFrameGPUHandle(UINT Index)
 {
-	return GetGPUHandle(GSwapChain.GetCurrentBackBufferIndex(), Index);
+	return GetGPUHandle(GSwapChain.GetBackBufferIndex(), Index);
 }
