@@ -10,19 +10,19 @@ public:
     void Load(const std::filesystem::path& imagePath,
               ID3D12GraphicsCommandList* cmdList,
               ID3D12DescriptorHeap* srvHeap,
-              UINT HandleIndex);
+              UINT DescriptorHandleIndex);
     void Release();
 
     UINT ComputeMipCount(UINT width, UINT height);
 
     void CreateResource();
     void UploadToGPU(ID3D12GraphicsCommandList* cmdList);
-    void CreateSRV(ID3D12DescriptorHeap* srvHeap, UINT HandleIndex);
+    void CreateSRV(ID3D12DescriptorHeap* srvHeap, UINT DescriptorHandleIndex);
 
     ComPointer<ID3D12Resource> textureResource = nullptr;
     ComPointer<ID3D12Resource> uploadResource = nullptr;
 
     FImageLoader::FImageData textureData;
-    UINT HandleIndex = 0;
+    UINT DescriptorHandleIndex = 0;
 };
 

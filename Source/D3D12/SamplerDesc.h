@@ -9,6 +9,6 @@ public:
     FSamplerDesc();
     D3D12_CPU_DESCRIPTOR_HANDLE CreateDescriptor(void);
     D3D12_CPU_DESCRIPTOR_HANDLE Handle;  
-    UINT HandleIndex = 0;
+    UINT DescriptorHandleIndex = 0;
 };
 

@@ -23,7 +23,8 @@ class ConstantBufferManager
 public:
 	void Initialize();
 	void Release();
-
+	void Update(size_t FrameIndex);
+private:
 	void UpdateVertexConstantBuffer(const FVertexConstantBuffer& data);
 	void UpdatePixelConstantBuffer(const FPixelConstantBuffer& data);
 public:

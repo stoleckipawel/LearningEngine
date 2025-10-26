@@ -1,14 +1,14 @@
 #include "Texture.h"
 
 
-void FTexture::Load(const std::filesystem::path& imagePath, ID3D12GraphicsCommandList* cmdList, ID3D12DescriptorHeap* srvHeap, UINT HandleIndex)
+void FTexture::Load(const std::filesystem::path& imagePath, ID3D12GraphicsCommandList* cmdList, ID3D12DescriptorHeap* srvHeap, UINT DescriptorHandleIndex)
 {
 	//ToDo:Switch to DirectXTex for better format support and mip generation
 	//FImageLoader::LoadImageFromDisk("Assets/Textures/ColorCheckerBoard.png", textureData);
 
     //CreateResource();
     //UploadToGPU(cmdList);
-    //CreateSRV(srvHeap, HandleIndex);
+    //CreateSRV(srvHeap, DescriptorHandleIndex);
 }
 
 void FTexture::CreateResource()
@@ -86,11 +86,11 @@ void FTexture::UploadToGPU(ID3D12GraphicsCommandList* cmdList)
     cmdList->ResourceBarrier(1, &barrier);	
 }
 
-void FTexture::CreateSRV(ID3D12DescriptorHeap* srvHeap, UINT HandleIndex)
+void FTexture::CreateSRV(ID3D12DescriptorHeap* srvHeap, UINT DescriptorHandleIndex)
 {
     UINT descriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     D3D12_CPU_DESCRIPTOR_HANDLE cpuStart = srvHeap->GetCPUDescriptorHandleForHeapStart();
-    cpuStart.ptr += HandleIndex * descriptorSize;
+    cpuStart.ptr += DescriptorHandleIndex * descriptorSize;
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = textureData.dxgiPixelFormat;
@@ -106,7 +106,7 @@ void FTexture::CreateSRV(ID3D12DescriptorHeap* srvHeap, UINT HandleIndex)
 		&srvDesc,
 		srvHeap->GetCPUDescriptorHandleForHeapStart());//Popraw!!!!!!!!!!!!!!
 
-    HandleIndex = HandleIndex;		
+    DescriptorHandleIndex = DescriptorHandleIndex;		
 }
 
 void FTexture::Release()

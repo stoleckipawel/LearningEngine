@@ -197,15 +197,15 @@ void Renderer::BindDescriptorTables()
 	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(
 		0, 
 		GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameGPUHandle(
-			GConstantBufferManager.VertexConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].HandleIndex));
+			GConstantBufferManager.VertexConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].DescriptorHandleIndex));
 
 	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(
 		1, 
 		GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameGPUHandle(
-			GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].HandleIndex));
+			GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].DescriptorHandleIndex));
 
-	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(2, GDescriptorHeapManager.GetTextureHeap().GetCurrentFrameGPUHandle(texture.HandleIndex));
-	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(3, GDescriptorHeapManager.GetSamplerHeap().GetCurrentFrameGPUHandle(sampler.HandleIndex));
+	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(2, GDescriptorHeapManager.GetTextureHeap().GetCurrentFrameGPUHandle(texture.DescriptorHandleIndex));
+	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(3, GDescriptorHeapManager.GetSamplerHeap().GetCurrentFrameGPUHandle(sampler.DescriptorHandleIndex));
 }
 
 void Renderer::PopulateCommandList()
@@ -251,31 +251,10 @@ void Renderer::ReleaseFrameBuffers()
 	depthStencilBuffer.Release();
 }
 
-void Renderer::UpdateRainbowColor()
-{
-	float speed = FrameIndex * 0.02f; // Speed of the color change
-
-	//Update Vertex Constant Buffers
-	FVertexConstantBuffer vertexData;
-	vertexData.WorldMTX = XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f);
-	vertexData.ViewMTX = XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f);
-	vertexData.ProjectionMTX = XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f);
-	GConstantBufferManager.UpdateVertexConstantBuffer(vertexData);
-
-	//Update Pixel Constant Buffers
-	FPixelConstantBuffer pixelData;
-	pixelData.Color.x = 0.5f + 0.5f * sinf(speed);
-	pixelData.Color.y = 0.5f + 0.5f * sinf(speed + 2.0f);
-	pixelData.Color.z = 0.5f + 0.5f * sinf(speed + 4.0f);
-	pixelData.Color.w = 1.0f;
-	GConstantBufferManager.UpdatePixelConstantBuffer(pixelData);
-}
-
-// Update frame-based values.
 void Renderer::OnUpdate()
 {
 	FrameIndex++;
-	UpdateRainbowColor();
+	GConstantBufferManager.Update(FrameIndex);
 }
 
 void Renderer::OnResize()

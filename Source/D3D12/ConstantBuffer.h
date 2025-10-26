@@ -7,23 +7,23 @@ template <typename T>
 class FConstantBuffer
 {
 public:
-	void Initialize(UINT HandleIndex);
-	void Update(const T& data);
+	void Initialize(UINT DescriptorHandleIndex);
+	void Update(const T& Data);
 	void Release();
-	void CreateConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE handle);
+	void CreateConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE Handle);
 public:
     D3D12_CONSTANT_BUFFER_VIEW_DESC ConstantBufferViewDesc = {};
 	ComPointer<ID3D12Resource2> Resource = nullptr;
 	T ConstantBufferData;
 	UINT ConstantBufferSize = 0;
     void* MappedData = nullptr;
-    UINT HandleIndex = 0;
+    UINT DescriptorHandleIndex = 0;
 };
 
 template <typename T>
-void FConstantBuffer<T>::Initialize(UINT HandleIndex)
+void FConstantBuffer<T>::Initialize(UINT DescriptorHandleIndex)
 {
-    this->HandleIndex = HandleIndex;
+    this->DescriptorHandleIndex = DescriptorHandleIndex;
 
     //Initialize constant Buffer Data members
     ZeroMemory(&ConstantBufferData, sizeof(T));
@@ -66,20 +66,20 @@ void FConstantBuffer<T>::Initialize(UINT HandleIndex)
 }
 
 template <typename T>
-void FConstantBuffer<T>::Update(const T& data)
+void FConstantBuffer<T>::Update(const T& Data)
 {
-  ConstantBufferData = data;
+  ConstantBufferData = Data;
 
   // Copy the updated data to the mapped memory
   memcpy(MappedData, &ConstantBufferData, sizeof(T));
 }
 
 template <typename T>
-void FConstantBuffer<T>::CreateConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE handle)
+void FConstantBuffer<T>::CreateConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE Handle)
 {
     ConstantBufferViewDesc.BufferLocation = Resource->GetGPUVirtualAddress();
     ConstantBufferViewDesc.SizeInBytes = static_cast<UINT>(ConstantBufferSize);
-    GRHI.Device->CreateConstantBufferView(&ConstantBufferViewDesc, handle);
+    GRHI.Device->CreateConstantBufferView(&ConstantBufferViewDesc, Handle);
 }
 
 template <typename T>
