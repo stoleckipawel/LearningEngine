@@ -1,8 +1,8 @@
 #include "DebugLayer.h"
 
-FDebugLayer GDebugLayer;
+DebugLayer GDebugLayer;
 
-void FDebugLayer::Initialize()
+void DebugLayer::Initialize()
 {
 #if defined(_DEBUG)
 	//Init D3D12 Debug Layer
@@ -15,7 +15,7 @@ void FDebugLayer::Initialize()
 #endif
 }
 
-void FDebugLayer::Shutdown()
+void DebugLayer::Shutdown()
 {
 #if defined(_DEBUG)
 	if (m_dxgiDebug)

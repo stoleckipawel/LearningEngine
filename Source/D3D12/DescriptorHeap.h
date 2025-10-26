@@ -3,7 +3,7 @@
 #include "../Vendor/Windows/WinInclude.h"
 #include "RHI.h"
 
-class FDescriptorHeap
+class DescriptorHeap
 {
 public:
 	void Create(D3D12_DESCRIPTOR_HEAP_TYPE Type, UINT NumDescriptorsPerFrame, bool bFrameBuffered, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR Name);

@@ -4,7 +4,6 @@
 #include "Texture.h"
 #include "Geometry.h"
 #include "PSO.h"
-#include "DescriptorHeap.h"
 #include "RootSignature.h"
 #include "ConstantBuffer.h"
 #include "SamplerDesc.h"
@@ -22,7 +21,7 @@ struct alignas(256) FPixelConstantBuffer
 	XMFLOAT4 Color;
 };
 
-class FRenderer
+class Renderer
 {
 public:
 	void Load();
@@ -45,7 +44,6 @@ private:
 	void CreateRootSignatures();
 	void ReleaseRootSignatures();
 
-	void CreateDescriptorHeaps();
 	void ReleaseDescriptorHeaps();
 
 	void CreatePSOs();
@@ -67,8 +65,7 @@ private:
 
 	void ClearBackBuffer();
 	void ClearDepthStencilBuffer();
-
-	void SetDescriptorHeaps();
+	
 	void BindDescriptorTables();
 
 	void PopulateCommandList();
@@ -81,10 +78,6 @@ private:
 	FGeometry vertecies;
 	FPSO pso;
 	FRootSignature rootSignature;
-	FDescriptorHeap ConstantBufferHeap = FDescriptorHeap();
-	FDescriptorHeap TextureHeap = FDescriptorHeap();
-	FDescriptorHeap SamplerHeap = FDescriptorHeap();
-	FDescriptorHeap DepthStencilViewHeap = FDescriptorHeap();
 
 	D3D12_RESOURCE_DESC depthStencilResourceDesc = {};
 	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
@@ -96,10 +89,9 @@ private:
 
 	FShaderCompiler vertexShader;
 	FShaderCompiler pixelShader;
-	UINT NumConstantBuffers = 2;
 
 	UINT FrameIndex = 0;
 };
 
-extern FRenderer GRenderer;
+extern Renderer GRenderer;
 

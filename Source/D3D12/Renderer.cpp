@@ -3,77 +3,62 @@
 #include "RHI.h"
 #include "Window.h"
 #include "SwapChain.h"
+#include "DescriptorHeapManager.h"
 
-FRenderer GRenderer;
+Renderer GRenderer;
 
-void FRenderer::LoadGeometry()
+void Renderer::LoadGeometry()
 {
 	vertecies.Upload();
 }
 
-void FRenderer::UnloadGeometry()
+void Renderer::UnloadGeometry()
 {
 	vertecies.Release();
 }
 
-void FRenderer::LoadTextures()
+void Renderer::LoadTextures()
 {
 	//texture.Load("Assets/Textures/ColorCheckerBoard.png");
 }
 
-void FRenderer::UnloadTextures()
+void Renderer::UnloadTextures()
 {
 	//texture.Release();
 }
 
-void FRenderer::LoadSamplers()
+void Renderer::LoadSamplers()
 {
 	//sampler = FSamplerDesc();
 }
 
-void FRenderer::LoadShaders()
+void Renderer::LoadShaders()
 {
 	vertexShader = FShaderCompiler(L"Shaders/VertShader.hlsl", "vs_5_0", "main");//To Do check 6.0 shaders
 	pixelShader = FShaderCompiler(L"Shaders/PixShader.hlsl", "ps_5_0", "main");
 }
 
-void FRenderer::CreateRootSignatures()
+void Renderer::CreateRootSignatures()
 {
 	rootSignature = FRootSignature();
 	rootSignature.Create();
 }
-void FRenderer::ReleaseRootSignatures()
+void Renderer::ReleaseRootSignatures()
 {
 	rootSignature.rootSignature.Release();
 }
 
-void FRenderer::CreateDescriptorHeaps()
-{
-	ConstantBufferHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, NumConstantBuffers, true, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"ConstantBufferHeap");
-	TextureHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1, false, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"TextureHeap");
-	SamplerHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 1, false, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"SamplerHeap");
-	DepthStencilViewHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, L"DepthStencilHeap");
-}
-
-void FRenderer::ReleaseDescriptorHeaps()
-{
-	ConstantBufferHeap.heap.Release();
-	TextureHeap.heap.Release();
-	SamplerHeap.heap.Release();
-	DepthStencilViewHeap.heap.Release();
-}
-
-void FRenderer::CreatePSOs()
+void Renderer::CreatePSOs()
 {
 	pso.Create(vertecies, rootSignature.rootSignature, vertexShader, pixelShader);
 }
 
-void FRenderer::ReleasePSOs()
+void Renderer::ReleasePSOs()
 {
 	pso.pso.Release();
 }
 
-void FRenderer::CreateCommandLists()
+void Renderer::CreateCommandLists()
 {
 	for (size_t i = 0; i < BufferingCount; ++i) 
 	{ 
@@ -85,7 +70,7 @@ void FRenderer::CreateCommandLists()
 	}
 }
 
-void FRenderer::ReleaseCommandLists()
+void Renderer::ReleaseCommandLists()
 {
 	for (size_t i = 0; i < BufferingCount; ++i) 
 	{ 
@@ -93,7 +78,7 @@ void FRenderer::ReleaseCommandLists()
 	}
 }
 
-void FRenderer::CreateDepthStencilBuffer()
+void Renderer::CreateDepthStencilBuffer()
 {
 	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
@@ -138,29 +123,29 @@ void FRenderer::CreateDepthStencilBuffer()
 		LogError(message, ELogType::Warning);
 	}
 
-	DepthStencilHandle = DepthStencilViewHeap.heap->GetCPUDescriptorHandleForHeapStart();
+	DepthStencilHandle = GDescriptorHeapManager.GetDepthStencilViewHeap().heap->GetCPUDescriptorHandleForHeapStart();
 	GRHI.Device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, DepthStencilHandle);
 }
 
-void FRenderer::CreateConstantBuffers()
+void Renderer::CreateConstantBuffers()
 {
 	for (size_t i = 0; i < BufferingCount; ++i)
 	{
 		//Create Vertex Constant Buffer
 		FConstantBuffer<FVertexConstantBuffer> vertexConstantBuffer;
 		vertexConstantBuffer.Initialize(0);
-		vertexConstantBuffer.CreateConstantBufferView(ConstantBufferHeap.GetCPUHandle(i, vertexConstantBuffer.HandleIndex));
+		vertexConstantBuffer.CreateConstantBufferView(GDescriptorHeapManager.GetConstantBufferHeap().GetCPUHandle(i, vertexConstantBuffer.HandleIndex));
 		VertexConstantBuffers[i] = vertexConstantBuffer;
 
 		//Create Pixel Constant Buffer
 		FConstantBuffer<FPixelConstantBuffer> pixelConstantBuffer;
 		pixelConstantBuffer.Initialize(1);
-		pixelConstantBuffer.CreateConstantBufferView(ConstantBufferHeap.GetCPUHandle(i, pixelConstantBuffer.HandleIndex));
+		pixelConstantBuffer.CreateConstantBufferView(GDescriptorHeapManager.GetConstantBufferHeap().GetCPUHandle(i, pixelConstantBuffer.HandleIndex));
 		PixelConstantBuffers[i] = pixelConstantBuffer;
 	}
 }
 
-void FRenderer::ReleaseConstantBuffers()
+void Renderer::ReleaseConstantBuffers()
 {
 	for (size_t i = 0; i < BufferingCount; ++i)
 	{
@@ -169,7 +154,7 @@ void FRenderer::ReleaseConstantBuffers()
 	}
 }
 
-void FRenderer::Load()
+void Renderer::Load()
 {
 	LoadGeometry();
 	//LoadTextures();
@@ -179,31 +164,31 @@ void FRenderer::Load()
 	CreateRootSignatures();
 	CreatePSOs();
 	CreateCommandLists();
-	CreateDescriptorHeaps();
+	GDescriptorHeapManager.Initialize();
 	CreateConstantBuffers();
 	CreateFrameBuffers();
 
 	GRHI.Flush();
 }
 
-void FRenderer::Unload()
+void Renderer::Unload()
 {
 	//Unloads previously loaded assets from disc
 	UnloadGeometry();
 	UnloadTextures();
 }
 
-void FRenderer::Release()
+void Renderer::Release()
 {
 	ReleaseCommandLists();
 	ReleaseRootSignatures();
 	ReleasePSOs();
 	ReleaseFrameBuffers();
-	ReleaseDescriptorHeaps();
+	GDescriptorHeapManager.Release();
 	ReleaseConstantBuffers();
 }
 
-void FRenderer::SetViewport()
+void Renderer::SetViewport()
 {
 	//Rasterizer State: Viewport
 	D3D12_VIEWPORT viewport = GSwapChain.GetDefaultViewport();
@@ -214,7 +199,7 @@ void FRenderer::SetViewport()
 	GRHI.GetCurrentCommandList()->RSSetScissorRects(1, &scissorRect);
 }
 
-void FRenderer::ClearBackBuffer()
+void Renderer::ClearBackBuffer()
 {
 	//Clear backbuffer 
 	float clearColor[4] = {255.0f, 0.5f, 0.5f, 1.0f };
@@ -222,35 +207,28 @@ void FRenderer::ClearBackBuffer()
 	GRHI.GetCurrentCommandList()->ClearRenderTargetView(backBufferRTVHandle, clearColor, 0, nullptr);
 }
 
-void FRenderer::ClearDepthStencilBuffer()
+void Renderer::ClearDepthStencilBuffer()
 {
-	DepthStencilHandle = DepthStencilViewHeap.heap->GetCPUDescriptorHandleForHeapStart();
+	DepthStencilHandle = GDescriptorHeapManager.GetDepthStencilViewHeap().heap->GetCPUDescriptorHandleForHeapStart();
 	GRHI.GetCurrentCommandList()->ClearDepthStencilView(DepthStencilHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 }
 
-void FRenderer::SetBackBufferRTV()
+void Renderer::SetBackBufferRTV()
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GSwapChain.GetBackbufferRTVHandle();
-	DepthStencilHandle = DepthStencilViewHeap.heap->GetCPUDescriptorHandleForHeapStart();
+	DepthStencilHandle = GDescriptorHeapManager.GetDepthStencilViewHeap().heap->GetCPUDescriptorHandleForHeapStart();
 	GRHI.GetCurrentCommandList()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &DepthStencilHandle);
 }
 
-void FRenderer::SetDescriptorHeaps()
+void Renderer::BindDescriptorTables()
 {
-	ID3D12DescriptorHeap* heaps[] = { ConstantBufferHeap.heap.Get() };
-	GRHI.GetCurrentCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
+	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(0, GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameGPUHandle(VertexConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].HandleIndex));
+	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(1, GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameGPUHandle(PixelConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].HandleIndex));
+	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(2, GDescriptorHeapManager.GetTextureHeap().GetCurrentFrameGPUHandle(texture.HandleIndex));
+	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(3, GDescriptorHeapManager.GetSamplerHeap().GetCurrentFrameGPUHandle(sampler.HandleIndex));
 }
 
-void FRenderer::BindDescriptorTables()
-{
-	ConstantBufferHeap.GetCurrentFrameGPUHandle(0);
-	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(0, ConstantBufferHeap.GetCurrentFrameGPUHandle(VertexConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].HandleIndex));
-	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(1, ConstantBufferHeap.GetCurrentFrameGPUHandle(PixelConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].HandleIndex));
-	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(2, TextureHeap.GetCurrentFrameGPUHandle(texture.HandleIndex));
-	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(3, SamplerHeap.GetCurrentFrameGPUHandle(sampler.HandleIndex));
-}
-
-void FRenderer::PopulateCommandList()
+void Renderer::PopulateCommandList()
 {
 	//Sets BackbBuffer to Present State
 	GRHI.SetBarrier(
@@ -269,7 +247,7 @@ void FRenderer::PopulateCommandList()
 
 	vertecies.Set();
 
-	SetDescriptorHeaps();
+	GDescriptorHeapManager.SetShaderVisibleHeaps();
 	BindDescriptorTables();
 
 	pso.Set();
@@ -283,17 +261,17 @@ void FRenderer::PopulateCommandList()
 		D3D12_RESOURCE_STATE_PRESENT);
 }
 
-void FRenderer::CreateFrameBuffers()
+void Renderer::CreateFrameBuffers()
 {
 	CreateDepthStencilBuffer();
 }
 
-void FRenderer::ReleaseFrameBuffers()
+void Renderer::ReleaseFrameBuffers()
 {
 	depthStencilBuffer.Release();
 }
 
-void FRenderer::UpdateRainbowColor()
+void Renderer::UpdateRainbowColor()
 {
 	float speed = FrameIndex * 0.02f; // Speed of the color change
 
@@ -314,13 +292,13 @@ void FRenderer::UpdateRainbowColor()
 }
 
 // Update frame-based values.
-void FRenderer::OnUpdate()
+void Renderer::OnUpdate()
 {
 	FrameIndex++;
 	UpdateRainbowColor();
 }
 
-void FRenderer::OnResize()
+void Renderer::OnResize()
 {
 	GRHI.Flush();
 	ReleaseFrameBuffers();
@@ -328,7 +306,7 @@ void FRenderer::OnResize()
 }
 
 // Render the scene.
-void FRenderer::OnRender()
+void Renderer::OnRender()
 {
 	OnUpdate();
 
@@ -357,13 +335,13 @@ void FRenderer::OnRender()
 	GSwapChain.UpdateCurrentBackBufferIndex();
 }
 
-void FRenderer::Shutdown()
+void Renderer::Shutdown()
 {
 	GRHI.Flush();
 
 	// Release all resources.
-	FRenderer::Release();
-	FRenderer::Unload();
+	Renderer::Release();
+	Renderer::Unload();
 	GSwapChain.Shutdown();
 	GWindow.Shutdown();
 	GRHI.Shutdown();

@@ -1,7 +1,7 @@
 #pragma once
 #include "../Vendor/Windows/WinInclude.h"
 
-class FDebugLayer
+class DebugLayer
 {
 public:
 	void Initialize();
@@ -13,4 +13,4 @@ private:
 #endif
 };
 
-extern FDebugLayer GDebugLayer;
+extern DebugLayer GDebugLayer;
