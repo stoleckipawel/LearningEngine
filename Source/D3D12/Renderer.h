@@ -7,6 +7,8 @@
 #include "DescriptorHeap.h"
 #include "RootSignature.h"
 #include "ConstantBuffer.h"
+#include "SamplerDesc.h"
+
 
 struct alignas(256) FVertexConstantBuffer
 {
@@ -36,8 +38,9 @@ private:
 	void LoadTextures();
 	void UnloadTextures();
 
+	void LoadSamplers();
+
 	void LoadShaders();
-	void LoadAssets();
 
 	void CreateRootSignatures();
 	void ReleaseRootSignatures();
@@ -74,11 +77,12 @@ private:
 	void OnUpdate();
 private:
 	FTexture texture;
+	FSamplerDesc sampler;
 	FGeometry vertecies;
 	FPSO pso;
 	FRootSignature rootSignature;
 	FDescriptorHeap ConstantBufferHeap = FDescriptorHeap();
-	FDescriptorHeap ShaderResourceViewHeap = FDescriptorHeap();
+	FDescriptorHeap TextureHeap = FDescriptorHeap();
 	FDescriptorHeap SamplerHeap = FDescriptorHeap();
 	FDescriptorHeap DepthStencilViewHeap = FDescriptorHeap();
 

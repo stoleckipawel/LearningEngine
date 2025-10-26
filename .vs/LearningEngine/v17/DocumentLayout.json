@@ -3,20 +3,19 @@
   "WorkspaceRootPath": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Shaders\\PixShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Shaders\\PixShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}"
+      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Renderer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\Renderer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Microsoft\\VC\\v170\\Microsoft.CppBuild.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     },
     {
       "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\RootSignature.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\RootSignature.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\SamplerDesc.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\SamplerDesc.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\SamplerDesc.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\SamplerDesc.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Texture.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\Texture.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,58 +25,58 @@
       "DocumentGroups": [
         {
           "DockedWidth": 319,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "PixShader.hlsl",
-              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Shaders\\PixShader.hlsl",
-              "RelativeDocumentMoniker": "Shaders\\PixShader.hlsl",
-              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Shaders\\PixShader.hlsl",
-              "RelativeToolTip": "Shaders\\PixShader.hlsl",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAACAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2025-10-25T14:44:57.861Z",
+              "DocumentIndex": 1,
+              "Title": "Microsoft.CppBuild.targets",
+              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Microsoft\\VC\\v170\\Microsoft.CppBuild.targets",
+              "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Microsoft\\VC\\v170\\Microsoft.CppBuild.targets",
+              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Microsoft\\VC\\v170\\Microsoft.CppBuild.targets",
+              "RelativeToolTip": "..\\..\\..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Microsoft\\VC\\v170\\Microsoft.CppBuild.targets",
+              "ViewState": "AgIAAPoBAAAAAAAAAAAjwAoCAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003801|",
+              "WhenOpened": "2025-10-26T11:40:24.789Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "SamplerDesc.h",
-              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\SamplerDesc.h",
-              "RelativeDocumentMoniker": "Source\\D3D12\\SamplerDesc.h",
-              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\SamplerDesc.h",
-              "RelativeToolTip": "Source\\D3D12\\SamplerDesc.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAHAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-10-25T14:44:09.978Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
               "Title": "RootSignature.cpp",
               "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\RootSignature.cpp",
               "RelativeDocumentMoniker": "Source\\D3D12\\RootSignature.cpp",
               "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\RootSignature.cpp",
               "RelativeToolTip": "Source\\D3D12\\RootSignature.cpp",
-              "ViewState": "AgIAAAIAAAAAAAAAAAAgwAwAAAAvAAAAAAAAAA==",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAQwBQAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-10-25T14:43:56.201Z",
+              "WhenOpened": "2025-10-26T11:40:05.617Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "SamplerDesc.cpp",
-              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\SamplerDesc.cpp",
-              "RelativeDocumentMoniker": "Source\\D3D12\\SamplerDesc.cpp",
-              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\SamplerDesc.cpp",
-              "RelativeToolTip": "Source\\D3D12\\SamplerDesc.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAGAAAAAAAAAA==",
+              "Title": "Texture.cpp",
+              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Texture.cpp",
+              "RelativeDocumentMoniker": "Source\\D3D12\\Texture.cpp",
+              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Texture.cpp",
+              "RelativeToolTip": "Source\\D3D12\\Texture.cpp",
+              "ViewState": "AgIAACYAAAAAAAAAAAAQwEAAAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-10-25T14:43:24.672Z",
+              "WhenOpened": "2025-10-26T11:36:23.186Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Renderer.cpp",
+              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Renderer.cpp",
+              "RelativeDocumentMoniker": "Source\\D3D12\\Renderer.cpp",
+              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Renderer.cpp",
+              "RelativeToolTip": "Source\\D3D12\\Renderer.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-10-26T11:36:15.436Z",
               "EditorCaption": ""
             }
           ]

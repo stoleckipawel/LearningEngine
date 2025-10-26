@@ -18,25 +18,23 @@ void FRenderer::UnloadGeometry()
 
 void FRenderer::LoadTextures()
 {
-	texture.Load("Assets/Textures/ColorCheckerBoard.png");
+	//texture.Load("Assets/Textures/ColorCheckerBoard.png");
 }
 
 void FRenderer::UnloadTextures()
 {
-	texture.Release();
+	//texture.Release();
+}
+
+void FRenderer::LoadSamplers()
+{
+	//sampler = FSamplerDesc();
 }
 
 void FRenderer::LoadShaders()
 {
 	vertexShader = FShaderCompiler(L"Shaders/VertShader.hlsl", "vs_5_0", "main");//To Do check 6.0 shaders
 	pixelShader = FShaderCompiler(L"Shaders/PixShader.hlsl", "ps_5_0", "main");
-}
-
-void FRenderer::LoadAssets()
-{
-	LoadGeometry();
-	LoadTextures();
-	LoadShaders();
 }
 
 void FRenderer::CreateRootSignatures()
@@ -51,15 +49,16 @@ void FRenderer::ReleaseRootSignatures()
 
 void FRenderer::CreateDescriptorHeaps()
 {
-	ConstantBufferHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, NumConstantBuffers, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"ConstantBufferHeap");
-	ShaderResourceViewHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"ShaderResourceViewHeap");
-	SamplerHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 1, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"SamplerHeap");
-	DepthStencilViewHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, L"DepthStencilHeap");
+	ConstantBufferHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, NumConstantBuffers, true, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"ConstantBufferHeap");
+	TextureHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1, false, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"TextureHeap");
+	SamplerHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 1, false, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"SamplerHeap");
+	DepthStencilViewHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, L"DepthStencilHeap");
 }
 
 void FRenderer::ReleaseDescriptorHeaps()
 {
 	ConstantBufferHeap.heap.Release();
+	TextureHeap.heap.Release();
 	SamplerHeap.heap.Release();
 	DepthStencilViewHeap.heap.Release();
 }
@@ -172,7 +171,10 @@ void FRenderer::ReleaseConstantBuffers()
 
 void FRenderer::Load()
 {
-	LoadAssets();
+	LoadGeometry();
+	//LoadTextures();
+	//LoadSamplers();
+	LoadShaders();
 
 	CreateRootSignatures();
 	CreatePSOs();
@@ -244,6 +246,8 @@ void FRenderer::BindDescriptorTables()
 	ConstantBufferHeap.GetCurrentFrameGPUHandle(0);
 	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(0, ConstantBufferHeap.GetCurrentFrameGPUHandle(VertexConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].HandleIndex));
 	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(1, ConstantBufferHeap.GetCurrentFrameGPUHandle(PixelConstantBuffers[GSwapChain.GetCurrentBackBufferIndex()].HandleIndex));
+	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(2, TextureHeap.GetCurrentFrameGPUHandle(texture.HandleIndex));
+	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(3, SamplerHeap.GetCurrentFrameGPUHandle(sampler.HandleIndex));
 }
 
 void FRenderer::PopulateCommandList()

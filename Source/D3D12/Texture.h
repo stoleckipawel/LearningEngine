@@ -4,19 +4,25 @@
 #include "RHI.h"
 
 
-class FTexture
+class FTexture 
 {
 public:
-	void Load(const std::filesystem::path& imagePath);
-	D3D12_RESOURCE_DESC CreateResourceDesc();
-	void Create();
-	void Release();
-	UINT ComputeMipCount(UINT width, UINT height);
+    void Load(const std::filesystem::path& imagePath,
+              ID3D12GraphicsCommandList* cmdList,
+              ID3D12DescriptorHeap* srvHeap,
+              UINT HandleIndex);
+    void Release();
 
-	void CreateSRV(ComPointer<ID3D12DescriptorHeap> srvHeap);
+    UINT ComputeMipCount(UINT width, UINT height);
 
-	FImageLoader::ImageData textureData;
-	ComPointer<ID3D12Resource2> textureResource;
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc;
+    void CreateResource();
+    void UploadToGPU(ID3D12GraphicsCommandList* cmdList);
+    void CreateSRV(ID3D12DescriptorHeap* srvHeap, UINT HandleIndex);
+
+    ComPointer<ID3D12Resource> textureResource = nullptr;
+    ComPointer<ID3D12Resource> uploadResource = nullptr;
+
+    FImageLoader::FImageData textureData;
+    UINT HandleIndex = 0;
 };
 

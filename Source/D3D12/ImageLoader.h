@@ -7,7 +7,7 @@
 class FImageLoader
 {
 public:
-	struct ImageData
+	struct FImageData
 	{
 		std::vector<char> data;
 		uint32_t width = 1;
@@ -19,7 +19,7 @@ public:
 		DXGI_FORMAT dxgiPixelFormat = DXGI_FORMAT_UNKNOWN;
 	};
 
-	static bool LoadImageFromDisk(const std::filesystem::path& imagePath, ImageData& data);
+	static bool LoadImageFromDisk(const std::filesystem::path& imagePath, FImageData& data);
 private:
 	struct GUID_to_DXGI
 	{

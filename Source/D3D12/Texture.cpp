@@ -1,105 +1,116 @@
 #include "Texture.h"
 
 
-void FTexture::Load(const std::filesystem::path& imagePath)
+void FTexture::Load(const std::filesystem::path& imagePath, ID3D12GraphicsCommandList* cmdList, ID3D12DescriptorHeap* srvHeap, UINT HandleIndex)
 {
-	FImageLoader::LoadImageFromDisk("Assets/Textures/ColorCheckerBoard.png", textureData);
+	//ToDo:Switch to DirectXTex for better format support and mip generation
+	//FImageLoader::LoadImageFromDisk("Assets/Textures/ColorCheckerBoard.png", textureData);
+
+    //CreateResource();
+    //UploadToGPU(cmdList);
+    //CreateSRV(srvHeap, HandleIndex);
 }
 
-UINT FTexture::ComputeMipCount(UINT width, UINT height)
+void FTexture::CreateResource()
 {
-	return 1;
-
-	//ToDo activate when mip generation is done
-	return 1 + static_cast<UINT>(floor(log2(static_cast<float>(std::max(width, height)))));
-}
-
-D3D12_RESOURCE_DESC FTexture::CreateResourceDesc()
-{
+	//Texture Resource Desc
 	D3D12_RESOURCE_DESC texResourceDesc = {};
-	texResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	texResourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-	texResourceDesc.Width = textureData.width;
-	texResourceDesc.Height = textureData.height;
-	texResourceDesc.DepthOrArraySize = 1;
-	texResourceDesc.MipLevels = ComputeMipCount(textureData.width, textureData.height);
-	texResourceDesc.Format = textureData.dxgiPixelFormat;
-	texResourceDesc.SampleDesc.Count = 1;
-	texResourceDesc.SampleDesc.Quality = 0;
-	texResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	texResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-	return texResourceDesc;
-}
+	{
+		texResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		texResourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+		texResourceDesc.Width = textureData.width;
+		texResourceDesc.Height = textureData.height;
+		texResourceDesc.DepthOrArraySize = 1;
+		texResourceDesc.MipLevels = 1;//ToDo: Generate Mips
+		texResourceDesc.Format = textureData.dxgiPixelFormat;
+		texResourceDesc.SampleDesc.Count = 1;
+		texResourceDesc.SampleDesc.Quality = 0;
+		texResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+		texResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	}
 
-void FTexture::Create()
-{
-	D3D12_RESOURCE_DESC texResourceDesc = CreateResourceDesc();
+		D3D12_HEAP_PROPERTIES heapDefaultProperties = {};
+		heapDefaultProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+		heapDefaultProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+		heapDefaultProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		heapDefaultProperties.CreationNodeMask = 0;
+		heapDefaultProperties.VisibleNodeMask = 0;
 
-	D3D12_HEAP_PROPERTIES heapDefaultProperties = {};
-	heapDefaultProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+	ThrowIfFailed(GRHI.Device->CreateCommittedResource(
+		&heapDefaultProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&texResourceDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS(&textureResource)), 
+		"Texture: Failed To Create Texture Resource");
+
+	UINT64 uploadBufferSize = GetRequiredIntermediateSize(textureResource.Get(), 0, 1);//update when adding mips
+
+	D3D12_HEAP_PROPERTIES heapUploadProperties = {};
+	heapDefaultProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
 	heapDefaultProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 	heapDefaultProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 	heapDefaultProperties.CreationNodeMask = 0;
 	heapDefaultProperties.VisibleNodeMask = 0;
 
-	GRHI.Device->CreateCommittedResource(
-		&heapDefaultProperties,
+	CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+
+	ThrowIfFailed(GRHI.Device->CreateCommittedResource(
+		&heapUploadProperties,
 		D3D12_HEAP_FLAG_NONE,
-		&texResourceDesc,
-		D3D12_RESOURCE_STATE_COMMON,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(&textureResource));
+		IID_PPV_ARGS(&uploadResource)),
+		"Texture: Failed To Create Upload Buffer");	
 }
 
-void FTexture::Release()
+void FTexture::UploadToGPU(ID3D12GraphicsCommandList* cmdList)
 {
-	textureResource.Release();
+    D3D12_SUBRESOURCE_DATA sub = {};
+	{
+		sub.pData = textureData.data.data();
+		sub.RowPitch = textureData.width * ((textureData.bitsPerPixel + 7) / 8);
+		sub.SlicePitch = sub.RowPitch * textureData.height;	
+	}
+
+	UpdateSubresources(cmdList, textureResource.Get(), uploadResource.Get(), 0, 0, 1, &sub);
+
+    // Barrier to PIXEL_SHADER_RESOURCE
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+        textureResource.Get(),
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+    cmdList->ResourceBarrier(1, &barrier);	
 }
 
-void FTexture::CreateSRV(ComPointer<ID3D12DescriptorHeap> srvHeap)
+void FTexture::CreateSRV(ID3D12DescriptorHeap* srvHeap, UINT HandleIndex)
 {
+    UINT descriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    D3D12_CPU_DESCRIPTOR_HANDLE cpuStart = srvHeap->GetCPUDescriptorHandleForHeapStart();
+    cpuStart.ptr += HandleIndex * descriptorSize;
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = textureData.dxgiPixelFormat;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2D.MipLevels = ComputeMipCount(textureData.width, textureData.height);
+	srvDesc.Texture2D.MipLevels = 1;//ToDo: Update when adding mips
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 	srvDesc.Texture2D.PlaneSlice = 0;
 
 	GRHI.Device->CreateShaderResourceView(
 		textureResource,
 		&srvDesc,
-		srvHeap->GetCPUDescriptorHandleForHeapStart());
+		srvHeap->GetCPUDescriptorHandleForHeapStart());//Popraw!!!!!!!!!!!!!!
+
+    HandleIndex = HandleIndex;		
 }
 
-/*
-	uint32_t textureStride = textureData.width * ((textureData.bitsPerPixel + 7) / 8);
-	uint32_t textureSize = textureStride * textureData.height;
-
-
-D3D12_BOX textureSizeAsBox;
-textureSizeAsBox.left = textureSizeAsBox.top = textureSizeAsBox.front = 0;
-textureSizeAsBox.right = textureData.width;
-textureSizeAsBox.bottom = textureData.height;
-textureSizeAsBox.back = 1;
-
-D3D12_TEXTURE_COPY_LOCATION txtcSrc;
-
-txtcSrc.pResource = uploadBuffer;
-txtcSrc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-txtcSrc.PlacedFootprint.Offset = 0;
-txtcSrc.PlacedFootprint.Footprint.Width = textureData.width;
-txtcSrc.PlacedFootprint.Footprint.Height = textureData.height;
-txtcSrc.PlacedFootprint.Footprint.Depth = 1;
-txtcSrc.PlacedFootprint.Footprint.RowPitch = textureStride;
-txtcSrc.PlacedFootprint.Footprint.Format = textureData.dxgiPixelFormat;
-
-D3D12_TEXTURE_COPY_LOCATION	txtcDst;
-txtcDst.pResource = textureResource;
-txtcDst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-txtcDst.SubresourceIndex = 0;
-cmdList->CopyTextureRegion(&txtcDst, 0, 0, 0, &txtcSrc, &textureSizeAsBox);
-
-
-*/
-
+void FTexture::Release()
+{
+    //textureResource.Release();
+    //uploadResource.Release();
+}

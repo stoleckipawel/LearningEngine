@@ -6,7 +6,7 @@ const std::vector<FImageLoader::GUID_to_DXGI> FImageLoader::s_lookupTable =
 	{ GUID_WICPixelFormat32bppBGRA, DXGI_FORMAT_B8G8R8A8_UNORM }
 };
 
-bool FImageLoader::LoadImageFromDisk(const std::filesystem::path& imagePath, ImageData& data)
+bool FImageLoader::LoadImageFromDisk(const std::filesystem::path& imagePath, FImageData& data)
 {
 	// Create Factory
 	ComPointer<IWICImagingFactory> wicFactory;
