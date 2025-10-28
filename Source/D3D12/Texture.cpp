@@ -1,14 +1,14 @@
 #include "Texture.h"
 
 
-void Texture::Load(const std::filesystem::path& imagePath, ID3D12GraphicsCommandList* cmdList, ID3D12DescriptorHeap* srvHeap, UINT DescriptorHandleIndex)
+void Texture::Load(const std::filesystem::path& imagePath, ID3D12GraphicsCommandList* cmdList, ID3D12DescriptorHeap* srvHeap, UINT m_DescriptorHandleIndex)
 {
 	//ToDo:Switch to DirectXTex for better format support and mip generation
 	//ImageLoader::LoadImageFromDisk("Assets/Textures/ColorCheckerBoard.png", textureData);
 
     //CreateResource();
     //UploadToGPU(cmdList);
-    //CreateSRV(srvHeap, DescriptorHandleIndex);
+    //CreateSRV(srvHeap, m_DescriptorHandleIndex);
 }
 
 void Texture::CreateResource()
@@ -86,11 +86,11 @@ void Texture::UploadToGPU(ID3D12GraphicsCommandList* cmdList)
     cmdList->ResourceBarrier(1, &barrier);	
 }
 
-void Texture::CreateSRV(ID3D12DescriptorHeap* srvHeap, UINT DescriptorHandleIndex)
+void Texture::CreateSRV(ID3D12DescriptorHeap* srvHeap, UINT m_DescriptorHandleIndex)
 {
     UINT descriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     D3D12_CPU_DESCRIPTOR_HANDLE cpuStart = srvHeap->GetCPUDescriptorHandleForHeapStart();
-    cpuStart.ptr += DescriptorHandleIndex * descriptorSize;
+    cpuStart.ptr += m_DescriptorHandleIndex * descriptorSize;
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = textureData.dxgiPixelFormat;
@@ -106,7 +106,7 @@ void Texture::CreateSRV(ID3D12DescriptorHeap* srvHeap, UINT DescriptorHandleInde
 		&srvDesc,
 		srvHeap->GetCPUDescriptorHandleForHeapStart());//Popraw!!!!!!!!!!!!!!
 
-    DescriptorHandleIndex = DescriptorHandleIndex;		
+    m_DescriptorHandleIndex = m_DescriptorHandleIndex;		
 }
 
 void Texture::Release()

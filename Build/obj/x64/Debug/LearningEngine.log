@@ -3,8 +3,6 @@ C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v17
   ConstantBufferManager.cpp
 C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\ConstantBufferManager.cpp(12,109): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
 C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\ConstantBufferManager.cpp(18,108): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
-  RootSignature.cpp
-  DescriptorHeap.cpp
   Renderer.cpp
   Application.cpp
   Window.cpp

@@ -9,6 +9,6 @@ public:
     SamplerDesc();
     D3D12_CPU_DESCRIPTOR_HANDLE CreateDescriptor(void);
     D3D12_CPU_DESCRIPTOR_HANDLE Handle;  
-    UINT DescriptorHandleIndex = 0;
+    UINT m_DescriptorHandleIndex = 0;
 };
 

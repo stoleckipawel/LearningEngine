@@ -2,6 +2,7 @@
 #include "../Vendor/Windows/WinInclude.h"
 #include "DescriptorHeap.h"
 #include "UploadBuffer.h"
+#include "DescriptorHeapManager.h"
 
 template <typename T>
 class ConstantBuffer
@@ -11,10 +12,13 @@ public:
 	void Update(const T& Data);
 	void Release();
 	void CreateConstantBufferView(D3D12_CPU_DESCRIPTOR_HANDLE Handle);
+    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle();
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle();
+    UINT GetDescriptorHandleIndex() const { return m_DescriptorHandleIndex; }
 public:
 	ComPointer<ID3D12Resource2> Resource = nullptr;
-    UINT DescriptorHandleIndex = 0;
 private:
+    UINT m_DescriptorHandleIndex = 0;
 	T m_ConstantBufferData;
     D3D12_CONSTANT_BUFFER_VIEW_DESC m_ConstantBufferViewDesc = {};
     void* m_MappedData = nullptr;
@@ -24,7 +28,7 @@ private:
 template <typename T>
 void ConstantBuffer<T>::Initialize(UINT DescriptorHandleIndex)
 {
-    this->DescriptorHandleIndex = DescriptorHandleIndex;
+    m_DescriptorHandleIndex = DescriptorHandleIndex;
 
     //Initialize constant Buffer Data members
     ZeroMemory(&m_ConstantBufferData, sizeof(T));
@@ -90,3 +94,14 @@ void ConstantBuffer<T>::Release()
     Resource.Release();
 }
 
+template <typename T>
+D3D12_GPU_DESCRIPTOR_HANDLE ConstantBuffer<T>::GetGPUHandle()
+{
+    return GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameGPUHandle(m_DescriptorHandleIndex);
+}   
+
+template <typename T> 
+D3D12_CPU_DESCRIPTOR_HANDLE ConstantBuffer<T>::GetCPUHandle()
+{
+    return GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameCPUHandle(m_DescriptorHandleIndex);
+}   

@@ -9,13 +9,13 @@ void ConstantBufferManager::Initialize()
 		//Create Vertex Constant Buffer
 		ConstantBuffer<FVertexConstantBufferData> vertexConstantBuffer;
 		vertexConstantBuffer.Initialize(0);
-		vertexConstantBuffer.CreateConstantBufferView(GDescriptorHeapManager.GetConstantBufferHeap().GetCPUHandle(i, vertexConstantBuffer.DescriptorHandleIndex));
+		vertexConstantBuffer.CreateConstantBufferView(GDescriptorHeapManager.GetConstantBufferHeap().GetCPUHandle(i, vertexConstantBuffer.GetDescriptorHandleIndex()));
 		VertexConstantBuffers[i] = vertexConstantBuffer;
 
 		//Create Pixel Constant Buffer
 		ConstantBuffer<PixelConstantBufferData> pixelConstantBuffer;
 		pixelConstantBuffer.Initialize(1);
-		pixelConstantBuffer.CreateConstantBufferView(GDescriptorHeapManager.GetConstantBufferHeap().GetCPUHandle(i, pixelConstantBuffer.DescriptorHandleIndex));
+		pixelConstantBuffer.CreateConstantBufferView(GDescriptorHeapManager.GetConstantBufferHeap().GetCPUHandle(i, pixelConstantBuffer.GetDescriptorHandleIndex()));
 		PixelConstantBuffers[i] = pixelConstantBuffer;
 	}
 }

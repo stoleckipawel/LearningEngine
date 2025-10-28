@@ -204,16 +204,14 @@ void Renderer::BindDescriptorTables()
 {
 	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(
 		0, 
-		GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameGPUHandle(
-			GConstantBufferManager.VertexConstantBuffers[GSwapChain.GetBackBufferIndex()].DescriptorHandleIndex));
+		GConstantBufferManager.VertexConstantBuffers[GSwapChain.GetBackBufferIndex()].GetGPUHandle());
 
 	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(
 		1, 
-		GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameGPUHandle(
-			GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetBackBufferIndex()].DescriptorHandleIndex));
+		GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetBackBufferIndex()].GetGPUHandle());
 
-	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(2, GDescriptorHeapManager.GetTextureHeap().GetCurrentFrameGPUHandle(texture.DescriptorHandleIndex));
-	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(3, GDescriptorHeapManager.GetSamplerHeap().GetCurrentFrameGPUHandle(sampler.DescriptorHandleIndex));
+	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(2, GDescriptorHeapManager.GetTextureHeap().GetCurrentFrameGPUHandle(texture.m_DescriptorHandleIndex));
+	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(3, GDescriptorHeapManager.GetSamplerHeap().GetCurrentFrameGPUHandle(sampler.m_DescriptorHandleIndex));
 }
 
 void Renderer::PopulateCommandList()
