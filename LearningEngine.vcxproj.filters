@@ -57,7 +57,7 @@
     <ClCompile Include="Source\D3D12\Camera.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Source\D3D12\SamplerDesc.cpp">
+    <ClCompile Include="Source\D3D12\Sampler.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
     <ClCompile Include="Source\D3D12\RHI.cpp">
@@ -122,7 +122,7 @@
     <ClInclude Include="Source\D3D12\Camera.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="Source\D3D12\SamplerDesc.h">
+    <ClInclude Include="Source\D3D12\Sampler.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
     <ClInclude Include="Source\D3D12\RHI.h">

@@ -3,10 +3,10 @@
 void RootSignature::Create()
 {
     CD3DX12_DESCRIPTOR_RANGE cbvVertexRange;
-    cbvVertexRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, FrameCount, 0); //b0 
+    cbvVertexRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, NumFramesInFlight, 0); //b0 
 
     CD3DX12_DESCRIPTOR_RANGE cbvPixelRange;
-    cbvPixelRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, FrameCount, 0); //b0 
+    cbvPixelRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, NumFramesInFlight, 0); //b0 
 
     CD3DX12_DESCRIPTOR_RANGE textureRange;
     textureRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC); //t0 
@@ -20,7 +20,7 @@ void RootSignature::Create()
     //rootParameters[2].InitAsDescriptorTable(1, &textureRange, D3D12_SHADER_VISIBILITY_PIXEL);
     //rootParameters[3].InitAsDescriptorTable(1, &samplerRange, D3D12_SHADER_VISIBILITY_PIXEL);
 
-    //SamplerDesc samplerDesc;
+    //Sampler Sampler;
 
     CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
     rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);

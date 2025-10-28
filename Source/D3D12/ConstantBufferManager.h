@@ -25,8 +25,8 @@ public:
 	void Release();
 	void Update(size_t BackBufferFrameIndex);
 public:
-	ConstantBuffer<FVertexConstantBufferData> VertexConstantBuffers[FrameCount];
-	ConstantBuffer<PixelConstantBufferData> PixelConstantBuffers[FrameCount];
+	ConstantBuffer<FVertexConstantBufferData> VertexConstantBuffers[NumFramesInFlight];
+	ConstantBuffer<PixelConstantBufferData> PixelConstantBuffers[NumFramesInFlight];
 
 };
 

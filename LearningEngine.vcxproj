@@ -146,7 +146,7 @@
     <ClCompile Include="Source\D3D12\ConstantBufferManager.cpp" />
     <ClCompile Include="Source\D3D12\DescriptorHeapManager.cpp" />
     <ClCompile Include="Source\D3D12\RHI.cpp" />
-    <ClCompile Include="Source\D3D12\SamplerDesc.cpp" />
+    <ClCompile Include="Source\D3D12\Sampler.cpp" />
     <ClCompile Include="Source\D3D12\Camera.cpp" />
     <ClCompile Include="Source\D3D12\UploadBuffer.cpp" />
     <ClCompile Include="Source\D3D12\ConstantBuffer.cpp" />
@@ -167,7 +167,7 @@
     <ClInclude Include="Source\D3D12\ConstantBufferManager.h" />
     <ClInclude Include="Source\D3D12\DescriptorHeapManager.h" />
     <ClInclude Include="Source\D3D12\RHI.h" />
-    <ClInclude Include="Source\D3D12\SamplerDesc.h" />
+    <ClInclude Include="Source\D3D12\Sampler.h" />
     <ClInclude Include="Source\D3D12\Camera.h" />
     <ClInclude Include="Source\D3D12\UploadBuffer.h" />
     <ClInclude Include="Source\D3D12\ConstantBuffer.h" />

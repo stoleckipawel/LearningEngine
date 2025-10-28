@@ -1,7 +1,7 @@
 C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\ConstantBufferManager.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\ConstantBufferManager.obj
 C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\DescriptorHeapManager.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\DescriptorHeapManager.obj
 C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\RHI.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\RHI.obj
-C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\SamplerDesc.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\SamplerDesc.obj
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\Sampler.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\Sampler.obj
 C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\Camera.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\Camera.obj
 C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\UploadBuffer.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\UploadBuffer.obj
 C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\ConstantBuffer.cpp;C:\Users\stole\Documents\GitHub\LearningEngine\Build\obj\x64\Debug\ConstantBuffer.obj

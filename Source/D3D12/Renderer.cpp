@@ -28,7 +28,7 @@ void Renderer::UnloadTextures()
 
 void Renderer::LoadSamplers()
 {
-	//sampler = SamplerDesc();
+	sampler = Sampler(0);
 }
 
 void Renderer::LoadShaders()
@@ -59,7 +59,7 @@ void Renderer::ReleasePSOs()
 
 void Renderer::CreateCommandLists()
 {
-	for (size_t i = 0; i < FrameCount; ++i) 
+	for (size_t i = 0; i < NumFramesInFlight; ++i) 
 	{ 
 		// Create the command list.
 		ThrowIfFailed(GRHI.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, GRHI.CmdAllocator[i].Get(), pso.pso.Get(), IID_PPV_ARGS(&GRHI.CmdList[i])), "RHI: Failed To Create Command List");
@@ -71,7 +71,7 @@ void Renderer::CreateCommandLists()
 
 void Renderer::ReleaseCommandLists()
 {
-	for (size_t i = 0; i < FrameCount; ++i) 
+	for (size_t i = 0; i < NumFramesInFlight; ++i) 
 	{ 
 		GRHI.CmdAllocator[i].Release();
 	}
@@ -137,16 +137,15 @@ void Renderer::CreateDepthStencilBuffer()
 
 void Renderer::Load()
 {
-	LoadGeometry();
-	//LoadTextures();
-	//LoadSamplers();
-	LoadShaders();
-
 	CreateRootSignatures();
-	CreatePSOs();
+	LoadGeometry();
+	LoadShaders();
 	CreateCommandLists();
 	GDescriptorHeapManager.Initialize();
-	GConstantBufferManager.Initialize();
+	GConstantBufferManager.Initialize();	
+	//LoadTextures();
+	LoadSamplers();
+	CreatePSOs();
 	CreateFrameBuffers();
 
 	GRHI.Flush();
@@ -211,7 +210,12 @@ void Renderer::BindDescriptorTables()
 		GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetBackBufferIndex()].GetGPUHandle());
 
 	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(2, GDescriptorHeapManager.GetTextureHeap().GetCurrentFrameGPUHandle(texture.m_DescriptorHandleIndex));
-	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(3, GDescriptorHeapManager.GetSamplerHeap().GetCurrentFrameGPUHandle(sampler.m_DescriptorHandleIndex));
+	
+	/*
+	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(
+		3, 
+		sampler.GetGPUHandle());
+	*/
 }
 
 void Renderer::PopulateCommandList()

@@ -4,7 +4,7 @@ void DescriptorHeap::Create(D3D12_DESCRIPTOR_HEAP_TYPE Type, UINT NumDescriptors
 {
 	this->NumDescriptorsPerFrame = NumDescriptorsPerFrame;
 	this->bFrameBuffered = bFrameBuffered;
-	this->NumDescriptors = NumDescriptorsPerFrame * (bFrameBuffered ? FrameCount : 1);
+	this->NumDescriptors = NumDescriptorsPerFrame * (bFrameBuffered ? NumFramesInFlight : 1);
 
 	heapDesc.NumDescriptors = NumDescriptors;
 	heapDesc.Type = Type;

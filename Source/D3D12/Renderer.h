@@ -6,10 +6,7 @@
 #include "PSO.h"
 #include "RootSignature.h"
 #include "ConstantBuffer.h"
-#include "SamplerDesc.h"
-
-
-
+#include "Sampler.h"
 
 class Renderer
 {
@@ -60,7 +57,7 @@ private:
 	void OnUpdate();
 private:
 	Texture texture;
-	SamplerDesc sampler;
+	Sampler sampler;
 	Geometry vertecies;
 	PSO pso;
 	RootSignature rootSignature;

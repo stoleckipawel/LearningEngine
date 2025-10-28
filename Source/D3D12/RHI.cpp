@@ -101,7 +101,7 @@ bool RHI::Initialize(bool RequireDXRSupport)
 	
 	//Create Command Allocators (Frame Buffered)
 	{
-		for (size_t i = 0; i < FrameCount; ++i) 
+		for (size_t i = 0; i < NumFramesInFlight; ++i) 
 		{ 
 			ThrowIfFailed(GRHI.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&GRHI.CmdAllocator[i])), "RHI: Failed To Create Command Allocator"); 
 		}
@@ -109,7 +109,7 @@ bool RHI::Initialize(bool RequireDXRSupport)
 	
 	//Create Fence
 	{
-		for (size_t i = 0; i < FrameCount; ++i)
+		for (size_t i = 0; i < NumFramesInFlight; ++i)
 		{
 			GRHI.FenceValues[i] = 0;
 		}
@@ -131,7 +131,7 @@ bool RHI::Initialize(bool RequireDXRSupport)
 
 void RHI::Shutdown()
 {
-	for(size_t i = 0; i < FrameCount; ++i) 
+	for(size_t i = 0; i < NumFramesInFlight; ++i) 
 	{ 
 		GRHI.CmdAllocator[i].Release();
 	}

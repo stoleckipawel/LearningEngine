@@ -4,7 +4,7 @@ ConstantBufferManager GConstantBufferManager;
 
 void ConstantBufferManager::Initialize()
 {
-	for (size_t i = 0; i < FrameCount; ++i)
+	for (size_t i = 0; i < NumFramesInFlight; ++i)
 	{
 		//Create Vertex Constant Buffer
 		ConstantBuffer<FVertexConstantBufferData> vertexConstantBuffer;
@@ -42,7 +42,7 @@ void ConstantBufferManager::Update(size_t FrameIndex)
 
 void ConstantBufferManager::Release()
 {
-	for (size_t i = 0; i < FrameCount; ++i)
+	for (size_t i = 0; i < NumFramesInFlight; ++i)
 	{
 		VertexConstantBuffers[i].Resource.Release();
 		PixelConstantBuffers[i].Resource.Release();

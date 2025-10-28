@@ -2,7 +2,7 @@
 
 #include "../Vendor/Windows/WinInclude.h"
 
-static const UINT FrameCount = 3;
+static const UINT NumFramesInFlight = 3;
 
 class SwapChain
 {
@@ -25,11 +25,11 @@ public:
 public:
 	ComPointer<ID3D12DescriptorHeap> m_rtvHeap = nullptr;
 	UINT m_rtvDescriptorSize;
-	D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[FrameCount];
+	D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandles[NumFramesInFlight];
 	UINT m_currentBufferIndex = 0;
 
 	ComPointer<IDXGISwapChain3> m_swapChain = nullptr;
-	ComPointer<ID3D12Resource2> m_buffers[FrameCount];
+	ComPointer<ID3D12Resource2> m_buffers[NumFramesInFlight];
 };
 
 extern SwapChain GSwapChain; 
