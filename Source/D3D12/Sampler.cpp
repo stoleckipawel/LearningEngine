@@ -18,10 +18,10 @@ Sampler::Sampler(UINT DescriptorHandleIndex)
 
 D3D12_GPU_DESCRIPTOR_HANDLE Sampler::GetGPUHandle()
 {
-    return GDescriptorHeapManager.GetSamplerHeap().GetCurrentFrameGPUHandle(m_DescriptorHandleIndex);
+    return GDescriptorHeapManager.GetSamplerHeap().GetGPUHandle(m_DescriptorHandleIndex);
 }   
 
 D3D12_CPU_DESCRIPTOR_HANDLE Sampler::GetCPUHandle()
 {
-    return GDescriptorHeapManager.GetSamplerHeap().GetCurrentFrameCPUHandle(m_DescriptorHandleIndex);
+    return GDescriptorHeapManager.GetSamplerHeap().GetCPUHandle(m_DescriptorHandleIndex);
 }   

@@ -11,19 +11,9 @@ void Renderer::LoadGeometry()
 	vertecies.Upload();
 }
 
-void Renderer::UnloadGeometry()
-{
-	vertecies.Release();
-}
-
 void Renderer::LoadTextures()
 {
 	//texture.Load("Assets/Textures/ColorCheckerBoard.png");
-}
-
-void Renderer::UnloadTextures()
-{
-	//texture.Release();
 }
 
 void Renderer::LoadSamplers()
@@ -143,18 +133,12 @@ void Renderer::Load()
 	CreateCommandLists();
 	GDescriptorHeapManager.Initialize();
 	GConstantBufferManager.Initialize();	
-	//LoadTextures();
+	LoadTextures();
 	LoadSamplers();
 	CreatePSOs();
 	CreateFrameBuffers();
 
 	GRHI.Flush();
-}
-
-void Renderer::Unload()
-{
-	UnloadGeometry();
-	UnloadTextures();
 }
 
 void Renderer::Release()
@@ -306,7 +290,6 @@ void Renderer::Shutdown()
 	GRHI.Flush();
 
 	Renderer::Release();
-	Renderer::Unload();
 	GSwapChain.Shutdown();
 	GWindow.Shutdown();
 	GRHI.Shutdown();

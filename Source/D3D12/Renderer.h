@@ -12,20 +12,14 @@ class Renderer
 {
 public:
 	void Load();
-	void Unload();
 	void Release();
 	void Shutdown();
 	void OnRender();
 	void OnResize();
 private:
 	void LoadGeometry();
-	void UnloadGeometry();
-
 	void LoadTextures();
-	void UnloadTextures();
-
 	void LoadSamplers();
-
 	void LoadShaders();
 
 	void CreateRootSignatures();

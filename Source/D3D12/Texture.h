@@ -7,6 +7,7 @@
 class Texture 
 {
 public:
+    ~Texture();
     void Load(const std::filesystem::path& imagePath,
               ID3D12GraphicsCommandList* cmdList,
               ID3D12DescriptorHeap* srvHeap,

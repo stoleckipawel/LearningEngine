@@ -1,6 +1,11 @@
 #include "Geometry.h"
 #include "UploadBuffer.h"
 
+Geometry::~Geometry()
+{
+	Release();
+}
+
 void Geometry::UploadVertexBuffer()
 {
 	//Position

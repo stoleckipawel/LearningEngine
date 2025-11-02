@@ -11,13 +11,11 @@ public:
 	void SetShaderVisibleHeaps();
 	void Release();
 
-	DescriptorHeap& GetConstantBufferHeap() { return ConstantBufferHeap; }
-	DescriptorHeap& GetTextureHeap() { return TextureHeap; }	
+	DescriptorHeap& GetCBVSRVUAVHeap() { return CBVSRVUAVHeap; }
 	DescriptorHeap& GetSamplerHeap() { return SamplerHeap; }
 	DescriptorHeap& GetDepthStencilViewHeap() { return DepthStencilViewHeap; }
 private:
-	DescriptorHeap ConstantBufferHeap;
-	DescriptorHeap TextureHeap;
+	DescriptorHeap CBVSRVUAVHeap;
 	DescriptorHeap SamplerHeap;
 	DescriptorHeap DepthStencilViewHeap;
 	//RTV Heap:ToDo:

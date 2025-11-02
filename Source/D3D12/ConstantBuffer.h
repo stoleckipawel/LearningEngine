@@ -97,11 +97,11 @@ void ConstantBuffer<T>::Release()
 template <typename T>
 D3D12_GPU_DESCRIPTOR_HANDLE ConstantBuffer<T>::GetGPUHandle()
 {
-    return GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameGPUHandle(m_DescriptorHandleIndex);
+    return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCBVGPUHandle(m_DescriptorHandleIndex);
 }   
 
 template <typename T> 
 D3D12_CPU_DESCRIPTOR_HANDLE ConstantBuffer<T>::GetCPUHandle()
 {
-    return GDescriptorHeapManager.GetConstantBufferHeap().GetCurrentFrameCPUHandle(m_DescriptorHandleIndex);
+    return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCBVCPUHandle(m_DescriptorHandleIndex);
 }   

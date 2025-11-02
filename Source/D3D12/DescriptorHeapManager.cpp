@@ -4,18 +4,19 @@ DescriptorHeapManager GDescriptorHeapManager;
 
 void DescriptorHeapManager::Initialize()
 {
-	ConstantBufferHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2, true, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"ConstantBufferHeap");
-	TextureHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1, false, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"TextureHeap");
-	SamplerHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 1, false, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"SamplerHeap");
-	DepthStencilViewHeap.Create(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, L"DepthStencilHeap");
+	UINT CBVCount = 2;
+	UINT SRVCount = 1;
+	UINT UAVCount = 0;
+	CBVSRVUAVHeap.InitializeCBVSRVUAV(CBVCount, SRVCount, UAVCount, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"CBVSRVUAVHeap");
+	SamplerHeap.Initialize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 1, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, L"SamplerHeap");
+	DepthStencilViewHeap.Initialize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, L"DepthStencilHeap");
 }
 
 void DescriptorHeapManager::SetShaderVisibleHeaps()
 {
-	//Texture Heap, RVT heap to do
 	ID3D12DescriptorHeap* heaps[] = 
 	{ 
-		ConstantBufferHeap.heap.Get(), 
+		CBVSRVUAVHeap.heap.Get(), 
 		SamplerHeap.heap.Get()
 	};
 
@@ -24,8 +25,7 @@ void DescriptorHeapManager::SetShaderVisibleHeaps()
 
 void DescriptorHeapManager::Release()
 {
-	ConstantBufferHeap.heap.Release();
-	TextureHeap.heap.Release();
+	CBVSRVUAVHeap.heap.Release();
 	SamplerHeap.heap.Release();
 	DepthStencilViewHeap.heap.Release();
 }

@@ -16,6 +16,7 @@ struct Vertex
 class Geometry
 {
 public:
+	~Geometry();
 	void UploadVertexBuffer();
 	void UploadIndexBuffer();
 	void Upload();

@@ -1,5 +1,9 @@
 #include "Texture.h"
 
+Texture::~Texture()
+{
+	Release();
+}
 
 void Texture::Load(const std::filesystem::path& imagePath, ID3D12GraphicsCommandList* cmdList, ID3D12DescriptorHeap* srvHeap, UINT m_DescriptorHandleIndex)
 {
@@ -111,6 +115,6 @@ void Texture::CreateSRV(ID3D12DescriptorHeap* srvHeap, UINT m_DescriptorHandleIn
 
 void Texture::Release()
 {
-    //textureResource.Release();
-    //uploadResource.Release();
+    textureResource.Release();
+    uploadResource.Release();
 }
