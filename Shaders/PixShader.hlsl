@@ -18,7 +18,7 @@ cbuffer PixelConstantBuffer : register(b0)
 };
 
 //Texture2D<float4> texture : register(t0);
-sampler texturesSampler : register(s0);
+sampler textureSampler : register(s0);
 
 void main(in PsInput Input, out PsOutput Output)
 {

@@ -209,13 +209,12 @@ void Renderer::BindDescriptorTables()
 		1, 
 		GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetBackBufferIndex()].GetGPUHandle());
 
-	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(2, GDescriptorHeapManager.GetTextureHeap().GetCurrentFrameGPUHandle(texture.m_DescriptorHandleIndex));
-	
-	/*
+
 	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(
-		3, 
+		2, 
 		sampler.GetGPUHandle());
-	*/
+
+	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(3, GDescriptorHeapManager.GetTextureHeap().GetCurrentFrameGPUHandle(texture.m_DescriptorHandleIndex));
 }
 
 void Renderer::PopulateCommandList()

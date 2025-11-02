@@ -12,6 +12,7 @@ void DescriptorHeapManager::Initialize()
 
 void DescriptorHeapManager::SetShaderVisibleHeaps()
 {
+	//Texture Heap, RVT heap to do
 	ID3D12DescriptorHeap* heaps[] = 
 	{ 
 		ConstantBufferHeap.heap.Get(), 
