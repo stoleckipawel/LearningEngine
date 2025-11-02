@@ -16,12 +16,6 @@ public:
     void CreateResource();
     void UploadToGPU(ID3D12GraphicsCommandList* cmdList);
     void CreateSRV();
-
-
-
-
-private:
-
 private:    
     ComPointer<ID3D12Resource> m_textureResource = nullptr;
     ComPointer<ID3D12Resource> m_uploadResource = nullptr;

@@ -1,12 +1,37 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Texture.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{84909218-303D-49B4-9D35-02B5DEDA0161}|LearningEngine.vcxproj|solutionrelative:Source\\D3D12\\Texture.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 319,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Texture.cpp",
+              "DocumentMoniker": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Texture.cpp",
+              "RelativeDocumentMoniker": "Source\\D3D12\\Texture.cpp",
+              "ToolTip": "C:\\Users\\stole\\Documents\\GitHub\\LearningEngine\\Source\\D3D12\\Texture.cpp",
+              "RelativeToolTip": "Source\\D3D12\\Texture.cpp",
+              "ViewState": "AgIAADwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-11-02T22:09:39.881Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }

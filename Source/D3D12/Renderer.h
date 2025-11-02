@@ -21,6 +21,7 @@ private:
 	void LoadTextures();
 	void LoadSamplers();
 	void LoadShaders();
+	void PostLoad();
 
 	void CreateRootSignatures();
 	void ReleaseRootSignatures();
@@ -31,6 +32,7 @@ private:
 	void ReleasePSOs();
 
 	void CreateCommandLists();
+	void CloseCommandLists();
 	void ReleaseCommandLists();
 
 	void CreateDepthStencilBuffer();

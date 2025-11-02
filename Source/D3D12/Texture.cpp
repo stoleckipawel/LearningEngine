@@ -1,19 +1,13 @@
 #include "Texture.h"
 
-Texture::~Texture()
-{
-	Release();
-}
-
 void Texture::Initialize(const std::filesystem::path& imagePath, ID3D12GraphicsCommandList* cmdList, UINT descriptorHandleIndex)
 {
 	m_DescriptorHandleIndex = descriptorHandleIndex;
 	//ToDo:Switch to DirectXTex for better format support and mip generation
-	//ImageLoader::LoadImageFromDisk("Assets/Textures/ColorCheckerBoard.png", m_textureData);
-
-    //CreateResource();
-    //UploadToGPU(cmdList);
-    //CreateSRV(srvHeap, m_DescriptorHandleIndex);
+	ImageLoader::LoadImageFromDisk("Assets/Textures/ColorCheckerBoard.png", m_textureData);
+    CreateResource();
+    UploadToGPU(cmdList);
+    CreateSRV();
 }
 
 void Texture::CreateResource()
@@ -56,11 +50,11 @@ void Texture::CreateResource()
 
 	D3D12_HEAP_PROPERTIES heapUploadProperties = {};
 	{
-		heapDefaultProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-		heapDefaultProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-		heapDefaultProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-		heapDefaultProperties.CreationNodeMask = 0;
-		heapDefaultProperties.VisibleNodeMask = 0;
+		heapUploadProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+		heapUploadProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+		heapUploadProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		heapUploadProperties.CreationNodeMask = 0;
+		heapUploadProperties.VisibleNodeMask = 0;
 	}
 
 	CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
@@ -109,7 +103,7 @@ void Texture::CreateSRV()
 	}
 
 	GRHI.Device->CreateShaderResourceView(
-		m_textureResource,
+		m_textureResource.Get(),
 		&srvDesc,
 		GetCPUHandle());		
 }
@@ -129,3 +123,8 @@ D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetCPUHandle()
 {
 	return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCPUHandle(m_DescriptorHandleIndex);
 } 
+
+Texture::~Texture()
+{
+	Release();
+}

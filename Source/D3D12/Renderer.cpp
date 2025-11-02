@@ -51,10 +51,14 @@ void Renderer::CreateCommandLists()
 {
 	for (size_t i = 0; i < NumFramesInFlight; ++i) 
 	{ 
-		// Create the command list.
 		ThrowIfFailed(GRHI.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, GRHI.CmdAllocator[i].Get(), pso.pso.Get(), IID_PPV_ARGS(&GRHI.CmdList[i])), "RHI: Failed To Create Command List");
-		// Command lists are created in the recording state, but there is nothing
-		// to record yet. The main loop expects it to be closed, so close it now.
+	}
+}
+
+void Renderer::CloseCommandLists()
+{
+	for (size_t i = 0; i < NumFramesInFlight; ++i) 
+	{ 
 		ThrowIfFailed(GRHI.CmdList[i]->Close(), "RHI: Failed To Close Command List");
 	}
 }
@@ -125,6 +129,13 @@ void Renderer::CreateDepthStencilBuffer()
 	GRHI.Device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, DepthStencilHandle);
 }
 
+void Renderer::PostLoad()
+{
+	CloseCommandLists();
+	GRHI.ExecuteCommandList();	
+	GRHI.Flush();
+}
+
 void Renderer::Load()
 {
 	CreateRootSignatures();
@@ -137,8 +148,7 @@ void Renderer::Load()
 	LoadSamplers();
 	CreatePSOs();
 	CreateFrameBuffers();
-
-	GRHI.Flush();
+	PostLoad();
 }
 
 void Renderer::Release()
@@ -192,7 +202,6 @@ void Renderer::BindDescriptorTables()
 	GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
 		1, 
 		GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetBackBufferIndex()].GetGPUHandle());
-
 
 	GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
 		2, 
