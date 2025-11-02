@@ -5,17 +5,17 @@
 
 RHI GRHI;
 
-ComPointer<ID3D12GraphicsCommandList7> RHI::GetCurrentCommandList()
+ComPointer<ID3D12GraphicsCommandList7> RHI::GetCommandList()
 {
 	return GRHI.CmdList[GSwapChain.GetBackBufferIndex()];
 }
 
-ComPointer<ID3D12CommandAllocator> RHI::GetCurrentCommandAllocator()
+ComPointer<ID3D12CommandAllocator> RHI::GetCommandAllocator()
 {
 	return GRHI.CmdAllocator[GSwapChain.GetBackBufferIndex()];
 }
 
-UINT64 RHI::GetCurrentFenceValue()
+UINT64 RHI::GetFenceValue()
 {
 	return GRHI.FenceValues[GSwapChain.GetBackBufferIndex()];
 }
@@ -149,7 +149,7 @@ void RHI::Shutdown()
 
 void RHI::ExecuteCommandList()
 {
-	ID3D12CommandList* ppcommandLists[] = { GRHI.GetCurrentCommandList().Get() };
+	ID3D12CommandList* ppcommandLists[] = { GRHI.GetCommandList().Get() };
 	GRHI.CmdQueue->ExecuteCommandLists(1, ppcommandLists);
 }
 
@@ -163,12 +163,12 @@ void RHI::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore
 	barrier.Transition.StateBefore = StateBefore;
 	barrier.Transition.StateAfter = StateAfter;
 
-	GRHI.GetCurrentCommandList()->ResourceBarrier(1, &barrier);
+	GRHI.GetCommandList()->ResourceBarrier(1, &barrier);
 }
 
 void RHI::WaitForGPU()
 {
-	UINT FenceCurrentValue = GetCurrentFenceValue();
+	UINT FenceCurrentValue = GetFenceValue();
 	UINT FenceCompletedValue = Fence->GetCompletedValue();
 
 	if (FenceCompletedValue < FenceCurrentValue)

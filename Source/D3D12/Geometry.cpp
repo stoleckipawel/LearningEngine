@@ -84,9 +84,9 @@ void Geometry::Release()
 void Geometry::Set()
 {
 	//Input Assembler
-	GRHI.GetCurrentCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-	GRHI.GetCurrentCommandList()->IASetIndexBuffer(&indexBufferView);
-	GRHI.GetCurrentCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	GRHI.GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	GRHI.GetCommandList()->IASetIndexBuffer(&indexBufferView);
+	GRHI.GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 std::vector<D3D12_INPUT_ELEMENT_DESC> Geometry::GetVertexLayout()

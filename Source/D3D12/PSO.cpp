@@ -154,5 +154,5 @@ void PSO::Create(Geometry& vertecies,
 
 void PSO::Set()
 {
-	GRHI.GetCurrentCommandList()->SetPipelineState(pso);
+	GRHI.GetCommandList()->SetPipelineState(pso);
 }

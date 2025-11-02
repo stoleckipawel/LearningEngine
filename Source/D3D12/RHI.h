@@ -15,9 +15,9 @@ public:
 	void Signal();
 	void Flush();
 
-	ComPointer<ID3D12GraphicsCommandList7> GetCurrentCommandList();
-	ComPointer<ID3D12CommandAllocator> GetCurrentCommandAllocator();
-	UINT64 GetCurrentFenceValue();
+	ComPointer<ID3D12GraphicsCommandList7> GetCommandList();
+	ComPointer<ID3D12CommandAllocator> GetCommandAllocator();
+	UINT64 GetFenceValue();
 public:
 	ComPointer<IDXGIFactory7> DxgiFactory = nullptr;
 	ComPointer<IDXGIAdapter1> Adapter = nullptr;

@@ -19,8 +19,8 @@ void DescriptorHeapManager::SetShaderVisibleHeaps()
 		CBVSRVUAVHeap.heap.Get(), 
 		SamplerHeap.heap.Get()
 	};
-
-	GRHI.GetCurrentCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
+ 
+	GRHI.GetCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
 }
 
 void DescriptorHeapManager::Release()

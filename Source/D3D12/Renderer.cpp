@@ -13,7 +13,7 @@ void Renderer::LoadGeometry()
 
 void Renderer::LoadTextures()
 {
-	//texture.Load("Assets/Textures/ColorCheckerBoard.png");
+	texture.Initialize("Assets/Textures/ColorCheckerBoard.png", GRHI.GetCommandList(), 0);
 }
 
 void Renderer::LoadSamplers()
@@ -155,11 +155,11 @@ void Renderer::SetViewport()
 {
 	//Rasterizer State: Viewport
 	D3D12_VIEWPORT viewport = GSwapChain.GetDefaultViewport();
-	GRHI.GetCurrentCommandList()->RSSetViewports(1, &viewport);
+	GRHI.GetCommandList()->RSSetViewports(1, &viewport);
 
 	//Rasterizer State: Scissor  
 	D3D12_RECT scissorRect = GSwapChain.GetDefaultScissorRect();
-	GRHI.GetCurrentCommandList()->RSSetScissorRects(1, &scissorRect);
+	GRHI.GetCommandList()->RSSetScissorRects(1, &scissorRect);
 }
 
 void Renderer::ClearBackBuffer()
@@ -167,38 +167,40 @@ void Renderer::ClearBackBuffer()
 	//Clear backbuffer 
 	float clearColor[4] = {255.0f, 0.5f, 0.5f, 1.0f };
 	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GSwapChain.GetBackbufferRTVHandle();
-	GRHI.GetCurrentCommandList()->ClearRenderTargetView(backBufferRTVHandle, clearColor, 0, nullptr);
+	GRHI.GetCommandList()->ClearRenderTargetView(backBufferRTVHandle, clearColor, 0, nullptr);
 }
 
 void Renderer::ClearDepthStencilBuffer()
 {
 	DepthStencilHandle = GDescriptorHeapManager.GetDepthStencilViewHeap().heap->GetCPUDescriptorHandleForHeapStart();
-	GRHI.GetCurrentCommandList()->ClearDepthStencilView(DepthStencilHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+	GRHI.GetCommandList()->ClearDepthStencilView(DepthStencilHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 }
 
 void Renderer::SetBackBufferRTV()
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GSwapChain.GetBackbufferRTVHandle();
 	DepthStencilHandle = GDescriptorHeapManager.GetDepthStencilViewHeap().heap->GetCPUDescriptorHandleForHeapStart();
-	GRHI.GetCurrentCommandList()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &DepthStencilHandle);
+	GRHI.GetCommandList()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &DepthStencilHandle);
 }
 
 void Renderer::BindDescriptorTables()
 {
-	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(
+	GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
 		0, 
 		GConstantBufferManager.VertexConstantBuffers[GSwapChain.GetBackBufferIndex()].GetGPUHandle());
 
-	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(
+	GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
 		1, 
 		GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetBackBufferIndex()].GetGPUHandle());
 
 
-	GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(
+	GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
 		2, 
 		sampler.GetGPUHandle());
 
-	//GRHI.GetCurrentCommandList()->SetGraphicsRootDescriptorTable(3, GDescriptorHeapManager.GetTextureHeap().GetCurrentFrameGPUHandle(texture.m_DescriptorHandleIndex));
+	GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
+		3, 
+		texture.GetGPUHandle());
 }
 
 void Renderer::PopulateCommandList()
@@ -208,7 +210,7 @@ void Renderer::PopulateCommandList()
 		D3D12_RESOURCE_STATE_PRESENT,
 		D3D12_RESOURCE_STATE_RENDER_TARGET);
 	
-	GRHI.GetCurrentCommandList()->SetGraphicsRootSignature(rootSignature.rootSignature);
+	GRHI.GetCommandList()->SetGraphicsRootSignature(rootSignature.rootSignature);
 
 	SetViewport();
 
@@ -224,7 +226,7 @@ void Renderer::PopulateCommandList()
 
 	pso.Set();
 
-	GRHI.GetCurrentCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+	GRHI.GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 	GRHI.SetBarrier(
 		GSwapChain.GetBackBufferResource(),
@@ -263,14 +265,14 @@ void Renderer::OnRender()
 	GRHI.WaitForGPU();
 
 	// Prepare the command list to render a new frame.
-    ThrowIfFailed(GRHI.GetCurrentCommandAllocator()->Reset(), "Renderer: Failed To Reset Command Allocator");
-    ThrowIfFailed(GRHI.GetCurrentCommandList()->Reset(GRHI.GetCurrentCommandAllocator().Get(), pso.pso.Get()), "Renderer: Failed To Reset Command List");
+    ThrowIfFailed(GRHI.GetCommandAllocator()->Reset(), "Renderer: Failed To Reset Command Allocator");
+    ThrowIfFailed(GRHI.GetCommandList()->Reset(GRHI.GetCommandAllocator().Get(), pso.pso.Get()), "Renderer: Failed To Reset Command List");
 
 	// Record all the commands we need to render the scene into the command list.
 	PopulateCommandList();
 
 	// Finalize the command list.
-	ThrowIfFailed(GRHI.CmdList[GSwapChain.GetBackBufferIndex()]->Close(), "Failed To Close Command List");
+	ThrowIfFailed(GRHI.GetCommandList()->Close(), "Failed To Close Command List");
 
 	// Execute the command list.
 	GRHI.ExecuteCommandList();
