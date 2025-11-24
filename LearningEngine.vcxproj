@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\D3D12\ConstantBufferManager.cpp" />
+    <ClCompile Include="Source\D3D12\DepthStencil.cpp" />
     <ClCompile Include="Source\D3D12\DescriptorHeapManager.cpp" />
     <ClCompile Include="Source\D3D12\RHI.cpp" />
     <ClCompile Include="Source\D3D12\Sampler.cpp" />
@@ -165,6 +166,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\D3D12\ConstantBufferManager.h" />
+    <ClInclude Include="Source\D3D12\DepthStencil.h" />
     <ClInclude Include="Source\D3D12\DescriptorHeapManager.h" />
     <ClInclude Include="Source\D3D12\RHI.h" />
     <ClInclude Include="Source\D3D12\Sampler.h" />

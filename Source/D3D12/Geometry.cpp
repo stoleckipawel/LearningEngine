@@ -42,11 +42,11 @@ void Geometry::UploadVertexBuffer()
 		}); 
 
 	const UINT vertsDataSize = sizeof(Vertex) * vertexList.size();
-	vertexBuffer = UploadBuffer::Upload(vertexList.data(), vertsDataSize);
+	VertexBuffer = UploadBuffer::Upload(vertexList.data(), vertsDataSize);
 
-	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-	vertexBufferView.SizeInBytes = vertsDataSize;
-	vertexBufferView.StrideInBytes = sizeof(Vertex);
+	m_vertexBufferView.BufferLocation = VertexBuffer->GetGPUVirtualAddress();
+	m_vertexBufferView.SizeInBytes = vertsDataSize;
+	m_vertexBufferView.StrideInBytes = sizeof(Vertex);
 }
 
 void Geometry::UploadIndexBuffer()
@@ -62,11 +62,11 @@ void Geometry::UploadIndexBuffer()
     indexList.push_back(3); // Bottom-left
 
 	UINT indexDataSize = sizeof(DWORD) * indexList.size();
-	indexBuffer = UploadBuffer::Upload(indexList.data(), indexDataSize);
+	IndexBuffer = UploadBuffer::Upload(indexList.data(), indexDataSize);
 
-	indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
-	indexBufferView.SizeInBytes = indexDataSize;
-	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+	m_indexBufferView.BufferLocation = IndexBuffer->GetGPUVirtualAddress();
+	m_indexBufferView.SizeInBytes = indexDataSize;
+	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 }
 
 void Geometry::Upload()
@@ -77,15 +77,15 @@ void Geometry::Upload()
 
 void Geometry::Release()
 {
-	indexBuffer.Release();
-	vertexBuffer.Release();
+	IndexBuffer.Release();
+	VertexBuffer.Release();
 }
 
 void Geometry::Set()
 {
 	//Input Assembler
-	GRHI.GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-	GRHI.GetCommandList()->IASetIndexBuffer(&indexBufferView);
+	GRHI.GetCommandList()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+	GRHI.GetCommandList()->IASetIndexBuffer(&m_indexBufferView);
 	GRHI.GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 

@@ -8,130 +8,48 @@ Renderer GRenderer;
 
 void Renderer::LoadGeometry()
 {
-	vertecies.Upload();
+	m_vertecies.Upload();
 }
 
 void Renderer::LoadTextures()
 {
-	texture.Initialize("Assets/Textures/ColorCheckerBoard.png", GRHI.GetCommandList(), 0);
+	m_texture.Initialize("Assets/Textures/Test1.png", 0);
 }
 
 void Renderer::LoadSamplers()
 {
-	sampler = Sampler(0);
+	m_sampler = Sampler(0);
 }
 
 void Renderer::LoadShaders()
 {
-	vertexShader = ShaderCompiler(L"Shaders/VertShader.hlsl", "vs_5_0", "main");//To Do check 6.0 shaders
-	pixelShader = ShaderCompiler(L"Shaders/PixShader.hlsl", "ps_5_0", "main");
+	m_vertexShader = ShaderCompiler(L"Shaders/VertShader.hlsl", "vs_5_0", "main");//To Do check 6.0 shaders
+	m_pixelShader = ShaderCompiler(L"Shaders/PixShader.hlsl", "ps_5_0", "main");
 }
 
 void Renderer::CreateRootSignatures()
 {
-	rootSignature = RootSignature();
-	rootSignature.Create();
+	m_rootSignature = RootSignature();
+	m_rootSignature.Create();
 }
 void Renderer::ReleaseRootSignatures()
 {
-	rootSignature.rootSignature.Release();
+	m_rootSignature.Get().Release();
 }
 
 void Renderer::CreatePSOs()
 {
-	pso.Create(vertecies, rootSignature.rootSignature, vertexShader, pixelShader);
+	m_pso.Create(m_vertecies, m_rootSignature.Get(), m_vertexShader, m_pixelShader);
 }
 
 void Renderer::ReleasePSOs()
 {
-	pso.pso.Release();
-}
-
-void Renderer::CreateCommandLists()
-{
-	for (size_t i = 0; i < NumFramesInFlight; ++i) 
-	{ 
-		ThrowIfFailed(GRHI.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, GRHI.CmdAllocator[i].Get(), pso.pso.Get(), IID_PPV_ARGS(&GRHI.CmdList[i])), "RHI: Failed To Create Command List");
-	}
-}
-
-void Renderer::CloseCommandLists()
-{
-	for (size_t i = 0; i < NumFramesInFlight; ++i) 
-	{ 
-		ThrowIfFailed(GRHI.CmdList[i]->Close(), "RHI: Failed To Close Command List");
-	}
-}
-
-void Renderer::ReleaseCommandLists()
-{
-	for (size_t i = 0; i < NumFramesInFlight; ++i) 
-	{ 
-		GRHI.CmdAllocator[i].Release();
-	}
-}
-
-void Renderer::CreateDepthStencilBuffer()
-{
-	{
-		depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-		depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
-	}
-
-	D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
-	{
-		depthOptimizedClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
-		depthOptimizedClearValue.DepthStencil.Stencil = 0;
-	}
-
-	D3D12_HEAP_PROPERTIES heapDefaultProperties = {};
-	{
-		heapDefaultProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
-		heapDefaultProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-		heapDefaultProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-		heapDefaultProperties.CreationNodeMask = 0;
-		heapDefaultProperties.VisibleNodeMask = 0;
-	}
-
-	{
-		depthStencilResourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		depthStencilResourceDesc.MipLevels = 1;
-		depthStencilResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION::D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-		depthStencilResourceDesc.Height = GWindow.GetHeight();
-		depthStencilResourceDesc.Width = GWindow.GetWidth();
-		depthStencilResourceDesc.DepthOrArraySize = 1;
-		depthStencilResourceDesc.SampleDesc.Count = 1;
-		depthStencilResourceDesc.SampleDesc.Quality = 0;
-		depthStencilResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-		depthStencilResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-		depthStencilResourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;		
-	}
-
-
-	GRHI.Device->CreateCommittedResource(
-		&heapDefaultProperties,
-		D3D12_HEAP_FLAG_NONE,
-		&depthStencilResourceDesc,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		&depthOptimizedClearValue,
-		IID_PPV_ARGS(&depthStencilBuffer)
-	);
-
-	if(FAILED(depthStencilBuffer))
-	{
-		std::string message = "Create Depth Stencil Buffer: Failed to Create Resource";
-		LogError(message, ELogType::Warning);
-	}
-
-	DepthStencilHandle = GDescriptorHeapManager.GetDepthStencilViewHeap().heap->GetCPUDescriptorHandleForHeapStart();
-	GRHI.Device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, DepthStencilHandle);
+	m_pso.Get().Release();
 }
 
 void Renderer::PostLoad()
 {
-	CloseCommandLists();
+	GRHI.CloseCommandLists();
 	GRHI.ExecuteCommandList();	
 	GRHI.Flush();
 }
@@ -141,8 +59,8 @@ void Renderer::Load()
 	CreateRootSignatures();
 	LoadGeometry();
 	LoadShaders();
-	CreateCommandLists();
 	GDescriptorHeapManager.Initialize();
+	GSwapChain.Initialize();
 	GConstantBufferManager.Initialize();	
 	LoadTextures();
 	LoadSamplers();
@@ -153,10 +71,8 @@ void Renderer::Load()
 
 void Renderer::Release()
 {
-	ReleaseCommandLists();
 	ReleaseRootSignatures();
 	ReleasePSOs();
-	ReleaseFrameBuffers();
 	GDescriptorHeapManager.Release();
 	GConstantBufferManager.Release();
 }
@@ -172,97 +88,71 @@ void Renderer::SetViewport()
 	GRHI.GetCommandList()->RSSetScissorRects(1, &scissorRect);
 }
 
-void Renderer::ClearBackBuffer()
-{
-	//Clear backbuffer 
-	float clearColor[4] = {255.0f, 0.5f, 0.5f, 1.0f };
-	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GSwapChain.GetBackbufferRTVHandle();
-	GRHI.GetCommandList()->ClearRenderTargetView(backBufferRTVHandle, clearColor, 0, nullptr);
-}
-
-void Renderer::ClearDepthStencilBuffer()
-{
-	DepthStencilHandle = GDescriptorHeapManager.GetDepthStencilViewHeap().heap->GetCPUDescriptorHandleForHeapStart();
-	GRHI.GetCommandList()->ClearDepthStencilView(DepthStencilHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-}
-
 void Renderer::SetBackBufferRTV()
 {
-	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GSwapChain.GetBackbufferRTVHandle();
-	DepthStencilHandle = GDescriptorHeapManager.GetDepthStencilViewHeap().heap->GetCPUDescriptorHandleForHeapStart();
-	GRHI.GetCommandList()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &DepthStencilHandle);
+	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GSwapChain.GetCPUHandle();
+	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle = m_depthStencil.GetCPUHandle();
+	GRHI.GetCommandList()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &depthStencilHandle);
 }
 
 void Renderer::BindDescriptorTables()
 {
 	GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
 		0, 
+		m_texture.GetGPUHandle());
+
+	GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
+		1,
+		m_sampler.GetGPUHandle());
+
+	GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
+		2,
 		GConstantBufferManager.VertexConstantBuffers[GSwapChain.GetBackBufferIndex()].GetGPUHandle());
 
 	GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
-		1, 
+		3,
 		GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetBackBufferIndex()].GetGPUHandle());
-
-	GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
-		2, 
-		sampler.GetGPUHandle());
-
-	GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
-		3, 
-		texture.GetGPUHandle());
 }
 
 void Renderer::PopulateCommandList()
 {
-	GRHI.SetBarrier(
-		GSwapChain.GetBackBufferResource(),
-		D3D12_RESOURCE_STATE_PRESENT,
-		D3D12_RESOURCE_STATE_RENDER_TARGET);
+	GSwapChain.SetRenderTargetState();
 	
-	GRHI.GetCommandList()->SetGraphicsRootSignature(rootSignature.rootSignature);
+	GRHI.GetCommandList()->SetGraphicsRootSignature(m_rootSignature.Get());
 
 	SetViewport();
 
 	SetBackBufferRTV();
 
-	ClearBackBuffer();
-	ClearDepthStencilBuffer();
+	GSwapChain.Clear();
+	m_depthStencil.Clear();
 
-	vertecies.Set();
+	m_vertecies.Set();
 
 	GDescriptorHeapManager.SetShaderVisibleHeaps();
 	BindDescriptorTables();
 
-	pso.Set();
+	m_pso.Set();
 
 	GRHI.GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
-	GRHI.SetBarrier(
-		GSwapChain.GetBackBufferResource(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET,
-		D3D12_RESOURCE_STATE_PRESENT);
+	GSwapChain.SetPresentState();
 }
 
 void Renderer::CreateFrameBuffers()
 {
-	CreateDepthStencilBuffer();
-}
-
-void Renderer::ReleaseFrameBuffers()
-{
-	depthStencilBuffer.Release();
+	m_depthStencil.Initialize(0);
 }
 
 void Renderer::OnUpdate()
 {
-	BackBufferFrameIndex++;
-	GConstantBufferManager.Update(BackBufferFrameIndex);
+	m_frameIndex++;
+	GConstantBufferManager.Update(m_frameIndex);
 }
 
 void Renderer::OnResize()
 {
 	GRHI.Flush();
-	ReleaseFrameBuffers();
 	CreateFrameBuffers();
 }
 
@@ -275,7 +165,7 @@ void Renderer::OnRender()
 
 	// Prepare the command list to render a new frame.
     ThrowIfFailed(GRHI.GetCommandAllocator()->Reset(), "Renderer: Failed To Reset Command Allocator");
-    ThrowIfFailed(GRHI.GetCommandList()->Reset(GRHI.GetCommandAllocator().Get(), pso.pso.Get()), "Renderer: Failed To Reset Command List");
+    ThrowIfFailed(GRHI.GetCommandList()->Reset(GRHI.GetCommandAllocator().Get(), m_pso.Get().Get()), "Renderer: Failed To Reset Command List");
 
 	// Record all the commands we need to render the scene into the command list.
 	PopulateCommandList();

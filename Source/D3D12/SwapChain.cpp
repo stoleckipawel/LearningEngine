@@ -1,6 +1,7 @@
 #include "SwapChain.h"
 #include "Window.h"
 #include "RHI.h"
+#include "DescriptorHeapManager.h"
 
 SwapChain GSwapChain;
 
@@ -8,7 +9,6 @@ void SwapChain::Initialize()
 {
 	//Create Swap Chain
 	{
-		//Describe Swapchain
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 		{
 			swapChainDesc.Width = GWindow.GetWidth();
@@ -31,33 +31,18 @@ void SwapChain::Initialize()
 		}
 
 		ComPointer<IDXGISwapChain1> swapChain;
-		ThrowIfFailed(GRHI.DxgiFactory->CreateSwapChainForHwnd(GRHI.CmdQueue, GWindow.m_window, &swapChainDesc, &swapChainFullsceenDesc, nullptr, &swapChain), " Failed To Create Swap Chain for HWND");
+		ThrowIfFailed(GRHI.DxgiFactory->CreateSwapChainForHwnd(GRHI.CmdQueue, GWindow.WindowHWND, &swapChainDesc, &swapChainFullsceenDesc, nullptr, &swapChain), " Failed To Create Swap Chain for HWND");
 		
 		ThrowIfFailed(swapChain.QueryInterface(m_swapChain), "Failed to Query Swap Chain Interface");
 	}
 
-	//Create Descriptor Heap
-	D3D12_DESCRIPTOR_HEAP_DESC rtvDescHeapDesc{};
-	{
-		rtvDescHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-		rtvDescHeapDesc.NumDescriptors = NumFramesInFlight;
-		rtvDescHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-		ThrowIfFailed(GRHI.Device->CreateDescriptorHeap(&rtvDescHeapDesc, IID_PPV_ARGS(&m_rtvHeap)), "Failed to Create Descriptor Heap for Window");
+	CreateRenderTargetViews();
+}
 
-		m_rtvDescriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	}
-
-	//Create RenderTarget View & View Handles
-	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
-		for (UINT i = 0; i < NumFramesInFlight; i++)
-		{
-			m_rtvHandles[i] = rtvHandle;
-			m_rtvHandles[i].ptr += m_rtvDescriptorSize * i;
-		}
-
-		CreateRenderTargetViews();
-	}
+void SwapChain::Clear()
+{
+	float clearColor[4] = { 255.0f, 0.5f, 0.5f, 1.0f };
+	GRHI.GetCommandList()->ClearRenderTargetView(GSwapChain.GetCPUHandle(), clearColor, 0, nullptr);
 }
 
 void SwapChain::Resize()
@@ -66,10 +51,21 @@ void SwapChain::Resize()
 
 	m_swapChain->ResizeBuffers(NumFramesInFlight,
 		GWindow.GetWidth(), GWindow.GetHeight(),
-		DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH |
+		DXGI_FORMAT_UNKNOWN, 
+		DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH |
 		DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING);
 
 	CreateRenderTargetViews();
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::GetCPUHandle(UINT index)
+{
+	return GDescriptorHeapManager.GetRenderTargetViewHeap().GetCPUHandle(index);
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::GetCPUHandle()
+{
+	return GetCPUHandle(m_currentBufferIndex);
 }
 
 void SwapChain::CreateRenderTargetViews()
@@ -87,13 +83,8 @@ void SwapChain::CreateRenderTargetViews()
 			rtvDesc.Texture2D.PlaneSlice = 0;
 		}
 
-		GRHI.Device->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, m_rtvHandles[i]);
+		GRHI.Device->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, GetCPUHandle(i));
 	}
-}
-
-ID3D12Resource* SwapChain::GetBackBufferResource()
-{
-	return m_buffers[m_currentBufferIndex];
 }
 
 D3D12_VIEWPORT SwapChain::GetDefaultViewport()
@@ -123,6 +114,22 @@ void SwapChain::Present()
 	ThrowIfFailed(m_swapChain->Present(1, 0), "Failed to Present Swap Chain");
 }
 
+void SwapChain::SetRenderTargetState()
+{
+	GRHI.SetBarrier(
+		m_buffers[m_currentBufferIndex],
+		D3D12_RESOURCE_STATE_PRESENT,
+		D3D12_RESOURCE_STATE_RENDER_TARGET);
+}
+
+void SwapChain::SetPresentState()
+{
+	GRHI.SetBarrier(
+		m_buffers[m_currentBufferIndex],
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		D3D12_RESOURCE_STATE_PRESENT);
+}
+
 void SwapChain::ReleaseBuffers()
 {
 	for (UINT i = 0; i < NumFramesInFlight; i++)
@@ -134,8 +141,5 @@ void SwapChain::ReleaseBuffers()
 void SwapChain::Shutdown()
 {
 	ReleaseBuffers();
-
-	m_rtvHeap.Release();
-
 	m_swapChain.Release();
 }

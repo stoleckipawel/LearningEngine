@@ -19,15 +19,15 @@ public:
 
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(UINT index);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(UINT index);
-public:
-	ComPointer<ID3D12DescriptorHeap> heap;
-	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 private:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandleInternal(UINT index, UINT frameIndex);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandleInternal(UINT index, UINT frameIndex);
+public:
+	ComPointer<ID3D12DescriptorHeap> Heap;
 private:
-	UINT NumCBV = 0;
-	UINT NumSRV = 0;
-	UINT NumUAV = 0;
+	D3D12_DESCRIPTOR_HEAP_DESC m_heapDesc = {};
+	UINT m_numCBV = 0;
+	UINT m_numSRV = 0;
+	UINT m_numUAV = 0;
 };
 

@@ -112,21 +112,17 @@ bool ImageLoader::LoadImageFromDisk(const std::filesystem::path& imagePath, Imag
 	data.dxgiPixelFormat = findIt->dxgiFormat;
 
 	//Image Loading
-	uint32_t stride = ((data.bitsPerPixel + 7) / 8) * data.width;
-	uint32_t size = data.height * stride;
-	data.data.resize(size);
+	data.stride = ((data.bitsPerPixel + 7) / 8) * data.width;
+	data.slicePitch = data.height * data.stride;
+	data.data.resize(data.slicePitch);
 
 	WICRect copyRect;
 	copyRect.X = 0;
 	copyRect.Y = 0;
 	copyRect.Width = data.width;
 	copyRect.Height = data.height;
-	if (FAILED(wicFrame->CopyPixels(&copyRect, stride, size, reinterpret_cast<BYTE*>(data.data.data()))))
-	{
-		std::string message = "ImageLoader: Failed To Copy Pixels";
-		LogError(message, ELogType::Warning);
-		return false;
-	}
+
+	ThrowIfFailed(wicFrame->CopyPixels(&copyRect, data.stride, data.slicePitch, reinterpret_cast<BYTE*>(data.data.data())), "ImageLoader: Failed To Copy Pixels");
 
 	return true;
 }

@@ -19,6 +19,7 @@ public:
     DirectX::XMFLOAT3 GetPosition() const;
     DirectX::XMFLOAT3 GetRotationDegrees() const;
     DirectX::XMMATRIX GetViewMatrix() const;
+    DirectX::XMMATRIX GetProjectionMatrix() const;
 
 private:
     DirectX::XMFLOAT3 m_position;
@@ -26,3 +27,5 @@ private:
 
     DirectX::XMMATRIX GetRotationMatrix() const; // Helper for internal use
 };
+
+extern Camera GCamera;

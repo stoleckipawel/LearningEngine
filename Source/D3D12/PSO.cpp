@@ -149,10 +149,10 @@ void PSO::Create(Geometry& vertecies,
 	psoDesc.SampleDesc.Quality = 0;
 
 	// -- Create PSO
-	ThrowIfFailed(GRHI.Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pso)), "Failed To Create PSO");
+	ThrowIfFailed(GRHI.Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pso)), "Failed To Create PSO");
 }
 
 void PSO::Set()
 {
-	GRHI.GetCommandList()->SetPipelineState(pso);
+	GRHI.GetCommandList()->SetPipelineState(m_pso);
 }

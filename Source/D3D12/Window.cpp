@@ -6,7 +6,7 @@ Window GWindow;
 RECT Window::GetRect()
 {
 	RECT rect;
-	GetClientRect(m_window, &rect);
+	GetClientRect(WindowHWND, &rect);
 	return rect;
 }
 
@@ -45,7 +45,7 @@ bool Window::Initialize()
 	}
 
 	//Create Win Window
-	m_window = CreateWindowEx(
+	WindowHWND = CreateWindowEx(
 		WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW,
 		(LPCWSTR)m_wndClass,
 		L"Engine",
@@ -57,7 +57,7 @@ bool Window::Initialize()
 		nullptr
 	);
 
-	if (m_window == nullptr)
+	if (WindowHWND == nullptr)
 	{
 		std::string message = "Window: Failed to Create a Window";
 		LogError(message, ELogType::Fatal);
@@ -69,9 +69,9 @@ bool Window::Initialize()
 
 void Window::Shutdown()
 {
-	if (m_window)
+	if (WindowHWND)
 	{
-		DestroyWindow(m_window);
+		DestroyWindow(WindowHWND);
 	}
 
 	if (m_wndClass)
@@ -85,7 +85,7 @@ void Window::Update()
 {
 	// Process pending window messages
 	MSG msg;
-	while (PeekMessageW(&msg, m_window, 0, 0, PM_REMOVE))
+	while (PeekMessageW(&msg, WindowHWND, 0, 0, PM_REMOVE))
 	{
 		TranslateMessage(&msg);
 		DispatchMessageW(&msg);
@@ -108,17 +108,17 @@ void Window::SetFullScreen(bool bSetFullScreen)
 		exStyle = WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW;
 	}
 
-	SetWindowLongW(m_window, GWL_STYLE, style);
-	SetWindowLongW(m_window, GWL_EXSTYLE, exStyle);
+	SetWindowLongW(WindowHWND, GWL_STYLE, style);
+	SetWindowLongW(WindowHWND, GWL_EXSTYLE, exStyle);
 
 	if (bSetFullScreen)
 	{
-		HMONITOR monitorFromWindow = MonitorFromWindow(m_window, MONITOR_DEFAULTTONEAREST);
+		HMONITOR monitorFromWindow = MonitorFromWindow(WindowHWND, MONITOR_DEFAULTTONEAREST);
 		MONITORINFO monitorInfo{};
 		monitorInfo.cbSize = sizeof(MONITORINFO);
 		if (GetMonitorInfoW(monitorFromWindow, &monitorInfo))
 		{
-			SetWindowPos(m_window, nullptr,
+			SetWindowPos(WindowHWND, nullptr,
 				monitorInfo.rcMonitor.left,
 				monitorInfo.rcMonitor.top,
 				monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
@@ -128,10 +128,10 @@ void Window::SetFullScreen(bool bSetFullScreen)
 	}
 	else
 	{
-		ShowWindow(m_window, SW_MAXIMIZE);
+		ShowWindow(WindowHWND, SW_MAXIMIZE);
 	}
 
-	bIsFullScreen = bSetFullScreen;	
+	m_bIsFullScreen = bSetFullScreen;	
 }
 
 
@@ -156,7 +156,7 @@ LRESULT Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam
 			return 0;
 		case WM_CLOSE:
 		case WM_QUIT:
-			GWindow.bShouldClose = true;
+			GWindow.m_bShouldClose = true;
 			return 0;
     }
 	return DefWindowProcW(wnd, msg, wParam, lParam);

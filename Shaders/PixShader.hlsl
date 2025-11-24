@@ -17,12 +17,12 @@ cbuffer PixelConstantBuffer : register(b0)
     float4 color;
 };
 
-Texture2D<float4> myTexture : register(t0);
+Texture2D myTexture : register(t0);
 sampler textureSampler : register(s0);
 
 void main(in PsInput Input, out PsOutput Output)
 {
-    float4 texel = myTexture.Sample(textureSampler, Input.TexCoord);
-    Output.Color0 = float4(Input.TexCoord, 0.0, 1.0f);
+    float3 texel = myTexture.SampleLevel(textureSampler, Input.TexCoord, 0.0f).xyz;
+    texel *= color;
     Output.Color0 = float4(texel.rgb, 1.0f);
 }

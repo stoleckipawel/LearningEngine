@@ -23,7 +23,12 @@ cbuffer VertexConstantBuffer : register(b0)
 
 void main(in VsInput Input, out VsOutput Output) 
 {
-    Output.Position = float4(Input.Position.xyz, 1.0f);
+    float4 LocalPosition = float4(Input.Position.xyz, 1.0f);
+    float4 WorldPosition = mul(LocalPosition, WorldMTX);
+    float4 ViewPosition = mul(WorldPosition, ViewMTX);
+    float4 ProjPosition = mul(ViewPosition, ProjectionMTX);
+    Output.Position = ViewPosition;
+    //Output.Position = ProjPosition;
     Output.TexCoord = Input.TexCoord;
     Output.Color = Input.Color;
 

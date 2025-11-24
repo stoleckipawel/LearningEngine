@@ -14,6 +14,8 @@ public:
 		uint32_t height = 1;
 		uint32_t bitsPerPixel = 1;
 		uint32_t channelCount = 1;
+		uint32_t stride = 1;//Row Pitch
+		uint32_t slicePitch = 1;
 
 		GUID wicPixelFormat = {};
 		DXGI_FORMAT dxgiPixelFormat = DXGI_FORMAT_UNKNOWN;

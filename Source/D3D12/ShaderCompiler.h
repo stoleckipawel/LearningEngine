@@ -13,9 +13,9 @@ class ShaderCompiler
 public:
     ShaderCompiler() = default;
     ShaderCompiler(LPCWSTR name, const std::string& model, const std::string& entryPoint);
-	inline const void* GetBuffer() const { return shaderBytecode.pShaderBytecode; }
-	inline size_t GetSize() const { return shaderBytecode.BytecodeLength; }
+	inline const void* GetBuffer() const { return m_shaderBytecode.pShaderBytecode; }
+	inline size_t GetSize() const { return m_shaderBytecode.BytecodeLength; }
 private:
-	D3D12_SHADER_BYTECODE shaderBytecode;
+	D3D12_SHADER_BYTECODE m_shaderBytecode;
 };
 

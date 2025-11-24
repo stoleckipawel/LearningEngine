@@ -7,6 +7,7 @@ class RootSignature
 {
 public:
 	void Create();
-public:
-	ComPointer<ID3D12RootSignature> rootSignature = nullptr;
+	ComPointer<ID3D12RootSignature> Get() { return m_rootSignature; }
+private:
+	ComPointer<ID3D12RootSignature> m_rootSignature = nullptr;
 };

@@ -12,7 +12,6 @@ struct Vertex
 	XMFLOAT4 color;
 };
 
-
 class Geometry
 {
 public:
@@ -24,12 +23,12 @@ public:
 	void Set();
 	std::vector<D3D12_INPUT_ELEMENT_DESC> GetVertexLayout();
 	D3D12_RESOURCE_DESC CreateVertexBufferDesc(uint32_t VertexCount);
-
 public:
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
-	ComPointer<ID3D12Resource2> vertexBuffer = nullptr;
+	ComPointer<ID3D12Resource2> VertexBuffer = nullptr;
+	ComPointer<ID3D12Resource2> IndexBuffer = nullptr;
+private:
+	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+	D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};
 
-	D3D12_INDEX_BUFFER_VIEW indexBufferView = {};
-	ComPointer<ID3D12Resource2> indexBuffer = nullptr;
 };
 

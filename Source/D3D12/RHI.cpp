@@ -2,7 +2,6 @@
 #include "DebugLayer.h"
 #include "Window.h"
 
-
 RHI GRHI;
 
 ComPointer<ID3D12GraphicsCommandList7> RHI::GetCommandList()
@@ -38,7 +37,7 @@ void RHI::SelectAdapter()
 		}
 
 		// Check to see if the adapter supports Direct3D 12, but don't create the actual device yet.
-		if (SUCCEEDED(D3D12CreateDevice(GRHI.Adapter, DesiredD3DFeatureLevel, _uuidof(ID3D12Device), nullptr)))
+		if (SUCCEEDED(D3D12CreateDevice(GRHI.Adapter, m_DesiredD3DFeatureLevel, _uuidof(ID3D12Device), nullptr)))
 		{
 			break;
 		}
@@ -59,7 +58,7 @@ void RHI::SelectAdapter()
             }
 
             // Check to see whether the adapter supports Direct3D 12, but don't create the actual device yet.
-            if (SUCCEEDED(D3D12CreateDevice(GRHI.Adapter.Get(), DesiredD3DFeatureLevel, _uuidof(ID3D12Device), nullptr)))
+            if (SUCCEEDED(D3D12CreateDevice(GRHI.Adapter.Get(), m_DesiredD3DFeatureLevel, _uuidof(ID3D12Device), nullptr)))
             {
                 break;
             }
@@ -84,7 +83,7 @@ bool RHI::Initialize(bool RequireDXRSupport)
 	//Create Device
 	{
 		SelectAdapter();
-		ThrowIfFailed(D3D12CreateDevice(GRHI.Adapter.Get(), DesiredD3DFeatureLevel, IID_PPV_ARGS(&GRHI.Device)), "RHI: Failed To Create Device");
+		ThrowIfFailed(D3D12CreateDevice(GRHI.Adapter.Get(), m_DesiredD3DFeatureLevel, IID_PPV_ARGS(&GRHI.Device)), "RHI: Failed To Create Device");
 	}
 	
 	//Create Command Queue
@@ -96,15 +95,19 @@ bool RHI::Initialize(bool RequireDXRSupport)
 		cmdQueueDesc.NodeMask = 0;
 		ThrowIfFailed(GRHI.Device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&GRHI.CmdQueue)), "RHI: Failed To Create Command Queue");
 	}
-
-	GSwapChain.Initialize();
 	
 	//Create Command Allocators (Frame Buffered)
 	{
 		for (size_t i = 0; i < NumFramesInFlight; ++i) 
 		{ 
 			ThrowIfFailed(GRHI.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&GRHI.CmdAllocator[i])), "RHI: Failed To Create Command Allocator"); 
+			ThrowIfFailed(GRHI.CmdAllocator[i]->Reset(), "RHI: Failed to Reset Command Allocator");
 		}
+	}
+
+	for (size_t i = 0; i < NumFramesInFlight; ++i)// (Frame Buffered)
+	{
+		ThrowIfFailed(GRHI.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, GRHI.CmdAllocator[i].Get(), nullptr, IID_PPV_ARGS(&GRHI.CmdList[i])), "RHI: Failed To Create Command List");
 	}
 	
 	//Create Fence
@@ -129,11 +132,20 @@ bool RHI::Initialize(bool RequireDXRSupport)
 	return true;
 }
 
+void RHI::CloseCommandLists()
+{
+	for (size_t i = 0; i < NumFramesInFlight; ++i)
+	{
+		ThrowIfFailed(GRHI.CmdList[i]->Close(), "RHI: Failed To Close Command List");
+	}
+}
+
 void RHI::Shutdown()
 {
 	for(size_t i = 0; i < NumFramesInFlight; ++i) 
 	{ 
 		GRHI.CmdAllocator[i].Release();
+		GRHI.CmdList[i].Release();
 	}
 
 	if (FenceEvent)

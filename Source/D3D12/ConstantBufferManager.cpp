@@ -1,4 +1,5 @@
 #include "ConstantBufferManager.h"
+#include "Camera.h"
 
 ConstantBufferManager GConstantBufferManager;
 
@@ -26,9 +27,12 @@ void ConstantBufferManager::Update(size_t FrameIndex)
 
 	//Update Vertex Constant Buffers
 	FVertexConstantBufferData vertexData;
-	vertexData.WorldMTX = XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f);
-	vertexData.ViewMTX = XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f);
-	vertexData.ProjectionMTX = XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.f, 0.0f);
+	float angleRadians = XMConvertToRadians(FrameIndex);
+	XMMATRIX world = XMMatrixRotationZ(angleRadians);
+	XMStoreFloat4x4(&vertexData.WorldMTX, world);
+
+	XMStoreFloat4x4(&vertexData.ViewMTX, GCamera.GetViewMatrix());
+	XMStoreFloat4x4(&vertexData.ProjectionMTX, GCamera.GetProjectionMatrix());
 	VertexConstantBuffers[GSwapChain.GetBackBufferIndex()].Update(vertexData);
 
 	//Update Pixel Constant Buffers

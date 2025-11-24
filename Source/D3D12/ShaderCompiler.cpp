@@ -31,6 +31,6 @@ ShaderCompiler::ShaderCompiler(LPCWSTR name, const std::string& model, const std
 	}
 
 	// Fill out a shader bytecode structure
-	shaderBytecode.BytecodeLength = blob->GetBufferSize();
-	shaderBytecode.pShaderBytecode = blob->GetBufferPointer();
+	m_shaderBytecode.BytecodeLength = blob->GetBufferSize();
+	m_shaderBytecode.pShaderBytecode = blob->GetBufferPointer();
 }

@@ -2,46 +2,46 @@
 
 void DescriptorHeap::Initialize(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name)
 {
-	heapDesc.NumDescriptors = numDescriptors;
-	heapDesc.Type = type;
-	heapDesc.Flags = flags;
+	m_heapDesc.NumDescriptors = numDescriptors;
+	m_heapDesc.Type = type;
+	m_heapDesc.Flags = flags;
 	
 	ThrowIfFailed(GRHI.Device->CreateDescriptorHeap(
-		&heapDesc,
-		IID_PPV_ARGS(&heap)), "DescriptorHeap: Failed To Create Descriptor Heap");
+		&m_heapDesc,
+		IID_PPV_ARGS(&Heap)), "DescriptorHeap: Failed To Create Descriptor Heap");
 
-	heap->SetName(name);
+	Heap->SetName(name);
 }
 
 void DescriptorHeap::InitializeCBVSRVUAV(UINT numCBV, UINT numSRV, UINT numUAV, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name)
 {
-	NumCBV = numCBV;
-	NumSRV = numSRV;	
-	NumUAV = numUAV;
+	m_numCBV = numCBV;
+	m_numSRV = numSRV;	
+	m_numUAV = numUAV;
 	UINT numDescriptors = numCBV * NumFramesInFlight + numSRV + numUAV;
 	Initialize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, numDescriptors, flags, name);
 }
 
 UINT DescriptorHeap::GetCBVOffset(UINT backBufferFrameIndex, UINT index)
 {
-	UINT descriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(heapDesc.Type);
-	UINT cbvGroupOffset = backBufferFrameIndex * NumCBV;
+	UINT descriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(m_heapDesc.Type);
+	UINT cbvGroupOffset = backBufferFrameIndex * m_numCBV;
 	return descriptorSize * (cbvGroupOffset + index);
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCPUHandleInternal(UINT index, UINT frameIndex)
 {
-	D3D12_CPU_DESCRIPTOR_HANDLE handle = heap->GetCPUDescriptorHandleForHeapStart();
-	UINT descriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(heapDesc.Type);
-	handle.ptr += descriptorSize * (frameIndex * NumCBV + index);
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = Heap->GetCPUDescriptorHandleForHeapStart();
+	UINT descriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(m_heapDesc.Type);
+	handle.ptr += descriptorSize * (frameIndex * m_numCBV + index);
 	return handle;
 }
 
 D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGPUHandleInternal(UINT index, UINT frameIndex)
 {
-	D3D12_GPU_DESCRIPTOR_HANDLE handle = heap->GetGPUDescriptorHandleForHeapStart();
-	UINT descriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(heapDesc.Type);
-	handle.ptr += descriptorSize * (frameIndex * NumCBV + index);
+	D3D12_GPU_DESCRIPTOR_HANDLE handle = Heap->GetGPUDescriptorHandleForHeapStart();
+	UINT descriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(m_heapDesc.Type);
+	handle.ptr += descriptorSize * (frameIndex * m_numCBV + index);
 	return handle;
 }
 
