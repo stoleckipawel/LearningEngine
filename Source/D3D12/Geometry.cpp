@@ -13,33 +13,20 @@ void Geometry::UploadVertexBuffer()
 	//Color
 
 	std::vector<Vertex> vertexList;
-    // Plane (Quad) vertices
-    vertexList.push_back({ 
-		{ -0.5f,  0.5f, 0.0f }, 
-		{ 0.0f, 0.0f},
-		{ 1.0, 0.0, 0.0, 1.0 } 
-		}); 
+	// Cube vertices
+	vertexList = {
+		// Front face
+		{ { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f }, { 1.0, 0.0, 0.0, 1.0 } }, // 0
+		{ { -0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f }, { 0.0, 1.0, 0.0, 1.0 } }, // 1
+		{ {  0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f }, { 0.0, 0.0, 1.0, 1.0 } }, // 2
+		{ {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f }, { 1.0, 1.0, 0.0, 1.0 } }, // 3
 
-
-    vertexList.push_back({ 
-		{  0.5f,  0.5f, 0.0f }, 
-		{ 1.0f, 0.0f},
-		{ 0.0, 1.0, 0.0, 1.0 } 
-		}); 
-
-
-    vertexList.push_back({ 
-		{  0.5f, -0.5f, 0.0f }, 
-		{ 1.0f, 1.0f},
-		{ 0.0, 0.0, 1.0, 1.0 } 
-		}); 
-
-
-    vertexList.push_back({ 
-		{ -0.5f, -0.5f, 0.0f }, 
-		{ 0.0f, 1.0f},
-		{ 1.0, 1.0, 0.0, 1.0 } 
-		}); 
+		// Back face
+		{ { -0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f }, { 1.0, 0.0, 1.0, 1.0 } }, // 4
+		{ { -0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f }, { 0.0, 1.0, 1.0, 1.0 } }, // 5
+		{ {  0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f }, { 1.0, 1.0, 1.0, 1.0 } }, // 6
+		{ {  0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.5, 0.5, 0.5, 1.0 } }, // 7
+	};
 
 	const UINT vertsDataSize = sizeof(Vertex) * vertexList.size();
 	VertexBuffer = UploadBuffer::Upload(vertexList.data(), vertsDataSize);
@@ -52,14 +39,21 @@ void Geometry::UploadVertexBuffer()
 void Geometry::UploadIndexBuffer()
 {
 	std::vector<DWORD> indexList;
-    // Two triangles for the quad
-    indexList.push_back(0); // Top-left
-    indexList.push_back(1); // Top-right
-    indexList.push_back(2); // Bottom-right
-
-    indexList.push_back(0); // Top-left
-    indexList.push_back(2); // Bottom-right
-    indexList.push_back(3); // Bottom-left
+	// Cube indices (12 triangles, 36 indices)
+	indexList = {
+		// Front face
+		0, 1, 2, 0, 2, 3,
+		// Back face
+		4, 6, 5, 4, 7, 6,
+		// Left face
+		4, 5, 1, 4, 1, 0,
+		// Right face
+		3, 2, 6, 3, 6, 7,
+		// Top face
+		1, 5, 6, 1, 6, 2,
+		// Bottom face
+		4, 0, 3, 4, 3, 7
+	};
 
 	UINT indexDataSize = sizeof(DWORD) * indexList.size();
 	IndexBuffer = UploadBuffer::Upload(indexList.data(), indexDataSize);

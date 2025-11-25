@@ -134,7 +134,7 @@ void Renderer::PopulateCommandList()
 
 	m_pso.Set();
 
-	GRHI.GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+	GRHI.GetCommandList()->DrawIndexedInstanced(36, 1, 0, 0, 0);
 
 	GSwapChain.SetPresentState();
 }
