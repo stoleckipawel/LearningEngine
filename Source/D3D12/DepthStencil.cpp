@@ -2,10 +2,11 @@
 #include "DepthStencil.h"
 #include "Window.h"
 
-// Initializes the depth stencil resource and view
-void DepthStencil::Initialize(UINT descriptorHandleIndex)
+
+// Constructs and initializes the depth stencil resource and view
+DepthStencil::DepthStencil(UINT descriptorHandleIndex)
+	: m_DescriptorHandleIndex(descriptorHandleIndex)
 {
-	m_DescriptorHandleIndex = descriptorHandleIndex;
 	CreateResource();
 	CreateView();
 }

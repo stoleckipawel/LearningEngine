@@ -21,20 +21,15 @@ struct Vertex
 class Geometry
 {
 public:
-	// Destructor: Releases geometry resources
+	// Constructs and uploads geometry resources
+	Geometry();
+
+	// Destructor releases geometry resources
 	~Geometry();
 
-	// Uploads the vertex buffer for the geometry
-	void UploadVertexBuffer();
-
-	// Uploads the index buffer for the geometry
-	void UploadIndexBuffer();
-
-	// Uploads both vertex and index buffers
-	void Upload();
-
-	// Releases geometry resources
-	void Release();
+	// Deleted copy constructor and assignment operator to enforce unique ownership
+	Geometry(const Geometry&) = delete;
+	Geometry& operator=(const Geometry&) = delete;
 
 	// Sets geometry buffers and topology for rendering
 	void Set();
@@ -42,12 +37,18 @@ public:
 	std::vector<D3D12_INPUT_ELEMENT_DESC> GetVertexLayout();
 
 	D3D12_RESOURCE_DESC CreateVertexBufferDesc(uint32_t VertexCount);
-
-public:
+private:
+	// Uploads the vertex buffer for the geometry
+	void UploadVertexBuffer();
+	// Uploads the index buffer for the geometry
+	void UploadIndexBuffer();
+	// Uploads both vertex and index buffers
+	void Upload();
+	// Releases geometry resources
+	void Release();
+private:
 	ComPointer<ID3D12Resource2> VertexBuffer = nullptr;
 	ComPointer<ID3D12Resource2> IndexBuffer = nullptr; 
-
-private:
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {}; 
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};  
 };

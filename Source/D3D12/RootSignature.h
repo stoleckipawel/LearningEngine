@@ -7,12 +7,20 @@
 class RootSignature
 {
 public:
-	// Creates the root signature for the graphics pipeline
-	void Create();
+	// Constructs and creates the root signature for the graphics pipeline
+	RootSignature();
+
+	// Destructor releases the root signature
+	~RootSignature();
+
+	// Deleted copy constructor and assignment operator to enforce unique ownership
+	RootSignature(const RootSignature&) = delete;
+	RootSignature& operator=(const RootSignature&) = delete;
 
 	// Returns the COM pointer to the root signature
 	ComPointer<ID3D12RootSignature> Get() { return m_rootSignature; }
-
 private:
+	void Create();
+	void Release();
 	ComPointer<ID3D12RootSignature> m_rootSignature = nullptr; // Root signature COM pointer
 };

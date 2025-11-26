@@ -36,11 +36,7 @@ private:
 	void PostLoad();
 
 	void CreateRootSignatures();
-	void ReleaseRootSignatures();
-
 	void CreatePSOs();
-	void ReleasePSOs();
-
 	void CreateFrameBuffers();
 	void SetViewport();
 	void SetBackBufferRTV();
@@ -51,14 +47,14 @@ private:
 	void OnUpdate();
 
 private:
-	Texture m_texture;
-	DepthStencil m_depthStencil;
-	Sampler m_sampler;
-	Geometry m_vertecies;
-	PSO m_pso;
-	RootSignature m_rootSignature;
-	ShaderCompiler m_vertexShader;
-	ShaderCompiler m_pixelShader;
+	std::unique_ptr<Texture> m_texture;
+	std::unique_ptr<DepthStencil> m_depthStencil;
+	std::unique_ptr<Sampler> m_sampler;
+	std::unique_ptr<Geometry> m_vertecies; 
+	std::unique_ptr<PSO> m_pso;
+	std::unique_ptr<RootSignature> m_rootSignature;
+	std::unique_ptr<ShaderCompiler> m_vertexShader;
+	std::unique_ptr<ShaderCompiler> m_pixelShader;
 	UINT m_frameIndex = 0;
 };
 

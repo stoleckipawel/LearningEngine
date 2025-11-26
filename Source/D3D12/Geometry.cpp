@@ -6,7 +6,14 @@
 // Implements geometry setup, upload, and binding for rendering.
 
 
-// Destructor: Releases geometry resources
+
+// Constructs and uploads geometry resources
+Geometry::Geometry()
+{
+	Upload();
+}
+
+// Destructor releases geometry resources
 Geometry::~Geometry()
 {
 	Release();

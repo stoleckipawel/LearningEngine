@@ -1,8 +1,6 @@
 #include "ShaderCompiler.h"
 #include "d3dcompiler.h"
 
-
-
 // Compiles a shader from file and stores the bytecode
 ShaderCompiler::ShaderCompiler(LPCWSTR name, const std::string& model, const std::string& entryPoint)
 {
@@ -40,4 +38,15 @@ ShaderCompiler::ShaderCompiler(LPCWSTR name, const std::string& model, const std
 	// Store compiled shader bytecode
 	m_shaderBytecode.BytecodeLength = blob->GetBufferSize();
 	m_shaderBytecode.pShaderBytecode = blob->GetBufferPointer();
+}
+
+ShaderCompiler::~ShaderCompiler()
+{
+    Release();
+}
+
+void ShaderCompiler::Release()
+{
+    m_shaderBytecode.BytecodeLength = 0;
+    m_shaderBytecode.pShaderBytecode = nullptr;
 }

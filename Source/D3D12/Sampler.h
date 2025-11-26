@@ -8,18 +8,21 @@
 class Sampler
 {
 public:
-    Sampler() = default;
-
     // Constructs a sampler and creates it in the descriptor heap
     Sampler(UINT DescriptorHandleIndex);
+    // Destructor releases resources 
+    ~Sampler();
+
+    Sampler(const Sampler&) = delete;
+    Sampler& operator=(const Sampler&) = delete;
 
     // Returns the GPU descriptor handle for this sampler
-    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle();
+    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const;
 
     // Returns the CPU descriptor handle for this sampler
-    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle();
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const;
 private:
-    UINT m_DescriptorHandleIndex = 0;  
-    D3D12_SAMPLER_DESC m_desc = {}; 
+    UINT m_DescriptorHandleIndex = 0;  // Index in the sampler descriptor heap
+    D3D12_SAMPLER_DESC m_desc = {};    // Sampler description
 };
 

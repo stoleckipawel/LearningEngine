@@ -1,4 +1,3 @@
-
 #include "PSO.h"
 
 // PSO.cpp
@@ -74,13 +73,8 @@ void PSO::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12
 	psoDesc.DepthStencilState.BackFace.StencilPassOp = stencilDesc.BackFaceStencilPassOp;
 }
 
-
-// Creates the graphics pipeline state object (PSO).
-void PSO::Create(
-	Geometry& vertecies,
-	ID3D12RootSignature* rootSignature,
-	ShaderCompiler& vertexShader,
-	ShaderCompiler& pixelShader)
+// Constructs and creates the graphics pipeline state object (PSO)
+PSO::PSO(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler& vertexShader, ShaderCompiler& pixelShader)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
@@ -164,7 +158,15 @@ void PSO::Create(
 	ThrowIfFailed(GRHI.Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pso)), "Failed To Create PSO");
 }
 
+void PSO::Release()
+{
+	m_pso.Release();
+}
 
+PSO::~PSO()
+{
+	Release();
+}
 
 // Sets the pipeline state object for the current command list.
 void PSO::Set()

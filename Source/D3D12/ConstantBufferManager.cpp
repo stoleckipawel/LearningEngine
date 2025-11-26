@@ -10,17 +10,13 @@ void ConstantBufferManager::Initialize()
 {
 	for (size_t i = 0; i < NumFramesInFlight; ++i)
 	{
-		// Create and initialize vertex constant buffer
-		ConstantBuffer<FVertexConstantBufferData> vertexConstantBuffer;
-		vertexConstantBuffer.Initialize(0);
-		vertexConstantBuffer.CreateConstantBufferView(GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCBVCPUHandle(vertexConstantBuffer.GetDescriptorHandleIndex(), i));
-		VertexConstantBuffers[i] = vertexConstantBuffer;
+		// Create and initialize vertex constant buffer (RAII, unique_ptr)
+		VertexConstantBuffers[i] = std::make_unique<ConstantBuffer<FVertexConstantBufferData>>(0);
+		VertexConstantBuffers[i]->CreateConstantBufferView(GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCBVCPUHandle(VertexConstantBuffers[i]->GetDescriptorHandleIndex(), i));
 
-		// Create and initialize pixel constant buffer
-		ConstantBuffer<PixelConstantBufferData> pixelConstantBuffer;
-		pixelConstantBuffer.Initialize(1);
-		pixelConstantBuffer.CreateConstantBufferView(GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCBVCPUHandle(pixelConstantBuffer.GetDescriptorHandleIndex(), i));
-		PixelConstantBuffers[i] = pixelConstantBuffer;
+		// Create and initialize pixel constant buffer (RAII, unique_ptr)
+		PixelConstantBuffers[i] = std::make_unique<ConstantBuffer<PixelConstantBufferData>>(1);
+		PixelConstantBuffers[i]->CreateConstantBufferView(GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCBVCPUHandle(PixelConstantBuffers[i]->GetDescriptorHandleIndex(), i));
 	}
 }
 
@@ -38,7 +34,7 @@ void ConstantBufferManager::Update(size_t FrameIndex)
 	XMStoreFloat4x4(&vertexData.WorldMTX, world);
 	XMStoreFloat4x4(&vertexData.ViewMTX, GCamera.GetViewMatrix());
 	XMStoreFloat4x4(&vertexData.ProjectionMTX, GCamera.GetProjectionMatrix());
-	VertexConstantBuffers[GSwapChain.GetBackBufferIndex()].Update(vertexData);
+	VertexConstantBuffers[GSwapChain.GetBackBufferIndex()]->Update(vertexData);
 
 	// Update pixel constant buffer with animated color
 	PixelConstantBufferData pixelData;
@@ -46,7 +42,7 @@ void ConstantBufferManager::Update(size_t FrameIndex)
 	pixelData.Color.y = 0.5f + 0.5f * sinf(speed + 2.0f);
 	pixelData.Color.z = 0.5f + 0.5f * sinf(speed + 4.0f);
 	pixelData.Color.w = 1.0f;
-	PixelConstantBuffers[GSwapChain.GetBackBufferIndex()].Update(pixelData);
+	PixelConstantBuffers[GSwapChain.GetBackBufferIndex()]->Update(pixelData);
 }
 
 // Releases all constant buffers
@@ -54,7 +50,7 @@ void ConstantBufferManager::Release()
 {
 	for (size_t i = 0; i < NumFramesInFlight; ++i)
 	{
-		VertexConstantBuffers[i].Resource.Release();
-		PixelConstantBuffers[i].Resource.Release();
+		VertexConstantBuffers[i].reset();
+		PixelConstantBuffers[i].reset();
 	}
 }

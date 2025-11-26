@@ -32,13 +32,20 @@ struct D3D12_STENCIL_TEST_DESC
 class PSO
 {
 public:
-	//Creates the graphics pipeline state object.
-	void Create(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler& vertexShader, ShaderCompiler& pixelShader);
+	// Constructs and creates the graphics pipeline state object.
+	PSO(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler& vertexShader, ShaderCompiler& pixelShader);
 
-	//Sets the pipeline state object for the current command list.
+	// Destructor releases pipeline state object
+	~PSO();
+
+	// Deleted copy constructor and assignment operator to enforce unique ownership
+	PSO(const PSO&) = delete;
+	PSO& operator=(const PSO&) = delete;
+
+	// Sets the pipeline state object for the current command list.
 	void Set();
 
-	//Returns the underlying pipeline state COM pointer.
+	// Returns the underlying pipeline state COM pointer.
 	ComPointer<ID3D12PipelineState> Get() { return m_pso; }
 private:
 	void SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc);
@@ -46,6 +53,7 @@ private:
 	void SetRenderTargetBlendState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_RENDER_TARGET_BLEND_DESC blendDesc);
 	void SetDepthTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_DEPTH_TEST_DESC depthDesc);
 	void SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_STENCIL_TEST_DESC stencilDesc);
+	void Release();
 private:
 	ComPointer<ID3D12PipelineState> m_pso = nullptr; // Pipeline state COM pointer
 };

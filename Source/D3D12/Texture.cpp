@@ -1,17 +1,16 @@
+
 #include "Texture.h"
 
-
-// Initializes the texture from disk and creates all required GPU resources
-void Texture::Initialize(const std::filesystem::path& imagePath, UINT descriptorHandleIndex)
+// Loads the texture from disk and creates all required GPU resources
+Texture::Texture(const std::filesystem::path& imagePath, UINT descriptorHandleIndex)
+	: m_descriptorHandleIndex(descriptorHandleIndex)
 {
-	m_descriptorHandleIndex = descriptorHandleIndex;
 	// TODO: Switch to DirectXTex for better format support and mipmap generation
 	ImageLoader::LoadImageFromDisk(imagePath, m_textureData);
 	CreateResource();
 	UploadToGPU();
 	CreateSRV();
 }
-
 
 // Creates the committed GPU resource for the texture and its upload buffer
 void Texture::CreateResource()
@@ -60,7 +59,6 @@ void Texture::CreateResource()
 	);
 }
 
-
 // Uploads the texture data from CPU to GPU resource
 void Texture::UploadToGPU()
 {
@@ -90,7 +88,6 @@ void Texture::UploadToGPU()
 	GRHI.GetCommandList()->ResourceBarrier(1, &barrier);
 }
 
-
 // Creates the shader resource view (SRV) for the texture
 void Texture::CreateSRV()
 {
@@ -108,6 +105,17 @@ void Texture::CreateSRV()
 	);
 }
 
+// Returns the GPU descriptor handle for shader access
+D3D12_GPU_DESCRIPTOR_HANDLE Texture::GetGPUHandle() const
+{
+	return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetGPUHandle(m_descriptorHandleIndex);
+}
+
+// Returns the CPU descriptor handle for descriptor heap management
+D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetCPUHandle() const
+{
+	return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCPUHandle(m_descriptorHandleIndex);
+}
 
 // Releases all GPU resources associated with the texture
 void Texture::Release()
@@ -115,21 +123,6 @@ void Texture::Release()
 	m_textureResource.Release();
 	m_uploadResource.Release();
 }
-
-
-// Returns the GPU descriptor handle for shader access
-D3D12_GPU_DESCRIPTOR_HANDLE Texture::GetGPUHandle()
-{
-	return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetGPUHandle(m_descriptorHandleIndex);
-}
-
-
-// Returns the CPU descriptor handle for descriptor heap management
-D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetCPUHandle()
-{
-	return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCPUHandle(m_descriptorHandleIndex);
-} 
-
 
 // Destructor releases resources
 Texture::~Texture()

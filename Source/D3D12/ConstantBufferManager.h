@@ -6,7 +6,6 @@
 #include "DescriptorHeapManager.h"
 #include "SwapChain.h"
 
-
 // Vertex constant buffer data (aligned to 256 bytes for D3D12)
 struct alignas(256) FVertexConstantBufferData
 {
@@ -34,9 +33,9 @@ public:
 	void Update(size_t FrameIndex);
 
 	// Per-frame vertex constant buffers
-	ConstantBuffer<FVertexConstantBufferData> VertexConstantBuffers[NumFramesInFlight];
+	std::unique_ptr<ConstantBuffer<FVertexConstantBufferData>> VertexConstantBuffers[NumFramesInFlight];
 	// Per-frame pixel constant buffers
-	ConstantBuffer<PixelConstantBufferData> PixelConstantBuffers[NumFramesInFlight];
+	std::unique_ptr<ConstantBuffer<PixelConstantBufferData>> PixelConstantBuffers[NumFramesInFlight];
 };
 
 

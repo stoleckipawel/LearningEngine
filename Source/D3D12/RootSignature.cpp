@@ -1,5 +1,21 @@
-
 #include "RootSignature.h"
+
+// Constructs and creates the root signature for the graphics pipeline
+RootSignature::RootSignature()
+{
+    Create();
+}
+
+// Destructor releases the root signature
+RootSignature::~RootSignature()
+{
+    Release();
+}
+
+void RootSignature::Release()
+{
+    m_rootSignature.Release();
+}
 
 // Creates the root signature for the graphics pipeline
 void RootSignature::Create()

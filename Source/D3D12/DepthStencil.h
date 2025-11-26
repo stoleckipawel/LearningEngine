@@ -8,16 +8,21 @@
 class DepthStencil 
 {
 public:
+    // Constructs and initializes the depth stencil resource and view
+    explicit DepthStencil(UINT DescriptorHandleIndex);
+
     // Destructor releases resources
     ~DepthStencil();
 
-    // Initializes the depth stencil resource and view
-    void Initialize(UINT DescriptorHandleIndex);
+    // Deleted copy constructor and assignment operator to enforce unique ownership
+    DepthStencil(const DepthStencil&) = delete;
+    DepthStencil& operator=(const DepthStencil&) = delete;
+
     // Returns the GPU descriptor handle for shader access
     D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle();
     // Returns the CPU descriptor handle for descriptor heap management
     D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(); 
-    
+
     // Clears the depth stencil view
     void Clear();
 private:
