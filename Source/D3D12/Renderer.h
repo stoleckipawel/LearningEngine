@@ -9,14 +9,25 @@
 #include "Sampler.h"
 #include "DepthStencil.h"
 
+// Renderer manages the graphics pipeline, resources, and main render loop
 class Renderer
 {
 public:
+	// Loads all resources and initializes the rendering pipeline
 	void Load();
+
+	// Releases all resources and subsystems
 	void Release();
+
+	// Shuts down the renderer and all subsystems
 	void Shutdown();
+
+	// Main render loop for the scene
 	void OnRender();
+
+	// Handles window resize events
 	void OnResize();
+
 private:
 	void LoadGeometry();
 	void LoadTextures();
@@ -38,6 +49,7 @@ private:
 	void PopulateCommandList();
 
 	void OnUpdate();
+
 private:
 	Texture m_texture;
 	DepthStencil m_depthStencil;
@@ -50,5 +62,6 @@ private:
 	UINT m_frameIndex = 0;
 };
 
+// Global renderer instance
 extern Renderer GRenderer;
 

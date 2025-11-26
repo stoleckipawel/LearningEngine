@@ -150,7 +150,6 @@
     <ClCompile Include="Source\D3D12\Sampler.cpp" />
     <ClCompile Include="Source\D3D12\Camera.cpp" />
     <ClCompile Include="Source\D3D12\UploadBuffer.cpp" />
-    <ClCompile Include="Source\D3D12\ConstantBuffer.cpp" />
     <ClCompile Include="Source\D3D12\RootSignature.cpp" />
     <ClCompile Include="Source\D3D12\DescriptorHeap.cpp" />
     <ClCompile Include="Source\D3D12\PSO.cpp" />

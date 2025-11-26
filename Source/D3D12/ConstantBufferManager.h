@@ -6,28 +6,39 @@
 #include "DescriptorHeapManager.h"
 #include "SwapChain.h"
 
+
+// Vertex constant buffer data (aligned to 256 bytes for D3D12)
 struct alignas(256) FVertexConstantBufferData
 {
-	XMFLOAT4X4 WorldMTX;
-	XMFLOAT4X4 ViewMTX;
-	XMFLOAT4X4 ProjectionMTX;
+	XMFLOAT4X4 WorldMTX;      // World transformation matrix
+	XMFLOAT4X4 ViewMTX;       // View transformation matrix
+	XMFLOAT4X4 ProjectionMTX; // Projection transformation matrix
 };
 
+// Pixel constant buffer data (aligned to 256 bytes for D3D12)
 struct alignas(256) PixelConstantBufferData
 {
-	XMFLOAT4 Color;
+	XMFLOAT4 Color;           // RGBA color
 };
 
+
+// ConstantBufferManager manages per-frame vertex and pixel constant buffers for rendering.
 class ConstantBufferManager
 {
 public:
+	// Initializes all constant buffers for each frame in flight
 	void Initialize();
+	// Releases all constant buffers
 	void Release();
-	void Update(size_t BackBufferFrameIndex);
-public:
-	ConstantBuffer<FVertexConstantBufferData> VertexConstantBuffers[NumFramesInFlight];
-	ConstantBuffer<PixelConstantBufferData> PixelConstantBuffers[NumFramesInFlight];
+	// Updates the constant buffers
+	void Update(size_t FrameIndex);
 
+	// Per-frame vertex constant buffers
+	ConstantBuffer<FVertexConstantBufferData> VertexConstantBuffers[NumFramesInFlight];
+	// Per-frame pixel constant buffers
+	ConstantBuffer<PixelConstantBufferData> PixelConstantBuffers[NumFramesInFlight];
 };
 
+
+// Global constant buffer manager instance
 extern ConstantBufferManager GConstantBufferManager;

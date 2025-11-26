@@ -1,59 +1,72 @@
+
 #include "Renderer.h"
 #include "DebugLayer.h"
 #include "RHI.h"
 #include "Window.h"
 #include "ConstantBufferManager.h"
 
+// Global renderer instance
 Renderer GRenderer;
 
+// Uploads geometry data to the GPU
 void Renderer::LoadGeometry()
 {
 	m_vertecies.Upload();
 }
 
+// Loads texture resources
 void Renderer::LoadTextures()
 {
 	m_texture.Initialize("Assets/Textures/Test1.png", 0);
 }
 
+// Initializes the sampler state
 void Renderer::LoadSamplers()
 {
 	m_sampler = Sampler(0);
 }
 
+// Compiles and loads vertex and pixel shaders
 void Renderer::LoadShaders()
 {
-	m_vertexShader = ShaderCompiler(L"Shaders/VertShader.hlsl", "vs_5_0", "main");//To Do check 6.0 shaders
+	m_vertexShader = ShaderCompiler(L"Shaders/VertShader.hlsl", "vs_5_0", "main"); // TODO: Check shader model 6.0 support
 	m_pixelShader = ShaderCompiler(L"Shaders/PixShader.hlsl", "ps_5_0", "main");
 }
 
+// Creates the root signature for the pipeline
 void Renderer::CreateRootSignatures()
 {
 	m_rootSignature = RootSignature();
 	m_rootSignature.Create();
 }
+
+// Releases the root signature
 void Renderer::ReleaseRootSignatures()
 {
 	m_rootSignature.Get().Release();
 }
 
+// Creates the pipeline state object (PSO)
 void Renderer::CreatePSOs()
 {
 	m_pso.Create(m_vertecies, m_rootSignature.Get(), m_vertexShader, m_pixelShader);
 }
 
+// Releases the pipeline state object
 void Renderer::ReleasePSOs()
 {
 	m_pso.Get().Release();
 }
 
+// Finalizes resource uploads and flushes the command queue
 void Renderer::PostLoad()
 {
 	GRHI.CloseCommandLists();
-	GRHI.ExecuteCommandList();	
+	GRHI.ExecuteCommandList();
 	GRHI.Flush();
 }
 
+// Loads all resources and initializes the rendering pipeline
 void Renderer::Load()
 {
 	CreateRootSignatures();
@@ -61,7 +74,7 @@ void Renderer::Load()
 	LoadShaders();
 	GDescriptorHeapManager.Initialize();
 	GSwapChain.Initialize();
-	GConstantBufferManager.Initialize();	
+	GConstantBufferManager.Initialize();
 	LoadTextures();
 	LoadSamplers();
 	CreatePSOs();
@@ -69,6 +82,7 @@ void Renderer::Load()
 	PostLoad();
 }
 
+// Releases all resources and subsystems
 void Renderer::Release()
 {
 	ReleaseRootSignatures();
@@ -77,17 +91,17 @@ void Renderer::Release()
 	GConstantBufferManager.Release();
 }
 
+// Sets the viewport and scissor rectangle for rasterization
 void Renderer::SetViewport()
 {
-	//Rasterizer State: Viewport
 	D3D12_VIEWPORT viewport = GSwapChain.GetDefaultViewport();
 	GRHI.GetCommandList()->RSSetViewports(1, &viewport);
 
-	//Rasterizer State: Scissor  
 	D3D12_RECT scissorRect = GSwapChain.GetDefaultScissorRect();
 	GRHI.GetCommandList()->RSSetScissorRects(1, &scissorRect);
 }
 
+// Sets the render target and depth stencil views
 void Renderer::SetBackBufferRTV()
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GSwapChain.GetCPUHandle();
@@ -95,10 +109,11 @@ void Renderer::SetBackBufferRTV()
 	GRHI.GetCommandList()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &depthStencilHandle);
 }
 
+// Binds descriptor tables for textures, samplers, and constant buffers
 void Renderer::BindDescriptorTables()
 {
 	GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
-		0, 
+		0,
 		m_texture.GetGPUHandle());
 
 	GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
@@ -114,10 +129,11 @@ void Renderer::BindDescriptorTables()
 		GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetBackBufferIndex()].GetGPUHandle());
 }
 
+// Records all rendering commands for the current frame
 void Renderer::PopulateCommandList()
 {
 	GSwapChain.SetRenderTargetState();
-	
+
 	GRHI.GetCommandList()->SetGraphicsRootSignature(m_rootSignature.Get());
 
 	SetViewport();
@@ -139,53 +155,57 @@ void Renderer::PopulateCommandList()
 	GSwapChain.SetPresentState();
 }
 
+// Creates frame buffers and depth stencil resources
 void Renderer::CreateFrameBuffers()
 {
 	m_depthStencil.Initialize(0);
 }
 
+// Updates per-frame data and constant buffers
 void Renderer::OnUpdate()
 {
 	m_frameIndex++;
 	GConstantBufferManager.Update(m_frameIndex);
 }
 
+// Handles window resize events and recreates frame buffers
 void Renderer::OnResize()
 {
 	GRHI.Flush();
 	CreateFrameBuffers();
 }
 
-// Render the scene.
+// Main render loop for the scene
 void Renderer::OnRender()
 {
 	OnUpdate();
 
 	GRHI.WaitForGPU();
 
-	// Prepare the command list to render a new frame.
-    ThrowIfFailed(GRHI.GetCommandAllocator()->Reset(), "Renderer: Failed To Reset Command Allocator");
-    ThrowIfFailed(GRHI.GetCommandList()->Reset(GRHI.GetCommandAllocator().Get(), m_pso.Get().Get()), "Renderer: Failed To Reset Command List");
+	// Reset command allocator and command list for new frame
+	ThrowIfFailed(GRHI.GetCommandAllocator()->Reset(), "Renderer: Failed To Reset Command Allocator");
+	ThrowIfFailed(GRHI.GetCommandList()->Reset(GRHI.GetCommandAllocator().Get(), m_pso.Get().Get()), "Renderer: Failed To Reset Command List");
 
-	// Record all the commands we need to render the scene into the command list.
+	// Record rendering commands
 	PopulateCommandList();
 
-	// Finalize the command list.
+	// Close command list
 	ThrowIfFailed(GRHI.GetCommandList()->Close(), "Failed To Close Command List");
 
-	// Execute the command list.
+	// Execute command list
 	GRHI.ExecuteCommandList();
 
-	// Update Fence Value when GPU completes work
+	// Signal fence for GPU completion
 	GRHI.Signal();
 
-	// Present the frame.
+	// Present the frame
 	GSwapChain.Present();
 
-	// Update the frame index.
+	// Update back buffer index
 	GSwapChain.UpdateCurrentBackBufferIndex();
 }
 
+// Shuts down the renderer and all subsystems
 void Renderer::Shutdown()
 {
 	GRHI.Flush();

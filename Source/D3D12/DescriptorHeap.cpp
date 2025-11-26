@@ -22,13 +22,6 @@ void DescriptorHeap::InitializeCBVSRVUAV(UINT numCBV, UINT numSRV, UINT numUAV, 
 	Initialize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, numDescriptors, flags, name);
 }
 
-UINT DescriptorHeap::GetCBVOffset(UINT backBufferFrameIndex, UINT index)
-{
-	UINT descriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(m_heapDesc.Type);
-	UINT cbvGroupOffset = backBufferFrameIndex * m_numCBV;
-	return descriptorSize * (cbvGroupOffset + index);
-}
-
 D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCPUHandleInternal(UINT index, UINT frameIndex)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = Heap->GetCPUDescriptorHandleForHeapStart();

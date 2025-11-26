@@ -5,88 +5,112 @@
 
 SwapChain GSwapChain;
 
+
+// Initializes the swap chain and creates render target views
 void SwapChain::Initialize()	
 {
-	//Create Swap Chain
-	{
-		DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-		{
-			swapChainDesc.Width = GWindow.GetWidth();
-			swapChainDesc.Height = GWindow.GetHeight();
-			swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			swapChainDesc.Stereo = false;
-			swapChainDesc.SampleDesc.Quality = 0;
-			swapChainDesc.SampleDesc.Count = 1;
-			swapChainDesc.BufferUsage = DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_RENDER_TARGET_OUTPUT;
-			swapChainDesc.BufferCount = NumFramesInFlight;
-			swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
-			swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-			swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
-			swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
-		}
+	// Create swap chain description
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
+	swapChainDesc.Width = GWindow.GetWidth();
+	swapChainDesc.Height = GWindow.GetHeight();
+	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	swapChainDesc.Stereo = false;
+	swapChainDesc.SampleDesc.Quality = 0;
+	swapChainDesc.SampleDesc.Count = 1;
+	swapChainDesc.BufferUsage = DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swapChainDesc.BufferCount = NumFramesInFlight;
+	swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
+	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
-		DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullsceenDesc{};
-		{
-			swapChainFullsceenDesc.Windowed = true;
-		}
+	// Create fullscreen swap chain description
+	DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullsceenDesc{};
+	swapChainFullsceenDesc.Windowed = true;
 
-		ComPointer<IDXGISwapChain1> swapChain;
-		ThrowIfFailed(GRHI.DxgiFactory->CreateSwapChainForHwnd(GRHI.CmdQueue, GWindow.WindowHWND, &swapChainDesc, &swapChainFullsceenDesc, nullptr, &swapChain), " Failed To Create Swap Chain for HWND");
-		
-		ThrowIfFailed(swapChain.QueryInterface(m_swapChain), "Failed to Query Swap Chain Interface");
-	}
+	// Create the swap chain for the window
+	ComPointer<IDXGISwapChain1> swapChain;
+	ThrowIfFailed(
+		GRHI.DxgiFactory->CreateSwapChainForHwnd(
+			GRHI.CmdQueue,
+			GWindow.WindowHWND,
+			&swapChainDesc,
+			&swapChainFullsceenDesc,
+			nullptr,
+			&swapChain),
+		"Failed To Create Swap Chain for HWND"
+	);
 
+	// Query for IDXGISwapChain3 interface
+	ThrowIfFailed(swapChain.QueryInterface(m_swapChain), "Failed to Query Swap Chain Interface");
+
+	// Create render target views for all buffers
 	CreateRenderTargetViews();
 }
 
+
+// Clears the current render target view with a solid color
 void SwapChain::Clear()
 {
 	float clearColor[4] = { 255.0f, 0.5f, 0.5f, 1.0f };
 	GRHI.GetCommandList()->ClearRenderTargetView(GSwapChain.GetCPUHandle(), clearColor, 0, nullptr);
 }
 
+
+// Resizes the swap chain buffers and recreates render target views
 void SwapChain::Resize()
 {
 	ReleaseBuffers();
 
-	m_swapChain->ResizeBuffers(NumFramesInFlight,
-		GWindow.GetWidth(), GWindow.GetHeight(),
-		DXGI_FORMAT_UNKNOWN, 
+	m_swapChain->ResizeBuffers(
+		NumFramesInFlight,
+		GWindow.GetWidth(),
+		GWindow.GetHeight(),
+		DXGI_FORMAT_UNKNOWN,
 		DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH |
-		DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING);
+		DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
+	);
 
 	CreateRenderTargetViews();
 }
 
+
+// Returns the CPU descriptor handle for the specified buffer index
 D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::GetCPUHandle(UINT index)
 {
 	return GDescriptorHeapManager.GetRenderTargetViewHeap().GetCPUHandle(index);
 }
 
+
+// Returns the CPU descriptor handle for the current back buffer
 D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::GetCPUHandle()
 {
 	return GetCPUHandle(m_currentBufferIndex);
 }
 
+
+// Creates render target views for all swap chain buffers
 void SwapChain::CreateRenderTargetViews()
 {
-	//Get Swap Buffers
 	for (UINT i = 0; i < NumFramesInFlight; i++)
 	{
+		// Get the buffer resource from the swap chain
 		ThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])), "Failed To get Swapchain Buffer!");
-		
-		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
-		{
-			rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-			rtvDesc.Texture2D.MipSlice = 0;
-			rtvDesc.Texture2D.PlaneSlice = 0;
-		}
 
+		// Describe the render target view
+		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+		rtvDesc.Texture2D.MipSlice = 0;
+		rtvDesc.Texture2D.PlaneSlice = 0;
+
+		// Create the render target view
 		GRHI.Device->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, GetCPUHandle(i));
 	}
 }
 
+
+// Returns the default viewport for rendering
 D3D12_VIEWPORT SwapChain::GetDefaultViewport()
 {
 	D3D12_VIEWPORT vp;
@@ -99,6 +123,8 @@ D3D12_VIEWPORT SwapChain::GetDefaultViewport()
 	return vp;
 }
 
+
+// Returns the default scissor rectangle for rendering
 D3D12_RECT SwapChain::GetDefaultScissorRect()
 {
 	D3D12_RECT scissorRect;
@@ -109,27 +135,37 @@ D3D12_RECT SwapChain::GetDefaultScissorRect()
 	return scissorRect;
 }
 
+
+// Presents the current back buffer to the screen
 void SwapChain::Present()
 {
 	ThrowIfFailed(m_swapChain->Present(1, 0), "Failed to Present Swap Chain");
 }
 
+
+// Sets the current buffer to render target state
 void SwapChain::SetRenderTargetState()
 {
 	GRHI.SetBarrier(
 		m_buffers[m_currentBufferIndex],
 		D3D12_RESOURCE_STATE_PRESENT,
-		D3D12_RESOURCE_STATE_RENDER_TARGET);
+		D3D12_RESOURCE_STATE_RENDER_TARGET
+	);
 }
 
+
+// Sets the current buffer to present state
 void SwapChain::SetPresentState()
 {
 	GRHI.SetBarrier(
 		m_buffers[m_currentBufferIndex],
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
-		D3D12_RESOURCE_STATE_PRESENT);
+		D3D12_RESOURCE_STATE_PRESENT
+	);
 }
 
+
+// Releases all buffer resources
 void SwapChain::ReleaseBuffers()
 {
 	for (UINT i = 0; i < NumFramesInFlight; i++)
@@ -138,6 +174,8 @@ void SwapChain::ReleaseBuffers()
 	}
 }
 
+
+// Releases all resources associated with the swap chain
 void SwapChain::Shutdown()
 {
 	ReleaseBuffers();

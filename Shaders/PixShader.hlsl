@@ -23,6 +23,7 @@ sampler textureSampler : register(s0);
 void main(in PsInput Input, out PsOutput Output)
 {
     float3 texel = myTexture.SampleLevel(textureSampler, Input.TexCoord, 0.0f).xyz;
-    texel *= color;
-    Output.Color0 = float4(texel.rgb, 1.0f);
+    texel *= color.rgb;
+    texel *= Input.Color.rgb;
+    Output.Color0 = float4(texel, 1.0f);
 }

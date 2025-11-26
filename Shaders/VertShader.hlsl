@@ -27,9 +27,7 @@ void main(in VsInput Input, out VsOutput Output)
     float4 WorldPosition = mul(LocalPosition, WorldMTX);
     float4 ViewPosition = mul(WorldPosition, ViewMTX);
     float4 ProjPosition = mul(ViewPosition, ProjectionMTX);
-    Output.Position = ViewPosition;
-    //Output.Position = ProjPosition;
+    Output.Position = WorldPosition;
     Output.TexCoord = Input.TexCoord;
     Output.Color = Input.Color;
-
 }

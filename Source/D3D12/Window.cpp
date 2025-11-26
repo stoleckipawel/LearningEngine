@@ -22,12 +22,14 @@ UINT Window::GetHeight()
 	return rect.bottom - rect.top;
 }
 
-bool Window::Initialize()
+
+// Initializes the window and registers its class
+void Window::Initialize()
 {
-	//Create Win Window Desc
+	// Create window class description
 	WNDCLASSEXW windowClass{ 0 };
 	windowClass.cbSize = sizeof(windowClass);
-	windowClass.style = CS_OWNDC;// own device context
+	windowClass.style = CS_OWNDC; // Own device context
 	windowClass.lpfnWndProc = &Window::OnWindowMessage;
 	windowClass.hInstance = GetModuleHandle(nullptr);
 	windowClass.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
@@ -35,16 +37,14 @@ bool Window::Initialize()
 	windowClass.lpszClassName = L"Default Window Name";
 	windowClass.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);
 
-	//Register Win Window Class
+	// Register window class
 	m_wndClass = RegisterClassExW(&windowClass);
 	if (!m_wndClass)
 	{
-		std::string message = "Window: Failed to register window class";
-		LogError(message, ELogType::Fatal);
-		return false;
+		LogError("Window: Failed to register window class", ELogType::Fatal);
 	}
 
-	//Create Win Window
+	// Create the window
 	WindowHWND = CreateWindowEx(
 		WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW,
 		(LPCWSTR)m_wndClass,
@@ -59,14 +59,12 @@ bool Window::Initialize()
 
 	if (WindowHWND == nullptr)
 	{
-		std::string message = "Window: Failed to Create a Window";
-		LogError(message, ELogType::Fatal);
-		return false;
+		LogError("Window: Failed to Create a Window", ELogType::Fatal);
 	}
-
-	return true;
 }
 
+
+// Shuts down the window and unregisters its class
 void Window::Shutdown()
 {
 	if (WindowHWND)
@@ -81,9 +79,10 @@ void Window::Shutdown()
 	}
 }
 
+
+// Processes pending window messages (event loop)
 void Window::Update()
 {
-	// Process pending window messages
 	MSG msg;
 	while (PeekMessageW(&msg, WindowHWND, 0, 0, PM_REMOVE))
 	{
@@ -92,9 +91,10 @@ void Window::Update()
 	}
 }
 
+
+// Sets the window to fullscreen or windowed mode
 void Window::SetFullScreen(bool bSetFullScreen)
 {
-	//Update Window Styles
 	DWORD style;
 	DWORD exStyle;
 	if (bSetFullScreen)
@@ -113,6 +113,7 @@ void Window::SetFullScreen(bool bSetFullScreen)
 
 	if (bSetFullScreen)
 	{
+		// Resize window to cover the monitor
 		HMONITOR monitorFromWindow = MonitorFromWindow(WindowHWND, MONITOR_DEFAULTTONEAREST);
 		MONITORINFO monitorInfo{};
 		monitorInfo.cbSize = sizeof(MONITORINFO);
@@ -128,37 +129,44 @@ void Window::SetFullScreen(bool bSetFullScreen)
 	}
 	else
 	{
+		// Maximize window in windowed mode
 		ShowWindow(WindowHWND, SW_MAXIMIZE);
 	}
 
-	m_bIsFullScreen = bSetFullScreen;	
+	m_bIsFullScreen = bSetFullScreen;    
 }
 
 
+
+// Window message handler (WndProc)
 LRESULT Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    switch (msg)
-    {
+	switch (msg)
+	{
 		case WM_KEYDOWN:
+			// Toggle fullscreen on F11
 			if (wParam == VK_F11)
 			{
 				GWindow.SetFullScreen(!GWindow.IsFullScreen());
 			}
 			return 0;
 		case WM_SIZE:
+			// Handle window resize event
 			if (lParam && (HIWORD(lParam) != GWindow.GetHeight() && LOWORD(lParam) != GWindow.GetWidth()))
 			{
 				if (GRHI.Device != nullptr)
 				{
 					GRenderer.OnResize();
 				}
-			}	
+			}    
 			return 0;
 		case WM_CLOSE:
 		case WM_QUIT:
+			// Signal to close the window
 			GWindow.m_bShouldClose = true;
 			return 0;
-    }
+	}
+	// Default message handling
 	return DefWindowProcW(wnd, msg, wParam, lParam);
 }
 

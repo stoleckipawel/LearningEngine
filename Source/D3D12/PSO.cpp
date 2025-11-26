@@ -1,5 +1,12 @@
+
 #include "PSO.h"
 
+// PSO.cpp
+// Implements Pipeline State Object (PSO) setup and configuration for D3D12 rendering.
+
+/**
+ * @brief Configures stream output for the pipeline state (disabled by default).
+ */
 void PSO::SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc)
 {
 	psoDesc.StreamOutput.NumEntries = 0;
@@ -9,6 +16,7 @@ void PSO::SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc)
 	psoDesc.StreamOutput.RasterizedStream = 0;
 }
 
+// Configures rasterizer state for the pipeline.
 void PSO::SetRasterizerState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, bool bRenderWireframe, D3D12_CULL_MODE cullMode)
 {
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
@@ -25,6 +33,7 @@ void PSO::SetRasterizerState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, bool b
 	psoDesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 }
 
+// Configures blend state for the render target.
 void PSO::SetRenderTargetBlendState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_RENDER_TARGET_BLEND_DESC blendDesc)
 {
 	psoDesc.BlendState.RenderTarget[0].BlendEnable = blendDesc.BlendEnable;
@@ -39,6 +48,8 @@ void PSO::SetRenderTargetBlendState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc,
 	psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = blendDesc.RenderTargetWriteMask;
 }
 
+
+// Configures depth test state for the pipeline.
 void PSO::SetDepthTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_DEPTH_TEST_DESC depthDesc)
 {
 	psoDesc.DepthStencilState.DepthEnable = depthDesc.DepthEnable;
@@ -46,6 +57,8 @@ void PSO::SetDepthTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_D
 	psoDesc.DepthStencilState.DepthFunc = depthDesc.DepthFunc;
 }
 
+
+// Configures stencil test state for the pipeline.
 void PSO::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_STENCIL_TEST_DESC stencilDesc)
 {
 	psoDesc.DepthStencilState.StencilEnable = stencilDesc.StencilEnable;
@@ -61,10 +74,13 @@ void PSO::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12
 	psoDesc.DepthStencilState.BackFace.StencilPassOp = stencilDesc.BackFaceStencilPassOp;
 }
 
-void PSO::Create(Geometry& vertecies, 
-					ID3D12RootSignature* rootSignature,
-					ShaderCompiler& vertexShader,
-					ShaderCompiler& pixelShader)
+
+// Creates the graphics pipeline state object (PSO).
+void PSO::Create(
+	Geometry& vertecies,
+	ID3D12RootSignature* rootSignature,
+	ShaderCompiler& vertexShader,
+	ShaderCompiler& pixelShader)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
@@ -77,69 +93,65 @@ void PSO::Create(Geometry& vertecies,
 	// -- Root Signature
 	psoDesc.pRootSignature = rootSignature;
 
-	//VS	
+	// -- Vertex Shader
 	psoDesc.VS.pShaderBytecode = vertexShader.GetBuffer();
 	psoDesc.VS.BytecodeLength = vertexShader.GetSize();
-	//PS
+
+	// -- Pixel Shader
 	psoDesc.PS.pShaderBytecode = pixelShader.GetBuffer();
 	psoDesc.PS.BytecodeLength = pixelShader.GetSize();
 
 	// -- Rasterizer
 	SetRasterizerState(psoDesc, false, D3D12_CULL_MODE_NONE);
 
-	//StreamOutput
+	// -- Stream Output 
 	SetStreamOutput(psoDesc);
 
-	//Blend State
+	// -- Blend State
 	psoDesc.BlendState.AlphaToCoverageEnable = false;
-	psoDesc.BlendState.IndependentBlendEnable = false;//Multiple RenderTarget Varied Blending
+	psoDesc.BlendState.IndependentBlendEnable = false; // Multiple RenderTarget Varied Blending
 
-	D3D12_RENDER_TARGET_BLEND_DESC renderTargetBlendDesc;
-	{
-		renderTargetBlendDesc.BlendEnable = false;
-		renderTargetBlendDesc.BlendOp = D3D12_BLEND_OP_ADD;
-		renderTargetBlendDesc.BlendOpAlpha = D3D12_BLEND_OP_ADD;
-		renderTargetBlendDesc.SrcBlend = D3D12_BLEND_ONE;
-		renderTargetBlendDesc.DestBlend = D3D12_BLEND_ZERO;
-		renderTargetBlendDesc.SrcBlendAlpha = D3D12_BLEND_ONE;
-		renderTargetBlendDesc.DestBlendAlpha = D3D12_BLEND_ZERO;
-		renderTargetBlendDesc.LogicOp = D3D12_LOGIC_OP_NOOP;
-		renderTargetBlendDesc.LogicOpEnable = false;
-		renderTargetBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-	}
+	D3D12_RENDER_TARGET_BLEND_DESC renderTargetBlendDesc = {};
+	renderTargetBlendDesc.BlendEnable = false;
+	renderTargetBlendDesc.BlendOp = D3D12_BLEND_OP_ADD;
+	renderTargetBlendDesc.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	renderTargetBlendDesc.SrcBlend = D3D12_BLEND_ONE;
+	renderTargetBlendDesc.DestBlend = D3D12_BLEND_ZERO;
+	renderTargetBlendDesc.SrcBlendAlpha = D3D12_BLEND_ONE;
+	renderTargetBlendDesc.DestBlendAlpha = D3D12_BLEND_ZERO;
+	renderTargetBlendDesc.LogicOp = D3D12_LOGIC_OP_NOOP;
+	renderTargetBlendDesc.LogicOpEnable = false;
+	renderTargetBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 	SetRenderTargetBlendState(psoDesc, renderTargetBlendDesc);
 
-
-	D3D12_DEPTH_TEST_DESC depthTestDesc;
-	{
-		depthTestDesc.DepthEnable = true;
-		depthTestDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-		depthTestDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS; //D3D12_COMPARISON_FUNC_ALWAYS;
-	}
+	// -- Depth Test State
+	D3D12_DEPTH_TEST_DESC depthTestDesc = {};
+	depthTestDesc.DepthEnable = true;
+	depthTestDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	depthTestDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 	SetDepthTestState(psoDesc, depthTestDesc);
 
-	D3D12_STENCIL_TEST_DESC stencilTestDesc;
-	{
-		stencilTestDesc.StencilEnable = false;
-		stencilTestDesc.StencilReadMask = 0;
-		stencilTestDesc.StencilWriteMask = 0;
-		stencilTestDesc.FrontFaceStencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		stencilTestDesc.FrontFaceStencilFailOp = D3D12_STENCIL_OP_KEEP;
-		stencilTestDesc.FrontFaceStencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
-		stencilTestDesc.FrontFaceStencilPassOp = D3D12_STENCIL_OP_KEEP;
-		stencilTestDesc.BackFaceStencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		stencilTestDesc.BackFaceStencilFailOp = D3D12_STENCIL_OP_KEEP;
-		stencilTestDesc.BackFaceStencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
-		stencilTestDesc.BackFaceStencilPassOp = D3D12_STENCIL_OP_KEEP;
-	}
+	// -- Stencil Test State
+	D3D12_STENCIL_TEST_DESC stencilTestDesc = {};
+	stencilTestDesc.StencilEnable = false;
+	stencilTestDesc.StencilReadMask = 0;
+	stencilTestDesc.StencilWriteMask = 0;
+	stencilTestDesc.FrontFaceStencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	stencilTestDesc.FrontFaceStencilFailOp = D3D12_STENCIL_OP_KEEP;
+	stencilTestDesc.FrontFaceStencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	stencilTestDesc.FrontFaceStencilPassOp = D3D12_STENCIL_OP_KEEP;
+	stencilTestDesc.BackFaceStencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	stencilTestDesc.BackFaceStencilFailOp = D3D12_STENCIL_OP_KEEP;
+	stencilTestDesc.BackFaceStencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	stencilTestDesc.BackFaceStencilPassOp = D3D12_STENCIL_OP_KEEP;
 	SetStencilTestState(psoDesc, stencilTestDesc);
 
-	// -- NumRenderTargets
+	// -- Render Target and Depth Stencil Formats
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-	//Misc
+	// -- Miscellaneous
 	psoDesc.NodeMask = 0;
 	psoDesc.CachedPSO.CachedBlobSizeInBytes = 0;
 	psoDesc.CachedPSO.pCachedBlob = nullptr;
@@ -152,6 +164,9 @@ void PSO::Create(Geometry& vertecies,
 	ThrowIfFailed(GRHI.Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pso)), "Failed To Create PSO");
 }
 
+
+
+// Sets the pipeline state object for the current command list.
 void PSO::Set()
 {
 	GRHI.GetCommandList()->SetPipelineState(m_pso);

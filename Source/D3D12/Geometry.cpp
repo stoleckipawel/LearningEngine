@@ -1,6 +1,12 @@
+
 #include "Geometry.h"
 #include "UploadBuffer.h"
 
+// Geometry.cpp
+// Implements geometry setup, upload, and binding for rendering.
+
+
+// Destructor: Releases geometry resources
 Geometry::~Geometry()
 {
 	Release();
@@ -8,39 +14,36 @@ Geometry::~Geometry()
 
 void Geometry::UploadVertexBuffer()
 {
-	//Position
-	//UV
-	//Color
-
-	std::vector<Vertex> vertexList;
-	// Cube vertices
-	vertexList = {
+	// Define cube vertices with position, UV, and color
+	std::vector<Vertex> vertexList = {
 		// Front face
-		{ { -0.5f, -0.5f,  0.5f }, { 0.0f, 1.0f }, { 1.0, 0.0, 0.0, 1.0 } }, // 0
-		{ { -0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f }, { 0.0, 1.0, 0.0, 1.0 } }, // 1
-		{ {  0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f }, { 0.0, 0.0, 1.0, 1.0 } }, // 2
-		{ {  0.5f, -0.5f,  0.5f }, { 1.0f, 1.0f }, { 1.0, 1.0, 0.0, 1.0 } }, // 3
+		{ { -0.25f, -0.25f,  0.25f }, { 0.0f, 1.0f }, { 1.0, 0.0, 0.0, 1.0 } }, // 0
+		{ { -0.25f,  0.25f,  0.25f }, { 0.0f, 0.0f }, { 0.0, 1.0, 0.0, 1.0 } }, // 1
+		{ {  0.25f,  0.25f,  0.25f }, { 1.0f, 0.0f }, { 0.0, 0.0, 1.0, 1.0 } }, // 2
+		{ {  0.25f, -0.25f,  0.25f }, { 1.0f, 1.0f }, { 1.0, 1.0, 0.0, 1.0 } }, // 3
 
 		// Back face
-		{ { -0.5f, -0.5f, -0.5f }, { 1.0f, 1.0f }, { 1.0, 0.0, 1.0, 1.0 } }, // 4
-		{ { -0.5f,  0.5f, -0.5f }, { 1.0f, 0.0f }, { 0.0, 1.0, 1.0, 1.0 } }, // 5
-		{ {  0.5f,  0.5f, -0.5f }, { 0.0f, 0.0f }, { 1.0, 1.0, 1.0, 1.0 } }, // 6
-		{ {  0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f }, { 0.5, 0.5, 0.5, 1.0 } }, // 7
+		{ { -0.25f, -0.25f, -0.25f }, { 1.0f, 1.0f }, { 1.0, 0.0, 1.0, 1.0 } }, // 4
+		{ { -0.25f,  0.25f, -0.25f }, { 1.0f, 0.0f }, { 0.0, 1.0, 1.0, 1.0 } }, // 5
+		{ {  0.25f,  0.25f, -0.25f }, { 0.0f, 0.0f }, { 1.0, 1.0, 1.0, 1.0 } }, // 6
+		{ {  0.25f, -0.25f, -0.25f }, { 0.0f, 1.0f }, { 0.5, 0.5, 0.5, 1.0 } }, // 7
 	};
 
-	const UINT vertsDataSize = sizeof(Vertex) * vertexList.size();
+	const UINT vertsDataSize = static_cast<UINT>(sizeof(Vertex) * vertexList.size());
 	VertexBuffer = UploadBuffer::Upload(vertexList.data(), vertsDataSize);
 
+	// Setup vertex buffer view
 	m_vertexBufferView.BufferLocation = VertexBuffer->GetGPUVirtualAddress();
 	m_vertexBufferView.SizeInBytes = vertsDataSize;
 	m_vertexBufferView.StrideInBytes = sizeof(Vertex);
 }
 
+
+// Uploads the index buffer
 void Geometry::UploadIndexBuffer()
 {
-	std::vector<DWORD> indexList;
-	// Cube indices (12 triangles, 36 indices)
-	indexList = {
+	// Define cube indices (12 triangles, 36 indices)
+	std::vector<DWORD> indexList = {
 		// Front face
 		0, 1, 2, 0, 2, 3,
 		// Back face
@@ -55,44 +58,56 @@ void Geometry::UploadIndexBuffer()
 		4, 0, 3, 4, 3, 7
 	};
 
-	UINT indexDataSize = sizeof(DWORD) * indexList.size();
+	UINT indexDataSize = static_cast<UINT>(sizeof(DWORD) * indexList.size());
 	IndexBuffer = UploadBuffer::Upload(indexList.data(), indexDataSize);
 
+	// Setup index buffer view
 	m_indexBufferView.BufferLocation = IndexBuffer->GetGPUVirtualAddress();
 	m_indexBufferView.SizeInBytes = indexDataSize;
 	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 }
 
+
+// Uploads both vertex and index buffers
 void Geometry::Upload()
 {
 	UploadIndexBuffer();
 	UploadVertexBuffer();
 }
 
+
+// Releases geometry resources
 void Geometry::Release()
 {
 	IndexBuffer.Release();
 	VertexBuffer.Release();
 }
 
+
+// Sets geometry buffers and topology for rendering
 void Geometry::Set()
 {
-	//Input Assembler
+	// Bind vertex buffer
 	GRHI.GetCommandList()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+	// Bind index buffer
 	GRHI.GetCommandList()->IASetIndexBuffer(&m_indexBufferView);
+	// Set primitive topology
 	GRHI.GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
+
+// Returns the input layout for the vertex structure
 std::vector<D3D12_INPUT_ELEMENT_DESC> Geometry::GetVertexLayout()
 {
-	return
-	{
+	return {
 		{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "COLOR",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
 	};
 }
 
+
+// Creates a resource description for a vertex buffer
 D3D12_RESOURCE_DESC Geometry::CreateVertexBufferDesc(uint32_t VertexCount)
 {
 	D3D12_RESOURCE_DESC vertexResourceDesc = {};

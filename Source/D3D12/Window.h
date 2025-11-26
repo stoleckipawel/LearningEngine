@@ -1,28 +1,44 @@
 #pragma once
 #include "../Vendor/Windows/WinInclude.h"
 
+
+// Window class manages the main application window and its state
 class Window
 {
 public:
-	bool Initialize();
+	// Initialize the window and register its class
+	void Initialize();
+	// Destroy the window and unregister its class
 	void Shutdown();
+	// Process window messages (event loop)
 	void Update();
 
+	// Get the client rectangle of the window
 	RECT GetRect();
+	// Get the width of the window's client area
 	UINT GetWidth();
+	// Get the height of the window's client area
 	UINT GetHeight();
 
+	// Toggle fullscreen/windowed mode
 	void SetFullScreen(bool bSetFullScreen);
-	inline bool ShouldClose() { return m_bShouldClose; };
-	inline bool IsFullScreen() { return m_bIsFullScreen; };
+
+	inline bool ShouldClose() { return m_bShouldClose; }
+	inline bool IsFullScreen() { return m_bIsFullScreen; }
 private:
+	// Window message handler (WndProc)
 	static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 public:
+	// Handle to the window
 	HWND WindowHWND = nullptr;
 private:
 	bool m_bShouldClose = false;
 	bool m_bIsFullScreen = false;
+
+	// Window class atom (for registration/unregistration)
 	ATOM m_wndClass;
 };
 
+
+// Global window instance
 extern Window GWindow;

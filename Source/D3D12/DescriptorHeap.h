@@ -9,8 +9,6 @@ public:
 	void Initialize(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name);
 
 	void InitializeCBVSRVUAV(UINT numCBV, UINT numSRV, UINT numUAV, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name);
-	
-	UINT GetCBVOffset(UINT backBufferFrameIndex, UINT index);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCBVCPUHandle(UINT index, UINT frameIndex);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetCBVGPUHandle(UINT index, UINT frameIndex);

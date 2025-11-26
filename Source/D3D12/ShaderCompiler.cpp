@@ -2,6 +2,8 @@
 #include "d3dcompiler.h"
 
 
+
+// Compiles a shader from file and stores the bytecode
 ShaderCompiler::ShaderCompiler(LPCWSTR name, const std::string& model, const std::string& entryPoint)
 {
 	ID3DBlob* blob = nullptr;
@@ -13,24 +15,29 @@ ShaderCompiler::ShaderCompiler(LPCWSTR name, const std::string& model, const std
 	UINT compileFlags = 0;
 #endif
 
+	// Compile the HLSL shader from file
 	HRESULT hr = D3DCompileFromFile(
-		name,
-		nullptr,
-		nullptr,
-		entryPoint.c_str(),
-		model.c_str(),
-		compileFlags,
-		0,
-		&blob,
-		&errorBlob);
+		name,                // Path to HLSL file
+		nullptr,             // Optional macros
+		nullptr,             // Optional include handler
+		entryPoint.c_str(),  // Entry point function
+		model.c_str(),       // Shader model (e.g., "vs_5_0")
+		compileFlags,        // Compilation flags
+		0,                   // Effect flags
+		&blob,               // Compiled bytecode
+		&errorBlob           // Error messages
+	);
 
 	if (FAILED(hr)) {
-		std::string message = "Shader Failed to Compile: " + std::string((char*)errorBlob->GetBufferPointer());
+		// Output error message if compilation fails
+		std::string message = "Shader Failed to Compile: ";
+		if (errorBlob)
+			message += std::string((char*)errorBlob->GetBufferPointer());
 		LogError(message, ELogType::Fatal);
 		return;
 	}
 
-	// Fill out a shader bytecode structure
+	// Store compiled shader bytecode
 	m_shaderBytecode.BytecodeLength = blob->GetBufferSize();
 	m_shaderBytecode.pShaderBytecode = blob->GetBufferPointer();
 }

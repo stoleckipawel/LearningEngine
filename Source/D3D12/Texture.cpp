@@ -1,117 +1,137 @@
 #include "Texture.h"
 
+
+// Initializes the texture from disk and creates all required GPU resources
 void Texture::Initialize(const std::filesystem::path& imagePath, UINT descriptorHandleIndex)
 {
 	m_descriptorHandleIndex = descriptorHandleIndex;
-	//ToDo:Switch to DirectXTex for better format support and mip generation
+	// TODO: Switch to DirectXTex for better format support and mipmap generation
 	ImageLoader::LoadImageFromDisk(imagePath, m_textureData);
-    CreateResource();
-    UploadToGPU();
-    CreateSRV();
+	CreateResource();
+	UploadToGPU();
+	CreateSRV();
 }
 
+
+// Creates the committed GPU resource for the texture and its upload buffer
 void Texture::CreateResource()
 {
-	//Texture Resource Desc
+	// Describe the texture resource
 	m_texResourceDesc = {};
-	{
-		m_texResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-		m_texResourceDesc.Width = m_textureData.width;
-		m_texResourceDesc.Height = m_textureData.height;
-		m_texResourceDesc.DepthOrArraySize = 1;
-		m_texResourceDesc.MipLevels = 1;//ToDo: Generate Mips
-		m_texResourceDesc.Format = m_textureData.dxgiPixelFormat;
-		m_texResourceDesc.SampleDesc.Count = 1;
-		m_texResourceDesc.SampleDesc.Quality = 0;
-		m_texResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-		m_texResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-	}
+	m_texResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	m_texResourceDesc.Width = m_textureData.width;
+	m_texResourceDesc.Height = m_textureData.height;
+	m_texResourceDesc.DepthOrArraySize = 1;
+	m_texResourceDesc.MipLevels = 1; // TODO: Generate mipmaps
+	m_texResourceDesc.Format = m_textureData.dxgiPixelFormat;
+	m_texResourceDesc.SampleDesc.Count = 1;
+	m_texResourceDesc.SampleDesc.Quality = 0;
+	m_texResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	m_texResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-	CD3DX12_HEAP_PROPERTIES heapDefaultProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+	// Create the default heap resource for the texture
+	CD3DX12_HEAP_PROPERTIES heapDefaultProperties(D3D12_HEAP_TYPE_DEFAULT);
+	ThrowIfFailed(
+		GRHI.Device->CreateCommittedResource(
+			&heapDefaultProperties,
+			D3D12_HEAP_FLAG_NONE,
+			&m_texResourceDesc,
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			nullptr,
+			IID_PPV_ARGS(&m_textureResource)),
+		"Texture: Failed To Create Texture Resource"
+	);
 
-	ThrowIfFailed(GRHI.Device->CreateCommittedResource(
-		&heapDefaultProperties,
-		D3D12_HEAP_FLAG_NONE,
-		&m_texResourceDesc,
-		D3D12_RESOURCE_STATE_COPY_DEST,
-		nullptr,
-		IID_PPV_ARGS(&m_textureResource)), 
-		"Texture: Failed To Create Texture Resource");
+	// Calculate required size for the upload buffer
+	UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_textureResource.Get(), 0, 1); // Update when adding mipmaps
 
-	UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_textureResource.Get(), 0, 1);//update when adding mips
-
-	CD3DX12_HEAP_PROPERTIES heapUploadProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	// Create the upload heap resource for staging texture data
+	CD3DX12_HEAP_PROPERTIES heapUploadProperties(D3D12_HEAP_TYPE_UPLOAD);
 	CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
-
-	ThrowIfFailed(GRHI.Device->CreateCommittedResource(
-		&heapUploadProperties,
-		D3D12_HEAP_FLAG_NONE,
-		&resourceDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&m_uploadResource)),
-		"Texture: Failed To Create Upload Buffer");	
+	ThrowIfFailed(
+		GRHI.Device->CreateCommittedResource(
+			&heapUploadProperties,
+			D3D12_HEAP_FLAG_NONE,
+			&resourceDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&m_uploadResource)),
+		"Texture: Failed To Create Upload Buffer"
+	);
 }
 
+
+// Uploads the texture data from CPU to GPU resource
 void Texture::UploadToGPU()
 {
-	// collect sub resource data
-	const D3D12_SUBRESOURCE_DATA subResourceData = D3D12_SUBRESOURCE_DATA{
+	// Prepare subresource data for upload
+	const D3D12_SUBRESOURCE_DATA subResourceData = {
 		.pData = m_textureData.data.data(),
 		.RowPitch = (LONG_PTR)m_textureData.stride,
 		.SlicePitch = (LONG_PTR)m_textureData.slicePitch
 	};
 
+	// Upload the data to the GPU texture resource
 	UpdateSubresources(
 		GRHI.GetCommandList().Get(),
 		m_textureResource.Get(),
 		m_uploadResource.Get(),
 		0, 0,
 		(UINT)1,
-		&subResourceData);
+		&subResourceData
+	);
 
-	// Barrier to PIXEL_SHADER_RESOURCE
+	// Transition the texture resource to PIXEL_SHADER_RESOURCE state
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 		m_textureResource.Get(),
 		D3D12_RESOURCE_STATE_COPY_DEST,
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-
-	GRHI.GetCommandList()->ResourceBarrier(1, &barrier); 
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
+	GRHI.GetCommandList()->ResourceBarrier(1, &barrier);
 }
 
+
+// Creates the shader resource view (SRV) for the texture
 void Texture::CreateSRV()
 {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	{
-		srvDesc.Format = m_textureData.dxgiPixelFormat;
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srvDesc.Texture2D.MostDetailedMip = 0;
-		srvDesc.Texture2D.MipLevels = 1;//ToDo: Update when adding mips
-	}
+	srvDesc.Format = m_textureData.dxgiPixelFormat;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1; // TODO: Update when adding mipmaps
 
 	GRHI.Device->CreateShaderResourceView(
 		m_textureResource.Get(),
 		&srvDesc,
-		GetCPUHandle());		
+		GetCPUHandle()
+	);
 }
 
+
+// Releases all GPU resources associated with the texture
 void Texture::Release()
 {
-    m_textureResource.Release();
-    m_uploadResource.Release();
+	m_textureResource.Release();
+	m_uploadResource.Release();
 }
 
+
+// Returns the GPU descriptor handle for shader access
 D3D12_GPU_DESCRIPTOR_HANDLE Texture::GetGPUHandle()
 {
 	return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetGPUHandle(m_descriptorHandleIndex);
 }
 
+
+// Returns the CPU descriptor handle for descriptor heap management
 D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetCPUHandle()
 {
 	return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCPUHandle(m_descriptorHandleIndex);
 } 
 
+
+// Destructor releases resources
 Texture::~Texture()
 {
 	Release();
