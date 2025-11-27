@@ -1,6 +1,4 @@
 #pragma once
-#include "../Vendor/Windows/WinInclude.h"
-
 
 // Camera class manages position, rotation, and view/projection matrices for a 3D camera.
 class Camera

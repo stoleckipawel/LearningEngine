@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../Vendor/Windows/WinInclude.h"
 #include "RHI.h"
 #include "DescriptorHeapManager.h"
 

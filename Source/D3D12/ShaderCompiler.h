@@ -1,14 +1,5 @@
 #pragma once
 
-#include <cstring>
-#include <cstdlib>
-#include <string_view>
-#include <filesystem>
-#include <fstream>
-#include "../Vendor/Windows/WinInclude.h"
-#include <iostream>
-
-
 // ShaderCompiler compiles HLSL shaders and provides access to compiled bytecode for Direct3D 12.
 class ShaderCompiler
 {

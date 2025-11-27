@@ -1,11 +1,7 @@
 #pragma once
 
-#include "../Vendor/Windows/WinInclude.h"
-
-
 // Number of frames that can be processed simultaneously
 static const UINT NumFramesInFlight = 3;
-
 
 // SwapChain manages the Direct3D 12 swap chain and its associated render targets.
 class SwapChain

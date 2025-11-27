@@ -1,6 +1,4 @@
 #pragma once
-#include "../Vendor/Windows/WinInclude.h"
-
 
 // Window class manages the main application window and its state
 class Window

@@ -1,4 +1,5 @@
 
+#include "PCH.h"
 #include "Texture.h"
 
 // Loads the texture from disk and creates all required GPU resources

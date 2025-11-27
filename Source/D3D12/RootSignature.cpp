@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "RootSignature.h"
 
 // Constructs and creates the root signature for the graphics pipeline

@@ -85,6 +85,9 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source\\Vendor\\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -101,6 +104,9 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source\\Vendor\\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -117,6 +123,9 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source\\Vendor\\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -133,6 +142,9 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source\\Vendor\\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -162,6 +174,12 @@
     <ClCompile Include="Source\D3D12\DebugLayer.cpp" />
     <ClCompile Include="Source\D3D12\Window.cpp" />
     <ClCompile Include="Source\D3D12\SwapChain.cpp" />
+    <ClCompile Include="Source\Vendor\PCH.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\D3D12\ConstantBufferManager.h" />
@@ -182,9 +200,13 @@
     <ClInclude Include="Source\D3D12\ShaderCompiler.h" />
     <ClInclude Include="Source\D3D12\DebugLayer.h" />
     <ClInclude Include="Source\D3D12\Window.h" />
+    <ClInclude Include="Source\Vendor\ComPointer.h" />
+    <ClInclude Include="Source\Vendor\d3dx12.h" />
+    <ClInclude Include="Source\Vendor\Error.h" />
+    <ClInclude Include="Source\Vendor\PCH.h" />
     <ClInclude Include="Source\Vendor\Windows\ComPointer.h" />
     <ClInclude Include="Source\Vendor\Windows\d3dx12.h" />
-    <ClInclude Include="Source\Vendor\Windows\WinInclude.h" />
+    <ClInclude Include="Source\Vendor\Windows\PCH.h" />
     <ClInclude Include="Source\D3D12\SwapChain.h" />
   </ItemGroup>
   <ItemGroup>
@@ -208,6 +230,14 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.1</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">6.1</ShaderModel>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitattributes" />
+    <None Include=".gitignore" />
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="LICENSE.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

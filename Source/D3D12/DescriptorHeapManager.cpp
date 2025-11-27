@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "DescriptorHeapManager.h"
 
 // Global instance of DescriptorHeapManager for engine-wide access

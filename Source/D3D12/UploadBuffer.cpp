@@ -1,4 +1,4 @@
-
+#include "PCH.h"
 #include "UploadBuffer.h"
 
 // Uploads data to a GPU-accessible buffer using an upload heap.

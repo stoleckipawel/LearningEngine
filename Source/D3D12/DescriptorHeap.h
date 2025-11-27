@@ -1,6 +1,5 @@
 #pragma once
-#include <vector>
-#include "../Vendor/Windows/WinInclude.h"
+
 #include "RHI.h"
 
 enum class DescriptorType

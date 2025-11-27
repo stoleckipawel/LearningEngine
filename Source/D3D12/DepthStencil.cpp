@@ -1,7 +1,6 @@
-
+#include "PCH.h"
 #include "DepthStencil.h"
 #include "Window.h"
-
 
 // Constructs and initializes the depth stencil resource and view
 DepthStencil::DepthStencil(UINT descriptorHandleIndex)

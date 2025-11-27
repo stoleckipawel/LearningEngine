@@ -1,7 +1,5 @@
 #pragma once
-#include "../Vendor/Windows/WinInclude.h"
 #include "RHI.h"
-
 
 // UploadBuffer provides a utility for uploading data to GPU-accessible buffers using an upload heap.
 class UploadBuffer

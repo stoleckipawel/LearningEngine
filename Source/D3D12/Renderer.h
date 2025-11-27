@@ -1,5 +1,4 @@
 #pragma once
-#include "../Vendor/Windows/WinInclude.h"
 #include "ShaderCompiler.h"
 #include "Texture.h"
 #include "Geometry.h"

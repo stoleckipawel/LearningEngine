@@ -1,4 +1,5 @@
 
+#include "PCH.h"
 #include "ImageLoader.h"
 
 // Lookup table mapping WIC pixel formats to DXGI formats

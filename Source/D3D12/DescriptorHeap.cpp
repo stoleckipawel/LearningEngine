@@ -1,3 +1,4 @@
+#include "PCH.h"
 #include "DescriptorHeap.h"
 
 // General descriptor heap (RTV, DSV, Sampler, etc)

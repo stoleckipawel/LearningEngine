@@ -1,9 +1,6 @@
 #pragma once
-#include <vector>
-#include "../Vendor/Windows/WinInclude.h"
-#include "RHI.h"
-#include <DirectXMath.h>
 
+#include "RHI.h"
 
  //Vertex structure for geometry
 struct Vertex

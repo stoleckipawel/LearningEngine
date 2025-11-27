@@ -1,9 +1,5 @@
 #pragma once
 
-#include <vector>
-#include "../Vendor/Windows/WinInclude.h"
-#include <filesystem>
-
 /**
  * @brief ImageLoader provides static methods for loading images from disk using WIC.
  */

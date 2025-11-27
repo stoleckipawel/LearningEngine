@@ -72,6 +72,9 @@
     <ClCompile Include="Source\D3D12\DepthStencil.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Vendor\PCH.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\D3D12\DebugLayer.h">
@@ -107,7 +110,7 @@
     <ClInclude Include="Source\Vendor\Windows\d3dx12.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Vendor\Windows\WinInclude.h">
+    <ClInclude Include="Source\Vendor\Windows\PCH.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
     <ClInclude Include="Source\Vendor\Windows\ComPointer.h">
@@ -140,9 +143,29 @@
     <ClInclude Include="Source\D3D12\DepthStencil.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Vendor\ComPointer.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\d3dx12.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Error.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\PCH.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\PixShader.hlsl" />
     <FxCompile Include="Shaders\VertShader.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitattributes" />
+    <None Include=".gitignore" />
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="LICENSE.txt" />
   </ItemGroup>
 </Project>

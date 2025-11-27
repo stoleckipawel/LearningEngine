@@ -1,8 +1,6 @@
 #pragma once
-#include "../Vendor/Windows/WinInclude.h"
 #include "ShaderCompiler.h"
 #include "Geometry.h"
-
 
 // Describes depth test configuration for the pipeline state
 struct D3D12_DEPTH_TEST_DESC

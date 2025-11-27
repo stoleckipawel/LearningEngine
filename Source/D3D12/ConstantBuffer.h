@@ -1,9 +1,7 @@
 #pragma once
-#include "../Vendor/Windows/WinInclude.h"
 #include "DescriptorHeap.h"
 #include "UploadBuffer.h"
 #include "DescriptorHeapManager.h"
-
 
 // ConstantBuffer manages a GPU constant buffer for type T, including creation, mapping, updating, and descriptor views.
 template <typename T>
