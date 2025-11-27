@@ -8,16 +8,17 @@ ConstantBufferManager GConstantBufferManager;
 // Initializes all constant buffers for each frame in flight
 void ConstantBufferManager::Initialize()
 {
-	for (size_t i = 0; i < NumFramesInFlight; ++i)
+	for (UINT FrameIndex = 0; FrameIndex < NumFramesInFlight; ++FrameIndex)
 	{
-		// Create and initialize vertex constant buffer (RAII, unique_ptr)
-		VertexConstantBuffers[i] = std::make_unique<ConstantBuffer<FVertexConstantBufferData>>(0);
-		VertexConstantBuffers[i]->CreateConstantBufferView(GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCBVCPUHandle(VertexConstantBuffers[i]->GetDescriptorHandleIndex(), i));
-
-		// Create and initialize pixel constant buffer (RAII, unique_ptr)
-		PixelConstantBuffers[i] = std::make_unique<ConstantBuffer<PixelConstantBufferData>>(1);
-		PixelConstantBuffers[i]->CreateConstantBufferView(GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCBVCPUHandle(PixelConstantBuffers[i]->GetDescriptorHandleIndex(), i));
+		// Create and initialize constant buffers	
+		VertexConstantBuffers[FrameIndex] = std::make_unique<ConstantBuffer<FVertexConstantBufferData>>(GetDescriptorHandleIndex(0, FrameIndex));
+		PixelConstantBuffers[FrameIndex] = std::make_unique<ConstantBuffer<PixelConstantBufferData>>(GetDescriptorHandleIndex(1, FrameIndex));
 	}
+}
+
+UINT ConstantBufferManager::GetDescriptorHandleIndex(UINT ConstantBufferID, UINT FrameIndex)
+{
+	return NumFramesInFlight * ConstantBufferID + FrameIndex;
 }
 
 // Updates the constant buffers for the current frame

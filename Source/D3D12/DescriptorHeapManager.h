@@ -18,32 +18,32 @@
 class DescriptorHeapManager
 {
 public:
-	//Initializes all descriptor heaps.
+	// Initializes all descriptor heaps.
 	void Initialize();
 
-	//Sets the shader-visible heaps for the current command list.
+	// Sets the shader-visible heaps for the current command list.
 	void SetShaderVisibleHeaps();
 
 	// Releases all descriptor heap resources.
 	void Release();
 
 	// Returns reference to the CBV/SRV/UAV heap.
-	DescriptorHeap& GetCBVSRVUAVHeap() { return m_CBVSRVUAVHeap; }
+	DescriptorHeap& GetCBVSRVUAVHeap() { return *m_CBVSRVUAVHeap; }
 
 	// Returns reference to the Sampler heap.
-	DescriptorHeap& GetSamplerHeap() { return m_SamplerHeap; }
+	DescriptorHeap& GetSamplerHeap() { return *m_SamplerHeap; }
 
 	// Returns reference to the Depth Stencil View heap.
-	DescriptorHeap& GetDepthStencilViewHeap() { return m_DepthStencilViewHeap; }
+	DescriptorHeap& GetDepthStencilViewHeap() { return *m_DepthStencilViewHeap; }
 
 	// Returns reference to the Render Target View heap.
-	DescriptorHeap& GetRenderTargetViewHeap() { return m_RenderTargetViewHeap; }
+	DescriptorHeap& GetRenderTargetViewHeap() { return *m_RenderTargetViewHeap; }
 
 private:
-	DescriptorHeap m_CBVSRVUAVHeap;        // CBV/SRV/UAV heap (shader visible)
-	DescriptorHeap m_SamplerHeap;          // Sampler heap (shader visible)
-	DescriptorHeap m_DepthStencilViewHeap; // Depth Stencil View heap
-	DescriptorHeap m_RenderTargetViewHeap; // Render Target View heap
+	std::unique_ptr<DescriptorHeap> m_CBVSRVUAVHeap;        // CBV/SRV/UAV heap (shader visible)
+	std::unique_ptr<DescriptorHeap> m_SamplerHeap;          // Sampler heap (shader visible)
+	std::unique_ptr<DescriptorHeap> m_DepthStencilViewHeap; // Depth Stencil View heap
+	std::unique_ptr<DescriptorHeap> m_RenderTargetViewHeap; // Render Target View heap
 };
 
 // Global instance for engine-wide access

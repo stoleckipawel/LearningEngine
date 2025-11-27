@@ -108,13 +108,13 @@ void Texture::CreateSRV()
 // Returns the GPU descriptor handle for shader access
 D3D12_GPU_DESCRIPTOR_HANDLE Texture::GetGPUHandle() const
 {
-	return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetGPUHandle(m_descriptorHandleIndex);
+	return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetGPUHandle(m_descriptorHandleIndex, DescriptorType::SRV);
 }
 
 // Returns the CPU descriptor handle for descriptor heap management
 D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetCPUHandle() const
 {
-	return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCPUHandle(m_descriptorHandleIndex);
+	return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCPUHandle(m_descriptorHandleIndex, DescriptorType::SRV);
 }
 
 // Releases all GPU resources associated with the texture

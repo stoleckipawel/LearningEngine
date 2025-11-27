@@ -20,10 +20,9 @@ Sampler::Sampler(UINT DescriptorHandleIndex)
     GRHI.Device->CreateSampler(&m_desc, GetCPUHandle());
 }
 
-// Destructor (no explicit resource release needed for D3D12 samplers)
 Sampler::~Sampler()
 {
-    // Descriptor heap manages sampler lifetime
+
 }
 
 // Returns the GPU descriptor handle for this sampler
