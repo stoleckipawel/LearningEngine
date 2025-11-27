@@ -1,6 +1,5 @@
 #include "PCH.h"
 #include "ShaderCompiler.h"
-#include "d3dcompiler.h"
 
 // Compiles a shader from file and stores the bytecode
 ShaderCompiler::ShaderCompiler(LPCWSTR name, const std::string& model, const std::string& entryPoint)

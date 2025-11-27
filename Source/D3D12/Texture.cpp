@@ -1,6 +1,7 @@
 
 #include "PCH.h"
 #include "Texture.h"
+#include "DescriptorHeapManager.h"
 
 // Loads the texture from disk and creates all required GPU resources
 Texture::Texture(const std::filesystem::path& imagePath, UINT descriptorHandleIndex)

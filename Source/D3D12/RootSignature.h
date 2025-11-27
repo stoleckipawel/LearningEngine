@@ -1,6 +1,6 @@
 #pragma once
+
 #include "RHI.h"
-#include "ShaderCompiler.h"
 
 // RootSignature manages the creation and access to the D3D12 root signature
 class RootSignature

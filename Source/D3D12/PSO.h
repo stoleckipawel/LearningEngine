@@ -1,4 +1,5 @@
 #pragma once
+
 #include "ShaderCompiler.h"
 #include "Geometry.h"
 

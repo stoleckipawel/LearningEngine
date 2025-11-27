@@ -2,8 +2,6 @@
 
 #include "RHI.h"
 #include "ConstantBuffer.h"
-#include "DescriptorHeapManager.h"
-#include "SwapChain.h"
 
 // Vertex constant buffer data (aligned to 256 bytes for D3D12)
 struct alignas(256) FVertexConstantBufferData

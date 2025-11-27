@@ -2,8 +2,6 @@
 
 #include "ImageLoader.h"
 #include "RHI.h"
-#include "DescriptorHeapManager.h"
-
 
 // Texture class manages loading, uploading, and resource creation for a 2D texture in Direct3D 12.
 class Texture 
