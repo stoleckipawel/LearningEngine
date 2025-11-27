@@ -1,8 +1,5 @@
 #pragma once
 
-#include "RHI.h"
-#include "DescriptorHeapManager.h"
-
 // Sampler class manages a D3D12 sampler and its descriptor handles
 class Sampler
 {

@@ -1,1 +1,25 @@
-﻿
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(523,5): warning MSB8004: Intermediate Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Intermediate Directory.
+C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(524,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
+  Application.cpp
+  ConstantBufferManager.cpp
+  DepthStencil.cpp
+  DescriptorHeap.cpp
+  DescriptorHeapManager.cpp
+  Geometry.cpp
+  PSO.cpp
+  RHI.cpp
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\RHI.cpp(194,25): warning C4244: 'initializing': conversion from 'UINT64' to 'UINT', possible loss of data
+  (compiling source file '/Source/D3D12/RHI.cpp')
+  
+C:\Users\stole\Documents\GitHub\LearningEngine\Source\D3D12\RHI.cpp(195,27): warning C4244: 'initializing': conversion from 'UINT64' to 'UINT', possible loss of data
+  (compiling source file '/Source/D3D12/RHI.cpp')
+  
+  Renderer.cpp
+  RootSignature.cpp
+  Sampler.cpp
+  SwapChain.cpp
+  Texture.cpp
+  UploadBuffer.cpp
+  Window.cpp
+  Generating Code...
+  LearningEngine.vcxproj -> C:\Users\stole\Documents\GitHub\LearningEngine\Build\bin\x64\Debug\LearningEngine.exe

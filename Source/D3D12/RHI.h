@@ -1,4 +1,5 @@
 #pragma once
+
 #include "SwapChain.h"
 
 // RHI (Rendering Hardware Interface) manages Direct3D 12 device, command queues, fences, and synchronization

@@ -1,6 +1,8 @@
 
 #include "PCH.h"
 #include "Sampler.h"
+#include "RHI.h"
+#include "DescriptorHeapManager.h"
 
 // Constructs a Sampler and creates the D3D12 sampler in the descriptor heap
 Sampler::Sampler(UINT DescriptorHandleIndex)
