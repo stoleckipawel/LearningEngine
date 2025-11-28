@@ -2,11 +2,12 @@
 
 ## Overview
 
-LearningEngine is a DirectX 12 playground engine designed for experimentation and learning. It includes a modular engine and sample project (`DX12Toy`) to help you get started with graphics programming.
+LearningEngine is a DirectX 12 playground engine designed for experimentation and learning. It includes a modular engine and sample project (`DX12Toy`)
+
 
 ## Getting Started
 
-### 1. Regenerate Visual Studio Solution
+### Regenerate Visual Studio Solution
 
 To set up the Visual Studio solution and project files, run:
 
@@ -20,20 +21,6 @@ This script will:
 - Generate Visual Studio solution files using CMake.
 
 **Note:** Ensure CMake is installed and available in your system `PATH`.
-
-### 2. Clean Workspace
-
-To remove all intermediate, build, and temporary files, run:
-
-```
-CleanSolution.bat
-```
-
-This script will:
-- Delete all build artifacts, binaries, and temporary files.
-- Reset the workspace to a clean state.
-
-Use this if you encounter build issues or want to start fresh.
 
 ## Building and Running
 
@@ -55,10 +42,16 @@ The engine uses DirectX 12 libraries. Make sure your system has the required SDK
 - `build/` — Generated build files and solution
 - `bin/` — Compiled binaries
 
+
 ## Troubleshooting
 
 - If you encounter missing dependencies, ensure the Windows 10 SDK and DirectX 12 libraries are installed.
-- For build errors, try running `CleanSolution.bat` and then `RegenerateSolution.bat` to reset the workspace.
+- If you experience build errors or want to reset the workspace, run:
+
+	```
+	CleanSolution.bat
+	```
+	This will remove all intermediate, build, and temporary files, allowing you to start fresh. After cleaning, you may need to run `RegenerateSolution.bat` again to restore the solution files.
 
 ## License
 
