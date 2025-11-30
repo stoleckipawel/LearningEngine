@@ -29,6 +29,7 @@ target_include_directories(Engine PUBLIC
 # Require C++20
 target_compile_features(Engine PUBLIC cxx_std_20)
 
+
 # Link DirectX libraries
 target_link_libraries(Engine PUBLIC
   d3d12
@@ -37,9 +38,15 @@ target_link_libraries(Engine PUBLIC
   dxguid
   dxcompiler
 )
-  # Set compiler flags for debug builds: disable optimization (/Od) and enable debug info (/Zi)
+
+# Set compiler flags for debug builds
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+  set(CMAKE_C_FLAGS_DEBUG "-O0 -g")
+else()
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi")
   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /Od /Zi")
+endif()
 
 # --- PCH setup ---
 target_precompile_headers(Engine
