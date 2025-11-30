@@ -1,6 +1,12 @@
 @echo off
 REM ---------------------------------------------------
-REM Check for required dependencies: CMake, MSBuild, Visual Studio
+REM CheckDependencies.bat
+REM ---------------------------------------------------
+REM This script checks for required build dependencies for the LearningEngine project:
+REM   1. Checks if CMake is available in PATH
+REM   2. Checks if Clang is available in PATH (optional, falls back to MSVC)
+REM   3. Checks if MSBuild is available in PATH
+REM   4. Tracks any missing dependencies and reports them
 REM ---------------------------------------------------
 
 setlocal

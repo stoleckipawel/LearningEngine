@@ -1,6 +1,12 @@
 @echo off
 REM ---------------------------------------------------
-REM Clean all build, solution, and temporary files for Playground project
+REM CleanIntermediateFiles.bat
+REM ---------------------------------------------------
+REM This script cleans all build, solution, and temporary files for the Playground project:
+REM   1. Removes build, bin, obj, and .vs directories
+REM   2. Deletes Visual Studio solution and project files (*.sln, *.vcxproj, etc.)
+REM   3. Deletes CMake cache, files, and folders
+REM   4. Deletes Ninja intermediate files from root and build folder
 REM ---------------------------------------------------
 
 setlocal

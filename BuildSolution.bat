@@ -3,6 +3,7 @@ REM ---------------------------------------------------
 REM BuildSolution.bat
 REM ---------------------------------------------------
 REM This script performs a clean build pipeline for the Visual Studio solution:
+REM   0. Checks for required build dependencies using CheckDependencies.bat
 REM   1. Cleans all intermediate, build, and temporary files using CleanIntermediateFiles.bat
 REM   2. Configures build variables and toolset selection (ClangCL or MSVC)
 REM   3. Extracts the project name from CMakeLists.txt
@@ -94,7 +95,15 @@ if not exist "!SOLUTION_FILE!" (
 )
 
 echo [LOG] BuildSolution.bat completed.
-pause
+
+echo.
+REM Only pause if no CONTINUE argument is provided
+if /I "%1"=="CONTINUE" (
+    REM Do not pause, exit immediately
+) else (
+    pause
+)
 endlocal
 REM Do not exit, leave command prompt open for user input
+
 
