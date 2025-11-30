@@ -10,6 +10,7 @@ echo [LOG] Checking for CMake in PATH...
 cmake --version >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] CMake not found. Please install CMake and ensure it's in your PATH.
+    exit /B 1
 ) else (
     echo [LOG] CMake found.
 )
@@ -34,6 +35,11 @@ if errorlevel 1 (
 )
 
 echo.
-pause
+REM Only pause if no CONTINUE argument is provided
+if /I "%1"=="CONTINUE" (
+    REM Do not pause, exit immediately
+) else (
+    pause
+)
 endlocal
 REM Do not exit, leave command prompt open for user input

@@ -5,17 +5,29 @@ REM ---------------------------------------------------
 
 setlocal enabledelayedexpansion
 set "ARCH=x64"
-set "GENERATOR=Visual Studio 17 2022"
-set "CLANG_TOOLSET=ClangCL"
 set "SRC_DIR=%~dp0"
 set "BUILD_DIR=!SRC_DIR!build"
 set "SAMPLES_DIR=!SRC_DIR!samples"
 
-REM --- Read project name from CMakeLists.txt ---
-for /f "tokens=2 delims=( )" %%P in ('findstr /i "project(" "!SRC_DIR!CMakeLists.txt"') do set "PROJECT_NAME=%%P"
-set "SOLUTION_FILE=!BUILD_DIR!\!PROJECT_NAME!.sln"
+REM --- Step 1: Clean intermediate files ---
+echo [LOG] Cleaning intermediate files...
+call CleanIntermediateFiles.bat CONTINUE
+if errorlevel 1 (
+    echo [ERROR] CleanIntermediateFiles.bat failed.
+    pause
+    exit /B 1
+)
 
-REM --- Build ALL_BUILD.vcxproj to ensure all dependencies are built ---
+REM --- Step 2: Always generate solution file after cleaning ---
+echo [LOG] Generating solution file using BuildSolution.bat...
+call BuildSolution.bat
+if errorlevel 1 (
+    echo [ERROR] BuildSolution.bat failed to generate solution.
+    pause
+    exit /B 1
+)
+
+REM --- Step 3: Build ALL_BUILD.vcxproj to ensure all dependencies are built ---
 if exist "!BUILD_DIR!\ALL_BUILD.vcxproj" (
     for %%C in (Debug Release) do (
         echo [LOG] Building ALL_BUILD.vcxproj for configuration %%C...
@@ -31,7 +43,7 @@ if exist "!BUILD_DIR!\ALL_BUILD.vcxproj" (
     )
 )
 
-REM --- Find and build all sample projects ---
+REM --- Step 4: Find and build all sample projects ---
 for /D %%S in ("!SAMPLES_DIR!\*") do (
     set "SAMPLE_NAME=%%~nxS"
     if exist "!BUILD_DIR!\!SAMPLE_NAME!.vcxproj" (

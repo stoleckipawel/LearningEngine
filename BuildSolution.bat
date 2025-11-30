@@ -1,18 +1,43 @@
 @echo off
 REM ---------------------------------------------------
-REM Generate Visual Studio solution from CMakeLists.txt
+REM BuildSolution.bat
+REM ---------------------------------------------------
+REM This script performs a clean build pipeline for the Visual Studio solution:
+REM   1. Cleans all intermediate, build, and temporary files using CleanIntermediateFiles.bat
+REM   2. Configures build variables and toolset selection (ClangCL or MSVC)
+REM   3. Extracts the project name from CMakeLists.txt
+REM   4. Generates the Visual Studio solution using CMake
+REM   5. Logs all steps and errors for review
 REM ---------------------------------------------------
 
 setlocal enabledelayedexpansion
 
-REM --- Configuration ---
+REM Step 0: Check dependencies before proceeding
+echo [LOG] Checking build dependencies...
+call CheckDependencies.bat CONTINUE
+if errorlevel 1 (
+    echo [ERROR] Dependency check failed. Please review missing dependencies above.
+    pause
+    exit /B 1
+)
+
+REM Step 1: Clean all intermediate files
+echo [LOG] Cleaning intermediate files...
+call CleanIntermediateFiles.bat CONTINUE
+if errorlevel 1 (
+    echo [ERROR] CleanIntermediateFiles.bat failed.
+    pause
+    exit /B 1
+)
+
+REM Step 2: Configuration
 set "ARCH=x64"
 set "GENERATOR=Visual Studio 17 2022"
 set "CLANG_TOOLSET=ClangCL"
 set "SRC_DIR=%~dp0"
 set "BUILD_DIR=!SRC_DIR!build"
 
-REM --- Toolset selection ---
+REM Step 3: Toolset selection
 set "USE_CLANG=0"
 where clang >nul 2>&1
 if not errorlevel 1 set "USE_CLANG=1"
@@ -22,18 +47,18 @@ if "!USE_CLANG!"=="1" (
     echo [LOG] MSVC toolset will be used for generation and build.
 )
 
-REM --- Extract project name from CMakeLists.txt ---
+REM Step 4: Extract project name from CMakeLists.txt
 for /f "tokens=2 delims=( " %%P in ('findstr /i "project(" "!SRC_DIR!CMakeLists.txt"') do (
     set "RAW_PROJECT_NAME=%%P"
 )
-REM --- Clean up project name (remove trailing ')' and whitespace) ---
+REM Clean up project name (remove trailing ')' and whitespace)
 for /f "delims=) tokens=1" %%A in ("%RAW_PROJECT_NAME%") do set "PROJECT_NAME=%%A"
 set "PROJECT_NAME=%PROJECT_NAME: =%"
 echo [LOG] Project name found in CMakeLists.txt: %PROJECT_NAME%
 set "SOLUTION_FILE=!BUILD_DIR!\%PROJECT_NAME%.sln"
 echo [LOG] Solution file path set to: !SOLUTION_FILE!
 
-REM --- Generate solution if missing ---
+REM Step 5: Generate solution if missing
 if not exist "!SOLUTION_FILE!" (
     echo [LOG] Solution file not found. Starting generation process...
     if not exist "!BUILD_DIR!" (

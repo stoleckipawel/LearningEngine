@@ -76,7 +76,11 @@ REM --- Final status ---
 echo.
 echo [CLEAN] === Clean complete. All build, solution, and temporary files have been removed. ===
 echo.
-echo [LOG] Press any key to exit and review the output.
-pause
+REM Only pause if no CONTINUE argument is provided
+if /I "%1"=="CONTINUE" (
+    REM Do not pause, exit immediately
+) else (
+    pause
+)
 endlocal
 REM Do not exit, leave command prompt open for user input
