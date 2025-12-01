@@ -19,19 +19,13 @@ LearningEngine is a DirectX 12 playground engine for experimentation and learnin
 	```
 	Verifies CMake, Clang, and MSBuild are available. Logs missing tools.
 
-2. **Clean Workspace**
-	```
-	CleanIntermediateFiles.bat
-	```
-	Removes all build, bin, obj, and `.vs` folders.
-
-3. **Generate Solution**
+2. **Generate Solution**
 	```
 	BuildSolution.bat
 	```
 	Cleans, checks dependencies, and generates Visual Studio solution files using CMake.
 
-4. **Build Sample Projects**
+3. **Build Sample Projects**
 	```
 	BuildSamplesDebug.bat
 	BuildSamplesRelease.bat
@@ -40,7 +34,7 @@ LearningEngine is a DirectX 12 playground engine for experimentation and learnin
 	```
 	Builds all sample projects for Debug or Release. Output executables are in `bin/Debug` or `bin/Release`.
 
-5. **Manual Build (Visual Studio)**
+4. **Manual Build (Visual Studio)**
 	Open `build/Playground.sln` in Visual Studio. Build using Debug/Release. Default startup project: `DX12Toy`.
 
 ## Batch Script Reference
