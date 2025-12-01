@@ -9,12 +9,6 @@ int main()
 	// Initialize the Windows window
 	GWindow.Initialize();
 
-	// Initialize the rendering hardware interface (RHI)
-	GRHI.Initialize();
-
-	// Load renderer resources (geometry, shaders, etc.)
-	GRenderer.Load();
-
 	// Main application loop
 	while (!GWindow.ShouldClose())
 	{

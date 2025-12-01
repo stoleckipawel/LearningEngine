@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include "DX12/ShaderCompiler.h"
@@ -9,30 +10,41 @@
 #include "DX12/Sampler.h"
 #include "DX12/DepthStencil.h"
 
-// Renderer manages the graphics pipeline, resources, and main render loop
+// -----------------------------------------------------------------------------
+// Renderer: Main graphics pipeline manager for the engine
+// -----------------------------------------------------------------------------
+// - Owns all major graphics resources and pipeline objects
+// - Orchestrates initialization, per-frame updates, rendering, and shutdown
+// -----------------------------------------------------------------------------
 class Renderer
 {
 public:
-	// Loads all resources and initializes the rendering pipeline
-	void Load();
+	void Initialize();
 
-	// Releases all resources and subsystems
+	// Releases graphics resources 
 	void Release();
 
-	// Shuts down the renderer and all subsystems
+	// Shuts down the renderer and all owned subsystems
 	void Shutdown();
 
-	// Main render loop for the scene
+	// Main render loop: called once per frame
 	void OnRender();
 
-	// Handles window resize events
+	// Handles window resize events (recreates frame buffers)
 	void OnResize();
 
 private:
+	// Loads graphics resources
+	void Load();
+	// Loads geometry (vertex/index buffers)
 	void LoadGeometry();
+	// Loads texture resources
 	void LoadTextures();
+	// Loads/initializes sampler states
 	void LoadSamplers();
+	// Compiles and loads shaders
 	void LoadShaders();
+	// Finalizes resource uploads and flushes command queue
 	void PostLoad();
 
 	void CreateRootSignatures();
@@ -41,9 +53,12 @@ private:
 	void SetViewport();
 	void SetBackBufferRTV();
 
+	// Binds descriptor tables for textures, samplers, and constant buffers
 	void BindDescriptorTables();
+	// Records all rendering commands for the current frame
 	void PopulateCommandList();
 
+	// Updates per-frame data and constant buffers
 	void OnUpdate();
 
 private:
