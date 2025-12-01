@@ -59,6 +59,11 @@ LearningEngine is a DirectX 12 playground engine for experimentation and learnin
 ## Troubleshooting
 
 - Missing dependencies: Ensure Windows 10 SDK and DirectX 12 libraries are installed.
+  ```
+  CheckDependencies.bat
+  ```
+  Check for CMake, Clang, MSBuild 
+  
 - Build errors or workspace reset:
   ```
   CleanSolution.bat
