@@ -44,7 +44,6 @@ LearningEngine is a DirectX 12 playground engine for experimentation and learnin
 | CheckDependencies.bat      | Check for CMake, Clang, MSBuild                                |
 | CleanIntermediateFiles.bat | Clean build, bin, obj, .vs, and temp files                     |
 | BuildSolution.bat          | Clean, check dependencies, generate solution                   |
-| RegenerateSolution.bat     | Clean and regenerate solution (alternative to BuildSolution.bat)|
 | BuildSamples.bat           | Build all sample projects for given config (Debug/Release)      |
 | BuildSamplesDebug.bat      | Build all sample projects in Debug (calls BuildSamples.bat)     |
 | BuildSamplesRelease.bat    | Build all sample projects in Release (calls BuildSamples.bat)   |
@@ -63,7 +62,7 @@ LearningEngine is a DirectX 12 playground engine for experimentation and learnin
   CheckDependencies.bat
   ```
   Check for CMake, Clang, MSBuild 
-  
+
 - Build errors or workspace reset:
   ```
   CleanSolution.bat
