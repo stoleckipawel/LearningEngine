@@ -10,6 +10,7 @@ LearningEngine is a DirectX 12 playground engine for experimentation and learnin
 - **Visual Studio 2022** (or compatible)
 - **DirectX 12 SDK / Windows 10 SDK**
 - **Windows platform**
+- **Clang** (optional; if not available, build will automatically fall back to MSVC)
 
 ## Quick Start
 
