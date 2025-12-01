@@ -2,56 +2,74 @@
 
 ## Overview
 
-LearningEngine is a DirectX 12 playground engine designed for experimentation and learning. It includes a modular engine and sample project (`DX12Toy`)
+LearningEngine is a DirectX 12 playground engine for experimentation and learning. It features a modular engine and a sample project (`DX12Toy`).
 
+## Prerequisites
 
-## Getting Started
+- **CMake** (≥ 3.20)
+- **Visual Studio 2022** (or compatible)
+- **DirectX 12 SDK / Windows 10 SDK**
+- **Windows platform**
 
-### Regenerate Visual Studio Solution
+## Quick Start
 
-To set up the Visual Studio solution and project files, run:
+1. **Check Dependencies**
+	```
+	CheckDependencies.bat
+	```
+	Verifies CMake, Clang, and MSBuild are available. Logs missing tools.
 
-```
-RegenerateSolution.bat
-```
+2. **Clean Workspace**
+	```
+	CleanIntermediateFiles.bat
+	```
+	Removes all build, bin, obj, and `.vs` folders.
 
-This script will:
-- Clean old build, bin, obj, and `.vs` folders.
-- Create a fresh `build` directory.
-- Generate Visual Studio solution files using CMake.
+3. **Generate Solution**
+	```
+	BuildSolution.bat
+	```
+	Cleans, checks dependencies, and generates Visual Studio solution files using CMake.
 
-**Note:** Ensure CMake is installed and available in your system `PATH`.
+4. **Build Sample Projects**
+	```
+	BuildSamplesDebug.bat
+	BuildSamplesRelease.bat
+	BuildSamples.bat Debug
+	BuildSamples.bat Release
+	```
+	Builds all sample projects for Debug or Release. Output executables are in `bin/Debug` or `bin/Release`.
 
-## Building and Running
+5. **Manual Build (Visual Studio)**
+	Open `build/Playground.sln` in Visual Studio. Build using Debug/Release. Default startup project: `DX12Toy`.
 
-After generating the solution, open `build/Playground.sln` in Visual Studio. Build the solution using your preferred configuration (Debug/Release). The default startup project is `DX12Toy`.
+## Batch Script Reference
 
-## Dependencies
-
-- **CMake** (minimum version 3.20)
-- **Visual Studio 2022** (or compatible version)
-- **DirectX 12 SDK / Windows 10 SDK** (required for DX12 development)
-- **Windows platform** (tested on Windows)
-
-The engine uses DirectX 12 libraries. Make sure your system has the required SDKs installed.
+| Script                     | Purpose                                                        |
+|----------------------------|----------------------------------------------------------------|
+| CheckDependencies.bat      | Check for CMake, Clang, MSBuild                                |
+| CleanIntermediateFiles.bat | Clean build, bin, obj, .vs, and temp files                     |
+| BuildSolution.bat          | Clean, check dependencies, generate solution                   |
+| RegenerateSolution.bat     | Clean and regenerate solution (alternative to BuildSolution.bat)|
+| BuildSamples.bat           | Build all sample projects for given config (Debug/Release)      |
+| BuildSamplesDebug.bat      | Build all sample projects in Debug (calls BuildSamples.bat)     |
+| BuildSamplesRelease.bat    | Build all sample projects in Release (calls BuildSamples.bat)   |
 
 ## Directory Structure
 
 - `engine/` — Core engine code, headers, assets
-- `samples/DX12Toy/` — Sample project using the engine
+- `samples/` — Sample projects using the engine
 - `build/` — Generated build files and solution
 - `bin/` — Compiled binaries
 
-
 ## Troubleshooting
 
-- If you encounter missing dependencies, ensure the Windows 10 SDK and DirectX 12 libraries are installed.
-- If you experience build errors or want to reset the workspace, run:
-
-	```
-	CleanSolution.bat
-	```
-	This will remove all intermediate, build, and temporary files, allowing you to start fresh. After cleaning, you may need to run `RegenerateSolution.bat` again to restore the solution files.
+- Missing dependencies: Ensure Windows 10 SDK and DirectX 12 libraries are installed.
+- Build errors or workspace reset:
+  ```
+  CleanSolution.bat
+  ```
+  Removes all intermediate, build, and temporary files. After cleaning, run `BuildSolution.bat` to restore solution files.
 
 ## License
 
