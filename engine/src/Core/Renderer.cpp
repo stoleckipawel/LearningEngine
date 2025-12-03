@@ -219,6 +219,9 @@ void Renderer::OnUpdate()
 void Renderer::OnResize()
 {
     GRHI.Flush();
+    // Resize swap chain to match new window dimensions
+    GSwapChain.Resize();
+    // Recreate frame buffers (depth stencil) for new size
     CreateFrameBuffers();
 }
 

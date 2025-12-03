@@ -54,7 +54,7 @@ void DepthStencil::CreateResource()
 			&heapDefaultProperties,
 			D3D12_HEAP_FLAG_NONE,
 			&depthStencilResourceDesc,
-			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			D3D12_RESOURCE_STATE_DEPTH_READ,
 			&depthOptimizedClearValue,
 			IID_PPV_ARGS(&m_resource)),
 		"Depth Stencil: Failed To Create Resource"

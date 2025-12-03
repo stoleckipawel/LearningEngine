@@ -153,14 +153,11 @@ LRESULT Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam
 			}
 			return 0;
 		case WM_SIZE:
-			// Handle window resize event
-			if (lParam && (HIWORD(lParam) != GWindow.GetHeight() && LOWORD(lParam) != GWindow.GetWidth()))
+			// Trigger resize when the window is not minimized and device is ready
+			if (wParam != SIZE_MINIMIZED && GRHI.Device != nullptr)
 			{
-				if (GRHI.Device != nullptr)
-				{
-					GRenderer.OnResize();
-				}
-			}    
+				GRenderer.OnResize();
+			}
 			return 0;
 		case WM_CLOSE:
 		case WM_QUIT:

@@ -92,7 +92,6 @@ PSO::PSO(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler
 	// -- Vertex Shader
 	psoDesc.VS.pShaderBytecode = vertexShader.GetBuffer();
 	psoDesc.VS.BytecodeLength = vertexShader.GetSize();
-			psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_GREATER_EQUAL;
 	// -- Pixel Shader
 	psoDesc.PS.pShaderBytecode = pixelShader.GetBuffer();
 	psoDesc.PS.BytecodeLength = pixelShader.GetSize();
@@ -120,11 +119,11 @@ PSO::PSO(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler
 	renderTargetBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 	SetRenderTargetBlendState(psoDesc, renderTargetBlendDesc);
 
-	// -- Depth Test State
+	// -- Depth Test State (reversed-Z)
 	D3D12_DEPTH_TEST_DESC depthTestDesc = {};
 	depthTestDesc.DepthEnable = true;
 	depthTestDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	depthTestDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	depthTestDesc.DepthFunc = D3D12_COMPARISON_FUNC_GREATER_EQUAL;
 	SetDepthTestState(psoDesc, depthTestDesc);
 
 	// -- Stencil Test State
@@ -142,10 +141,10 @@ PSO::PSO(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler
 	stencilTestDesc.BackFaceStencilPassOp = D3D12_STENCIL_OP_KEEP;
 	SetStencilTestState(psoDesc, stencilTestDesc);
 
-	// -- Render Target and Depth Stencil Formats
-	psoDesc.NumRenderTargets = 1;
-			depthTestDesc.DepthFunc = D3D12_COMPARISON_FUNC_GREATER_EQUAL;
-	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	    // -- Render Target and Depth Stencil Formats
+	    psoDesc.NumRenderTargets = 1;
+	    psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	    psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	// -- Miscellaneous
 	psoDesc.NodeMask = 0;

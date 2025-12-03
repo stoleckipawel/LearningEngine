@@ -191,7 +191,8 @@ void RHI::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	barrier.Transition.pResource = Resource;
-	barrier.Transition.Subresource = 0;
+	// Transition all subresources (depth + stencil planes)
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 	barrier.Transition.StateBefore = StateBefore;
 	barrier.Transition.StateAfter = StateAfter;
 

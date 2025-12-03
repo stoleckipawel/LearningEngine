@@ -23,7 +23,8 @@ void SwapChain::Initialize()
 	swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
-	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+	// Keep flags minimal and consistent; avoid tearing until explicitly supported
+	swapChainDesc.Flags = 0;
 
 	// Create fullscreen swap chain description
 	DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullsceenDesc{};
@@ -45,6 +46,9 @@ void SwapChain::Initialize()
 	// Query for IDXGISwapChain3 interface
 	ThrowIfFailed(swapChain.QueryInterface(m_swapChain), "Failed to Query Swap Chain Interface");
 
+	// Initialize current back buffer index
+	m_currentBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+
 	// Create render target views for all buffers
 	CreateRenderTargetViews();
 }
@@ -53,7 +57,7 @@ void SwapChain::Initialize()
 // Clears the current render target view with a solid color
 void SwapChain::Clear()
 {
-	float clearColor[4] = { 255.0f, 0.5f, 0.5f, 1.0f };
+	float clearColor[4] = { 1.0f, 0.05f, 0.05f, 1.0f };
 	GRHI.GetCommandList()->ClearRenderTargetView(GSwapChain.GetCPUHandle(), clearColor, 0, nullptr);
 }
 
@@ -68,11 +72,13 @@ void SwapChain::Resize()
 		GWindow.GetWidth(),
 		GWindow.GetHeight(),
 		DXGI_FORMAT_UNKNOWN,
-		DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH |
-		DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING
+		0
 	);
 
 	CreateRenderTargetViews();
+
+	// Update back buffer index to the swapchain's current buffer
+	m_currentBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
 }
 
 

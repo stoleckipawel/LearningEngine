@@ -19,6 +19,8 @@ public:
 	void SetRenderTargetState();
 	// Sets the current buffer to present state
 	void SetPresentState();
+	// Resizes the swap chain buffers
+	void Resize();
 
 	// Returns the CPU descriptor handle for the specified buffer index
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(UINT index);
@@ -43,8 +45,7 @@ private:
 private:
 	// Creates render target views for all swap chain buffers
 	void CreateRenderTargetViews();
-	// Resizes the swap chain buffers
-	void Resize();
+
 	// Releases all buffer resources
 	void ReleaseBuffers();
 };
