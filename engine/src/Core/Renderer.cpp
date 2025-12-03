@@ -1,10 +1,18 @@
 
 #include "PCH.h"
 #include "Core/Renderer.h"
-#include "DX12/DebugLayer.h"
-#include "DX12/RHI.h"
+#include "D3D12/DebugLayer.h"
+#include "D3D12/RHI.h"
 #include "Core/Window.h"
-#include "DX12/ConstantBufferManager.h"
+#include "D3D12/ConstantBufferManager.h"
+#include "D3D12/ShaderCompiler.h"
+#include "D3D12/Texture.h"
+#include "D3D12/Geometry.h"
+#include "D3D12/PSO.h"
+#include "D3D12/RootSignature.h"
+#include "D3D12/ConstantBuffer.h"
+#include "D3D12/Sampler.h"
+#include "D3D12/DepthStencil.h"
 
 // Global renderer instance
 Renderer GRenderer;
@@ -214,11 +222,11 @@ void Renderer::OnResize()
 // -----------------------------------------------------------------------------
 void Renderer::OnRender()
 {
-    // Update per-frame data
-    OnUpdate();
-
     // Wait for GPU to finish previous frame
     GRHI.WaitForGPU();
+
+    // Update per-frame data
+    OnUpdate();
 
     // Reset command allocator and command list for new frame
     ThrowIfFailed(GRHI.GetCommandAllocator()->Reset(), "Renderer: Failed To Reset Command Allocator");

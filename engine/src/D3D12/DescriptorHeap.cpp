@@ -1,5 +1,5 @@
 #include "PCH.h"
-#include "DX12/DescriptorHeap.h"
+#include "D3D12/DescriptorHeap.h"
 
 // General descriptor heap (RTV, DSV, Sampler, etc)
 DescriptorHeap::DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name)

@@ -9,6 +9,8 @@ int main()
 	// Initialize the Windows window
 	GWindow.Initialize();
 
+	GRenderer.Initialize();
+
 	// Main application loop
 	while (!GWindow.ShouldClose())
 	{

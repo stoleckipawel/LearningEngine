@@ -1,6 +1,6 @@
 #include "PCH.h"
-#include "DX12/ShaderCompiler.h"
-#include "DX12/AssetPathResolver.h"
+#include "D3D12/ShaderCompiler.h"
+#include "D3D12/AssetPathResolver.h"
 
 // Compiles a shader from file and stores the bytecode using DXC
 // fileName: name of HLSL file

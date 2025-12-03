@@ -1,5 +1,5 @@
 #include "PCH.h"
-#include "DX12/PSO.h"
+#include "D3D12/PSO.h"
 
 // PSO.cpp
 // Implements Pipeline State Object (PSO) setup and configuration for D3D12 rendering.

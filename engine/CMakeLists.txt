@@ -20,10 +20,15 @@ add_library(Engine STATIC
 )
 
 # Public include directory
-target_include_directories(Engine PUBLIC
+target_include_directories(Engine 
+  PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/third_party"
     "${CMAKE_CURRENT_SOURCE_DIR}/pch"
+  PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/D3D12"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Core"
 )
 
 # Require C++20

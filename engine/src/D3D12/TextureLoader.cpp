@@ -1,6 +1,6 @@
 #include "PCH.h"
-#include "DX12/TextureLoader.h"
-#include "DX12/AssetPathResolver.h"
+#include "D3D12/TextureLoader.h"
+#include "D3D12/AssetPathResolver.h"
 
 const std::vector<TextureLoader::GUID_to_DXGI> TextureLoader::s_lookupTable = {
     { GUID_WICPixelFormat32bppRGBA, DXGI_FORMAT_R8G8B8A8_UNORM },

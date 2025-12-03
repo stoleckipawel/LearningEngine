@@ -1,7 +1,7 @@
 
 #include "PCH.h"
-#include "DX12/Geometry.h"
-#include "DX12/UploadBuffer.h"
+#include "D3D12/Geometry.h"
+#include "D3D12/UploadBuffer.h"
 
 // Geometry.cpp
 // Implements geometry setup, upload, and binding for rendering.

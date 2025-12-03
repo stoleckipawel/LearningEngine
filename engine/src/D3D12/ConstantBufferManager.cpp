@@ -1,6 +1,6 @@
 #include "PCH.h"
-#include "DX12/ConstantBufferManager.h"
-#include "DX12/Camera.h"
+#include "D3D12/ConstantBufferManager.h"
+#include "D3D12/Camera.h"
 
 // Global constant buffer manager instance
 ConstantBufferManager GConstantBufferManager;

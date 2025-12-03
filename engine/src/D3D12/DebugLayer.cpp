@@ -1,6 +1,6 @@
 
 #include "PCH.h"
-#include "DX12/DebugLayer.h"
+#include "D3D12/DebugLayer.h"
 
 // Global debug layer instance
 DebugLayer GDebugLayer;

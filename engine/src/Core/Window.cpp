@@ -1,6 +1,7 @@
 #include "PCH.h"
 #include "Core/Window.h"
 #include "Core/Renderer.h"
+#include "D3D12/RHI.h"
 
 Window GWindow;
 

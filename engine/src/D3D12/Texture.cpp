@@ -1,7 +1,7 @@
 
 #include "PCH.h"
-#include "DX12/Texture.h"
-#include "DX12/DescriptorHeapManager.h"
+#include "D3D12/Texture.h"
+#include "D3D12/DescriptorHeapManager.h"
 
 // Loads the texture from disk and creates all required GPU resources
 Texture::Texture(const std::filesystem::path& fileName, UINT descriptorHandleIndex)

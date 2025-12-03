@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include "DX12/ShaderCompiler.h"
-#include "DX12/Texture.h"
-#include "DX12/Geometry.h"
-#include "DX12/PSO.h"
-#include "DX12/RootSignature.h"
-#include "DX12/ConstantBuffer.h"
-#include "DX12/Sampler.h"
-#include "DX12/DepthStencil.h"
+// Forward declarations
+class ShaderCompiler;
+class Texture;
+class Geometry;
+class PSO;
+class RootSignature;
+class Sampler;
+class DepthStencil;
 
 // -----------------------------------------------------------------------------
 // Renderer: Main graphics pipeline manager for the engine
