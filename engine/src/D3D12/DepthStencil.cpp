@@ -22,7 +22,8 @@ void DepthStencil::CreateResource()
 	// Set optimized clear value for depth and stencil
 	D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
 	depthOptimizedClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+	// Reversed-Z: clear depth to 0.0 (far) for maximum precision
+	depthOptimizedClearValue.DepthStencil.Depth = 0.0f;
 	depthOptimizedClearValue.DepthStencil.Stencil = 0;
 
 	// Heap properties for default heap
@@ -81,7 +82,28 @@ D3D12_CPU_DESCRIPTOR_HANDLE DepthStencil::GetCPUHandle()
 // Clears the depth stencil view
 void DepthStencil::Clear()
 {
-	GRHI.GetCommandList()->ClearDepthStencilView(GetCPUHandle(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+	// Reversed-Z clear values: depth=0.0, stencil=0
+	GRHI.GetCommandList()->ClearDepthStencilView(GetCPUHandle(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 0.0f, 0, 0, nullptr);
+}
+
+// Transition depth buffer to write state before rendering
+void DepthStencil::SetWriteState()
+{
+	GRHI.SetBarrier(
+		m_resource,
+		D3D12_RESOURCE_STATE_DEPTH_READ,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE
+	);
+}
+
+// Transition depth buffer to read state after rendering
+void DepthStencil::SetReadState()
+{
+	GRHI.SetBarrier(
+		m_resource,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		D3D12_RESOURCE_STATE_DEPTH_READ
+	);
 }
 
 // Releases the depth stencil resource

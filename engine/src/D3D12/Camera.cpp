@@ -93,12 +93,14 @@ XMMATRIX Camera::GetRotationMatrix() const
 
 XMMATRIX Camera::GetProjectionMatrix() const
 {
+    // Perspective projection parameters
     float NearZ = 0.01f;
-    float FarZ = 10.0f;
-    float fovY = XMConvertToRadians(60.0f);
+    float FarZ = 10000.0f;
+    float fovY = XMConvertToRadians(60.0f); // 60 degree vertical FOV
 
     D3D12_VIEWPORT viewport = GSwapChain.GetDefaultViewport();
     float aspectRatio = viewport.Width / viewport.Height;
 
+    // Use perspective projection (not orthographic)
     return XMMatrixPerspectiveFovLH(fovY, aspectRatio, NearZ, FarZ);
 }

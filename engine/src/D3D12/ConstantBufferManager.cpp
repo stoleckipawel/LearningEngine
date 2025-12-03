@@ -28,13 +28,25 @@ void ConstantBufferManager::Update(size_t FrameIndex)
 
 	// Update vertex constant buffer with world, view, and projection matrices
 	FVertexConstantBufferData vertexData;
-	float angleX = XMConvertToRadians(FrameIndex * 1.0f); // X axis speed
-	float angleY = XMConvertToRadians(FrameIndex * 0.7f); // Y axis speed
-	float angleZ = XMConvertToRadians(FrameIndex * 1.3f); // Z axis speed
-	XMMATRIX world = XMMatrixRotationX(angleX) * XMMatrixRotationY(angleY) * XMMatrixRotationZ(angleZ);
+	// Rotate diagonally around the (1,1,1) axis for 3D dimensionality
+	XMVECTOR diagAxis = XMVector3Normalize(XMVectorSet(1.0f, 1.0f, 1.0f, 0.0f));
+	float angle = XMConvertToRadians(speed * 100.0);
+
+	XMMATRIX rotation = XMMatrixRotationAxis(diagAxis, angle);
+	XMMATRIX scale = XMMatrixScaling(1.0f, 1.0f, 1.0f);
+	XMMATRIX translation = XMMatrixTranslation(0.0f, 0.0f, 0.0f); // Centered
+	XMMATRIX world = scale * rotation * translation;
 	XMStoreFloat4x4(&vertexData.WorldMTX, world);
-	XMStoreFloat4x4(&vertexData.ViewMTX, GCamera.GetViewMatrix());
-	XMStoreFloat4x4(&vertexData.ProjectionMTX, GCamera.GetProjectionMatrix());
+
+	XMMATRIX view = GCamera.GetViewMatrix();
+	XMStoreFloat4x4(&vertexData.ViewMTX, view);
+
+	XMMATRIX projection = GCamera.GetProjectionMatrix();
+	XMStoreFloat4x4(&vertexData.ProjectionMTX, projection);
+
+	XMMATRIX worldViewProj = world * view * projection;
+	XMStoreFloat4x4(&vertexData.WorldViewProjMTX, worldViewProj);
+	
 	VertexConstantBuffers[GSwapChain.GetBackBufferIndex()]->Update(vertexData);
 
 	// Update pixel constant buffer with animated color

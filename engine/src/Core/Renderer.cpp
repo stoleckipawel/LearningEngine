@@ -167,6 +167,9 @@ void Renderer::PopulateCommandList()
     // Prepare render target
     GSwapChain.SetRenderTargetState();
 
+    // Transition depth buffer to write state before rendering
+    m_depthStencil->SetWriteState();
+
     // Bind root signature
     GRHI.GetCommandList()->SetGraphicsRootSignature(m_rootSignature->Get());
 
@@ -188,6 +191,8 @@ void Renderer::PopulateCommandList()
     GRHI.GetCommandList()->DrawIndexedInstanced(36, 1, 0, 0, 0);
 
     // Prepare for present
+    // Transition depth buffer to read state before presenting
+    m_depthStencil->SetReadState();
     GSwapChain.SetPresentState();
 }
 

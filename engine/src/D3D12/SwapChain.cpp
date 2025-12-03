@@ -119,6 +119,7 @@ D3D12_VIEWPORT SwapChain::GetDefaultViewport()
 	vp.TopLeftY = 0;
 	vp.Width = float(GWindow.GetWidth());
 	vp.Height = float(GWindow.GetHeight());
+	// Reversed-Z: map near to 1.0 and far to 0.0 for better precision
 	vp.MinDepth = 1.0f;
 	vp.MaxDepth = 0.0f;
 	return vp;

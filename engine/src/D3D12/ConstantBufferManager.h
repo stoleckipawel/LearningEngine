@@ -10,6 +10,7 @@ struct alignas(256) FVertexConstantBufferData
 	XMFLOAT4X4 WorldMTX;      // World transformation matrix
 	XMFLOAT4X4 ViewMTX;       // View transformation matrix
 	XMFLOAT4X4 ProjectionMTX; // Projection transformation matrix
+	XMFLOAT4X4 WorldViewProjMTX; // Combined World-View-Projection matrix
 };
 
 // Pixel constant buffer data (aligned to 256 bytes for D3D12)

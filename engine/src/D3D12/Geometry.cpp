@@ -25,16 +25,16 @@ void Geometry::UploadVertexBuffer()
 	// Define cube vertices with position, UV, and color
 	std::vector<Vertex> vertexList = {
 		// Front face
-		{ { -0.25f, -0.25f,  0.25f }, { 0.0f, 1.0f }, { 1.0, 0.0, 0.0, 1.0 } }, // 0
-		{ { -0.25f,  0.25f,  0.25f }, { 0.0f, 0.0f }, { 0.0, 1.0, 0.0, 1.0 } }, // 1
-		{ {  0.25f,  0.25f,  0.25f }, { 1.0f, 0.0f }, { 0.0, 0.0, 1.0, 1.0 } }, // 2
-		{ {  0.25f, -0.25f,  0.25f }, { 1.0f, 1.0f }, { 1.0, 1.0, 0.0, 1.0 } }, // 3
+		{ { -1.0f, -1.0f,  1.0f }, { 0.0f, 1.0f }, { 1.0, 0.0, 0.0, 1.0 } }, // 0
+		{ { -1.0f,  1.0f,  1.0f }, { 0.0f, 0.0f }, { 0.0, 1.0, 0.0, 1.0 } }, // 1
+		{ {  1.0f,  1.0f,  1.0f }, { 1.0f, 0.0f }, { 0.0, 0.0, 1.0, 1.0 } }, // 2
+		{ {  1.0f, -1.0f,  1.0f }, { 1.0f, 1.0f }, { 1.0, 1.0, 0.0, 1.0 } }, // 3
 
 		// Back face
-		{ { -0.25f, -0.25f, -0.25f }, { 1.0f, 1.0f }, { 1.0, 0.0, 1.0, 1.0 } }, // 4
-		{ { -0.25f,  0.25f, -0.25f }, { 1.0f, 0.0f }, { 0.0, 1.0, 1.0, 1.0 } }, // 5
-		{ {  0.25f,  0.25f, -0.25f }, { 0.0f, 0.0f }, { 1.0, 1.0, 1.0, 1.0 } }, // 6
-		{ {  0.25f, -0.25f, -0.25f }, { 0.0f, 1.0f }, { 0.5, 0.5, 0.5, 1.0 } }, // 7
+		{ { -1.0f, -1.0f, -1.0f }, { 1.0f, 1.0f }, { 1.0, 0.0, 1.0, 1.0 } }, // 4
+		{ { -1.0f,  1.0f, -1.0f }, { 1.0f, 0.0f }, { 0.0, 1.0, 1.0, 1.0 } }, // 5
+		{ {  1.0f,  1.0f, -1.0f }, { 0.0f, 0.0f }, { 1.0, 1.0, 1.0, 1.0 } }, // 6
+		{ {  1.0f, -1.0f, -1.0f }, { 0.0f, 1.0f }, { 0.5, 0.5, 0.5, 1.0 } }, // 7
 	};
 
 	const UINT vertsDataSize = static_cast<UINT>(sizeof(Vertex) * vertexList.size());
@@ -52,18 +52,18 @@ void Geometry::UploadIndexBuffer()
 {
 	// Define cube indices (12 triangles, 36 indices)
 	std::vector<DWORD> indexList = {
-		// Front face
-		0, 1, 2, 0, 2, 3,
-		// Back face
-		4, 6, 5, 4, 7, 6,
-		// Left face
-		4, 5, 1, 4, 1, 0,
-		// Right face
-		3, 2, 6, 3, 6, 7,
-		// Top face
-		1, 5, 6, 1, 6, 2,
-		// Bottom face
-		4, 0, 3, 4, 3, 7
+		// Front face (reversed winding)
+		0, 2, 1, 0, 3, 2,
+		// Back face (reversed winding)
+		4, 5, 6, 4, 6, 7,
+		// Left face (reversed winding)
+		4, 1, 5, 4, 0, 1,
+		// Right face (reversed winding)
+		3, 6, 2, 3, 7, 6,
+		// Top face (reversed winding)
+		1, 6, 5, 1, 2, 6,
+		// Bottom face (reversed winding)
+		4, 3, 0, 4, 7, 3
 	};
 
 	UINT indexDataSize = static_cast<UINT>(sizeof(DWORD) * indexList.size());

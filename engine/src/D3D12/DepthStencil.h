@@ -23,6 +23,10 @@ public:
 
     // Clears the depth stencil view
     void Clear();
+    // Transition depth buffer to writable state before rendering
+    void SetWriteState();
+    // Transition depth buffer to readable state after rendering
+    void SetReadState();
 private:
     // Creates the depth stencil resource on the GPU
     void CreateResource();
@@ -31,7 +35,7 @@ private:
     // Creates the depth stencil view in the descriptor heap
     void CreateView();
 private:
-    ComPointer<ID3D12Resource> m_resource = nullptr;           // Depth stencil resource
+    ComPointer<ID3D12Resource> m_resource;                     // Depth stencil resource
     D3D12_DEPTH_STENCIL_VIEW_DESC m_depthStencilDesc = {};     // DSV description
     UINT m_DescriptorHandleIndex = 0;                          // Index in descriptor heap
 };
