@@ -13,6 +13,7 @@
 #include "D3D12/ConstantBuffer.h"
 #include "D3D12/Sampler.h"
 #include "D3D12/DepthStencil.h"
+#include "Core/UI.h"
 
 // Global renderer instance
 Renderer GRenderer;
@@ -27,6 +28,9 @@ void Renderer::Initialize()
 
     // Load all graphics resources and pipeline objects
     Load();
+
+    // Initialize UI after window and device are ready
+    GUI.Initialize();
 }
 
 // -----------------------------------------------------------------------------
@@ -190,6 +194,10 @@ void Renderer::PopulateCommandList()
     // Draw geometry (hardcoded cube: 36 indices)
     GRHI.GetCommandList()->DrawIndexedInstanced(36, 1, 0, 0, 0);
 
+    //GUI.BeginFrame(0.0f);
+    //GUI.Build();    
+    //GUI.Render();
+
     // Prepare for present
     // Transition depth buffer to read state before presenting
     m_depthStencil->SetReadState();
@@ -233,12 +241,12 @@ void Renderer::OnRender()
     // Wait for GPU to finish previous frame
     GRHI.WaitForGPU();
 
-    // Update per-frame data
-    OnUpdate();
-
     // Reset command allocator and command list for new frame
     ThrowIfFailed(GRHI.GetCommandAllocator()->Reset(), "Renderer: Failed To Reset Command Allocator");
     ThrowIfFailed(GRHI.GetCommandList()->Reset(GRHI.GetCommandAllocator().Get(), m_pso->Get().Get()), "Renderer: Failed To Reset Command List");
+
+    // Update per-frame data
+    OnUpdate();
 
     // Record rendering commands
     PopulateCommandList();
@@ -268,6 +276,7 @@ void Renderer::Shutdown()
 
     Renderer::Release();
     GSwapChain.Shutdown();
+    GUI.Shutdown();
     GWindow.Shutdown();
     GRHI.Shutdown();
     GDebugLayer.Shutdown();

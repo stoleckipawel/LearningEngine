@@ -29,14 +29,17 @@ void UI::Initialize()
     D3D12_CPU_DESCRIPTOR_HANDLE cpuStart = GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCPUHandle(0, DescriptorType::UI);
     D3D12_GPU_DESCRIPTOR_HANDLE gpuStart = GDescriptorHeapManager.GetCBVSRVUAVHeap().GetGPUHandle(0, DescriptorType::UI);
 
-    // Initialize the DX12 backend using the shared CBV/SRV/UAV heap
+    // Initialize the DX12 backend 
     ImGui_ImplDX12_Init(
-        GRHI.Device,
+        GRHI.Device.Get(),
         NumFramesInFlight,
-        DXGI_FORMAT_R8G8B8A8_UNORM,
+        GSwapChain.GetBackBufferFormat(),
         GDescriptorHeapManager.GetCBVSRVUAVHeap().GetRaw(),
         cpuStart,
         gpuStart);
+
+    // Ensure device objects (e.g., font atlas) are created up front
+    ImGui_ImplDX12_CreateDeviceObjects();
 }
 
 void UI::Shutdown()
@@ -53,16 +56,17 @@ bool UI::OnWindowMessage(void* hwnd, unsigned int msg, unsigned long long wParam
     return ImGui_ImplWin32_WndProcHandler(reinterpret_cast<HWND>(hwnd), msg, wParam, lParam);
 }
 
-void UI::BeginFrame(float deltaSeconds, float displayWidth, float displayHeight)
+void UI::BeginFrame(float deltaSeconds)
 {
     // Update timing and display size for this frame
     ImGuiIO& io = ImGui::GetIO();
     io.DeltaTime = deltaSeconds;
-    io.DisplaySize = ImVec2(displayWidth, displayHeight);
+    const D3D12_VIEWPORT vp = GSwapChain.GetDefaultViewport();
+    io.DisplaySize = ImVec2(vp.Width, vp.Height);
 
     // Start a new frame for both backends and ImGui core
-    ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
+    ImGui_ImplDX12_NewFrame();
     ImGui::NewFrame();
 }
 
@@ -82,8 +86,18 @@ void UI::BuildFPSOverlay()
     ImGui::Render();
 }
 
+void UI::Build()
+{
+    // Build all UI panels for this frame
+    BuildFPSOverlay();
+}
+
 void UI::Render()
 {
+    // Bind the shared CBV/SRV/UAV heap required by ImGui's DX12 backend
+    //ID3D12DescriptorHeap* heaps[] = { GDescriptorHeapManager.GetCBVSRVUAVHeap().GetRaw() };
+    //GRHI.GetCommandList()->SetDescriptorHeaps(1, heaps);
+
     // Submit ImGui draw data using the engine's command list
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), GRHI.GetCommandList().Get());
 }

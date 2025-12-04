@@ -12,8 +12,9 @@ public:
     bool OnWindowMessage(void* hwnd, unsigned int msg, unsigned long long wParam, long long lParam);
 
     // Per-frame entry/exit
-    void BeginFrame(float deltaSeconds, float displayWidth, float displayHeight);
+    void BeginFrame(float deltaSeconds);
     void BuildFPSOverlay();
+    void Build();
     void Render();
 };
 

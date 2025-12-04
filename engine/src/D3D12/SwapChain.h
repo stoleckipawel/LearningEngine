@@ -1,5 +1,6 @@
-#pragma once
+#include "Core/PCH.h"
 
+#pragma once
 // Number of frames that can be processed simultaneously
 static const UINT NumFramesInFlight = 3;
 
@@ -35,6 +36,8 @@ public:
 	D3D12_VIEWPORT GetDefaultViewport();
 	// Returns the default scissor rectangle for rendering
 	D3D12_RECT GetDefaultScissorRect();
+	// Returns the DXGI format used for back buffers
+	DXGI_FORMAT GetBackBufferFormat() const { return m_backBufferFormat; }
 private:
 	// Current back buffer index
 	UINT m_currentBufferIndex = 0;
@@ -42,6 +45,8 @@ private:
 	ComPointer<IDXGISwapChain3> m_swapChain = nullptr;
 	// Array of render target resources (one per frame)
 	ComPointer<ID3D12Resource2> m_buffers[NumFramesInFlight];
+	// Back buffer format used by the swap chain
+	DXGI_FORMAT m_backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 private:
 	// Creates render target views for all swap chain buffers
 	void CreateRenderTargetViews();

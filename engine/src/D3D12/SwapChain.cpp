@@ -14,7 +14,7 @@ void SwapChain::Initialize()
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	swapChainDesc.Width = GWindow.GetWidth();
 	swapChainDesc.Height = GWindow.GetHeight();
-	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	swapChainDesc.Format = m_backBufferFormat;
 	swapChainDesc.Stereo = false;
 	swapChainDesc.SampleDesc.Quality = 0;
 	swapChainDesc.SampleDesc.Count = 1;
@@ -106,7 +106,7 @@ void SwapChain::CreateRenderTargetViews()
 
 		// Describe the render target view
 		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
-		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		rtvDesc.Format = m_backBufferFormat;
 		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 		rtvDesc.Texture2D.MipSlice = 0;
 		rtvDesc.Texture2D.PlaneSlice = 0;

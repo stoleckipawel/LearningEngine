@@ -143,7 +143,7 @@ PSO::PSO(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler
 
 	    // -- Render Target and Depth Stencil Formats
 	    psoDesc.NumRenderTargets = 1;
-	    psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	    psoDesc.RTVFormats[0] = GSwapChain.GetBackBufferFormat();
 	    psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	// -- Miscellaneous

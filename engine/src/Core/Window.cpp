@@ -2,6 +2,7 @@
 #include "Core/Window.h"
 #include "Core/Renderer.h"
 #include "D3D12/RHI.h"
+#include "Core/UI.h"
 
 Window GWindow;
 
@@ -143,6 +144,12 @@ void Window::SetFullScreen(bool bSetFullScreen)
 // Window message handler (WndProc)
 LRESULT Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+	// Let ImGui process messages first; if handled, consume it
+	if (GUI.OnWindowMessage(wnd, msg, static_cast<UINT64>(wParam), static_cast<LONG64>(lParam)))
+	{
+		return true;
+	}
+
 	switch (msg)
 	{
 		case WM_KEYDOWN:
