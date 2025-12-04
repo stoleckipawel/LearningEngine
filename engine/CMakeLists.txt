@@ -16,6 +16,9 @@ add_library(Engine STATIC
   ${ENGINE_HEADERS}
 )
 
+# Add ImGui third-party library
+add_subdirectory(third_party/imgui)
+
 # Public include directory
 target_include_directories(Engine 
   PUBLIC
@@ -31,13 +34,14 @@ target_include_directories(Engine
 target_compile_features(Engine PUBLIC cxx_std_20)
 
 
-# Link DirectX libraries
+# Link libraries
 target_link_libraries(Engine PUBLIC
   d3d12
   dxgi
   d3dcompiler
   dxguid
   dxcompiler
+  imgui
 )
 
 # Set compiler flags for debug builds

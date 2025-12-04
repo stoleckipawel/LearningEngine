@@ -7,6 +7,7 @@ enum class DescriptorType
 	CBV,
 	SRV,
 	UAV,
+	UI,
 	Other // Covers RTV, Sampler, DSV, etc
 };
 
@@ -44,6 +45,7 @@ private:
 	UINT m_numCBV = 0;
 	UINT m_numSRV = 0;
 	UINT m_numUAV = 0;
+	UINT m_numUI = 1;
 	ComPointer<ID3D12DescriptorHeap> m_heap;
 };
 

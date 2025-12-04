@@ -75,12 +75,12 @@ UINT DescriptorHeap::GetTypeOffset(DescriptorType type) const
 	{
 	case DescriptorType::CBV:
 		return 0;
+	case DescriptorType::UI:
+		return m_numCBV * NumFramesInFlight;	
 	case DescriptorType::SRV:
-		// SRV starts after CBVs
-		return m_numCBV * NumFramesInFlight;
+		return m_numCBV * NumFramesInFlight + m_numUI;
 	case DescriptorType::UAV:
-		// UAV starts after CBVs and SRVs
-		return m_numCBV * NumFramesInFlight + m_numSRV;
+		return m_numCBV * NumFramesInFlight + m_numUI + m_numSRV;
 	case DescriptorType::Other:
 	default:
 		// Other types use offset 0
