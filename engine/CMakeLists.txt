@@ -3,15 +3,12 @@
 # Collect all source files
 file(GLOB_RECURSE ENGINE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/**/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/pch/PCH.cpp
 )
 
 # Collect all header files for IDE visibility
 file(GLOB_RECURSE ENGINE_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/include/**/*.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/pch/PCH.h
 )
-
 
 # Create engine static library
 add_library(Engine STATIC
@@ -23,10 +20,9 @@ add_library(Engine STATIC
 target_include_directories(Engine 
   PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/third_party"
-    "${CMAKE_CURRENT_SOURCE_DIR}/pch"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
   PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"  
     "${CMAKE_CURRENT_SOURCE_DIR}/src/D3D12"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Core"
 )
@@ -56,8 +52,7 @@ endif()
 # --- PCH setup ---
 target_precompile_headers(Engine
     PRIVATE
-      # The relative path from engine folder to pch header
-      pch/pch.h
+      include/Core/PCH.h
 )
 
 # Set ENGINE_PATH environment variable for engine
