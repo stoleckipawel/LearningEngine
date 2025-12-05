@@ -8,8 +8,6 @@ class RHI
 public:
 	// Initialize the RHI and all required resources
 	void Initialize(bool RequireDXRSupport = false);
-	// Close all command lists
-	void CloseCommandLists();
 	// Release all resources and shutdown RHI
 	void Shutdown();
 	// Execute the current command list
@@ -23,8 +21,19 @@ public:
 	// Flush the command queue (signal and wait)
 	void Flush();
 
-	ComPointer<ID3D12GraphicsCommandList7> GetCommandList();
-	ComPointer<ID3D12CommandAllocator> GetCommandAllocator();
+	// Close all command lists
+	void CloseCommandLists();
+	void CloseCommandListScene(UINT FrameIndex);
+	void CloseCommandListUI(UINT FrameIndex);
+	void CloseCommandListScene();
+	void CloseCommandListUI();	
+	void ResetCommandLists();
+
+	ComPointer<ID3D12GraphicsCommandList7> GetCommandListScene();
+	ComPointer<ID3D12GraphicsCommandList7> GetCommandListUI();
+	ComPointer<ID3D12CommandAllocator> GetCommandAllocatorScene();
+	ComPointer<ID3D12CommandAllocator> GetCommandAllocatorUI();
+
 	UINT64 GetFenceValue();
 
 	// Checks for Shader Model 6.0 support
@@ -36,8 +45,10 @@ public:
 	ComPointer<IDXGIAdapter1> Adapter = nullptr;
 	ComPointer<ID3D12Device10> Device = nullptr;
 	ComPointer<ID3D12CommandQueue> CmdQueue = nullptr;
-	ComPointer<ID3D12CommandAllocator> CmdAllocator[NumFramesInFlight] = {};
-	ComPointer<ID3D12GraphicsCommandList7> CmdList[NumFramesInFlight] = {};
+	ComPointer<ID3D12CommandAllocator> CmdAllocatorScene[NumFramesInFlight] = {};
+	ComPointer<ID3D12GraphicsCommandList7> CmdListScene[NumFramesInFlight] = {};
+	ComPointer<ID3D12CommandAllocator> CmdAllocatorUI[NumFramesInFlight] = {};
+	ComPointer<ID3D12GraphicsCommandList7> CmdListUI[NumFramesInFlight] = {};
 
 	// Fence values for each frame in flight
 	UINT64 FenceValues[NumFramesInFlight] = { 0 };

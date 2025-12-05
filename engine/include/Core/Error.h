@@ -41,20 +41,46 @@ inline UINT GetErrorIcon(ELogType logType)
     return MB_ICONERROR;
 }
 
-// Helper to show message box and log
-inline void ShowErrorMessage(const std::string& msg, ELogType logType) 
+
+// Shows an error message, triggers breakpoint in debug, and returns user's choice.
+// Return values: IDOK/IDRETRY/IDCANCEL depending on buttons shown.
+inline int ShowErrorMessage(const std::string& msg, ELogType logType) 
 {
     std::cerr << msg << std::endl;
-    MessageBoxA(nullptr, msg.c_str(), GetErrorTitle(logType), GetErrorIcon(logType) | MB_OK);
+#if defined(_DEBUG)
+    // Trigger a debugger breakpoint first in debug builds
+    if (IsDebuggerPresent())
+        DebugBreak();
+#endif
+
+    UINT flags = GetErrorIcon(logType);
+    int choice = IDOK;
+    if (logType == ELogType::Fatal)
+    {
+        // Allow user to choose whether to Retry (continue) or Cancel (exit)
+        flags |= MB_RETRYCANCEL;
+        choice = MessageBoxA(nullptr, msg.c_str(), GetErrorTitle(logType), flags);
+    }
+    else
+    {
+        flags |= MB_OK;
+        choice = MessageBoxA(nullptr, msg.c_str(), GetErrorTitle(logType), flags);
+    }
+
+    return choice;
 }
 
 // Log message and optionally exit
 inline void LogMessage(const std::string& message, ELogType logType = ELogType::Info)
 {
     std::string formattedMsg = GetSeverityPrefix(logType) + message;
-    ShowErrorMessage(formattedMsg, logType);
+    int choice = ShowErrorMessage(formattedMsg, logType);
     if (logType == ELogType::Fatal)
-        std::exit(EXIT_FAILURE);
+    {
+        if (choice == IDCANCEL)
+            std::exit(EXIT_FAILURE);
+        // If Retry selected, continue execution.
+    }
 }
 
 // Throw if HRESULT failed, log error and optionally exit
@@ -65,8 +91,12 @@ inline void ThrowIfFailed(HRESULT hr, const char* message, ELogType logType = EL
         char buf[512];
         std::snprintf(buf, sizeof(buf), "%s\nHRESULT 0x%08X", message, static_cast<unsigned int>(hr));
         std::string formattedMsg = std::string(GetSeverityPrefix(logType)) + std::string(buf);
-        ShowErrorMessage(formattedMsg, logType);
+        int choice = ShowErrorMessage(formattedMsg, logType);
         if (logType == ELogType::Fatal)
-            std::exit(EXIT_FAILURE);
+        {
+            if (choice == IDCANCEL)
+                std::exit(EXIT_FAILURE);
+            // Retry continues execution so caller can attempt recovery or re-run
+        }
     }
 }

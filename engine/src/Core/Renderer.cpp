@@ -119,10 +119,10 @@ void Renderer::Release()
 void Renderer::SetViewport()
 {
     D3D12_VIEWPORT viewport = GSwapChain.GetDefaultViewport();
-    GRHI.GetCommandList()->RSSetViewports(1, &viewport);
+    GRHI.GetCommandListScene()->RSSetViewports(1, &viewport);
 
     D3D12_RECT scissorRect = GSwapChain.GetDefaultScissorRect();
-    GRHI.GetCommandList()->RSSetScissorRects(1, &scissorRect);
+    GRHI.GetCommandListScene()->RSSetScissorRects(1, &scissorRect);
 }
 
 // -----------------------------------------------------------------------------
@@ -132,7 +132,7 @@ void Renderer::SetBackBufferRTV()
 {
     D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GSwapChain.GetCPUHandle();
     D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle = m_depthStencil->GetCPUHandle();
-    GRHI.GetCommandList()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &depthStencilHandle);
+    GRHI.GetCommandListScene()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &depthStencilHandle);
 }
 
 // -----------------------------------------------------------------------------
@@ -141,22 +141,22 @@ void Renderer::SetBackBufferRTV()
 void Renderer::BindDescriptorTables()
 {
     // Texture
-    GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
+    GRHI.GetCommandListScene()->SetGraphicsRootDescriptorTable(
         0,
         m_texture->GetGPUHandle());
 
     // Sampler
-    GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
+    GRHI.GetCommandListScene()->SetGraphicsRootDescriptorTable(
         1,
         m_sampler->GetGPUHandle());
 
     // Vertex constant buffer
-    GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
+    GRHI.GetCommandListScene()->SetGraphicsRootDescriptorTable(
         2,
         GConstantBufferManager.VertexConstantBuffers[GSwapChain.GetBackBufferIndex()]->GetGPUHandle());
 
     // Pixel constant buffer
-    GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
+    GRHI.GetCommandListScene()->SetGraphicsRootDescriptorTable(
         3,
         GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetBackBufferIndex()]->GetGPUHandle());
 }
@@ -173,7 +173,7 @@ void Renderer::PopulateCommandList()
     m_depthStencil->SetWriteState();
 
     // Bind root signature
-    GRHI.GetCommandList()->SetGraphicsRootSignature(m_rootSignature->Get());
+    GRHI.GetCommandListScene()->SetGraphicsRootSignature(m_rootSignature->Get());
 
     // Set viewport and render targets
     SetViewport();
@@ -185,12 +185,12 @@ void Renderer::PopulateCommandList()
     m_vertecies->Set();
 
     // Bind descriptor heaps and tables
-    GDescriptorHeapManager.SetShaderVisibleHeaps();
+    GDescriptorHeapManager.SetShaderVisibleHeapsScene();
     BindDescriptorTables();
     m_pso->Set();
 
     // Draw geometry (hardcoded cube: 36 indices)
-    GRHI.GetCommandList()->DrawIndexedInstanced(36, 1, 0, 0, 0);
+    GRHI.GetCommandListScene()->DrawIndexedInstanced(36, 1, 0, 0, 0);
 
     GUI.BeginFrame(0.0f);
     //GUI.Build();    
@@ -240,8 +240,7 @@ void Renderer::OnRender()
     GRHI.WaitForGPU();
 
     // Reset command allocator and command list for new frame
-    ThrowIfFailed(GRHI.GetCommandAllocator()->Reset(), "Renderer: Failed To Reset Command Allocator");
-    ThrowIfFailed(GRHI.GetCommandList()->Reset(GRHI.GetCommandAllocator().Get(), m_pso->Get().Get()), "Renderer: Failed To Reset Command List");
+    GRHI.ResetCommandLists();
 
     // Update per-frame data
     OnUpdate();
@@ -249,8 +248,7 @@ void Renderer::OnRender()
     // Record rendering commands
     PopulateCommandList();
 
-    // Close command list
-    ThrowIfFailed(GRHI.GetCommandList()->Close(), "Failed To Close Command List");
+    GRHI.CloseCommandListScene();
 
     // Execute command list
     GRHI.ExecuteCommandList();

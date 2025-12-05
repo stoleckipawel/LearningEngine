@@ -19,9 +19,9 @@ class DescriptorHeapManager
 public:
 	// Initializes all descriptor heaps.
 	void Initialize();
-
-	// Sets the shader-visible heaps for the current command list.
-	void SetShaderVisibleHeaps();
+	
+	void SetShaderVisibleHeapsScene();
+	void SetShaderVisibleHeapsUI();
 
 	// Releases all descriptor heap resources.
 	void Release();
@@ -37,7 +37,8 @@ public:
 
 	// Returns reference to the Render Target View heap.
 	DescriptorHeap& GetRenderTargetViewHeap() { return *m_RenderTargetViewHeap; }
-
+private:
+	void SetShaderVisibleHeaps(ComPointer<ID3D12GraphicsCommandList7> cmdList);	
 private:
 	std::unique_ptr<DescriptorHeap> m_CBVSRVUAVHeap;        // CBV/SRV/UAV heap (shader visible)
 	std::unique_ptr<DescriptorHeap> m_SamplerHeap;          // Sampler heap (shader visible)

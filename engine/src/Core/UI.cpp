@@ -42,12 +42,12 @@ void UI::Initialize()
 
 void UI::BeginFrame(float deltaSeconds)
 {
-    /*
+
     // Update timing and display size for this frame
     ImGuiIO& io = ImGui::GetIO();
     io.DeltaTime = deltaSeconds;
     io.DisplaySize = ImVec2(GWindow.GetWidth(), GWindow.GetHeight());
-
+    /*
     ImGui_ImplWin32_NewFrame();
     ImGui_ImplDX12_NewFrame();
     ImGui::NewFrame();
@@ -77,12 +77,9 @@ void UI::Build()
 
 void UI::Render()
 {
-    // Ensure the shader-visible CBV/SRV/UAV heap is bound before rendering ImGui
-    //ID3D12GraphicsCommandList* cmd = GRHI.GetCommandList().Get();
-    //ID3D12DescriptorHeap* heaps[] = { GDescriptorHeapManager.GetCBVSRVUAVHeap().GetRaw() };
-    //cmd->SetDescriptorHeaps(1, heaps);
-
-    //ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), cmd);
+    //GDescriptorHeapManager.SetShaderVisibleHeapsUI();
+    //ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), GRHI.GetCommandListUI().Get());
+    //GRHI.CloseCommandListUI();
 }
 
 void UI::Shutdown()

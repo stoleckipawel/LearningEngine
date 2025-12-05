@@ -96,11 +96,11 @@ void Geometry::Release()
 void Geometry::Set()
 {
 	// Bind vertex buffer
-	GRHI.GetCommandList()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+	GRHI.GetCommandListScene()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 	// Bind index buffer
-	GRHI.GetCommandList()->IASetIndexBuffer(&m_indexBufferView);
+	GRHI.GetCommandListScene()->IASetIndexBuffer(&m_indexBufferView);
 	// Set primitive topology
-	GRHI.GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	GRHI.GetCommandListScene()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 

@@ -47,17 +47,27 @@ void DescriptorHeapManager::Initialize()
 }
 
 
-// Sets the shader-visible descriptor heaps for the current command list
-void DescriptorHeapManager::SetShaderVisibleHeaps()
+// Core: set shader-visible heaps on a given command list
+void DescriptorHeapManager::SetShaderVisibleHeaps(ComPointer<ID3D12GraphicsCommandList7> cmdList)
 {
 	ID3D12DescriptorHeap* heaps[] =
 	{
 		m_CBVSRVUAVHeap->GetRaw(), // CBV/SRV/UAV heap
-		m_SamplerHeap->GetRaw()    // Sampler heap
+		m_SamplerHeap->GetRaw()    // Sampler heap (optional for UI; harmless)
 	};
+	cmdList->SetDescriptorHeaps(_countof(heaps), heaps);
+}
 
-	// Bind the descriptor heaps to the command list
-	GRHI.GetCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
+// Convenience: scene command list
+void DescriptorHeapManager::SetShaderVisibleHeapsScene()
+{
+	SetShaderVisibleHeaps(GRHI.GetCommandListScene());
+}
+
+// Convenience: UI command list
+void DescriptorHeapManager::SetShaderVisibleHeapsUI()
+{
+	SetShaderVisibleHeaps(GRHI.GetCommandListUI());
 }
 
 

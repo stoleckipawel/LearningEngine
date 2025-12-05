@@ -5,22 +5,6 @@
 
 RHI GRHI;
 
-ComPointer<ID3D12GraphicsCommandList7> RHI::GetCommandList()
-{
-	return GRHI.CmdList[GSwapChain.GetBackBufferIndex()];
-}
-
-ComPointer<ID3D12CommandAllocator> RHI::GetCommandAllocator()
-{
-	return GRHI.CmdAllocator[GSwapChain.GetBackBufferIndex()];
-}
-
-UINT64 RHI::GetFenceValue()
-{
-	return GRHI.FenceValues[GSwapChain.GetBackBufferIndex()];
-}
-
-
 // Selects the best available adapter (GPU) that supports Direct3D 12
 void RHI::SelectAdapter()
 {
@@ -116,20 +100,21 @@ void RHI::Initialize(bool RequireDXRSupport)
 	{
 		for (size_t i = 0; i < NumFramesInFlight; ++i) 
 		{ 
-			ThrowIfFailed(GRHI.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&GRHI.CmdAllocator[i])), "RHI: Failed To Create Command Allocator"); 
-			ThrowIfFailed(GRHI.CmdAllocator[i]->Reset(), "RHI: Failed to Reset Command Allocator");
+			ThrowIfFailed(GRHI.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&GRHI.CmdAllocatorScene[i])), "RHI: Failed To Create Scene Command Allocator"); 
+			ThrowIfFailed(GRHI.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&GRHI.CmdAllocatorUI[i])), "RHI: Failed To Create UI Command Allocator");
 		}
 	}
 
 	// Create Command Lists (Frame Buffered)
 	for (size_t i = 0; i < NumFramesInFlight; ++i)
 	{
-		ThrowIfFailed(GRHI.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, GRHI.CmdAllocator[i].Get(), nullptr, IID_PPV_ARGS(&GRHI.CmdList[i])), "RHI: Failed To Create Command List");
+		ThrowIfFailed(GRHI.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, GRHI.CmdAllocatorScene[i].Get(), nullptr, IID_PPV_ARGS(&GRHI.CmdListScene[i])), "RHI: Failed To Create Scene Command List");
+		ThrowIfFailed(GRHI.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, GRHI.CmdAllocatorUI[i].Get(), nullptr, IID_PPV_ARGS(&GRHI.CmdListUI[i])), "RHI: Failed To Create UI Command List");
 	}
     
 	// Create Fence for GPU/CPU synchronization
 	{
-		for (size_t i = 0; i < NumFramesInFlight; ++i)
+		for (UINT i = 0; i < NumFramesInFlight; ++i)
 		{
 			GRHI.FenceValues[i] = 0;
 		}
@@ -144,24 +129,77 @@ void RHI::Initialize(bool RequireDXRSupport)
 	}
 }
 
+ComPointer<ID3D12GraphicsCommandList7> RHI::GetCommandListScene()
+{
+	return GRHI.CmdListScene[GSwapChain.GetBackBufferIndex()];
+}
 
-// Closes all command lists for each frame in flight
+ComPointer<ID3D12GraphicsCommandList7> RHI::GetCommandListUI()
+{
+	return GRHI.CmdListUI[GSwapChain.GetBackBufferIndex()];
+}
+
+ComPointer<ID3D12CommandAllocator> RHI::GetCommandAllocatorScene()
+{
+	return GRHI.CmdAllocatorScene[GSwapChain.GetBackBufferIndex()];
+}
+
+ComPointer<ID3D12CommandAllocator> RHI::GetCommandAllocatorUI()
+{
+	return GRHI.CmdAllocatorUI[GSwapChain.GetBackBufferIndex()];
+}
+
+UINT64 RHI::GetFenceValue()
+{
+	return GRHI.FenceValues[GSwapChain.GetBackBufferIndex()];
+}
+
+void RHI::CloseCommandListScene(UINT FrameIndex)
+{
+	ThrowIfFailed(GRHI.CmdListScene[FrameIndex]->Close(), "RHI: Failed To Close Scene Command List");
+}
+
+void RHI::CloseCommandListUI(UINT FrameIndex)
+{
+	ThrowIfFailed(GRHI.CmdListUI[FrameIndex]->Close(), "RHI: Failed To Close UI Command List");		
+}
+
+void RHI::CloseCommandListScene()
+{
+	CloseCommandListScene(GSwapChain.GetBackBufferIndex());
+}
+
+void RHI::CloseCommandListUI()
+{
+	CloseCommandListUI(GSwapChain.GetBackBufferIndex());
+}
+
 void RHI::CloseCommandLists()
 {
-	for (size_t i = 0; i < NumFramesInFlight; ++i)
+	for (UINT i = 0; i < NumFramesInFlight; ++i)
 	{
-		ThrowIfFailed(GRHI.CmdList[i]->Close(), "RHI: Failed To Close Command List");
+		CloseCommandListScene(i);
+		CloseCommandListUI(i);
 	}
 }
 
+void RHI::ResetCommandLists()
+{
+	ThrowIfFailed(GetCommandAllocatorScene()->Reset(), "RHI: Failed To Reset Scene Command Allocator");
+	ThrowIfFailed(GetCommandListScene()->Reset(GetCommandAllocatorScene().Get(), nullptr), "RHI: Failed To Reset Scene Command List");
+	//ThrowIfFailed(GetCommandAllocatorUI()->Reset(), "RHI: Failed To Reset UI Command Allocator");
+	//ThrowIfFailed(GetCommandListUI()->Reset(GetCommandAllocatorUI().Get(), nullptr), "RHI: Failed To Reset UI Command List");
+}
 
 // Releases all resources and shuts down the RHI
 void RHI::Shutdown()
 {
-	for(size_t i = 0; i < NumFramesInFlight; ++i) 
+	for(UINT i = 0; i < NumFramesInFlight; ++i) 
 	{ 
-		GRHI.CmdAllocator[i].Release();
-		GRHI.CmdList[i].Release();
+		GRHI.CmdAllocatorScene[i].Release();
+		GRHI.CmdListScene[i].Release();
+		GRHI.CmdAllocatorUI[i].Release();
+		GRHI.CmdListUI[i].Release();
 	}
 
 	if (FenceEvent)
@@ -179,7 +217,7 @@ void RHI::Shutdown()
 // Executes the current command list on the command queue
 void RHI::ExecuteCommandList()
 {
-	ID3D12CommandList* ppcommandLists[] = { GRHI.GetCommandList().Get() };
+	ID3D12CommandList* ppcommandLists[] = { GRHI.GetCommandListScene().Get() };
 	GRHI.CmdQueue->ExecuteCommandLists(1, ppcommandLists);
 }
 
@@ -196,7 +234,7 @@ void RHI::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore
 	barrier.Transition.StateBefore = StateBefore;
 	barrier.Transition.StateAfter = StateAfter;
 
-	GRHI.GetCommandList()->ResourceBarrier(1, &barrier);
+	GRHI.GetCommandListScene()->ResourceBarrier(1, &barrier);
 }
 
 

@@ -192,5 +192,5 @@ PSO::~PSO()
 // Sets the pipeline state object for the current command list.
 void PSO::Set()
 {
-	GRHI.GetCommandList()->SetPipelineState(m_pso);
+	GRHI.GetCommandListScene()->SetPipelineState(m_pso);
 }

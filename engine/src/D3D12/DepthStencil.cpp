@@ -54,7 +54,7 @@ void DepthStencil::CreateResource()
 			&heapDefaultProperties,
 			D3D12_HEAP_FLAG_NONE,
 			&depthStencilResourceDesc,
-			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			D3D12_RESOURCE_STATE_DEPTH_READ,
 			&depthOptimizedClearValue,
 			IID_PPV_ARGS(&m_resource)),
 		"Depth Stencil: Failed To Create Resource"
@@ -83,7 +83,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE DepthStencil::GetCPUHandle()
 void DepthStencil::Clear()
 {
 	// Reversed-Z clear values: depth=0.0, stencil=0
-	GRHI.GetCommandList()->ClearDepthStencilView(GetCPUHandle(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 0.0f, 0, 0, nullptr);
+	GRHI.GetCommandListScene()->ClearDepthStencilView(GetCPUHandle(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 0.0f, 0, 0, nullptr);
 }
 
 // Transition depth buffer to write state before rendering
