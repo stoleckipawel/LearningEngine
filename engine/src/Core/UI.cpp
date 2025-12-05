@@ -47,11 +47,10 @@ void UI::BeginFrame(float deltaSeconds)
     ImGuiIO& io = ImGui::GetIO();
     io.DeltaTime = deltaSeconds;
     io.DisplaySize = ImVec2(GWindow.GetWidth(), GWindow.GetHeight());
-    /*
+
     ImGui_ImplWin32_NewFrame();
     ImGui_ImplDX12_NewFrame();
     ImGui::NewFrame();
-    */
 }
 
 void UI::BuildFPSOverlay()
@@ -72,14 +71,13 @@ void UI::BuildFPSOverlay()
 
 void UI::Build()
 {
-    //BuildFPSOverlay();
+    BuildFPSOverlay();
 }
 
 void UI::Render()
 {
-    //GDescriptorHeapManager.SetShaderVisibleHeapsUI();
-    //ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), GRHI.GetCommandListUI().Get());
-    //GRHI.CloseCommandListUI();
+    GDescriptorHeapManager.SetShaderVisibleHeapsUI();
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), GRHI.GetCommandListUI().Get());
 }
 
 void UI::Shutdown()

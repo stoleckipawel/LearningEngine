@@ -187,8 +187,6 @@ void RHI::ResetCommandLists()
 {
 	ThrowIfFailed(GetCommandAllocatorScene()->Reset(), "RHI: Failed To Reset Scene Command Allocator");
 	ThrowIfFailed(GetCommandListScene()->Reset(GetCommandAllocatorScene().Get(), nullptr), "RHI: Failed To Reset Scene Command List");
-	//ThrowIfFailed(GetCommandAllocatorUI()->Reset(), "RHI: Failed To Reset UI Command Allocator");
-	//ThrowIfFailed(GetCommandListUI()->Reset(GetCommandAllocatorUI().Get(), nullptr), "RHI: Failed To Reset UI Command List");
 }
 
 // Releases all resources and shuts down the RHI

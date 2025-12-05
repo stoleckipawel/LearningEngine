@@ -193,8 +193,8 @@ void Renderer::PopulateCommandList()
     GRHI.GetCommandListScene()->DrawIndexedInstanced(36, 1, 0, 0, 0);
 
     GUI.BeginFrame(0.0f);
-    //GUI.Build();    
-    //GUI.Render();
+    GUI.Build();    
+    GUI.Render();
 
     // Prepare for present
     // Transition depth buffer to read state before presenting
