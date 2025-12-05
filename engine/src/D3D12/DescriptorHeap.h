@@ -6,7 +6,6 @@ enum class DescriptorType
 {
 	CBV,
 	SRV,
-	UAV,
 	UI,
 	Other // Covers RTV, Sampler, DSV, etc
 };
@@ -22,7 +21,7 @@ public:
 	// Create general descriptor heap (RTV, DSV, Sampler, etc)
 	explicit DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name);
 	// Create CBV/SRV/UAV descriptor heap
-	explicit DescriptorHeap(UINT numCBV, UINT numSRV, UINT numUAV, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name);
+	explicit DescriptorHeap(UINT numCBV, UINT numSRV, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name);
 
 	// Move constructor and assignment
 	DescriptorHeap(DescriptorHeap&& other) noexcept;
@@ -44,8 +43,6 @@ private:
 	D3D12_DESCRIPTOR_HEAP_DESC m_heapDesc = {};
 	UINT m_numCBV = 0;
 	UINT m_numSRV = 0;
-	UINT m_numUAV = 0;
-	UINT m_numUI = 1;
 	ComPointer<ID3D12DescriptorHeap> m_heap;
 };
 

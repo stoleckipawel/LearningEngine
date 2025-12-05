@@ -9,8 +9,7 @@ void DescriptorHeapManager::Initialize()
 {
 	// Number of descriptors for each heap type
 	constexpr UINT CBVCount = 2; // Constant Buffer Views
-	constexpr UINT SRVCount = 2; // Shader Resource Views (+1 for UI)
-	constexpr UINT UAVCount = 0; // Unordered Access Views
+	constexpr UINT SRVCount = 2; // Shader Resource Views
 	constexpr UINT SamplerCount = 1; // Samplers Views
 	constexpr UINT DepthStencilCount = 1; // Depth Stencil Views
 
@@ -18,7 +17,6 @@ void DescriptorHeapManager::Initialize()
 	m_CBVSRVUAVHeap = std::make_unique<DescriptorHeap>(
 		CBVCount,
 		SRVCount,
-		UAVCount,
 		D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
 		L"CBVSRVUAVHeap"
 	);

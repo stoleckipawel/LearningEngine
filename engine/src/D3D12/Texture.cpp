@@ -11,7 +11,7 @@ Texture::Texture(const std::filesystem::path& fileName, UINT descriptorHandleInd
 	m_loader = std::make_unique<TextureLoader>(fileName);
 	CreateResource();
 	UploadToGPU();
-	CreateSRV();
+	CreateShaderResourceView();
 }
 
 // Creates the committed GPU resource for the texture and its upload buffer
@@ -92,7 +92,7 @@ void Texture::UploadToGPU()
 }
 
 // Creates the shader resource view (SRV) for the texture
-void Texture::CreateSRV()
+void Texture::CreateShaderResourceView()
 {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = m_loader->GetData().dxgiPixelFormat;

@@ -144,9 +144,9 @@ void Window::SetFullScreen(bool bSetFullScreen)
 // Window message handler (WndProc)
 LRESULT Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	// Let ImGui process messages first; if handled, consume it
 	if (GUI.OnWindowMessage(wnd, msg, static_cast<UINT64>(wParam), static_cast<LONG64>(lParam)))
 	{
+		//GUI Layer enforces being first & if it returns true we must stop processing further events
 		return true;
 	}
 

@@ -8,24 +8,19 @@
 Sampler::Sampler(UINT DescriptorHandleIndex)
     : m_DescriptorHandleIndex(DescriptorHandleIndex)
 {
-    // Set up default sampler description
-    m_desc.Filter = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
-    m_desc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    m_desc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    m_desc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    m_desc.MipLODBias = 0.0f;
-    m_desc.MaxAnisotropy = 0;
-    m_desc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-    m_desc.MinLOD = 0.0f;
-    m_desc.MaxLOD = D3D12_FLOAT32_MAX;
+    D3D12_SAMPLER_DESC samplerDesc = {};
+    samplerDesc.Filter = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
+    samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    samplerDesc.MipLODBias = 0.0f;
+    samplerDesc.MaxAnisotropy = 0;
+    samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    samplerDesc.MinLOD = 0.0f;
+    samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 
     // Create the sampler in the descriptor heap
-    GRHI.Device->CreateSampler(&m_desc, GetCPUHandle());
-}
-
-Sampler::~Sampler()
-{
-
+    GRHI.Device->CreateSampler(&samplerDesc, GetCPUHandle());
 }
 
 // Returns the GPU descriptor handle for this sampler

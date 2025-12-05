@@ -28,9 +28,6 @@ void Renderer::Initialize()
 
     // Load all graphics resources and pipeline objects
     Load();
-
-    // Initialize UI after window and device are ready
-    GUI.Initialize();
 }
 
 // -----------------------------------------------------------------------------
@@ -104,6 +101,7 @@ void Renderer::Load()
     LoadSamplers();
     CreatePSOs();
     CreateFrameBuffers();
+    GUI.Initialize();
     PostLoad();
 }
 
@@ -194,7 +192,7 @@ void Renderer::PopulateCommandList()
     // Draw geometry (hardcoded cube: 36 indices)
     GRHI.GetCommandList()->DrawIndexedInstanced(36, 1, 0, 0, 0);
 
-    //GUI.BeginFrame(0.0f);
+    GUI.BeginFrame(0.0f);
     //GUI.Build();    
     //GUI.Render();
 

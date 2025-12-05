@@ -16,14 +16,12 @@ DescriptorHeap::DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescript
 }
 
 // CBV/SRV/UAV descriptor heap
-DescriptorHeap::DescriptorHeap(UINT numCBV, UINT numSRV, UINT numUAV, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name)
+DescriptorHeap::DescriptorHeap(UINT numCBV, UINT numSRV, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name)
+	: m_numCBV(numCBV),
+	  m_numSRV(numSRV)
 {
-	m_numCBV = numCBV;
-	m_numSRV = numSRV;
-	m_numUAV = numUAV;
-
 	// Calculate total descriptors
-	UINT numDescriptors = numCBV * NumFramesInFlight + numSRV + numUAV;
+	UINT numDescriptors = numCBV * NumFramesInFlight + numSRV;
 
 	m_heapDesc.NumDescriptors = numDescriptors;
 	m_heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -40,8 +38,7 @@ DescriptorHeap::DescriptorHeap(DescriptorHeap&& other) noexcept
 	: m_heap(std::move(other.m_heap)),
 	  m_heapDesc(other.m_heapDesc),
 	  m_numCBV(other.m_numCBV),
-	  m_numSRV(other.m_numSRV),
-	  m_numUAV(other.m_numUAV)
+	  m_numSRV(other.m_numSRV)
 {
 	other.m_heap = nullptr;
 }
@@ -56,7 +53,6 @@ DescriptorHeap& DescriptorHeap::operator=(DescriptorHeap&& other) noexcept
 		m_heapDesc = other.m_heapDesc;
 		m_numCBV = other.m_numCBV;
 		m_numSRV = other.m_numSRV;
-		m_numUAV = other.m_numUAV;
 		other.m_heap = nullptr;
 	}
 	return *this;
@@ -75,15 +71,13 @@ UINT DescriptorHeap::GetTypeOffset(DescriptorType type) const
 	{
 	case DescriptorType::CBV:
 		return 0;
-	case DescriptorType::UI:
-		return m_numCBV * NumFramesInFlight;	
 	case DescriptorType::SRV:
-		return m_numCBV * NumFramesInFlight + m_numUI;
-	case DescriptorType::UAV:
-		return m_numCBV * NumFramesInFlight + m_numUI + m_numSRV;
+		// SRV starts after CBVs
+		return m_numCBV * NumFramesInFlight;
+	case DescriptorType::UI:
+		return m_numCBV * NumFramesInFlight + (m_numSRV - 1);//UI is last SRV descriptor	
 	case DescriptorType::Other:
 	default:
-		// Other types use offset 0
 		return 0;
 	}
 }

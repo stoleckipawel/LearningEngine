@@ -27,13 +27,16 @@ public:
     void SetWriteState();
     // Transition depth buffer to readable state after rendering
     void SetReadState();
+    
+    // Internal helper: returns underlying resource (if ever needed internally)
+    ComPointer<ID3D12Resource> GetResource() const { return m_resource; }
 private:
     // Creates the depth stencil resource on the GPU
     void CreateResource();
     // Releases the depth stencil resource
     void Release();
     // Creates the depth stencil view in the descriptor heap
-    void CreateView();
+    void CreateDepthStencilView();
 private:
     ComPointer<ID3D12Resource> m_resource;                     // Depth stencil resource
     D3D12_DEPTH_STENCIL_VIEW_DESC m_depthStencilDesc = {};     // DSV description

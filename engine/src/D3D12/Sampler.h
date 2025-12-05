@@ -6,8 +6,6 @@ class Sampler
 public:
     // Constructs a sampler and creates it in the descriptor heap
     Sampler(UINT DescriptorHandleIndex);
-    // Destructor releases resources 
-    ~Sampler();
 
     Sampler(const Sampler&) = delete;
     Sampler& operator=(const Sampler&) = delete;
@@ -19,6 +17,5 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const;
 private:
     UINT m_DescriptorHandleIndex = 0;  // Index in the sampler descriptor heap
-    D3D12_SAMPLER_DESC m_desc = {};    // Sampler description
 };
 

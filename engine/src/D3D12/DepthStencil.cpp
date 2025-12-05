@@ -8,7 +8,7 @@ DepthStencil::DepthStencil(UINT descriptorHandleIndex)
 	: m_DescriptorHandleIndex(descriptorHandleIndex)
 {
 	CreateResource();
-	CreateView();
+	CreateDepthStencilView();
 }
 
 // Creates the depth stencil resource on the GPU
@@ -54,7 +54,7 @@ void DepthStencil::CreateResource()
 			&heapDefaultProperties,
 			D3D12_HEAP_FLAG_NONE,
 			&depthStencilResourceDesc,
-			D3D12_RESOURCE_STATE_DEPTH_READ,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,
 			&depthOptimizedClearValue,
 			IID_PPV_ARGS(&m_resource)),
 		"Depth Stencil: Failed To Create Resource"
@@ -62,7 +62,7 @@ void DepthStencil::CreateResource()
 }
 
 // Creates the depth stencil view in the descriptor heap
-void DepthStencil::CreateView()
+void DepthStencil::CreateDepthStencilView()
 {
 	GRHI.Device->CreateDepthStencilView(m_resource, &m_depthStencilDesc, GetCPUHandle());
 }

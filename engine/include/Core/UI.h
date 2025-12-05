@@ -9,7 +9,7 @@ public:
     void Shutdown();
 
     // Forward platform messages (WndProc)
-    bool OnWindowMessage(void* hwnd, unsigned int msg, unsigned long long wParam, long long lParam);
+    bool OnWindowMessage(HWND hwnd, unsigned int msg, unsigned long long wParam, long long lParam);
 
     // Per-frame entry/exit
     void BeginFrame(float deltaSeconds);

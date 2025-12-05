@@ -29,7 +29,7 @@ private:
     // Uploads the texture data to the GPU resource
     void UploadToGPU();
     // Creates the shader resource view (SRV) for the texture
-    void CreateSRV();
+    void CreateShaderResourceView();
 private:
     // GPU resource for the texture
     ComPointer<ID3D12Resource2> m_textureResource = nullptr;
