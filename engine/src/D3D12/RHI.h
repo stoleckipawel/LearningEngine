@@ -25,8 +25,7 @@ public:
 	void CloseCommandLists();
 	void CloseCommandListScene(UINT FrameIndex);
 	void CloseCommandListUI(UINT FrameIndex);
-	void CloseCommandListScene();
-	void CloseCommandListUI();	
+	void CloseCommandListScene();	
 	void ResetCommandLists();
 
 	ComPointer<ID3D12GraphicsCommandList7> GetCommandListScene();

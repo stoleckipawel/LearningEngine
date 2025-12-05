@@ -169,10 +169,6 @@ void RHI::CloseCommandListScene()
 	CloseCommandListScene(GSwapChain.GetBackBufferIndex());
 }
 
-void RHI::CloseCommandListUI()
-{
-	CloseCommandListUI(GSwapChain.GetBackBufferIndex());
-}
 
 void RHI::CloseCommandLists()
 {
