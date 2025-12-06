@@ -32,7 +32,7 @@ void UI::Initialize()
 
     // Initialize the DX12 backend 
     ImGui_ImplDX12_Init(
-        GRHI.Device.Get(),
+        GRHI.GetDevice().Get(),
         NumFramesInFlight,
         GSwapChain.GetBackBufferFormat(),
         GDescriptorHeapManager.GetCBVSRVUAVHeap().GetRaw(),
@@ -42,7 +42,6 @@ void UI::Initialize()
 
 void UI::BeginFrame(float deltaSeconds)
 {
-
     // Update timing and display size for this frame
     ImGuiIO& io = ImGui::GetIO();
     io.DeltaTime = deltaSeconds;

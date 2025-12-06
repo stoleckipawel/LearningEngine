@@ -34,7 +34,7 @@ void Texture::CreateResource()
 	// Create the default heap resource for the texture
 	CD3DX12_HEAP_PROPERTIES heapDefaultProperties(D3D12_HEAP_TYPE_DEFAULT);
 	ThrowIfFailed(
-		GRHI.Device->CreateCommittedResource(
+		GRHI.GetDevice()->CreateCommittedResource(
 			&heapDefaultProperties,
 			D3D12_HEAP_FLAG_NONE,
 			&m_texResourceDesc,
@@ -43,6 +43,7 @@ void Texture::CreateResource()
 			IID_PPV_ARGS(&m_textureResource)),
 		"Texture: Failed To Create Texture Resource"
 	);
+	m_textureResource->SetName(L"RHI_Texture");
 
 	// Calculate required size for the upload buffer
 	UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_textureResource.Get(), 0, 1); // Update when adding mipmaps
@@ -51,7 +52,7 @@ void Texture::CreateResource()
 	CD3DX12_HEAP_PROPERTIES heapUploadProperties(D3D12_HEAP_TYPE_UPLOAD);
 	CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
 	ThrowIfFailed(
-		GRHI.Device->CreateCommittedResource(
+		GRHI.GetDevice()->CreateCommittedResource(
 			&heapUploadProperties,
 			D3D12_HEAP_FLAG_NONE,
 			&resourceDesc,
@@ -101,7 +102,7 @@ void Texture::CreateShaderResourceView()
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2D.MipLevels = 1; // TODO: Update when adding mipmaps
 
-	GRHI.Device->CreateShaderResourceView(
+	GRHI.GetDevice()->CreateShaderResourceView(
 		m_textureResource.Get(),
 		&srvDesc,
 		GetCPUHandle()

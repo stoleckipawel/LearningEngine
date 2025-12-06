@@ -157,12 +157,12 @@ PSO::PSO(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler
 
 
 	// -- Create PSO (manual HRESULT check and info queue logging)
-	HRESULT hr = GRHI.Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pso));
+	HRESULT hr = GRHI.GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pso));
 	if (FAILED(hr))
 	{	
 		// If debug layer is enabled, query InfoQueue for messages
 		ComPointer<ID3D12InfoQueue> infoQueue;
-		if (SUCCEEDED(GRHI.Device->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
+		if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
 			UINT64 numMessages = infoQueue->GetNumStoredMessages();
 			for (UINT64 i = 0; i < numMessages; ++i) {
 				SIZE_T messageLength = 0;
@@ -177,6 +177,8 @@ PSO::PSO(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler
 		std::snprintf(buf, sizeof(buf), "Failed To Create PSO. HRESULT: 0x%08X", static_cast<unsigned int>(hr));
 		LogMessage(buf, ELogType::Fatal);
 	}
+
+	m_pso->SetName(L"RHI_PipelineState");
 }
 
 void PSO::Release()

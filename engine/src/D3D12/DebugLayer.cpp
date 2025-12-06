@@ -41,7 +41,7 @@ void DebugLayer::InitDXGIDebug()
 void DebugLayer::ConfigureInfoQueue()
 {
 	ComPointer<ID3D12InfoQueue> infoQueue;
-	if (SUCCEEDED(GRHI.Device->QueryInterface(IID_PPV_ARGS(&infoQueue))))
+	if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(&infoQueue))))
 	{
 		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
 		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
@@ -53,7 +53,7 @@ void DebugLayer::ConfigureInfoQueue()
 void DebugLayer::ApplyInfoQueueFilters()
 {
 	ComPointer<ID3D12InfoQueue> infoQueue;
-	if (SUCCEEDED(GRHI.Device->QueryInterface(IID_PPV_ARGS(&infoQueue))))
+	if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(&infoQueue))))
 	{
 		//Suppress FENCE_ZERO_WAIT (SDK layer noise/bug); not always present in headers
 		const int D3D12_MESSAGE_ID_FENCE_ZERO_WAIT_ = 1424;
@@ -68,12 +68,34 @@ void DebugLayer::ApplyInfoQueueFilters()
 // Shuts down the debug layers and reports live objects (only in debug builds)
 void DebugLayer::Shutdown()
 {
-	if (m_dxgiDebug)
-	{
-		OutputDebugStringW(L"DXGI Reports Living Device Objects: \n");
-		m_dxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_ALL));
-	}
-
+#if defined(_DEBUG)
+	ReportLiveDXGIObjects();
 	m_dxgiDebug.Release();
 	m_d3d12Debug.Release();
+#endif
+}
+
+// Reports live D3D12 device objects (must be called before device is released)
+void DebugLayer::ReportLiveDeviceObjects()
+{
+#if defined(_DEBUG)
+	ComPointer<ID3D12DebugDevice> debugDevice;
+	if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(&debugDevice))))
+	{
+		OutputDebugStringW(L"D3D12 Live Device Objects (detail + summary):\n");
+		debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL | D3D12_RLDO_SUMMARY);
+	}
+#endif
+}
+
+// Reports DXGI live objects (factory, adapters, swapchains)
+void DebugLayer::ReportLiveDXGIObjects()
+{
+#if defined(_DEBUG)
+	if (m_dxgiDebug)
+	{
+		OutputDebugStringW(L"DXGI Live Objects (all flags):\n");
+		m_dxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_ALL));
+	}
+#endif
 }

@@ -62,8 +62,6 @@ void RootSignature::Create()
         "Failed To Serialize Root Signature"
     );
 
-    ThrowIfFailed(
-        GRHI.Device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)),
-        "Failed To Create Root Signature"
-    );
+    ThrowIfFailed(GRHI.GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)), "Failed To Create Root Signature");
+    m_rootSignature->SetName(L"RHI_RootSignature");
 }

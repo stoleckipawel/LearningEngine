@@ -12,10 +12,10 @@ void RHI::SelectAdapter()
 	enum DXGI_GPU_PREFERENCE GpuPreference = bHighPerformancePreference ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE : DXGI_GPU_PREFERENCE_MINIMUM_POWER;
 
 	// Try to find an adapter that meets the required GPU preference.
-	for(UINT AdapterIndex = 0; SUCCEEDED(GRHI.DxgiFactory->EnumAdapterByGpuPreference(AdapterIndex, GpuPreference, IID_PPV_ARGS(&GRHI.Adapter)));++AdapterIndex)
+	for(UINT AdapterIndex = 0; SUCCEEDED(m_DxgiFactory->EnumAdapterByGpuPreference(AdapterIndex, GpuPreference, IID_PPV_ARGS(&m_Adapter)));++AdapterIndex)
 	{
 		DXGI_ADAPTER_DESC1 desc;
-		GRHI.Adapter->GetDesc1(&desc);
+		m_Adapter->GetDesc1(&desc);
 
 		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
 		{
@@ -24,19 +24,19 @@ void RHI::SelectAdapter()
 		}
 
 		// Check to see if the adapter supports Direct3D 12, but don't create the actual device yet.
-		if (SUCCEEDED(D3D12CreateDevice(GRHI.Adapter, m_DesiredD3DFeatureLevel, _uuidof(ID3D12Device), nullptr)))
+		if (SUCCEEDED(D3D12CreateDevice(m_Adapter.Get(), m_DesiredD3DFeatureLevel, _uuidof(ID3D12Device), nullptr)))
 		{
 			break;
 		}
 	}
 
 	// If the above failed, fall back to the default adapter.
-	if(GRHI.Adapter.Get() == nullptr)
+	if(m_Adapter.Get() == nullptr)
 	{
-		for (UINT adapterIndex = 0; SUCCEEDED(GRHI.DxgiFactory->EnumAdapters1(adapterIndex, &GRHI.Adapter)); ++adapterIndex)
+		for (UINT adapterIndex = 0; SUCCEEDED(m_DxgiFactory->EnumAdapters1(adapterIndex, &m_Adapter)); ++adapterIndex)
 		{
 			DXGI_ADAPTER_DESC1 desc;
-			GRHI.Adapter->GetDesc1(&desc);
+			m_Adapter->GetDesc1(&desc);
 
 			if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
 			{
@@ -45,7 +45,7 @@ void RHI::SelectAdapter()
 			}
 
 			// Check to see whether the adapter supports Direct3D 12, but don't create the actual device yet.
-			if (SUCCEEDED(D3D12CreateDevice(GRHI.Adapter.Get(), m_DesiredD3DFeatureLevel, _uuidof(ID3D12Device), nullptr)))
+			if (SUCCEEDED(D3D12CreateDevice(m_Adapter.Get(), m_DesiredD3DFeatureLevel, _uuidof(ID3D12Device), nullptr)))
 			{
 				break;
 			}
@@ -54,10 +54,10 @@ void RHI::SelectAdapter()
 }
 
 // Checks for Shader Model 6.0 support
-void RHI::CheckShaderModel6Support() const
+void RHI::CheckShaderModel6Support()
 {
 	D3D12_FEATURE_DATA_SHADER_MODEL shaderModel = { D3D_SHADER_MODEL_6_0 };
-	if (GRHI.Device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(shaderModel)) || shaderModel.HighestShaderModel < D3D_SHADER_MODEL_6_0)
+	if (m_Device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(shaderModel)) || shaderModel.HighestShaderModel < D3D_SHADER_MODEL_6_0)
 	{
 		LogMessage("RHI: Device does not support Shader Model 6.0. Minimum required for engine.", ELogType::Fatal);
 	}
@@ -84,13 +84,13 @@ void RHI::CreateFactory()
 #else
 	UINT dxgiFactoryFlags = 0;
 #endif
-	ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&GRHI.DxgiFactory)), "RHI: Failed To Create Factory");
+	ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&m_DxgiFactory)), "RHI: Failed To Create Factory");
 }
 
 void RHI::CreateDevice(bool /*requireDXRSupport*/)
 {
 	SelectAdapter();
-	ThrowIfFailed(D3D12CreateDevice(GRHI.Adapter.Get(), m_DesiredD3DFeatureLevel, IID_PPV_ARGS(&GRHI.Device)), "RHI: Failed To Create Device");
+	ThrowIfFailed(D3D12CreateDevice(m_Adapter.Get(), m_DesiredD3DFeatureLevel, IID_PPV_ARGS(&m_Device)), "RHI: Failed To Create Device");
 }
 
 void RHI::CreateCommandQueue()
@@ -100,125 +100,65 @@ void RHI::CreateCommandQueue()
 	cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
 	cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	cmdQueueDesc.NodeMask = 0;
-	ThrowIfFailed(GRHI.Device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&GRHI.CmdQueue)), "RHI: Failed To Create Command Queue");
+	ThrowIfFailed(m_Device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&m_CmdQueue)), "RHI: Failed To Create Command Queue");
 }
 
 void RHI::CreateCommandAllocators()
 {
 	for (size_t i = 0; i < NumFramesInFlight; ++i)
 	{
-		ThrowIfFailed(GRHI.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&GRHI.CmdAllocatorScene[i])), "RHI: Failed To Create Scene Command Allocator");
-		ThrowIfFailed(GRHI.Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&GRHI.CmdAllocatorUI[i])), "RHI: Failed To Create UI Command Allocator");
+		ThrowIfFailed(m_Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_CmdAllocatorScene[i])), "RHI: Failed To Create Scene Command Allocator");
+		ThrowIfFailed(m_Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_CmdAllocatorUI[i])), "RHI: Failed To Create UI Command Allocator");
 	}
 }
 
 void RHI::CreateCommandLists()
 {
-	for (size_t i = 0; i < NumFramesInFlight; ++i)
-	{
-		ThrowIfFailed(GRHI.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, GRHI.CmdAllocatorScene[i].Get(), nullptr, IID_PPV_ARGS(&GRHI.CmdListScene[i])), "RHI: Failed To Create Scene Command List");
-		ThrowIfFailed(GRHI.Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, GRHI.CmdAllocatorUI[i].Get(), nullptr, IID_PPV_ARGS(&GRHI.CmdListUI[i])), "RHI: Failed To Create UI Command List");
-	}
+	ThrowIfFailed(m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, GetCommandAllocatorScene().Get(), nullptr, IID_PPV_ARGS(&m_CmdListScene)), "RHI: Failed To Create Scene Command List");
+	ThrowIfFailed(m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, GetCommandAllocatorUI().Get(), nullptr, IID_PPV_ARGS(&m_CmdListUI)), "RHI: Failed To Create UI Command List");
 }
 
 void RHI::CreateFenceAndEvent()
 {
 	for (UINT i = 0; i < NumFramesInFlight; ++i)
 	{
-		GRHI.FenceValues[i] = 0;
+		m_FenceValues[i] = 0;
 	}
 
-	ThrowIfFailed(GRHI.Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&GRHI.Fence)), "RHI: Failed To Create Fence");
+	ThrowIfFailed(m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fence)), "RHI: Failed To Create Fence");
 
-	FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-	if (!FenceEvent)
+	m_FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+	if (!m_FenceEvent)
 	{
 		LogMessage("RHI: Failed To Create Fence Event", ELogType::Fatal);
 	}
 }
 
-ComPointer<ID3D12GraphicsCommandList7> RHI::GetCommandListScene()
-{
-	return GRHI.CmdListScene[GSwapChain.GetBackBufferIndex()];
-}
-
-ComPointer<ID3D12GraphicsCommandList7> RHI::GetCommandListUI()
-{
-	return GRHI.CmdListUI[GSwapChain.GetBackBufferIndex()];
-}
-
-ComPointer<ID3D12CommandAllocator> RHI::GetCommandAllocatorScene()
-{
-	return GRHI.CmdAllocatorScene[GSwapChain.GetBackBufferIndex()];
-}
-
-ComPointer<ID3D12CommandAllocator> RHI::GetCommandAllocatorUI()
-{
-	return GRHI.CmdAllocatorUI[GSwapChain.GetBackBufferIndex()];
-}
-
-UINT64 RHI::GetFenceValue()
-{
-	return GRHI.FenceValues[GSwapChain.GetBackBufferIndex()];
-}
-
-void RHI::CloseCommandListScene(UINT FrameIndex)
-{
-	ThrowIfFailed(GRHI.CmdListScene[FrameIndex]->Close(), "RHI: Failed To Close Scene Command List");
-}
-
-void RHI::CloseCommandListUI(UINT FrameIndex)
-{
-	ThrowIfFailed(GRHI.CmdListUI[FrameIndex]->Close(), "RHI: Failed To Close UI Command List");		
-}
-
 void RHI::CloseCommandListScene()
 {
-	CloseCommandListScene(GSwapChain.GetBackBufferIndex());
+	ThrowIfFailed(m_CmdListScene->Close(), "RHI: Failed To Close Scene Command List");
 }
 
-void RHI::CloseCommandLists()
+void RHI::CloseCommandListUI()
 {
-	for (UINT i = 0; i < NumFramesInFlight; ++i)
-	{
-		CloseCommandListScene(i);
-	}
+	ThrowIfFailed(m_CmdListUI->Close(), "RHI: Failed To Close UI Command List");
 }
 
-void RHI::ResetCommandLists()
+void RHI::ResetCommandAllocatorScene()
 {
 	ThrowIfFailed(GetCommandAllocatorScene()->Reset(), "RHI: Failed To Reset Scene Command Allocator");
-	ThrowIfFailed(GetCommandListScene()->Reset(GetCommandAllocatorScene().Get(), nullptr), "RHI: Failed To Reset Scene Command List");
 }
 
-// Releases all resources and shuts down the RHI
-void RHI::Shutdown()
+void RHI::ResetCommandListScene()
 {
-	for(UINT i = 0; i < NumFramesInFlight; ++i) 
-	{ 
-		GRHI.CmdAllocatorScene[i].Release();
-		GRHI.CmdListScene[i].Release();
-		GRHI.CmdAllocatorUI[i].Release();
-		GRHI.CmdListUI[i].Release();
-	}
-
-	if (FenceEvent)
-	{
-		CloseHandle(FenceEvent);
-	}
-
-	Fence.Release();
-	GRHI.CmdQueue.Release();
-	GRHI.Device.Release();
-	GRHI.DxgiFactory.Release();
+	ThrowIfFailed(m_CmdListScene->Reset(GetCommandAllocatorScene().Get(), nullptr), "RHI: Failed To Reset Scene Command List");
 }
-
 
 // Executes the current command list on the command queue
 void RHI::ExecuteCommandList()
 {
-	ID3D12CommandList* ppcommandLists[] = { GRHI.GetCommandListScene().Get() };
-	GRHI.CmdQueue->ExecuteCommandLists(1, ppcommandLists);
+	ID3D12CommandList* ppcommandLists[] = { m_CmdListScene.Get() };
+	m_CmdQueue->ExecuteCommandLists(1, ppcommandLists);
 }
 
 
@@ -234,39 +174,64 @@ void RHI::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore
 	barrier.Transition.StateBefore = StateBefore;
 	barrier.Transition.StateAfter = StateAfter;
 
-	GRHI.GetCommandListScene()->ResourceBarrier(1, &barrier);
+	m_CmdListScene->ResourceBarrier(1, &barrier);
 }
-
 
 // Waits for the GPU to finish executing commands
 void RHI::WaitForGPU()
 {
-	UINT FenceCurrentValue = GetFenceValue();
-	UINT FenceCompletedValue = Fence->GetCompletedValue();
+	UINT FenceCurrentValue = m_FenceValues[GSwapChain.GetFrameInFlightIndex()];
+	UINT FenceCompletedValue = m_Fence->GetCompletedValue();
 
 	if (FenceCompletedValue < FenceCurrentValue)
 	{
-		ThrowIfFailed(Fence->SetEventOnCompletion(FenceCurrentValue, FenceEvent), "RHI: Failed To Signal Command Queue");
-		WaitForSingleObject(FenceEvent, INFINITE);
+		ThrowIfFailed(m_Fence->SetEventOnCompletion(FenceCurrentValue, m_FenceEvent), "RHI: Failed To Signal Command Queue");
+		WaitForSingleObject(m_FenceEvent, INFINITE);
 	}
 }
-
 
 // Signals the fence for synchronization
 void RHI::Signal()
 {
 	// Schedule a Signal command in the queue. -> Updates Fence Completed Value
-	UINT64 currentFenceValue = NextFenceValue++;
-	ThrowIfFailed(CmdQueue->Signal(Fence.Get(), currentFenceValue), "RHI: Failed To Signal Command Queue");
+	UINT64 currentFenceValue = m_NextFenceValue++;
+	ThrowIfFailed(m_CmdQueue->Signal(m_Fence.Get(), currentFenceValue), "RHI: Failed To Signal Command Queue");
 
 	// Set the fence value for the next frame.
-	FenceValues[GSwapChain.GetBackBufferIndex()] = currentFenceValue;
+	m_FenceValues[GSwapChain.GetFrameInFlightIndex()] = currentFenceValue;
 }
-
 
 // Flushes the command queue (signal and wait)
 void RHI::Flush()
 {
 	Signal();
 	WaitForGPU();
+}
+
+// Releases all resources and shuts down the RHI
+void RHI::Shutdown()
+{
+	m_CmdListScene.Release();
+	m_CmdListUI.Release();
+
+	for (UINT i = 0; i < NumFramesInFlight; ++i)
+	{
+		m_CmdAllocatorScene[i].Release();
+		m_CmdAllocatorUI[i].Release();
+		m_FenceValues[i] = 0;
+	}
+
+	if (m_FenceEvent)
+	{
+		CloseHandle(m_FenceEvent);
+		m_FenceEvent = nullptr;
+	}
+
+	m_Fence.Release();
+	m_CmdQueue.Release();
+	GDebugLayer.ReportLiveDeviceObjects();
+	m_Device.Release();
+	m_Adapter.Release();
+	m_DxgiFactory.Release();
+	GDebugLayer.Shutdown();
 }

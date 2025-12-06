@@ -161,7 +161,7 @@ LRESULT Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam
 			return 0;
 		case WM_SIZE:
 			// Trigger resize when the window is not minimized and device is ready
-			if (wParam != SIZE_MINIMIZED && GRHI.Device != nullptr)
+			if (wParam != SIZE_MINIMIZED && GRHI.GetDevice() != nullptr)
 			{
 				GRenderer.OnResize();
 			}

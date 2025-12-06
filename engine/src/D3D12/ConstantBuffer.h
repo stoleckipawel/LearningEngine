@@ -97,7 +97,7 @@ private:
         resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
         resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-        ThrowIfFailed(GRHI.Device->CreateCommittedResource(
+        ThrowIfFailed(GRHI.GetDevice()->CreateCommittedResource(
             &heapProperties,
             D3D12_HEAP_FLAG_NONE,
             &resourceDesc,
@@ -105,6 +105,7 @@ private:
             nullptr,
             IID_PPV_ARGS(&Resource)),
             "Failed to create constant buffer resource.");
+        Resource->SetName(L"RHI_ConstantBuffer");
 
         // Map the resource for CPU writes
         D3D12_RANGE readRange = { 0, 0 };
@@ -116,7 +117,7 @@ private:
     {
         m_ConstantBufferViewDesc.BufferLocation = Resource->GetGPUVirtualAddress();
         m_ConstantBufferViewDesc.SizeInBytes = static_cast<UINT>(m_ConstantBufferSize);
-        GRHI.Device->CreateConstantBufferView(&m_ConstantBufferViewDesc, GetCPUHandle());
+        GRHI.GetDevice()->CreateConstantBufferView(&m_ConstantBufferViewDesc, GetCPUHandle());
     }
 
     UINT GetDescriptorHandleIndex() const noexcept { return m_DescriptorHandleIndex; }

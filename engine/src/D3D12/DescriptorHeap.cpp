@@ -9,7 +9,7 @@ DescriptorHeap::DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescript
 	m_heapDesc.Flags = flags;
 
 	// Create descriptor heap
-	ThrowIfFailed(GRHI.Device->CreateDescriptorHeap(
+	ThrowIfFailed(GRHI.GetDevice()->CreateDescriptorHeap(
 		&m_heapDesc,
 		IID_PPV_ARGS(&m_heap)), "DescriptorHeap: Failed To Create Descriptor Heap");
 	m_heap->SetName(name);
@@ -26,8 +26,10 @@ DescriptorHeap::DescriptorHeap(UINT numCBV, UINT numSRV, D3D12_DESCRIPTOR_HEAP_F
 	m_heapDesc.NumDescriptors = numDescriptors;
 	m_heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	m_heapDesc.Flags = flags;
+	m_heapDesc.NodeMask = 1;
+
 	// Create descriptor heap
-	ThrowIfFailed(GRHI.Device->CreateDescriptorHeap(
+	ThrowIfFailed(GRHI.GetDevice()->CreateDescriptorHeap(
 		&m_heapDesc,
 		IID_PPV_ARGS(&m_heap)), "DescriptorHeap: Failed To Create Descriptor Heap");
 	m_heap->SetName(name);
@@ -86,7 +88,7 @@ UINT DescriptorHeap::GetTypeOffset(DescriptorType type) const
 D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCPUHandle(UINT indexInType, DescriptorType type)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = m_heap->GetCPUDescriptorHandleForHeapStart();
-	UINT descriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(m_heapDesc.Type);
+	UINT descriptorSize = GRHI.GetDevice()->GetDescriptorHandleIncrementSize(m_heapDesc.Type);
 	// Offset by type and index
 	handle.ptr += descriptorSize * (indexInType + GetTypeOffset(type));
 	return handle;
@@ -96,7 +98,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCPUHandle(UINT indexInType, Descr
 D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGPUHandle(UINT indexInType, DescriptorType type)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE handle = m_heap->GetGPUDescriptorHandleForHeapStart();
-	UINT descriptorSize = GRHI.Device->GetDescriptorHandleIncrementSize(m_heapDesc.Type);
+	UINT descriptorSize = GRHI.GetDevice()->GetDescriptorHandleIncrementSize(m_heapDesc.Type);
 	// Offset by type and index
 	handle.ptr += descriptorSize * (indexInType + GetTypeOffset(type));
 	return handle;

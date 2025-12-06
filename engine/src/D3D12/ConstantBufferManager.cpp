@@ -47,7 +47,7 @@ void ConstantBufferManager::Update(size_t FrameIndex)
 	XMMATRIX worldViewProj = world * view * projection;
 	XMStoreFloat4x4(&vertexData.WorldViewProjMTX, worldViewProj);
 	
-	VertexConstantBuffers[GSwapChain.GetBackBufferIndex()]->Update(vertexData);
+	VertexConstantBuffers[GSwapChain.GetFrameInFlightIndex()]->Update(vertexData);
 
 	// Update pixel constant buffer with animated color
 	PixelConstantBufferData pixelData;
@@ -55,7 +55,7 @@ void ConstantBufferManager::Update(size_t FrameIndex)
 	pixelData.Color.y = 0.5f + 0.5f * sinf(speed + 2.0f);
 	pixelData.Color.z = 0.5f + 0.5f * sinf(speed + 4.0f);
 	pixelData.Color.w = 1.0f;
-	PixelConstantBuffers[GSwapChain.GetBackBufferIndex()]->Update(pixelData);
+	PixelConstantBuffers[GSwapChain.GetFrameInFlightIndex()]->Update(pixelData);
 }
 
 // Releases all constant buffers

@@ -20,7 +20,7 @@ Sampler::Sampler(UINT DescriptorHandleIndex)
     samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 
     // Create the sampler in the descriptor heap
-    GRHI.Device->CreateSampler(&samplerDesc, GetCPUHandle());
+    GRHI.GetDevice()->CreateSampler(&samplerDesc, GetCPUHandle());
 }
 
 // Returns the GPU descriptor handle for this sampler

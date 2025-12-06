@@ -2,7 +2,7 @@
 
 #pragma once
 // Number of frames that can be processed simultaneously
-static const UINT NumFramesInFlight = 3;
+static const UINT NumFramesInFlight = 2;
 
 // SwapChain manages the Direct3D 12 swap chain and its associated render targets.
 class SwapChain
@@ -28,9 +28,9 @@ public:
 	// Returns the CPU descriptor handle for the current back buffer
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle();
 	// Returns the current back buffer index
-	UINT GetBackBufferIndex() { return m_currentBufferIndex; }
+	UINT GetFrameInFlightIndex() { return m_FrameInFlightIndex; }
 	// Updates the current back buffer index from the swap chain
-	void UpdateCurrentBackBufferIndex() { m_currentBufferIndex = m_swapChain->GetCurrentBackBufferIndex(); }
+	void UpdateFrameInFlightIndex() { m_FrameInFlightIndex = m_swapChain->GetCurrentBackBufferIndex(); }
 
 	// Returns the default viewport for rendering
 	D3D12_VIEWPORT GetDefaultViewport();
@@ -40,7 +40,7 @@ public:
 	DXGI_FORMAT GetBackBufferFormat() const { return m_backBufferFormat; }
 private:
 	// Current back buffer index
-	UINT m_currentBufferIndex = 0;
+	UINT m_FrameInFlightIndex = 0;
 	// Swap chain interface
 	ComPointer<IDXGISwapChain3> m_swapChain = nullptr;
 	// Array of render target resources (one per frame)

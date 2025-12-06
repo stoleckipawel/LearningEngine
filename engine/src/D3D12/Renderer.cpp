@@ -80,7 +80,7 @@ void Renderer::CreatePSOs()
 // -----------------------------------------------------------------------------
 void Renderer::PostLoad()
 {
-    GRHI.CloseCommandLists();
+    GRHI.CloseCommandListScene();
     GRHI.ExecuteCommandList();
     GRHI.Flush();
 }
@@ -103,14 +103,6 @@ void Renderer::Load()
     CreateFrameBuffers();
     GUI.Initialize();
     PostLoad();
-}
-
-// -----------------------------------------------------------------------------
-// Releases graphics resources 
-// -----------------------------------------------------------------------------
-void Renderer::Release()
-{
-    GDescriptorHeapManager.Release();
 }
 
 // -----------------------------------------------------------------------------
@@ -153,12 +145,12 @@ void Renderer::BindDescriptorTables()
     // Vertex constant buffer
     GRHI.GetCommandListScene()->SetGraphicsRootDescriptorTable(
         2,
-        GConstantBufferManager.VertexConstantBuffers[GSwapChain.GetBackBufferIndex()]->GetGPUHandle());
+        GConstantBufferManager.VertexConstantBuffers[GSwapChain.GetFrameInFlightIndex()]->GetGPUHandle());
 
     // Pixel constant buffer
     GRHI.GetCommandListScene()->SetGraphicsRootDescriptorTable(
         3,
-        GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetBackBufferIndex()]->GetGPUHandle());
+        GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetFrameInFlightIndex()]->GetGPUHandle());
 }
 
 // -----------------------------------------------------------------------------
@@ -239,8 +231,8 @@ void Renderer::OnRender()
     // Wait for GPU to finish previous frame
     GRHI.WaitForGPU();
 
-    // Reset command allocator and command list for new frame
-    GRHI.ResetCommandLists();
+    GRHI.ResetCommandAllocatorScene();
+    GRHI.ResetCommandListScene();  
 
     // Update per-frame data
     OnUpdate();
@@ -259,8 +251,8 @@ void Renderer::OnRender()
     // Present the frame
     GSwapChain.Present();
 
-    // Update back buffer index
-    GSwapChain.UpdateCurrentBackBufferIndex();
+    // Advance frame-in-flight index for next frame's per-frame resources
+    GSwapChain.UpdateFrameInFlightIndex();
 }
 
 // -----------------------------------------------------------------------------
@@ -268,12 +260,10 @@ void Renderer::OnRender()
 // -----------------------------------------------------------------------------
 void Renderer::Shutdown()
 {
-    GRHI.Flush();
-
-    Renderer::Release();
-    GSwapChain.Shutdown();
+    GRHI.Flush();       
     GUI.Shutdown();
+    GSwapChain.Shutdown();
     GWindow.Shutdown();
+    GDescriptorHeapManager.Release();
     GRHI.Shutdown();
-    GDebugLayer.Shutdown();
 }

@@ -32,8 +32,8 @@ void SwapChain::Initialize()
 	// Create the swap chain for the window
 	ComPointer<IDXGISwapChain1> swapChain;
 	ThrowIfFailed(
-		GRHI.DxgiFactory->CreateSwapChainForHwnd(
-			GRHI.CmdQueue,
+		GRHI.GetDxgiFactory()->CreateSwapChainForHwnd(
+			GRHI.GetCommandQueue(),
 			GWindow.WindowHWND,
 			&swapChainDesc,
 			&swapChainFullsceenDesc,
@@ -46,7 +46,7 @@ void SwapChain::Initialize()
 	ThrowIfFailed(swapChain.QueryInterface(m_swapChain), "Failed to Query Swap Chain Interface");
 
 	// Initialize current back buffer index
-	m_currentBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+	m_FrameInFlightIndex = m_swapChain->GetCurrentBackBufferIndex();
 
 	// Create render target views for all buffers
 	CreateRenderTargetViews();
@@ -76,8 +76,7 @@ void SwapChain::Resize()
 
 	CreateRenderTargetViews();
 
-	// Update back buffer index to the swapchain's current buffer
-	m_currentBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+	UpdateFrameInFlightIndex();
 }
 
 
@@ -91,7 +90,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::GetCPUHandle(UINT index)
 // Returns the CPU descriptor handle for the current back buffer
 D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::GetCPUHandle()
 {
-	return GetCPUHandle(m_currentBufferIndex);
+	return GetCPUHandle(m_FrameInFlightIndex);
 }
 
 
@@ -102,6 +101,7 @@ void SwapChain::CreateRenderTargetViews()
 	{
 		// Get the buffer resource from the swap chain
 		ThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])), "Failed To get Swapchain Buffer!");
+		m_buffers[i]->SetName(L"RHI_BackBuffer");
 
 		// Describe the render target view
 		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
@@ -111,7 +111,7 @@ void SwapChain::CreateRenderTargetViews()
 		rtvDesc.Texture2D.PlaneSlice = 0;
 
 		// Create the render target view
-		GRHI.Device->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, GetCPUHandle(i));
+		GRHI.GetDevice()->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, GetCPUHandle(i));
 	}
 }
 
@@ -154,7 +154,7 @@ void SwapChain::Present()
 void SwapChain::SetRenderTargetState()
 {
 	GRHI.SetBarrier(
-		m_buffers[m_currentBufferIndex],
+		m_buffers[m_FrameInFlightIndex],
 		D3D12_RESOURCE_STATE_PRESENT,
 		D3D12_RESOURCE_STATE_RENDER_TARGET
 	);
@@ -165,7 +165,7 @@ void SwapChain::SetRenderTargetState()
 void SwapChain::SetPresentState()
 {
 	GRHI.SetBarrier(
-		m_buffers[m_currentBufferIndex],
+		m_buffers[m_FrameInFlightIndex],
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_PRESENT
 	);

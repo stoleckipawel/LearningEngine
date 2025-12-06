@@ -20,23 +20,21 @@ ComPointer<ID3D12Resource2> UploadBuffer::Upload(void* data, uint32_t dataSize)
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-	// Specify upload heap properties
-	D3D12_HEAP_PROPERTIES heapUploadProperties = {};
-	heapUploadProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-
 	// Create the committed resource in the upload heap
 	ComPointer<ID3D12Resource2> uploadBuffer;
+	CD3DX12_HEAP_PROPERTIES heapUploadProperties(D3D12_HEAP_TYPE_UPLOAD);
 	ThrowIfFailed(
-		GRHI.Device->CreateCommittedResource(
+		GRHI.GetDevice()->CreateCommittedResource(
 			&heapUploadProperties,
 			D3D12_HEAP_FLAG_NONE,
 			&resourceDesc,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
 			IID_PPV_ARGS(&uploadBuffer)),
-		"UploadBuffer: Failed To Create Committed Resource"
+		"UploadBuffer: Failed to create upload buffer"
 	);
 
+	uploadBuffer->SetName(L"RHI_UploadBuffer");
 	// Map the buffer and copy the data
 	void* mappedData = nullptr;
 	D3D12_RANGE readRange = { 0, 0 }; // We do not intend to read from this resource on CPU

@@ -9,6 +9,10 @@ public:
 	void InitializeInfoQueue();	
 	// Shuts down the debug layers and reports live objects
 	void Shutdown();
+	// Reports D3D12 live device objects with details (call before releasing device)
+	void ReportLiveDeviceObjects();
+	// Reports DXGI live objects (factory, adapters, swapchains)
+	void ReportLiveDXGIObjects();
 private:
 	void InitD3D12Debug();
 	void InitDXGIDebug();

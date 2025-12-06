@@ -9,7 +9,7 @@ public:
 	// Initialize the RHI and all required resources
 	void Initialize(bool RequireDXRSupport = false);
 	// Release all resources and shutdown RHI
-	void Shutdown();
+	void Shutdown();	
 	// Execute the current command list
 	void ExecuteCommandList();
 	// Set a resource barrier for a resource state transition
@@ -21,22 +21,15 @@ public:
 	// Flush the command queue (signal and wait)
 	void Flush();
 
-	// Close all command lists
-	void CloseCommandLists();
-	void CloseCommandListScene(UINT FrameIndex);
-	void CloseCommandListUI(UINT FrameIndex);
+	// Use swap chain's frame-in-flight index for per-frame resources
+	
 	void CloseCommandListScene();	
-	void ResetCommandLists();
-
-	ComPointer<ID3D12GraphicsCommandList7> GetCommandListScene();
-	ComPointer<ID3D12GraphicsCommandList7> GetCommandListUI();
-	ComPointer<ID3D12CommandAllocator> GetCommandAllocatorScene();
-	ComPointer<ID3D12CommandAllocator> GetCommandAllocatorUI();
-
-	UINT64 GetFenceValue();
+	void CloseCommandListUI();
+	void ResetCommandAllocatorScene();
+	void ResetCommandListScene();
 
 	// Checks for Shader Model 6.0 support
-	void CheckShaderModel6Support() const;
+	void CheckShaderModel6Support();
 private:
 	void SelectAdapter();
 	// Initialization helpers (called by Initialize)
@@ -47,24 +40,42 @@ private:
 	void CreateCommandLists();
 	void CreateFenceAndEvent();
 public:
-	ComPointer<IDXGIFactory7> DxgiFactory = nullptr;
-	ComPointer<IDXGIAdapter1> Adapter = nullptr;
-	ComPointer<ID3D12Device10> Device = nullptr;
-	ComPointer<ID3D12CommandQueue> CmdQueue = nullptr;
-	ComPointer<ID3D12CommandAllocator> CmdAllocatorScene[NumFramesInFlight] = {};
-	ComPointer<ID3D12GraphicsCommandList7> CmdListScene[NumFramesInFlight] = {};
-	ComPointer<ID3D12CommandAllocator> CmdAllocatorUI[NumFramesInFlight] = {};
-	ComPointer<ID3D12GraphicsCommandList7> CmdListUI[NumFramesInFlight] = {};
+    ComPointer<IDXGIFactory7> GetDxgiFactory() const { return m_DxgiFactory; }
+    ComPointer<IDXGIAdapter1> GetAdapter() const { return m_Adapter; }
+    ComPointer<ID3D12Device10> GetDevice() const { return m_Device; }
+    ComPointer<ID3D12CommandQueue> GetCommandQueue() const { return m_CmdQueue; }
+	ComPointer<ID3D12CommandAllocator> GetCommandAllocatorScene(UINT frameIndex) const { return m_CmdAllocatorScene[frameIndex]; }
+	ComPointer<ID3D12CommandAllocator> GetCommandAllocatorScene() const { return  GetCommandAllocatorScene(GSwapChain.GetFrameInFlightIndex()); }
+	ComPointer<ID3D12GraphicsCommandList7> GetCommandListScene() const { return m_CmdListScene; }
+	ComPointer<ID3D12GraphicsCommandList7> GetCommandListUI() const { return m_CmdListUI; }
+	ComPointer<ID3D12CommandAllocator> GetCommandAllocatorUI(UINT frameIndex) const { return m_CmdAllocatorUI[frameIndex]; }
+	ComPointer<ID3D12CommandAllocator> GetCommandAllocatorUI() const { return  GetCommandAllocatorUI(GSwapChain.GetFrameInFlightIndex()); }
+	ComPointer<ID3D12GraphicsCommandList7> GetUICommandList() const { return m_CmdListUI; }
+	ComPointer<ID3D12Fence1> GetFence() const { return m_Fence; }
+	UINT64 GetFenceValue() const { return m_FenceValues[GSwapChain.GetFrameInFlightIndex()]; }
+	UINT64 GetFenceValueForFrame(UINT frameIndex) const { return m_FenceValues[frameIndex]; }
+	void SetFenceValueForFrame(UINT frameIndex, UINT64 value) { m_FenceValues[frameIndex] = value; }
+	HANDLE GetFenceEvent() const { return m_FenceEvent; }
+	UINT64 GetNextFenceValue() const { return m_NextFenceValue; }
+	void SetNextFenceValue(UINT64 value) { m_NextFenceValue = value; }
+private:
+	ComPointer<IDXGIFactory7> m_DxgiFactory = nullptr;
+	ComPointer<IDXGIAdapter1> m_Adapter = nullptr;
+	ComPointer<ID3D12Device10> m_Device = nullptr;
+	ComPointer<ID3D12CommandQueue> m_CmdQueue = nullptr;
+	ComPointer<ID3D12CommandAllocator> m_CmdAllocatorScene[NumFramesInFlight] = {};
+	ComPointer<ID3D12GraphicsCommandList7> m_CmdListScene = nullptr;
+	ComPointer<ID3D12CommandAllocator> m_CmdAllocatorUI[NumFramesInFlight] = {};
+	ComPointer<ID3D12GraphicsCommandList7> m_CmdListUI = nullptr;
 
 	// Fence values for each frame in flight
-	UINT64 FenceValues[NumFramesInFlight] = { 0 };
+	UINT64 m_FenceValues[NumFramesInFlight] = { 0 };
 	// Next fence value to signal
-	UINT64 NextFenceValue = 1;
+	UINT64 m_NextFenceValue = 1;
 	// Fence for GPU/CPU synchronization
-	ComPointer<ID3D12Fence1> Fence = nullptr;
+	ComPointer<ID3D12Fence1> m_Fence = nullptr;
 	// Event handle for fence completion
-	HANDLE FenceEvent = nullptr;
-private:
+	HANDLE m_FenceEvent = nullptr;
 	enum D3D_FEATURE_LEVEL m_DesiredD3DFeatureLevel = D3D_FEATURE_LEVEL_12_1;
 };
 
