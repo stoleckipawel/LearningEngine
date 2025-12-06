@@ -1,6 +1,7 @@
 
 #include "PCH.h"
 #include "D3D12/DebugLayer.h"
+#include "D3D12/RHI.h"
 
 // Global debug layer instance
 DebugLayer GDebugLayer;
@@ -9,20 +10,64 @@ DebugLayer GDebugLayer;
 void DebugLayer::Initialize()
 {
 #if defined(_DEBUG)
-	// Initialize D3D12 debug layer
+	// Initialize each feature via dedicated functions
+	InitD3D12Debug();
+	InitDXGIDebug();
+#endif
+}
+
+// Initialize InfoQueue debugging after device creation
+void DebugLayer::InitializeInfoQueue()
+{
+#if defined(_DEBUG)	
+	ConfigureInfoQueue();
+	ApplyInfoQueueFilters();
+#endif
+}
+
+void DebugLayer::InitD3D12Debug()
+{
 	ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&m_d3d12Debug)), "Failed To Initialize D3D12 Debug Interface.");
 	m_d3d12Debug->EnableDebugLayer();
+}
 
-	// Initialize DXGI debug layer
+void DebugLayer::InitDXGIDebug()
+{
 	ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&m_dxgiDebug)), "Failed To Initialize DXGI Debug Layer.");
 	m_dxgiDebug->EnableLeakTrackingForThread();
-#endif
+}
+
+// Configure D3D12 InfoQueue to break on warnings, errors and corruption
+void DebugLayer::ConfigureInfoQueue()
+{
+	ComPointer<ID3D12InfoQueue> infoQueue;
+	if (SUCCEEDED(GRHI.Device->QueryInterface(IID_PPV_ARGS(&infoQueue))))
+	{
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+	}
+}
+
+// Apply filters to suppress noisy/known-issue messages in the InfoQueue
+void DebugLayer::ApplyInfoQueueFilters()
+{
+	ComPointer<ID3D12InfoQueue> infoQueue;
+	if (SUCCEEDED(GRHI.Device->QueryInterface(IID_PPV_ARGS(&infoQueue))))
+	{
+		//Suppress FENCE_ZERO_WAIT (SDK layer noise/bug); not always present in headers
+		const int D3D12_MESSAGE_ID_FENCE_ZERO_WAIT_ = 1424;
+		D3D12_MESSAGE_ID disabledMessages[] = { (D3D12_MESSAGE_ID)D3D12_MESSAGE_ID_FENCE_ZERO_WAIT_ };
+		D3D12_INFO_QUEUE_FILTER filter = {};
+		filter.DenyList.NumIDs = 1;
+		filter.DenyList.pIDList = disabledMessages;
+		infoQueue->AddStorageFilterEntries(&filter);
+	}
 }
 
 // Shuts down the debug layers and reports live objects (only in debug builds)
 void DebugLayer::Shutdown()
 {
-#if defined(_DEBUG)
 	if (m_dxgiDebug)
 	{
 		OutputDebugStringW(L"DXGI Reports Living Device Objects: \n");
@@ -31,5 +76,4 @@ void DebugLayer::Shutdown()
 
 	m_dxgiDebug.Release();
 	m_d3d12Debug.Release();
-#endif
 }

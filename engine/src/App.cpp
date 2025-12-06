@@ -4,19 +4,15 @@
 #include "Window.h"
 #include "Renderer.h"
 
-extern UI GUI;
-extern Window GWindow;
-extern Renderer GRenderer;
-
 void App::Run()
 {
-    // Initialize platform window + renderer, then user extension
+    // Initialize platform window + renderer
     Initialize();
 
     // Main loop
     RenderLoop();
 
-    // Shutdown engine first, then user extension
+    // Shutdown engine
     Shutdown();
 }
 

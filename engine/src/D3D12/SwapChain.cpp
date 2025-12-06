@@ -23,8 +23,7 @@ void SwapChain::Initialize()
 	swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
-	// Keep flags minimal and consistent; avoid tearing until explicitly supported
-	swapChainDesc.Flags = 0;
+	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
 
 	// Create fullscreen swap chain description
 	DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullsceenDesc{};

@@ -6,13 +6,17 @@ class DebugLayer
 public:
 	// Initializes the debug layers
 	void Initialize();
+	void InitializeInfoQueue();	
 	// Shuts down the debug layers and reports live objects
 	void Shutdown();
 private:
-#if defined(_DEBUG)
+	void InitD3D12Debug();
+	void InitDXGIDebug();
+	void ConfigureInfoQueue();
+	void ApplyInfoQueueFilters();
+private:
 	ComPointer<ID3D12Debug> m_d3d12Debug;   // D3D12 debug interface
 	ComPointer<IDXGIDebug1> m_dxgiDebug;    // DXGI debug interface
-#endif
 };
 
 

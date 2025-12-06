@@ -9,10 +9,6 @@ protected:
 	void PreInitialize() override {}
 	void PostInitialize() override {}
 
-	// Input: read keyboard/mouse/gamepad, react to events.
-	void PreProcessInput() override {}
-	void PostProcessInput() override {}
-
 	// Rendering: add debug overlays or extra passes pre/post engine render.
 	void PreRender() override {}
 	void PostRender() override {}

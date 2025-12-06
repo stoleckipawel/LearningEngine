@@ -39,6 +39,13 @@ public:
 	void CheckShaderModel6Support() const;
 private:
 	void SelectAdapter();
+	// Initialization helpers (called by Initialize)
+	void CreateFactory();
+	void CreateDevice(bool requireDXRSupport);
+	void CreateCommandQueue();
+	void CreateCommandAllocators();
+	void CreateCommandLists();
+	void CreateFenceAndEvent();
 public:
 	ComPointer<IDXGIFactory7> DxgiFactory = nullptr;
 	ComPointer<IDXGIAdapter1> Adapter = nullptr;
