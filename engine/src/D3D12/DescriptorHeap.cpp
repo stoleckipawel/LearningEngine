@@ -11,7 +11,7 @@ DescriptorHeap::DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescript
 	// Create descriptor heap
 	ThrowIfFailed(GRHI.GetDevice()->CreateDescriptorHeap(
 		&m_heapDesc,
-		IID_PPV_ARGS(&m_heap)), "DescriptorHeap: Failed To Create Descriptor Heap");
+		IID_PPV_ARGS(m_heap.ReleaseAndGetAddressOf())), "DescriptorHeap: Failed To Create Descriptor Heap");
 	m_heap->SetName(name);
 }
 
@@ -31,7 +31,7 @@ DescriptorHeap::DescriptorHeap(UINT numCBV, UINT numSRV, D3D12_DESCRIPTOR_HEAP_F
 	// Create descriptor heap
 	ThrowIfFailed(GRHI.GetDevice()->CreateDescriptorHeap(
 		&m_heapDesc,
-		IID_PPV_ARGS(&m_heap)), "DescriptorHeap: Failed To Create Descriptor Heap");
+		IID_PPV_ARGS(m_heap.ReleaseAndGetAddressOf())), "DescriptorHeap: Failed To Create Descriptor Heap");
 	m_heap->SetName(name);
 }
 
@@ -42,7 +42,7 @@ DescriptorHeap::DescriptorHeap(DescriptorHeap&& other) noexcept
 	  m_numCBV(other.m_numCBV),
 	  m_numSRV(other.m_numSRV)
 {
-	other.m_heap = nullptr;
+	other.m_heap.Reset();
 }
 
 // Move assignment
@@ -50,12 +50,12 @@ DescriptorHeap& DescriptorHeap::operator=(DescriptorHeap&& other) noexcept
 {
 	if (this != &other)
 	{
-		m_heap.Release();
+		m_heap.Reset();
 		m_heap = std::move(other.m_heap);
 		m_heapDesc = other.m_heapDesc;
 		m_numCBV = other.m_numCBV;
 		m_numSRV = other.m_numSRV;
-		other.m_heap = nullptr;
+		other.m_heap.Reset();
 	}
 	return *this;
 }
@@ -63,7 +63,7 @@ DescriptorHeap& DescriptorHeap::operator=(DescriptorHeap&& other) noexcept
 // Destructor
 DescriptorHeap::~DescriptorHeap() noexcept
 {
-	m_heap.Release();
+	m_heap.Reset();
 }
 
 // Get offset for descriptor type

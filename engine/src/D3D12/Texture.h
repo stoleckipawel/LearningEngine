@@ -25,16 +25,16 @@ private:
     // Creates the committed resource for the texture on the GPU
     void CreateResource();
     // Releases all GPU resources associated with the texture
-    void Release();    
+    void Reset();    
     // Uploads the texture data to the GPU resource
     void UploadToGPU();
     // Creates the shader resource view (SRV) for the texture
     void CreateShaderResourceView();
 private:
     // GPU resource for the texture
-    ComPointer<ID3D12Resource2> m_textureResource = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource2> m_textureResource = nullptr;
     // Upload buffer resource for staging texture data
-    ComPointer<ID3D12Resource2> m_uploadResource = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource2> m_uploadResource = nullptr;
     // RAII loader for image data
     std::unique_ptr<TextureLoader> m_loader;
     // Index in the descriptor heap

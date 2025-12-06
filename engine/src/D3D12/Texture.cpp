@@ -40,7 +40,7 @@ void Texture::CreateResource()
 			&m_texResourceDesc,
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
-			IID_PPV_ARGS(&m_textureResource)),
+			IID_PPV_ARGS(m_textureResource.ReleaseAndGetAddressOf())),
 		"Texture: Failed To Create Texture Resource"
 	);
 	m_textureResource->SetName(L"RHI_Texture");
@@ -58,7 +58,7 @@ void Texture::CreateResource()
 			&resourceDesc,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
-			IID_PPV_ARGS(&m_uploadResource)),
+			IID_PPV_ARGS(m_uploadResource.ReleaseAndGetAddressOf())),
 		"Texture: Failed To Create Upload Buffer"
 	);
 }
@@ -122,14 +122,14 @@ D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetCPUHandle() const
 }
 
 // Releases all GPU resources associated with the texture
-void Texture::Release()
+void Texture::Reset()
 {
-	m_textureResource.Release();
-	m_uploadResource.Release();
+	m_textureResource.Reset();
+	m_uploadResource.Reset();
 }
 
 // Destructor releases resources
 Texture::~Texture()
 {
-	Release();
+	Reset();
 }

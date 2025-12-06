@@ -26,11 +26,11 @@ ShaderCompiler::ShaderCompiler(const std::filesystem::path& fileName, const std:
 // Releases shader compiler resources
 ShaderCompiler::~ShaderCompiler()
 {
-    Release();
+    Reset();
 }
 
 // Releases shader compiler resources
-void ShaderCompiler::Release()
+void ShaderCompiler::Reset()
 {
     m_shaderBytecode.BytecodeLength = 0;
     m_shaderBytecode.pShaderBytecode = nullptr;
@@ -50,19 +50,19 @@ void ShaderCompiler::ResolveAndValidatePath(const std::filesystem::path& fileNam
 void ShaderCompiler::CreateDXCInterfaces()
 {
     // Create DXC compiler interface
-    HRESULT hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&m_dxcCompiler));
+    HRESULT hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(m_dxcCompiler.ReleaseAndGetAddressOf()));
     if (FAILED(hr)) {
         LogMessage("Failed to create DXC compiler", ELogType::Fatal);
         return;
     }
     // Create DXC utility interface
-    hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&m_dxcUtils));
+    hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(m_dxcUtils.ReleaseAndGetAddressOf()));
     if (FAILED(hr)) {
         LogMessage("Failed to create DXC utils", ELogType::Fatal);
         return;
     }
     // Create default include handler for #include directives
-    hr = m_dxcUtils->CreateDefaultIncludeHandler(&m_includeHandler);
+    hr = m_dxcUtils->CreateDefaultIncludeHandler(m_includeHandler.ReleaseAndGetAddressOf());
     if (FAILED(hr)) {
         LogMessage("Failed to create DXC include handler", ELogType::Fatal);
         return;
@@ -73,8 +73,8 @@ void ShaderCompiler::CreateDXCInterfaces()
 void ShaderCompiler::HandleCompileResult()
 {
     // Print errors and warnings if present from DXC
-    ComPointer<IDxcBlobUtf8> errorBlob = nullptr;
-    m_compileResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errorBlob), nullptr);
+    Microsoft::WRL::ComPtr<IDxcBlobUtf8> errorBlob = nullptr;
+    m_compileResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errorBlob.ReleaseAndGetAddressOf()), nullptr);
     if (errorBlob != nullptr && errorBlob->GetStringLength() != 0) {
         LogMessage(std::string("DXC Warnings/Errors: ") + std::string(errorBlob->GetStringPointer(), errorBlob->GetStringLength()), ELogType::Fatal);
     }
@@ -89,9 +89,9 @@ void ShaderCompiler::HandleCompileResult()
     }
 
     // Save compiled shader binary to disk and store bytecode for engine use
-    ComPointer<IDxcBlob> shaderBlob = nullptr;
-    ComPointer<IDxcBlobUtf16> shaderNameBlob = nullptr;
-    m_compileResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), &shaderNameBlob);
+    Microsoft::WRL::ComPtr<IDxcBlob> shaderBlob = nullptr;
+    Microsoft::WRL::ComPtr<IDxcBlobUtf16> shaderNameBlob = nullptr;
+    m_compileResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(shaderBlob.ReleaseAndGetAddressOf()), shaderNameBlob.ReleaseAndGetAddressOf());
     if (shaderBlob != nullptr && shaderNameBlob != nullptr) {
         FILE* fp = nullptr;
         _wfopen_s(&fp, shaderNameBlob->GetStringPointer(), L"wb");
@@ -106,9 +106,9 @@ void ShaderCompiler::HandleCompileResult()
     m_shaderBytecode.pShaderBytecode = shaderBlob->GetBufferPointer();
 
     // Save PDB (debug info) to disk for debugging and PIX integration
-    ComPointer<IDxcBlob> pdbBlob = nullptr;
-    ComPointer<IDxcBlobUtf16> pdbNameBlob = nullptr;
-    m_compileResult->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(&pdbBlob), &pdbNameBlob);
+    Microsoft::WRL::ComPtr<IDxcBlob> pdbBlob = nullptr;
+    Microsoft::WRL::ComPtr<IDxcBlobUtf16> pdbNameBlob = nullptr;
+    m_compileResult->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(pdbBlob.ReleaseAndGetAddressOf()), pdbNameBlob.ReleaseAndGetAddressOf());
     if (pdbBlob != nullptr && pdbNameBlob != nullptr) {
         FILE* fp = nullptr;
         _wfopen_s(&fp, pdbNameBlob->GetStringPointer(), L"wb");
@@ -128,7 +128,7 @@ void ShaderCompiler::DumpShaderDebugInfo()
 void ShaderCompiler::LoadShaderSource()
 {
     // Load shader source file into DXC blob
-    HRESULT hr = m_dxcUtils->LoadFile(m_resolvedPath.c_str(), nullptr, &m_sourceBlob);
+    HRESULT hr = m_dxcUtils->LoadFile(m_resolvedPath.c_str(), nullptr, m_sourceBlob.ReleaseAndGetAddressOf());
     if (FAILED(hr) || !m_sourceBlob) {
         LogMessage("Failed to load shader source file: " + m_resolvedPath.string(), ELogType::Fatal);
         return;
@@ -160,7 +160,7 @@ void ShaderCompiler::CompileShader(const std::string& model, const std::string& 
         DXC_ARG_DEBUG,          // Enable debug info (full format)
         DXC_ARG_SKIP_OPTIMIZATIONS // Skip optimizations for easier debugging
     #else
-        DXC_ARG_OPTIMIZATION_LEVEL3 // Enable full optimizations for release
+        DXC_ARG_OPTIMIZATION_LEVEL3 // Enable full optimizations for reset
     #endif
         };
 
@@ -172,8 +172,8 @@ void ShaderCompiler::CompileShader(const std::string& model, const std::string& 
         &m_sourceBuffer,                  // Source buffer
         pszArgs,                          // Compile arguments
         static_cast<UINT>(std::size(pszArgs)), // Number of arguments
-        m_includeHandler,                 // #include handler
-        IID_PPV_ARGS(&m_compileResult)    // Compiler output
+        m_includeHandler.Get(),                 // #include handler
+        IID_PPV_ARGS(m_compileResult.ReleaseAndGetAddressOf())    // Compiler output
     );
 
     if (FAILED(hr) || !m_compileResult) {
@@ -210,8 +210,8 @@ void ShaderCompiler::LogDXCArguments()
 void ShaderCompiler::LogDXCVersion()
 {
 #if defined(_DEBUG)
-    ComPointer<IDxcVersionInfo> versionInfo = nullptr;
-    if (SUCCEEDED(m_dxcCompiler->QueryInterface(__uuidof(IDxcVersionInfo), reinterpret_cast<void**>(&versionInfo)))) {
+    Microsoft::WRL::ComPtr<IDxcVersionInfo> versionInfo = nullptr;
+    if (SUCCEEDED(m_dxcCompiler->QueryInterface(__uuidof(IDxcVersionInfo), reinterpret_cast<void**>(versionInfo.ReleaseAndGetAddressOf())))) {
         UINT major = 0, minor = 0;
         versionInfo->GetVersion(&major, &minor);
         LogMessage("DXC Version: " + std::to_string(major) + "." + std::to_string(minor), ELogType::Info);

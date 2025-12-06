@@ -14,10 +14,10 @@ Geometry::Geometry()
 	Upload();
 }
 
-// Destructor releases geometry resources
+// Destructor Resets geometry resources
 Geometry::~Geometry()
 {
-	Release();
+	Reset();
 }
 
 void Geometry::UploadVertexBuffer()
@@ -84,11 +84,11 @@ void Geometry::Upload()
 }
 
 
-// Releases geometry resources
-void Geometry::Release()
+// Resets geometry resources
+void Geometry::Reset()
 {
-	IndexBuffer.Release();
-	VertexBuffer.Release();
+	IndexBuffer.Reset();
+	VertexBuffer.Reset();
 }
 
 

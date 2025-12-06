@@ -14,7 +14,7 @@ public:
 	inline size_t GetSize() const { return m_shaderBytecode.BytecodeLength; }
 
 private:
-	void Release();
+	void Reset();
 	void ResolveAndValidatePath(const std::filesystem::path& fileName);
 	void CreateDXCInterfaces();
 	void LogDXCArguments();
@@ -26,12 +26,12 @@ private:
 
 	D3D12_SHADER_BYTECODE m_shaderBytecode{};
 	std::filesystem::path m_resolvedPath;
-	ComPointer<IDxcCompiler3> m_dxcCompiler;
-	ComPointer<IDxcUtils> m_dxcUtils;
-	ComPointer<IDxcIncludeHandler> m_includeHandler;
+	Microsoft::WRL::ComPtr<IDxcCompiler3> m_dxcCompiler;
+	Microsoft::WRL::ComPtr<IDxcUtils> m_dxcUtils;
+	Microsoft::WRL::ComPtr<IDxcIncludeHandler> m_includeHandler;
 	std::vector<LPCWSTR> m_compileArgs;
-	ComPointer<IDxcBlobEncoding> m_sourceBlob;
+	Microsoft::WRL::ComPtr<IDxcBlobEncoding> m_sourceBlob;
 	DxcBuffer m_sourceBuffer{};
-	ComPointer<IDxcResult> m_compileResult;
+	Microsoft::WRL::ComPtr<IDxcResult> m_compileResult;
 };
 

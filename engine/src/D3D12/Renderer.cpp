@@ -72,7 +72,7 @@ void Renderer::CreateRootSignatures()
 // Creates the pipeline state object (PSO)
 void Renderer::CreatePSOs()
 {
-    m_pso = std::make_unique<PSO>(*m_vertecies, m_rootSignature->Get(), *m_vertexShader, *m_pixelShader);
+    m_pso = std::make_unique<PSO>(*m_vertecies, m_rootSignature->Get().Get(), *m_vertexShader, *m_pixelShader);
 }
 
 // -----------------------------------------------------------------------------
@@ -165,7 +165,7 @@ void Renderer::PopulateCommandList()
     m_depthStencil->SetWriteState();
 
     // Bind root signature
-    GRHI.GetCommandListScene()->SetGraphicsRootSignature(m_rootSignature->Get());
+    GRHI.GetCommandListScene()->SetGraphicsRootSignature(m_rootSignature->Get().Get());
 
     // Set viewport and render targets
     SetViewport();
@@ -264,6 +264,6 @@ void Renderer::Shutdown()
     GUI.Shutdown();
     GSwapChain.Shutdown();
     GWindow.Shutdown();
-    GDescriptorHeapManager.Release();
+    GDescriptorHeapManager.Reset();
     GRHI.Shutdown();
 }

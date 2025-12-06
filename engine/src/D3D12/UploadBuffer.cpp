@@ -2,9 +2,9 @@
 #include "D3D12/UploadBuffer.h"
 
 // Uploads data to a GPU-accessible buffer using an upload heap.
-// Returns a ComPointer to the created ID3D12Resource2 buffer.
+// Returns a ComPtr to the created ID3D12Resource2 buffer.
 // Note: For optimal performance, consider using a default heap and staging resource for large or frequent uploads.
-ComPointer<ID3D12Resource2> UploadBuffer::Upload(void* data, uint32_t dataSize)
+Microsoft::WRL::ComPtr<ID3D12Resource2> UploadBuffer::Upload(void* data, uint32_t dataSize)
 {
 	// Describe the buffer resource
 	D3D12_RESOURCE_DESC resourceDesc = {};
@@ -21,7 +21,7 @@ ComPointer<ID3D12Resource2> UploadBuffer::Upload(void* data, uint32_t dataSize)
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
 	// Create the committed resource in the upload heap
-	ComPointer<ID3D12Resource2> uploadBuffer;
+	Microsoft::WRL::ComPtr<ID3D12Resource2> uploadBuffer;
 	CD3DX12_HEAP_PROPERTIES heapUploadProperties(D3D12_HEAP_TYPE_UPLOAD);
 	ThrowIfFailed(
 		GRHI.GetDevice()->CreateCommittedResource(
@@ -30,7 +30,7 @@ ComPointer<ID3D12Resource2> UploadBuffer::Upload(void* data, uint32_t dataSize)
 			&resourceDesc,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
-			IID_PPV_ARGS(&uploadBuffer)),
+			IID_PPV_ARGS(uploadBuffer.ReleaseAndGetAddressOf())),
 		"UploadBuffer: Failed to create upload buffer"
 	);
 

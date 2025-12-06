@@ -7,6 +7,6 @@ class UploadBuffer
 {
 public:
 	// Uploads the given data to a buffer of the specified size.
-	// Returns a ComPointer to the created ID3D12Resource2 buffer.
-	static ComPointer<ID3D12Resource2> Upload(void* data, uint32_t dataSize);
+	// Returns a ComPtr to the created ID3D12Resource2 buffer.
+	static Microsoft::WRL::ComPtr<ID3D12Resource2> Upload(void* data, uint32_t dataSize);
 };

@@ -27,21 +27,21 @@ void DebugLayer::InitializeInfoQueue()
 
 void DebugLayer::InitD3D12Debug()
 {
-	ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&m_d3d12Debug)), "Failed To Initialize D3D12 Debug Interface.");
+	ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(m_d3d12Debug.ReleaseAndGetAddressOf())), "Failed To Initialize D3D12 Debug Interface.");
 	m_d3d12Debug->EnableDebugLayer();
 }
 
 void DebugLayer::InitDXGIDebug()
 {
-	ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&m_dxgiDebug)), "Failed To Initialize DXGI Debug Layer.");
+	ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(m_dxgiDebug.ReleaseAndGetAddressOf())), "Failed To Initialize DXGI Debug Layer.");
 	m_dxgiDebug->EnableLeakTrackingForThread();
 }
 
 // Configure D3D12 InfoQueue to break on warnings, errors and corruption
 void DebugLayer::ConfigureInfoQueue()
 {
-	ComPointer<ID3D12InfoQueue> infoQueue;
-	if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(&infoQueue))))
+	Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue;
+	if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf()))))
 	{
 		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
 		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
@@ -52,8 +52,8 @@ void DebugLayer::ConfigureInfoQueue()
 // Apply filters to suppress noisy/known-issue messages in the InfoQueue
 void DebugLayer::ApplyInfoQueueFilters()
 {
-	ComPointer<ID3D12InfoQueue> infoQueue;
-	if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(&infoQueue))))
+	Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue;
+	if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf()))))
 	{
 		//Suppress FENCE_ZERO_WAIT (SDK layer noise/bug); not always present in headers
 		const int D3D12_MESSAGE_ID_FENCE_ZERO_WAIT_ = 1424;
@@ -70,17 +70,17 @@ void DebugLayer::Shutdown()
 {
 #if defined(_DEBUG)
 	ReportLiveDXGIObjects();
-	m_dxgiDebug.Release();
-	m_d3d12Debug.Release();
+	m_dxgiDebug.Reset();
+	m_d3d12Debug.Reset();
 #endif
 }
 
-// Reports live D3D12 device objects (must be called before device is released)
+// Reports live D3D12 device objects (must be called before device is Resetd)
 void DebugLayer::ReportLiveDeviceObjects()
 {
 #if defined(_DEBUG) && defined(REPORT_LIVE_OBJECTS)
-	ComPointer<ID3D12DebugDevice> debugDevice;
-	if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(&debugDevice))))
+	Microsoft::WRL::ComPtr<ID3D12DebugDevice> debugDevice;
+	if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(debugDevice.ReleaseAndGetAddressOf()))))
 	{
 		OutputDebugStringW(L"D3D12 Live Device Objects (detail + summary):\n");
 		debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL | D3D12_RLDO_SUMMARY);

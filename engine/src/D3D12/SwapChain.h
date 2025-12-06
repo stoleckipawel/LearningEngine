@@ -32,6 +32,8 @@ public:
 	// Updates the current back buffer index from the swap chain
 	void UpdateFrameInFlightIndex() { m_frameInFlightIndex = m_swapChain->GetCurrentBackBufferIndex(); }
 
+	HANDLE GetWaitableObject() const { return m_WaitableObject; }
+
 	// Returns the default viewport for rendering
 	D3D12_VIEWPORT GetDefaultViewport();
 	// Returns the default scissor rectangle for rendering
@@ -47,11 +49,12 @@ private:
 	// Current back buffer index
 	UINT m_frameInFlightIndex = 0;
 	// Swap chain interface
-	ComPointer<IDXGISwapChain3> m_swapChain = nullptr;
+	Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain = nullptr;
 	// Array of render target resources (one per frame)
-	ComPointer<ID3D12Resource2> m_buffers[NumFramesInFlight];
+	Microsoft::WRL::ComPtr<ID3D12Resource2> m_buffers[NumFramesInFlight];
 	// Back buffer format used by the swap chain
 	DXGI_FORMAT m_backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+	HANDLE m_WaitableObject = nullptr;	
 private:
 	// Creates render target views for all swap chain buffers
 	void CreateRenderTargetViews();

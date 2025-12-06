@@ -157,12 +157,12 @@ PSO::PSO(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler
 
 
 	// -- Create PSO (manual HRESULT check and info queue logging)
-	HRESULT hr = GRHI.GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pso));
+	HRESULT hr = GRHI.GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(m_pso.ReleaseAndGetAddressOf()));
 	if (FAILED(hr))
 	{	
 		// If debug layer is enabled, query InfoQueue for messages
-		ComPointer<ID3D12InfoQueue> infoQueue;
-		if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
+		Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue;
+		if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf())))) {
 			UINT64 numMessages = infoQueue->GetNumStoredMessages();
 			for (UINT64 i = 0; i < numMessages; ++i) {
 				SIZE_T messageLength = 0;
@@ -181,18 +181,13 @@ PSO::PSO(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler
 	m_pso->SetName(L"RHI_PipelineState");
 }
 
-void PSO::Release()
-{
-	m_pso.Release();
-}
-
 PSO::~PSO()
 {
-	Release();
+	m_pso.Reset();
 }
 
 // Sets the pipeline state object for the current command list.
 void PSO::Set()
 {
-	GRHI.GetCommandListScene()->SetPipelineState(m_pso);
+	GRHI.GetCommandListScene()->SetPipelineState(m_pso.Get());
 }

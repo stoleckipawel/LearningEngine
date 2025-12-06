@@ -6,7 +6,7 @@
 /**
  * Manages all descriptor heaps required by the engine.
  *
- * This class encapsulates creation, binding, and release of descriptor heaps for:
+ * This class encapsulates creation, binding, and Reset of descriptor heaps for:
  * - CBV/SRV/UAV (shader visible)
  * - Sampler (shader visible)
  * - Depth Stencil View (DSV)
@@ -19,12 +19,12 @@ class DescriptorHeapManager
 public:
 	// Initializes all descriptor heaps.
 	void Initialize();
-	
+
 	void SetShaderVisibleHeapsScene();
 	void SetShaderVisibleHeapsUI();
 
-	// Releases all descriptor heap resources.
-	void Release();
+	// Resets all descriptor heap resources.
+	void Reset();
 
 	// Returns reference to the CBV/SRV/UAV heap.
 	DescriptorHeap& GetCBVSRVUAVHeap() { return *m_CBVSRVUAVHeap; }
@@ -38,7 +38,7 @@ public:
 	// Returns reference to the Render Target View heap.
 	DescriptorHeap& GetRenderTargetViewHeap() { return *m_RenderTargetViewHeap; }
 private:
-	void SetShaderVisibleHeaps(ComPointer<ID3D12GraphicsCommandList7> cmdList);	
+	void SetShaderVisibleHeaps(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList7> cmdList);
 private:
 	std::unique_ptr<DescriptorHeap> m_CBVSRVUAVHeap;        // CBV/SRV/UAV heap (shader visible)
 	std::unique_ptr<DescriptorHeap> m_SamplerHeap;          // Sampler heap (shader visible)

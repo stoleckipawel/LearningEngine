@@ -17,9 +17,9 @@ public:
 	RootSignature& operator=(const RootSignature&) = delete;
 
 	// Returns the COM pointer to the root signature
-	ComPointer<ID3D12RootSignature> Get() { return m_rootSignature; }
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> Get() { return m_rootSignature; }
 private:
 	void Create();
-	void Release();
-	ComPointer<ID3D12RootSignature> m_rootSignature = nullptr; // Root signature COM pointer
+	void Reset();
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature = nullptr; // Root signature COM pointer
 };

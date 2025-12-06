@@ -21,7 +21,7 @@ public:
 	// Constructs and uploads geometry resources
 	Geometry();
 
-	// Destructor releases geometry resources
+	// Destructor Resets geometry resources
 	~Geometry();
 
 	// Deleted copy constructor and assignment operator to enforce unique ownership
@@ -41,11 +41,11 @@ private:
 	void UploadIndexBuffer();
 	// Uploads both vertex and index buffers
 	void Upload();
-	// Releases geometry resources
-	void Release();
+	// Resets geometry resources
+	void Reset();
 private:
-	ComPointer<ID3D12Resource2> VertexBuffer = nullptr;
-	ComPointer<ID3D12Resource2> IndexBuffer = nullptr; 
+	Microsoft::WRL::ComPtr<ID3D12Resource2> VertexBuffer = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource2> IndexBuffer = nullptr; 
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {}; 
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};  
 };

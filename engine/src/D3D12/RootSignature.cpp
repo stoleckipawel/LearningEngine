@@ -10,12 +10,12 @@ RootSignature::RootSignature()
 // Destructor releases the root signature
 RootSignature::~RootSignature()
 {
-    Release();
+    Reset();
 }
 
-void RootSignature::Release()
+void RootSignature::Reset()
 {
-    m_rootSignature.Release();
+    m_rootSignature.Reset();
 }
 
 // Creates the root signature for the graphics pipeline
@@ -62,6 +62,6 @@ void RootSignature::Create()
         "Failed To Serialize Root Signature"
     );
 
-    ThrowIfFailed(GRHI.GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)), "Failed To Create Root Signature");
+    ThrowIfFailed(GRHI.GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(m_rootSignature.ReleaseAndGetAddressOf())), "Failed To Create Root Signature");
     m_rootSignature->SetName(L"RHI_RootSignature");
 }

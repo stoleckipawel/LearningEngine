@@ -63,7 +63,7 @@ public:
     {
         if (this != &other)
         {
-            Release();
+            Reset();
             m_DescriptorHandleIndex = other.m_DescriptorHandleIndex;
             m_ConstantBufferData = std::move(other.m_ConstantBufferData);
             m_ConstantBufferViewDesc = other.m_ConstantBufferViewDesc;
@@ -75,10 +75,10 @@ public:
         return *this;
     }
 
-    // Destructor: releases the buffer resource
+    // Destructor: Resets the buffer resource
     ~ConstantBuffer() noexcept
     {
-        Release();
+        Reset();
     }
 private:
     // Create the committed resource and map for CPU writes
@@ -122,18 +122,18 @@ private:
 
     UINT GetDescriptorHandleIndex() const noexcept { return m_DescriptorHandleIndex; }
 
-    // Release buffer resource
-    void Release() noexcept
+    // Reset buffer resource
+    void Reset() noexcept
     {
         if (Resource)
         {
             Resource->Unmap(0, nullptr);
-            Resource.Release();
+            Resource.Reset();
             m_MappedData = nullptr;
         }
     }
 private:
-    ComPointer<ID3D12Resource2> Resource = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource2> Resource = nullptr;
     UINT m_DescriptorHandleIndex = 0; // Index in descriptor heap
     T m_ConstantBufferData; // Cached buffer data
     D3D12_CONSTANT_BUFFER_VIEW_DESC m_ConstantBufferViewDesc = {}; 

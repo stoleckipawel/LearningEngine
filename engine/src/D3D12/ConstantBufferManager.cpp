@@ -58,8 +58,8 @@ void ConstantBufferManager::Update(size_t FrameIndex)
 	PixelConstantBuffers[GSwapChain.GetFrameInFlightIndex()]->Update(pixelData);
 }
 
-// Releases all constant buffers
-void ConstantBufferManager::Release()
+// Resets all constant buffers
+void ConstantBufferManager::Reset()
 {
 	for (size_t i = 0; i < NumFramesInFlight; ++i)
 	{

@@ -27,7 +27,7 @@ public:
 	DescriptorHeap(DescriptorHeap&& other) noexcept;
 	DescriptorHeap& operator=(DescriptorHeap&& other) noexcept;
 
-	// Destructor releases the descriptor heap
+	// Destructor Resets the descriptor heap
 	~DescriptorHeap() noexcept;
 
 	// Get CPU handle for descriptor type and index
@@ -43,6 +43,6 @@ private:
 	D3D12_DESCRIPTOR_HEAP_DESC m_heapDesc = {};
 	UINT m_numCBV = 0;
 	UINT m_numSRV = 0;
-	ComPointer<ID3D12DescriptorHeap> m_heap;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_heap;
 };
 

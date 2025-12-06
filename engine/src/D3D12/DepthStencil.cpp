@@ -56,7 +56,7 @@ void DepthStencil::CreateResource()
 			&depthStencilResourceDesc,
 			D3D12_RESOURCE_STATE_DEPTH_READ,
 			&depthOptimizedClearValue,
-			IID_PPV_ARGS(&m_resource)),
+			IID_PPV_ARGS(m_resource.ReleaseAndGetAddressOf())),
 		"Depth Stencil: Failed To Create Resource"
 	);
 	m_resource->SetName(L"RHI_DepthStencil");
@@ -65,7 +65,7 @@ void DepthStencil::CreateResource()
 // Creates the depth stencil view in the descriptor heap
 void DepthStencil::CreateDepthStencilView()
 {
-	GRHI.GetDevice()->CreateDepthStencilView(m_resource, &m_depthStencilDesc, GetCPUHandle());
+	GRHI.GetDevice()->CreateDepthStencilView(m_resource.Get(), &m_depthStencilDesc, GetCPUHandle());
 }
 
 // Returns the GPU descriptor handle for shader access
@@ -91,7 +91,7 @@ void DepthStencil::Clear()
 void DepthStencil::SetWriteState()
 {
 	GRHI.SetBarrier(
-		m_resource,
+		m_resource.Get(),
 		D3D12_RESOURCE_STATE_DEPTH_READ,
 		D3D12_RESOURCE_STATE_DEPTH_WRITE
 	);
@@ -101,20 +101,14 @@ void DepthStencil::SetWriteState()
 void DepthStencil::SetReadState()
 {
 	GRHI.SetBarrier(
-		m_resource,
+		m_resource.Get(),
 		D3D12_RESOURCE_STATE_DEPTH_WRITE,
 		D3D12_RESOURCE_STATE_DEPTH_READ
 	);
 }
 
-// Releases the depth stencil resource
-void DepthStencil::Release()
-{
-	m_resource.Release();
-}
-
-// Destructor releases resources
+// Destructor resets resources
 DepthStencil::~DepthStencil()
 {
-	Release();
+	m_resource.Reset();
 }

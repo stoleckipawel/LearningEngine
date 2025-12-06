@@ -29,8 +29,8 @@ public:
 
 	UINT GetDescriptorHandleIndex(UINT ConstantBufferID, UINT GroupIndex);
 
-	// Releases all constant buffers
-	void Release();
+	// Resets all constant buffers
+	void Reset();
 	// Updates the constant buffers
 	void Update(size_t FrameIndex);
 

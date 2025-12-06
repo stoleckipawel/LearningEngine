@@ -30,20 +30,23 @@ void SwapChain::Initialize()
 	swapChainFullsceenDesc.Windowed = true;
 
 	// Create the swap chain for the window
-	ComPointer<IDXGISwapChain1> swapChain;
+	Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain;
 	ThrowIfFailed(
 		GRHI.GetDxgiFactory()->CreateSwapChainForHwnd(
-			GRHI.GetCommandQueue(),
+			GRHI.GetCommandQueue().Get(),
 			GWindow.WindowHWND,
 			&swapChainDesc,
 			&swapChainFullsceenDesc,
 			nullptr,
 			&swapChain),
 		"Failed To Create Swap Chain for HWND"
-	);
+	);	
 
 	// Query for IDXGISwapChain3 interface
-	ThrowIfFailed(swapChain.QueryInterface(m_swapChain), "Failed to Query Swap Chain Interface");
+	ThrowIfFailed(swapChain.As(&m_swapChain), "Failed to Query Swap Chain Interface");
+
+	m_swapChain->SetMaximumFrameLatency(NumFramesInFlight);
+	m_WaitableObject = m_swapChain->GetFrameLatencyWaitableObject();
 
 	// Initialize current frame-in-flight index from swap chain
 	UpdateFrameInFlightIndex();
@@ -51,7 +54,6 @@ void SwapChain::Initialize()
 	// Create render target views for all buffers
 	CreateRenderTargetViews();
 }
-
 
 // Clears the current render target view with a solid color
 void SwapChain::Clear()
@@ -99,7 +101,7 @@ void SwapChain::CreateRenderTargetViews()
 	for (UINT i = 0; i < NumFramesInFlight; i++)
 	{
 		// Get the buffer resource from the swap chain
-		ThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_buffers[i])), "Failed To get Swapchain Buffer!");
+		ThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(m_buffers[i].ReleaseAndGetAddressOf())), "Failed To get Swapchain Buffer!");
 		m_buffers[i]->SetName(L"RHI_BackBuffer");
 
 		// Describe the render target view
@@ -179,7 +181,7 @@ void SwapChain::Present()
 void SwapChain::SetRenderTargetState()
 {
 	GRHI.SetBarrier(
-		m_buffers[m_frameInFlightIndex],
+		m_buffers[m_frameInFlightIndex].Get(),
 		D3D12_RESOURCE_STATE_PRESENT,
 		D3D12_RESOURCE_STATE_RENDER_TARGET
 	);
@@ -190,7 +192,7 @@ void SwapChain::SetRenderTargetState()
 void SwapChain::SetPresentState()
 {
 	GRHI.SetBarrier(
-		m_buffers[m_frameInFlightIndex],
+		m_buffers[m_frameInFlightIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_PRESENT
 	);
@@ -202,7 +204,7 @@ void SwapChain::ReleaseBuffers()
 {
 	for (UINT i = 0; i < NumFramesInFlight; i++)
 	{
-		m_buffers[i].Release();
+		m_buffers[i].Reset();
 	}
 }
 
@@ -211,5 +213,5 @@ void SwapChain::ReleaseBuffers()
 void SwapChain::Shutdown()
 {
 	ReleaseBuffers();
-	m_swapChain.Release();
+	m_swapChain.Reset();
 }

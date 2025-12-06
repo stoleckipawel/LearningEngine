@@ -22,7 +22,7 @@ public:
 	void Initialize();
 
 	// Releases graphics resources 
-	void Release();
+	void Reset();
 
 	// Shuts down the renderer and all owned subsystems
 	void Shutdown();
