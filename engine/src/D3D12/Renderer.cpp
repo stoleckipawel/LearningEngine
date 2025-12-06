@@ -1,9 +1,9 @@
 
-#include "Core/PCH.h"
-#include "Core/Renderer.h"
+#include "PCH.h"
+#include "Renderer.h"
 #include "D3D12/DebugLayer.h"
 #include "D3D12/RHI.h"
-#include "Core/Window.h"
+#include "Window.h"
 #include "D3D12/ConstantBufferManager.h"
 #include "D3D12/ShaderCompiler.h"
 #include "D3D12/Texture.h"
@@ -13,7 +13,7 @@
 #include "D3D12/ConstantBuffer.h"
 #include "D3D12/Sampler.h"
 #include "D3D12/DepthStencil.h"
-#include "Core/UI.h"
+#include "UI.h"
 
 // Global renderer instance
 Renderer GRenderer;

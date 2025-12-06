@@ -1,0 +1,83 @@
+#include "PCH.h"
+#include "App.h"
+#include "UI.h"
+#include "Window.h"
+#include "Renderer.h"
+
+extern UI GUI;
+extern Window GWindow;
+extern Renderer GRenderer;
+
+void App::Run()
+{
+    // Initialize platform window + renderer, then user extension
+    Initialize();
+
+    // Main loop
+    RenderLoop();
+
+    // Shutdown engine first, then user extension
+    Shutdown();
+}
+
+void App::RenderLoop()
+{
+    while (!GWindow.ShouldClose())
+    {
+        // Engine input & message pump
+        GWindow.PollEvents();
+
+        // Optional scene extension
+        Render();
+    }
+}
+
+// --- NVI implementations ---
+void App::Initialize()
+{
+    // User can inject work before engine init
+    PreInitialize();
+
+    // Engine base init
+    GWindow.Initialize();
+    GRenderer.Initialize();
+
+    // User can extend after engine init
+    PostInitialize();
+}
+
+void App::Render()
+{
+    // User can record/prepare before engine render
+    PreRender();
+
+    // Engine render frame
+    GRenderer.OnRender();
+
+    // User can extend after engine render
+    PostRender();
+}
+
+void App::Resize()
+{
+    // User hook before engine resize
+    PreResize();
+
+    // Engine resize
+    GRenderer.OnResize();
+
+    // User hook after engine resize
+    PostResize();
+}
+
+void App::Shutdown()
+{
+    // User hook before engine shutdown
+    PreShutdown();
+
+    // Engine shutdown
+    GRenderer.Shutdown();
+
+    // User hook after engine shutdown
+    PostShutdown();
+}

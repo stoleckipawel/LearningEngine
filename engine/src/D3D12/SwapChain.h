@@ -1,4 +1,4 @@
-#include "Core/PCH.h"
+#include "PCH.h"
 
 #pragma once
 // Number of frames that can be processed simultaneously

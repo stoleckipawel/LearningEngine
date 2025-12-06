@@ -1,8 +1,8 @@
-#include "Core/PCH.h"
-#include "Core/Window.h"
-#include "Core/Renderer.h"
+#include "PCH.h"
+#include "Window.h"
+#include "Renderer.h"
 #include "D3D12/RHI.h"
-#include "Core/UI.h"
+#include "UI.h"
 
 Window GWindow;
 
@@ -83,8 +83,8 @@ void Window::Shutdown()
 }
 
 
-// Processes pending window messages (event loop)
-void Window::Update()
+// Polls and dispatches pending window messages (event loop)
+void Window::PollEvents()
 {
 	MSG msg;
 	while (PeekMessageW(&msg, WindowHWND, 0, 0, PM_REMOVE))

@@ -1,6 +1,6 @@
-#include "Core/PCH.h"
-#include "Core/UI.h"
-#include "Core/Window.h"
+#include "PCH.h"
+#include "UI.h"
+#include "Window.h"
 #include "D3D12/RHI.h"
 #include "D3D12/DescriptorHeapManager.h"
 

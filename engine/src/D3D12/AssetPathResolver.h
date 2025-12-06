@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/PCH.h"
+#include "PCH.h"
 
 enum class AssetType {
     Shader,

@@ -2,7 +2,7 @@
 
 ## Overview
 
-LearningEngine is a DirectX 12 playground engine for experimentation and learning. It features a modular engine and a sample project (`DX12Toy`).
+LearningEngine is a DirectX 12 playground engine for experimentation and learning. It features a modular engine and a sample project (`ExampleD3D12`).
 
 ## Prerequisites
 
@@ -36,7 +36,7 @@ LearningEngine is a DirectX 12 playground engine for experimentation and learnin
 	Builds all sample projects for Debug or Release. Output executables are in `bin/Debug` or `bin/Release`.
 
 4. **Manual Build (Visual Studio)**
-	Open `build/Playground.sln` in Visual Studio. Build using Debug/Release. Default startup project: `DX12Toy`.
+	Open `build/Playground.sln` in Visual Studio. Build using Debug/Release. Default startup project: `ExampleD3D12`.
 
 ## Batch Script Reference
 

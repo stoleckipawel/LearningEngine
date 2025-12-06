@@ -8,8 +8,8 @@ public:
 	void Initialize();
 	// Destroy the window and unregister its class
 	void Shutdown();
-	// Process window messages (event loop)
-	void Update();
+	// Poll and dispatch window messages (event loop)
+	void PollEvents();
 
 	// Get the client rectangle of the window
 	RECT GetRect();
@@ -29,12 +29,10 @@ private:
 public:
 	// Handle to the window
 	HWND WindowHWND = nullptr;
+	ATOM m_wndClass = 0;
 private:
 	bool m_bShouldClose = false;
 	bool m_bIsFullScreen = false;
-
-	// Window class atom (for registration/unregistration)
-	ATOM m_wndClass;
 };
 
 

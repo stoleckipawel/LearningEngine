@@ -18,7 +18,7 @@ endif()
 
 # Add engine and sample subdirectories
 add_subdirectory(engine)
-add_subdirectory(samples/DX12Toy)
+add_subdirectory(samples/ExampleD3D12)
 
-# Set DX12Toy as the default startup project in Visual Studio
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT DX12Toy)
+# Set ExampleD3D12 as the default startup project in Visual Studio
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ExampleD3D12)
