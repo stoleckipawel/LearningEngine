@@ -40,7 +40,7 @@ void DebugLayer::InitDXGIDebug()
 // Configure D3D12 InfoQueue to break on warnings, errors and corruption
 void DebugLayer::ConfigureInfoQueue()
 {
-	Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue;
+	ComPtr<ID3D12InfoQueue> infoQueue;
 	if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf()))))
 	{
 		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
@@ -52,7 +52,7 @@ void DebugLayer::ConfigureInfoQueue()
 // Apply filters to suppress noisy/known-issue messages in the InfoQueue
 void DebugLayer::ApplyInfoQueueFilters()
 {
-	Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue;
+	ComPtr<ID3D12InfoQueue> infoQueue;
 	if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf()))))
 	{
 		//Suppress FENCE_ZERO_WAIT (SDK layer noise/bug); not always present in headers
@@ -79,7 +79,7 @@ void DebugLayer::Shutdown()
 void DebugLayer::ReportLiveDeviceObjects()
 {
 #if defined(_DEBUG) && defined(REPORT_LIVE_OBJECTS)
-	Microsoft::WRL::ComPtr<ID3D12DebugDevice> debugDevice;
+	ComPtr<ID3D12DebugDevice> debugDevice;
 	if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(debugDevice.ReleaseAndGetAddressOf()))))
 	{
 		OutputDebugStringW(L"D3D12 Live Device Objects (detail + summary):\n");

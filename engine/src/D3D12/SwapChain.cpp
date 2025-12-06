@@ -30,7 +30,7 @@ void SwapChain::Initialize()
 	swapChainFullsceenDesc.Windowed = true;
 
 	// Create the swap chain for the window
-	Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain;
+	ComPtr<IDXGISwapChain1> swapChain;
 	ThrowIfFailed(
 		GRHI.GetDxgiFactory()->CreateSwapChainForHwnd(
 			GRHI.GetCommandQueue().Get(),

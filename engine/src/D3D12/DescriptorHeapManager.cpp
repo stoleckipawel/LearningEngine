@@ -48,7 +48,7 @@ void DescriptorHeapManager::Initialize()
 
 
 // Core: set shader-visible heaps on a given command list
-void DescriptorHeapManager::SetShaderVisibleHeaps(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList7> cmdList)
+void DescriptorHeapManager::SetShaderVisibleHeaps(ComPtr<ID3D12GraphicsCommandList7> cmdList)
 {
 	ID3D12DescriptorHeap* heaps[] =
 	{

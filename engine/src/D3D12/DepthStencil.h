@@ -29,14 +29,14 @@ public:
     void SetReadState();
     
     // Internal helper: returns underlying resource (if ever needed internally)
-    Microsoft::WRL::ComPtr<ID3D12Resource> GetResource() const { return m_resource; }
+    ComPtr<ID3D12Resource> GetResource() const { return m_resource; }
 private:
     // Creates the depth stencil resource on the GPU
     void CreateResource();
     // Creates the depth stencil view in the descriptor heap
     void CreateDepthStencilView();
 private:
-    Microsoft::WRL::ComPtr<ID3D12Resource> m_resource;                     // Depth stencil resource
+    ComPtr<ID3D12Resource> m_resource;                     // Depth stencil resource
     D3D12_DEPTH_STENCIL_VIEW_DESC m_depthStencilDesc = {};     // DSV description
     UINT m_DescriptorHandleIndex = 0;                          // Index in descriptor heap
 };

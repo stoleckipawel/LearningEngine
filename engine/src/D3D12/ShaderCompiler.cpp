@@ -73,7 +73,7 @@ void ShaderCompiler::CreateDXCInterfaces()
 void ShaderCompiler::HandleCompileResult()
 {
     // Print errors and warnings if present from DXC
-    Microsoft::WRL::ComPtr<IDxcBlobUtf8> errorBlob = nullptr;
+    ComPtr<IDxcBlobUtf8> errorBlob = nullptr;
     m_compileResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errorBlob.ReleaseAndGetAddressOf()), nullptr);
     if (errorBlob != nullptr && errorBlob->GetStringLength() != 0) {
         LogMessage(std::string("DXC Warnings/Errors: ") + std::string(errorBlob->GetStringPointer(), errorBlob->GetStringLength()), ELogType::Fatal);
@@ -89,8 +89,8 @@ void ShaderCompiler::HandleCompileResult()
     }
 
     // Save compiled shader binary to disk and store bytecode for engine use
-    Microsoft::WRL::ComPtr<IDxcBlob> shaderBlob = nullptr;
-    Microsoft::WRL::ComPtr<IDxcBlobUtf16> shaderNameBlob = nullptr;
+    ComPtr<IDxcBlob> shaderBlob = nullptr;
+    ComPtr<IDxcBlobUtf16> shaderNameBlob = nullptr;
     m_compileResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(shaderBlob.ReleaseAndGetAddressOf()), shaderNameBlob.ReleaseAndGetAddressOf());
     if (shaderBlob != nullptr && shaderNameBlob != nullptr) {
         FILE* fp = nullptr;
@@ -106,8 +106,8 @@ void ShaderCompiler::HandleCompileResult()
     m_shaderBytecode.pShaderBytecode = shaderBlob->GetBufferPointer();
 
     // Save PDB (debug info) to disk for debugging and PIX integration
-    Microsoft::WRL::ComPtr<IDxcBlob> pdbBlob = nullptr;
-    Microsoft::WRL::ComPtr<IDxcBlobUtf16> pdbNameBlob = nullptr;
+    ComPtr<IDxcBlob> pdbBlob = nullptr;
+    ComPtr<IDxcBlobUtf16> pdbNameBlob = nullptr;
     m_compileResult->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(pdbBlob.ReleaseAndGetAddressOf()), pdbNameBlob.ReleaseAndGetAddressOf());
     if (pdbBlob != nullptr && pdbNameBlob != nullptr) {
         FILE* fp = nullptr;
@@ -210,7 +210,7 @@ void ShaderCompiler::LogDXCArguments()
 void ShaderCompiler::LogDXCVersion()
 {
 #if defined(_DEBUG)
-    Microsoft::WRL::ComPtr<IDxcVersionInfo> versionInfo = nullptr;
+    ComPtr<IDxcVersionInfo> versionInfo = nullptr;
     if (SUCCEEDED(m_dxcCompiler->QueryInterface(__uuidof(IDxcVersionInfo), reinterpret_cast<void**>(versionInfo.ReleaseAndGetAddressOf())))) {
         UINT major = 0, minor = 0;
         versionInfo->GetVersion(&major, &minor);

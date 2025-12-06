@@ -2,6 +2,7 @@
 
 #include "ShaderCompiler.h"
 #include "Geometry.h"
+#include "RootSignature.h"
 
 // Describes depth test configuration for the pipeline state
 struct D3D12_DEPTH_TEST_DESC
@@ -32,7 +33,7 @@ class PSO
 {
 public:
 	// Constructs and creates the graphics pipeline state object.
-	PSO(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler& vertexShader, ShaderCompiler& pixelShader);
+	PSO(Geometry& vertecies, RootSignature& rootSignature, ShaderCompiler& vertexShader, ShaderCompiler& pixelShader);
 
 	// Destructor releases pipeline state object
 	~PSO();
@@ -45,7 +46,7 @@ public:
 	void Set();
 
 	// Returns the underlying pipeline state COM pointer.
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> Get() { return m_pso; }
+	ComPtr<ID3D12PipelineState> Get() { return m_pso; }
 private:
 	void SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc);
 	void SetRasterizerState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, bool bRenderWireframe, D3D12_CULL_MODE cullMode);
@@ -53,6 +54,6 @@ private:
 	void SetDepthTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_DEPTH_TEST_DESC depthDesc);
 	void SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_STENCIL_TEST_DESC stencilDesc);
 private:
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pso = nullptr; // Pipeline state COM pointer
+	ComPtr<ID3D12PipelineState> m_pso = nullptr; // Pipeline state COM pointer
 };
 

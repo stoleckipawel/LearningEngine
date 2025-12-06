@@ -21,8 +21,8 @@ private:
 	void ConfigureInfoQueue();
 	void ApplyInfoQueueFilters();
 private:
-	Microsoft::WRL::ComPtr<ID3D12Debug> m_d3d12Debug;   // D3D12 debug interface
-	Microsoft::WRL::ComPtr<IDXGIDebug1> m_dxgiDebug;    // DXGI debug interface
+	ComPtr<ID3D12Debug> m_d3d12Debug;   // D3D12 debug interface
+	ComPtr<IDXGIDebug1> m_dxgiDebug;    // DXGI debug interface
 };
 
 

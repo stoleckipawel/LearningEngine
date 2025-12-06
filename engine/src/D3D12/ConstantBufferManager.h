@@ -32,7 +32,7 @@ public:
 	// Resets all constant buffers
 	void Reset();
 	// Updates the constant buffers
-	void Update(size_t FrameIndex);
+	void Update(size_t FrameInFlightIndex);
 
 	// Per-frame vertex constant buffers
 	std::unique_ptr<ConstantBuffer<FVertexConstantBufferData>> VertexConstantBuffers[NumFramesInFlight];

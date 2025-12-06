@@ -18,13 +18,13 @@ TextureLoader::TextureLoader(const std::filesystem::path& fileName)
 	}
 
     // Create WIC Imaging Factory
-    Microsoft::WRL::ComPtr<IWICImagingFactory> wicFactory;
+    ComPtr<IWICImagingFactory> wicFactory;
     ThrowIfFailed(
         CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(wicFactory.ReleaseAndGetAddressOf())),
         "TextureLoader: Failed To Create Factory", ELogType::Fatal);
 
     // Create WIC Stream for file
-    Microsoft::WRL::ComPtr<IWICStream> wicFileStream;
+    ComPtr<IWICStream> wicFileStream;
     ThrowIfFailed(
         wicFactory->CreateStream(wicFileStream.ReleaseAndGetAddressOf()),
         "TextureLoader: Failed To Create Stream", ELogType::Fatal);
@@ -35,13 +35,13 @@ TextureLoader::TextureLoader(const std::filesystem::path& fileName)
         "TextureLoader: Failed To Initialize From Name", ELogType::Fatal);
 
     // Create decoder from stream
-    Microsoft::WRL::ComPtr<IWICBitmapDecoder> wicDecoder;
+    ComPtr<IWICBitmapDecoder> wicDecoder;
     ThrowIfFailed(
         wicFactory->CreateDecoderFromStream(wicFileStream.Get(), nullptr, WICDecodeMetadataCacheOnDemand, wicDecoder.ReleaseAndGetAddressOf()),
         "TextureLoader: Failed To Create Decoder From Stream", ELogType::Fatal);
 
     // Get first frame of image
-    Microsoft::WRL::ComPtr<IWICBitmapFrameDecode> wicFrame;
+    ComPtr<IWICBitmapFrameDecode> wicFrame;
     ThrowIfFailed(
         wicDecoder->GetFrame(0, wicFrame.ReleaseAndGetAddressOf()),
         "TextureLoader: Failed To Get Frame", ELogType::Fatal);
@@ -57,12 +57,12 @@ TextureLoader::TextureLoader(const std::filesystem::path& fileName)
         "TextureLoader: Failed To Get Pixel Format", ELogType::Fatal);
 
     // Get pixel format metadata
-    Microsoft::WRL::ComPtr<IWICComponentInfo> wicComponentInfo;
+    ComPtr<IWICComponentInfo> wicComponentInfo;
     ThrowIfFailed(
         wicFactory->CreateComponentInfo(m_data.wicPixelFormat, wicComponentInfo.ReleaseAndGetAddressOf()),
         "TextureLoader: Failed To Get Component Info", ELogType::Fatal);
 
-    Microsoft::WRL::ComPtr<IWICPixelFormatInfo> wicPixelFormatInfo;
+    ComPtr<IWICPixelFormatInfo> wicPixelFormatInfo;
     ThrowIfFailed(
         wicComponentInfo->QueryInterface(IID_PPV_ARGS(wicPixelFormatInfo.ReleaseAndGetAddressOf())),
         "TextureLoader: Failed To Query Interface", ELogType::Fatal);

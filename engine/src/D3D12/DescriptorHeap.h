@@ -43,6 +43,6 @@ private:
 	D3D12_DESCRIPTOR_HEAP_DESC m_heapDesc = {};
 	UINT m_numCBV = 0;
 	UINT m_numSRV = 0;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_heap;
+	ComPtr<ID3D12DescriptorHeap> m_heap;
 };
 

@@ -49,6 +49,7 @@
 #endif
 
 using namespace DirectX;
+using namespace Microsoft::WRL;
 
 // Error handling utilities
 #include "Error.h"

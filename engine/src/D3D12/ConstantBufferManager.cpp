@@ -8,23 +8,23 @@ ConstantBufferManager GConstantBufferManager;
 // Initializes all constant buffers for each frame in flight
 void ConstantBufferManager::Initialize()
 {
-	for (UINT FrameIndex = 0; FrameIndex < NumFramesInFlight; ++FrameIndex)
+	for (UINT FrameInFlightIndex = 0; FrameInFlightIndex < NumFramesInFlight; ++FrameInFlightIndex)
 	{
 		// Create and initialize constant buffers	
-		VertexConstantBuffers[FrameIndex] = std::make_unique<ConstantBuffer<FVertexConstantBufferData>>(GetDescriptorHandleIndex(0, FrameIndex));
-		PixelConstantBuffers[FrameIndex] = std::make_unique<ConstantBuffer<PixelConstantBufferData>>(GetDescriptorHandleIndex(1, FrameIndex));
+		VertexConstantBuffers[FrameInFlightIndex] = std::make_unique<ConstantBuffer<FVertexConstantBufferData>>(GetDescriptorHandleIndex(0, FrameInFlightIndex));
+		PixelConstantBuffers[FrameInFlightIndex] = std::make_unique<ConstantBuffer<PixelConstantBufferData>>(GetDescriptorHandleIndex(1, FrameInFlightIndex));
 	}
 }
 
-UINT ConstantBufferManager::GetDescriptorHandleIndex(UINT ConstantBufferID, UINT FrameIndex)
+UINT ConstantBufferManager::GetDescriptorHandleIndex(UINT ConstantBufferID, UINT FrameInFlightIndex)
 {
-	return NumFramesInFlight * ConstantBufferID + FrameIndex;
+	return NumFramesInFlight * ConstantBufferID + FrameInFlightIndex;
 }
 
 // Updates the constant buffers for the current frame
-void ConstantBufferManager::Update(size_t FrameIndex)
+void ConstantBufferManager::Update(size_t FrameInFlightIndex)
 {
-	float speed = FrameIndex * 0.02f; 
+	float speed = FrameInFlightIndex * 0.02f; 
 
 	// Update vertex constant buffer with world, view, and projection matrices
 	FVertexConstantBufferData vertexData;

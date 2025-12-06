@@ -133,7 +133,7 @@ private:
         }
     }
 private:
-    Microsoft::WRL::ComPtr<ID3D12Resource2> Resource = nullptr;
+    ComPtr<ID3D12Resource2> Resource = nullptr;
     UINT m_DescriptorHandleIndex = 0; // Index in descriptor heap
     T m_ConstantBufferData; // Cached buffer data
     D3D12_CONSTANT_BUFFER_VIEW_DESC m_ConstantBufferViewDesc = {}; 

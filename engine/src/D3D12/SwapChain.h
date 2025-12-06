@@ -49,9 +49,9 @@ private:
 	// Current back buffer index
 	UINT m_frameInFlightIndex = 0;
 	// Swap chain interface
-	Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain = nullptr;
+	ComPtr<IDXGISwapChain3> m_swapChain = nullptr;
 	// Array of render target resources (one per frame)
-	Microsoft::WRL::ComPtr<ID3D12Resource2> m_buffers[NumFramesInFlight];
+	ComPtr<ID3D12Resource2> m_buffers[NumFramesInFlight];
 	// Back buffer format used by the swap chain
 	DXGI_FORMAT m_backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 	HANDLE m_WaitableObject = nullptr;	

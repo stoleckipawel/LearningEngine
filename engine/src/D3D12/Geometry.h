@@ -44,8 +44,8 @@ private:
 	// Resets geometry resources
 	void Reset();
 private:
-	Microsoft::WRL::ComPtr<ID3D12Resource2> VertexBuffer = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12Resource2> IndexBuffer = nullptr; 
+	ComPtr<ID3D12Resource2> VertexBuffer = nullptr;
+	ComPtr<ID3D12Resource2> IndexBuffer = nullptr; 
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {}; 
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};  
 };

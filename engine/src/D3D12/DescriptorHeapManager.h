@@ -38,7 +38,7 @@ public:
 	// Returns reference to the Render Target View heap.
 	DescriptorHeap& GetRenderTargetViewHeap() { return *m_RenderTargetViewHeap; }
 private:
-	void SetShaderVisibleHeaps(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList7> cmdList);
+	void SetShaderVisibleHeaps(ComPtr<ID3D12GraphicsCommandList7> cmdList);
 private:
 	std::unique_ptr<DescriptorHeap> m_CBVSRVUAVHeap;        // CBV/SRV/UAV heap (shader visible)
 	std::unique_ptr<DescriptorHeap> m_SamplerHeap;          // Sampler heap (shader visible)

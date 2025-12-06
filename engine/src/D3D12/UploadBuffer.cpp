@@ -4,7 +4,7 @@
 // Uploads data to a GPU-accessible buffer using an upload heap.
 // Returns a ComPtr to the created ID3D12Resource2 buffer.
 // Note: For optimal performance, consider using a default heap and staging resource for large or frequent uploads.
-Microsoft::WRL::ComPtr<ID3D12Resource2> UploadBuffer::Upload(void* data, uint32_t dataSize)
+ComPtr<ID3D12Resource2> UploadBuffer::Upload(void* data, uint32_t dataSize)
 {
 	// Describe the buffer resource
 	D3D12_RESOURCE_DESC resourceDesc = {};
@@ -21,7 +21,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource2> UploadBuffer::Upload(void* data, uint32_
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
 	// Create the committed resource in the upload heap
-	Microsoft::WRL::ComPtr<ID3D12Resource2> uploadBuffer;
+	ComPtr<ID3D12Resource2> uploadBuffer;
 	CD3DX12_HEAP_PROPERTIES heapUploadProperties(D3D12_HEAP_TYPE_UPLOAD);
 	ThrowIfFailed(
 		GRHI.GetDevice()->CreateCommittedResource(

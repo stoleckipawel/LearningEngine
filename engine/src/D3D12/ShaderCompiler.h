@@ -26,12 +26,12 @@ private:
 
 	D3D12_SHADER_BYTECODE m_shaderBytecode{};
 	std::filesystem::path m_resolvedPath;
-	Microsoft::WRL::ComPtr<IDxcCompiler3> m_dxcCompiler;
-	Microsoft::WRL::ComPtr<IDxcUtils> m_dxcUtils;
-	Microsoft::WRL::ComPtr<IDxcIncludeHandler> m_includeHandler;
+	ComPtr<IDxcCompiler3> m_dxcCompiler;
+	ComPtr<IDxcUtils> m_dxcUtils;
+	ComPtr<IDxcIncludeHandler> m_includeHandler;
 	std::vector<LPCWSTR> m_compileArgs;
-	Microsoft::WRL::ComPtr<IDxcBlobEncoding> m_sourceBlob;
+	ComPtr<IDxcBlobEncoding> m_sourceBlob;
 	DxcBuffer m_sourceBuffer{};
-	Microsoft::WRL::ComPtr<IDxcResult> m_compileResult;
+	ComPtr<IDxcResult> m_compileResult;
 };
 

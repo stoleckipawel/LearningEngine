@@ -32,9 +32,9 @@ private:
     void CreateShaderResourceView();
 private:
     // GPU resource for the texture
-    Microsoft::WRL::ComPtr<ID3D12Resource2> m_textureResource = nullptr;
+    ComPtr<ID3D12Resource2> m_textureResource = nullptr;
     // Upload buffer resource for staging texture data
-    Microsoft::WRL::ComPtr<ID3D12Resource2> m_uploadResource = nullptr;
+    ComPtr<ID3D12Resource2> m_uploadResource = nullptr;
     // RAII loader for image data
     std::unique_ptr<TextureLoader> m_loader;
     // Index in the descriptor heap

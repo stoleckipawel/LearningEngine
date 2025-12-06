@@ -75,7 +75,7 @@ void PSO::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12
 }
 
 // Constructs and creates the graphics pipeline state object (PSO)
-PSO::PSO(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler& vertexShader, ShaderCompiler& pixelShader)
+PSO::PSO(Geometry& vertecies, RootSignature& rootSignature, ShaderCompiler& vertexShader, ShaderCompiler& pixelShader)
 {
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -87,7 +87,7 @@ PSO::PSO(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler
 	psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
 
 	// -- Root Signature
-	psoDesc.pRootSignature = rootSignature;
+	psoDesc.pRootSignature = rootSignature.GetRaw();
 
 	// -- Vertex Shader
 	psoDesc.VS.pShaderBytecode = vertexShader.GetBuffer();
@@ -161,7 +161,7 @@ PSO::PSO(Geometry& vertecies, ID3D12RootSignature* rootSignature, ShaderCompiler
 	if (FAILED(hr))
 	{	
 		// If debug layer is enabled, query InfoQueue for messages
-		Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue;
+		ComPtr<ID3D12InfoQueue> infoQueue;
 		if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf())))) {
 			UINT64 numMessages = infoQueue->GetNumStoredMessages();
 			for (UINT64 i = 0; i < numMessages; ++i) {
