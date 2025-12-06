@@ -1,5 +1,7 @@
 #pragma once
 
+//#define REPORT_LIVE_OBJECTS 1
+
 // DebugLayer manages Direct3D 12 and DXGI debug layers for diagnostics and leak tracking (debug builds only).
 class DebugLayer
 {

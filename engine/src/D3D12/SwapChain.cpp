@@ -23,7 +23,7 @@ void SwapChain::Initialize()
 	swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
-	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+	swapChainDesc.Flags = ComputeSwapChainFlags();
 
 	// Create fullscreen swap chain description
 	DXGI_SWAP_CHAIN_FULLSCREEN_DESC swapChainFullsceenDesc{};
@@ -45,8 +45,8 @@ void SwapChain::Initialize()
 	// Query for IDXGISwapChain3 interface
 	ThrowIfFailed(swapChain.QueryInterface(m_swapChain), "Failed to Query Swap Chain Interface");
 
-	// Initialize current back buffer index
-	m_FrameInFlightIndex = m_swapChain->GetCurrentBackBufferIndex();
+	// Initialize current frame-in-flight index from swap chain
+	UpdateFrameInFlightIndex();
 
 	// Create render target views for all buffers
 	CreateRenderTargetViews();
@@ -70,8 +70,8 @@ void SwapChain::Resize()
 		NumFramesInFlight,
 		GWindow.GetWidth(),
 		GWindow.GetHeight(),
-		DXGI_FORMAT_UNKNOWN,
-		0
+		m_backBufferFormat,
+		ComputeSwapChainFlags()
 	);
 
 	CreateRenderTargetViews();
@@ -90,9 +90,8 @@ D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::GetCPUHandle(UINT index)
 // Returns the CPU descriptor handle for the current back buffer
 D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::GetCPUHandle()
 {
-	return GetCPUHandle(m_FrameInFlightIndex);
+	return GetCPUHandle(m_frameInFlightIndex);
 }
-
 
 // Creates render target views for all swap chain buffers
 void SwapChain::CreateRenderTargetViews()
@@ -113,6 +112,32 @@ void SwapChain::CreateRenderTargetViews()
 		// Create the render target view
 		GRHI.GetDevice()->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, GetCPUHandle(i));
 	}
+}
+
+UINT SwapChain::GetAllowTearingFlag() const
+{
+	BOOL allowTearing = FALSE;
+
+	GRHI.GetDxgiFactory()->CheckFeatureSupport(
+		DXGI_FEATURE_PRESENT_ALLOW_TEARING,
+		&allowTearing,
+		sizeof(allowTearing));
+
+	return (allowTearing == TRUE) ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u;
+}
+
+UINT SwapChain::GetFrameLatencyWaitableFlag() const
+{
+	// Only meaningful for flip-model and multi-buffering
+	return (NumFramesInFlight > 1) ? DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT : 0u;
+}
+
+UINT SwapChain::ComputeSwapChainFlags() const
+{
+	UINT flags = 0u;
+	flags |= GetFrameLatencyWaitableFlag();
+	flags |= GetAllowTearingFlag();
+	return flags;
 }
 
 
@@ -154,7 +179,7 @@ void SwapChain::Present()
 void SwapChain::SetRenderTargetState()
 {
 	GRHI.SetBarrier(
-		m_buffers[m_FrameInFlightIndex],
+		m_buffers[m_frameInFlightIndex],
 		D3D12_RESOURCE_STATE_PRESENT,
 		D3D12_RESOURCE_STATE_RENDER_TARGET
 	);
@@ -165,7 +190,7 @@ void SwapChain::SetRenderTargetState()
 void SwapChain::SetPresentState()
 {
 	GRHI.SetBarrier(
-		m_buffers[m_FrameInFlightIndex],
+		m_buffers[m_frameInFlightIndex],
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_PRESENT
 	);

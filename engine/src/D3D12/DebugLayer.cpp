@@ -78,7 +78,7 @@ void DebugLayer::Shutdown()
 // Reports live D3D12 device objects (must be called before device is released)
 void DebugLayer::ReportLiveDeviceObjects()
 {
-#if defined(_DEBUG)
+#if defined(_DEBUG) && defined(REPORT_LIVE_OBJECTS)
 	ComPointer<ID3D12DebugDevice> debugDevice;
 	if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(&debugDevice))))
 	{
@@ -91,7 +91,7 @@ void DebugLayer::ReportLiveDeviceObjects()
 // Reports DXGI live objects (factory, adapters, swapchains)
 void DebugLayer::ReportLiveDXGIObjects()
 {
-#if defined(_DEBUG)
+#if defined(_DEBUG) && defined(REPORT_LIVE_OBJECTS)
 	if (m_dxgiDebug)
 	{
 		OutputDebugStringW(L"DXGI Live Objects (all flags):\n");

@@ -28,9 +28,9 @@ public:
 	// Returns the CPU descriptor handle for the current back buffer
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle();
 	// Returns the current back buffer index
-	UINT GetFrameInFlightIndex() { return m_FrameInFlightIndex; }
+	UINT GetFrameInFlightIndex() { return m_frameInFlightIndex; }
 	// Updates the current back buffer index from the swap chain
-	void UpdateFrameInFlightIndex() { m_FrameInFlightIndex = m_swapChain->GetCurrentBackBufferIndex(); }
+	void UpdateFrameInFlightIndex() { m_frameInFlightIndex = m_swapChain->GetCurrentBackBufferIndex(); }
 
 	// Returns the default viewport for rendering
 	D3D12_VIEWPORT GetDefaultViewport();
@@ -38,9 +38,14 @@ public:
 	D3D12_RECT GetDefaultScissorRect();
 	// Returns the DXGI format used for back buffers
 	DXGI_FORMAT GetBackBufferFormat() const { return m_backBufferFormat; }
+
+	// Feature flag helpers
+	UINT GetAllowTearingFlag() const; // queries DXGI and returns DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING if supported
+	UINT GetFrameLatencyWaitableFlag() const; // returns DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT when applicable
+	UINT ComputeSwapChainFlags() const; // aggregates all feature flags
 private:
 	// Current back buffer index
-	UINT m_FrameInFlightIndex = 0;
+	UINT m_frameInFlightIndex = 0;
 	// Swap chain interface
 	ComPointer<IDXGISwapChain3> m_swapChain = nullptr;
 	// Array of render target resources (one per frame)
