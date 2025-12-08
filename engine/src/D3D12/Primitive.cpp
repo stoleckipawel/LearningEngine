@@ -2,10 +2,63 @@
 #include "PCH.h"
 #include "D3D12/Primitive.h"
 #include "D3D12/UploadBuffer.h"
+#include "SwapChain.h"
+#include "Camera.h"
 
-Primitive::Primitive()
+
+Primitive::Primitive(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale)
+    : Translation(translation), Rotation(rotation), Scale(scale)
 {
+    for (size_t i = 0; i < NumFramesInFlight; ++i)
+    {
+        VertexConstantBuffer[i] = std::make_unique<ConstantBuffer<FVertexConstantBufferData>>();
+        PixelConstantBuffer[i] = std::make_unique<ConstantBuffer<PixelConstantBufferData>>();
+    }
+}
 
+XMMATRIX Primitive::GetWorldMatrix() const
+{
+    XMMATRIX translation = XMMatrixTranslation(Translation.x, Translation.y, Translation.z);
+    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(Rotation.x, Rotation.y, Rotation.z);
+    XMMATRIX scale = XMMatrixScaling(Scale.x, Scale.y, Scale.z);
+    XMMATRIX world = scale * rotation * translation;
+    return world;
+}
+
+void Primitive::UpdateVertexConstantBuffer()
+{
+	// Update vertex constant buffer with world, view, and projection matrices
+	FVertexConstantBufferData vertexData;
+	XMMATRIX world = GetWorldMatrix();
+	XMStoreFloat4x4(&vertexData.WorldMTX, world);
+
+	XMMATRIX view = GCamera.GetViewMatrix();
+	XMStoreFloat4x4(&vertexData.ViewMTX, view);
+
+	XMMATRIX projection = GCamera.GetProjectionMatrix();
+	XMStoreFloat4x4(&vertexData.ProjectionMTX, projection);
+
+	XMMATRIX worldViewProj = world * view * projection;
+	XMStoreFloat4x4(&vertexData.WorldViewProjMTX, worldViewProj);
+	
+	VertexConstantBuffer[GSwapChain.GetFrameInFlightIndex()]->Update(vertexData);
+}
+
+void Primitive::UpdatePixelConstantBuffer()
+{
+    float speed = 0.5;
+	PixelConstantBufferData pixelData;
+	pixelData.Color.x = 0.5f + 0.5f * sinf(speed);
+	pixelData.Color.y = 0.5f + 0.5f * sinf(speed + 2.0f);
+	pixelData.Color.z = 0.5f + 0.5f * sinf(speed + 4.0f);
+	pixelData.Color.w = 1.0f;
+	PixelConstantBuffer[GSwapChain.GetFrameInFlightIndex()]->Update(pixelData);
+}
+
+void Primitive::UpdateConstantBuffers()
+{
+    UpdateVertexConstantBuffer();
+    UpdatePixelConstantBuffer();
 }
 
 void Primitive::UploadVertexBuffer()

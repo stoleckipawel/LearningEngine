@@ -4,7 +4,6 @@
 #include "D3D12/DebugLayer.h"
 #include "D3D12/RHI.h"
 #include "Window.h"
-#include "D3D12/ConstantBufferManager.h"
 #include "D3D12/ShaderCompiler.h"
 #include "D3D12/Texture.h"
 #include "D3D12/PrimitiveFactory.h"
@@ -30,7 +29,6 @@ void Renderer::Initialize()
     m_pixelShader = std::make_unique<ShaderCompiler>("SimplePS.hlsl", "ps_6_0", "main");
     GDescriptorHeapManager.Initialize();
     GSwapChain.Initialize();
-    GConstantBufferManager.Initialize();
     m_texture = std::make_unique<Texture>(std::filesystem::path("Test1.png"));
     m_sampler = std::make_unique<Sampler>();
     GatherPrimitives();
@@ -43,7 +41,38 @@ void Renderer::Initialize()
 void Renderer::GatherPrimitives()
 {
     m_primitiveFactory = std::make_unique<PrimitiveFactory>();
-    m_primitiveFactory->AppendBox();
+
+
+    // Hard-coded 20 cubes with varied translation, rotation, and smaller scale or further from camera
+    std::vector<std::tuple<XMFLOAT3, XMFLOAT3, XMFLOAT3>> boxParams = {
+        // translation                rotation (radians)           scale
+        { { -10.0f,  0.0f,  -5.0f }, { 0.0f, 0.0f, 0.0f }, { 1.2f, 1.2f, 1.2f } },
+        { { -8.0f,   2.0f,   6.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.5f, 1.0f } },
+        { { -6.0f,  -2.0f,  -8.0f }, { 0.5f, 0.5f, 0.0f }, { 1.5f, 1.0f, 1.2f } },
+        { { -4.0f,   0.0f,   8.0f }, { 0.0f, 0.7f, 0.0f }, { 1.3f, 1.3f, 1.3f } },
+        { { -2.0f,   2.0f,  -6.0f }, { 1.0f, 0.0f, 0.5f }, { 1.0f, 0.8f, 1.2f } },
+        { {  0.0f,  -2.0f,   6.0f }, { 0.0f, 0.0f, 1.0f }, { 0.9f, 1.1f, 1.3f } },
+        { {  2.0f,   0.0f,  -8.0f }, { 0.3f, 0.8f, 0.2f }, { 1.2f, 1.2f, 0.8f } },
+        { {  4.0f,   4.0f,   8.0f }, { 0.0f, 1.2f, 0.0f }, { 1.0f, 0.7f, 1.5f } },
+        { {  6.0f,  -4.0f,  -6.0f }, { 1.0f, 0.5f, 0.0f }, { 0.7f, 1.5f, 1.0f } },
+        { {  8.0f,   0.0f,   6.0f }, { 0.7f, 0.0f, 1.0f }, { 1.3f, 1.0f, 1.0f } },
+        { { -9.0f,  -3.0f,  10.0f }, { 0.2f, 0.3f, 0.4f }, { 0.8f, 1.0f, 1.2f } },
+        { { -7.0f,   3.0f, -10.0f }, { 0.6f, 0.1f, 0.2f }, { 1.1f, 0.9f, 1.0f } },
+        { { -5.0f,  -1.0f,   9.0f }, { 0.4f, 0.6f, 0.8f }, { 1.0f, 1.0f, 0.7f } },
+        { { -3.0f,   1.0f,  -9.0f }, { 0.9f, 0.2f, 0.3f }, { 0.9f, 1.2f, 1.1f } },
+        { { -1.0f,  -3.0f,   8.0f }, { 0.1f, 0.4f, 0.7f }, { 1.2f, 0.8f, 1.0f } },
+        { {  1.0f,   3.0f,  -8.0f }, { 0.5f, 0.9f, 0.1f }, { 1.0f, 1.0f, 1.0f } },
+        { {  3.0f,  -1.0f,   7.0f }, { 0.8f, 0.3f, 0.6f }, { 0.7f, 1.1f, 1.2f } },
+        { {  5.0f,   1.0f,  -7.0f }, { 0.2f, 0.7f, 0.5f }, { 1.1f, 0.9f, 0.8f } },
+        { {  7.0f,  -3.0f,   6.0f }, { 0.3f, 0.6f, 0.9f }, { 0.8f, 1.0f, 1.0f } },
+        { {  9.0f,   3.0f,  -5.0f }, { 0.7f, 0.2f, 0.4f }, { 1.0f, 0.8f, 1.2f } }
+    };
+
+    for (const auto& [translation, rotation, scale] : boxParams)
+    {
+        m_primitiveFactory->AppendBox(translation, rotation, scale);
+    }
+
     m_primitiveFactory->Upload();
 }
 
@@ -93,16 +122,6 @@ void Renderer::BindDescriptorTables()
     GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
         1,
         m_sampler->GetGPUHandle());
-
-    // Vertex constant buffer
-    GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
-        2,
-        GConstantBufferManager.VertexConstantBuffers[GSwapChain.GetFrameInFlightIndex()]->GetGPUHandle());
-
-    // Pixel constant buffer
-    GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
-        3,
-        GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetFrameInFlightIndex()]->GetGPUHandle());
 }
 
 // -----------------------------------------------------------------------------
@@ -126,17 +145,34 @@ void Renderer::PopulateCommandList()
 
     // Clear depth stencil and set geometry
     m_depthStencil->Clear();
-    m_primitiveFactory->GetFirstPrimitive().Set();
+
+    GDescriptorHeapManager.SetShaderVisibleHeaps();
 
     // Bind descriptor heaps and tables
-    GDescriptorHeapManager.SetShaderVisibleHeaps();
     BindDescriptorTables();
-    m_pso->Set();
-
-    // Draw geometry (hardcoded cube: 36 indices)
-    GRHI.GetCommandList()->DrawIndexedInstanced(36, 1, 0, 0, 0);
-
     
+    // Render all primitives
+    for (const auto& primitive : m_primitiveFactory->GetPrimitives())
+    {
+        // Set geometry buffers and topology for this primitive
+        primitive->Set();
+        // Set the pipeline state object (PSO)
+        m_pso->Set();
+
+        // Bind the vertex constant buffer for this primitive
+        GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
+            2,
+            primitive->GetVertexConstantBuffer()->GetGPUHandle());
+
+        // Bind the pixel constant buffer for this primitive
+        GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
+            3,
+            primitive->GetPixelConstantBuffer()->GetGPUHandle());            
+
+        // Issue the draw call for this primitive
+        GRHI.GetCommandList()->DrawIndexedInstanced(36, 1, 0, 0, 0);
+    }
+
     GUI.Render();
 
     // Prepare for present
@@ -159,7 +195,7 @@ void Renderer::CreateFrameBuffers()
 void Renderer::OnUpdate()
 {
     m_FrameInFlightIndex++;
-    GConstantBufferManager.Update(m_FrameInFlightIndex);
+    m_primitiveFactory->UpdateConstantBuffers();
     GUI.Update(0.0f);  
 }
 

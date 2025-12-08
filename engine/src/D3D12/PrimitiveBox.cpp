@@ -1,9 +1,9 @@
 #include "PCH.h"
 #include "D3D12/PrimitiveBox.h"
 
-PrimitiveBox::PrimitiveBox()
+PrimitiveBox::PrimitiveBox(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale)
+    : Primitive(translation, rotation, scale)
 {
-    
 }
 
 void PrimitiveBox::GenerateVertices(std::vector<Vertex>& outVertices) const {

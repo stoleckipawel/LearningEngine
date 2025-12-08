@@ -1,17 +1,24 @@
 
-
 #include "PCH.h"
 #include "D3D12/PrimitiveFactory.h"
 
-void PrimitiveFactory::AppendBox()
+void PrimitiveFactory::UpdateConstantBuffers()
 {
-    auto box = std::make_unique<PrimitiveBox>();
+    for (size_t i = 0; i < m_primitives.size(); ++i)
+    {
+        m_primitives[i]->UpdateConstantBuffers();
+    }
+}
+
+void PrimitiveFactory::AppendBox(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale)
+{
+    auto box = std::make_unique<PrimitiveBox>(translation, rotation, scale);
     m_primitives.push_back(std::move(box));
 }
 
-void PrimitiveFactory::AppendPlane()
+void PrimitiveFactory::AppendPlane(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale)
 {
-    auto plane = std::make_unique<PrimitivePlane>();
+    auto plane = std::make_unique<PrimitivePlane>(translation, rotation, scale);
     m_primitives.push_back(std::move(plane));
 }
 

@@ -64,21 +64,21 @@ XMMATRIX Camera::GetViewMatrix() const noexcept
 // Helper: Builds a rotation matrix from Euler angles in degrees
 XMMATRIX Camera::GetRotationMatrix() const noexcept
 {
-    const float pitch = DirectX::XMConvertToRadians(m_rotationDegrees.x);
-    const float yaw   = DirectX::XMConvertToRadians(m_rotationDegrees.y);
-    const float roll  = DirectX::XMConvertToRadians(m_rotationDegrees.z);
-    return DirectX::XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
+    const float pitch = XMConvertToRadians(m_rotationDegrees.x);
+    const float yaw   = XMConvertToRadians(m_rotationDegrees.y);
+    const float roll  = XMConvertToRadians(m_rotationDegrees.z);
+    return XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
 }
 
 XMMATRIX Camera::GetProjectionMatrix() const noexcept
 {
     constexpr float NearZ = 0.01f;
     constexpr float FarZ = 10000.0f;
-    constexpr float fovY = DirectX::XMConvertToRadians(60.0f); // 60 degree vertical FOV
+    constexpr float fovY = XMConvertToRadians(60.0f); // 60 degree vertical FOV
 
     const D3D12_VIEWPORT viewport = GSwapChain.GetDefaultViewport();
     const float aspectRatio = viewport.Width / viewport.Height;
 
     // Use perspective projection (not orthographic)
-    return DirectX::XMMatrixPerspectiveFovLH(fovY, aspectRatio, NearZ, FarZ);
+    return XMMatrixPerspectiveFovLH(fovY, aspectRatio, NearZ, FarZ);
 }

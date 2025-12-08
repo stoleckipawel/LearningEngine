@@ -1,9 +1,9 @@
 #include "PCH.h"
 #include "D3D12/PrimitivePlane.h"
 
-PrimitivePlane::PrimitivePlane()
+PrimitivePlane::PrimitivePlane(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale)
+    : Primitive(translation, rotation, scale)
 {
-    
 }
 
 void PrimitivePlane::GenerateVertices(std::vector<Vertex>& outVertices) const {
