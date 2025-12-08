@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ShaderCompiler.h"
-#include "Geometry.h"
+#include "Primitive.h"
 #include "RootSignature.h"
 
 // Describes depth test configuration for the pipeline state
@@ -33,7 +33,7 @@ class PSO
 {
 public:
 	// Constructs and creates the graphics pipeline state object.
-	PSO(Geometry& vertecies, RootSignature& rootSignature, ShaderCompiler& vertexShader, ShaderCompiler& pixelShader);
+	PSO(Primitive& vertecies, RootSignature& rootSignature, ShaderCompiler& vertexShader, ShaderCompiler& pixelShader);
 
 	// Destructor releases pipeline state object
 	~PSO();

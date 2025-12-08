@@ -7,7 +7,7 @@
 #include "D3D12/ConstantBufferManager.h"
 #include "D3D12/ShaderCompiler.h"
 #include "D3D12/Texture.h"
-#include "D3D12/Geometry.h"
+#include "D3D12/PrimitiveFactory.h"
 #include "D3D12/PSO.h"
 #include "D3D12/RootSignature.h"
 #include "D3D12/ConstantBuffer.h"
@@ -25,9 +25,7 @@ void Renderer::Initialize()
 {
     // Initialize the rendering hardware interface (RHI)
     GRHI.Initialize();
-
     m_rootSignature = std::make_unique<RootSignature>();
-    m_vertecies = std::make_unique<Geometry>();
     m_vertexShader = std::make_unique<ShaderCompiler>("SimpleVS.hlsl", "vs_6_0", "main");
     m_pixelShader = std::make_unique<ShaderCompiler>("SimplePS.hlsl", "ps_6_0", "main");
     GDescriptorHeapManager.Initialize();
@@ -35,12 +33,19 @@ void Renderer::Initialize()
     GConstantBufferManager.Initialize();
     m_texture = std::make_unique<Texture>(std::filesystem::path("Test1.png"));
     m_sampler = std::make_unique<Sampler>();
-    m_pso = std::make_unique<PSO>(*m_vertecies, *m_rootSignature, *m_vertexShader, *m_pixelShader);
+    GatherPrimitives();
+    m_pso = std::make_unique<PSO>(m_primitiveFactory->GetFirstPrimitive(), *m_rootSignature, *m_vertexShader, *m_pixelShader);
     CreateFrameBuffers();
     GUI.Initialize();
     PostLoad();
 }
 
+void Renderer::GatherPrimitives()
+{
+    m_primitiveFactory = std::make_unique<PrimitiveFactory>();
+    m_primitiveFactory->AppendBox();
+    m_primitiveFactory->Upload();
+}
 
 // -----------------------------------------------------------------------------
 // Finalizes resource uploads and flushes the command queue
@@ -58,10 +63,10 @@ void Renderer::PostLoad()
 void Renderer::SetViewport()
 {
     D3D12_VIEWPORT viewport = GSwapChain.GetDefaultViewport();
-    GRHI.GetCommandListScene()->RSSetViewports(1, &viewport);
+    GRHI.GetCommandList()->RSSetViewports(1, &viewport);
 
     D3D12_RECT scissorRect = GSwapChain.GetDefaultScissorRect();
-    GRHI.GetCommandListScene()->RSSetScissorRects(1, &scissorRect);
+    GRHI.GetCommandList()->RSSetScissorRects(1, &scissorRect);
 }
 
 // -----------------------------------------------------------------------------
@@ -71,7 +76,7 @@ void Renderer::SetBackBufferRTV()
 {
     D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GSwapChain.GetCPUHandle();
     D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle = m_depthStencil->GetCPUHandle();
-    GRHI.GetCommandListScene()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &depthStencilHandle);
+    GRHI.GetCommandList()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &depthStencilHandle);
 }
 
 // -----------------------------------------------------------------------------
@@ -80,22 +85,22 @@ void Renderer::SetBackBufferRTV()
 void Renderer::BindDescriptorTables()
 {
     // Texture
-    GRHI.GetCommandListScene()->SetGraphicsRootDescriptorTable(
+    GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
         0,
         m_texture->GetGPUHandle());
 
     // Sampler
-    GRHI.GetCommandListScene()->SetGraphicsRootDescriptorTable(
+    GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
         1,
         m_sampler->GetGPUHandle());
 
     // Vertex constant buffer
-    GRHI.GetCommandListScene()->SetGraphicsRootDescriptorTable(
+    GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
         2,
         GConstantBufferManager.VertexConstantBuffers[GSwapChain.GetFrameInFlightIndex()]->GetGPUHandle());
 
     // Pixel constant buffer
-    GRHI.GetCommandListScene()->SetGraphicsRootDescriptorTable(
+    GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
         3,
         GConstantBufferManager.PixelConstantBuffers[GSwapChain.GetFrameInFlightIndex()]->GetGPUHandle());
 }
@@ -112,7 +117,7 @@ void Renderer::PopulateCommandList()
     m_depthStencil->SetWriteState();
 
     // Bind root signature
-    GRHI.GetCommandListScene()->SetGraphicsRootSignature(m_rootSignature->GetRaw());
+    GRHI.GetCommandList()->SetGraphicsRootSignature(m_rootSignature->GetRaw());
 
     // Set viewport and render targets
     SetViewport();
@@ -121,7 +126,7 @@ void Renderer::PopulateCommandList()
 
     // Clear depth stencil and set geometry
     m_depthStencil->Clear();
-    m_vertecies->Set();
+    m_primitiveFactory->GetFirstPrimitive().Set();
 
     // Bind descriptor heaps and tables
     GDescriptorHeapManager.SetShaderVisibleHeaps();
@@ -129,7 +134,7 @@ void Renderer::PopulateCommandList()
     m_pso->Set();
 
     // Draw geometry (hardcoded cube: 36 indices)
-    GRHI.GetCommandListScene()->DrawIndexedInstanced(36, 1, 0, 0, 0);
+    GRHI.GetCommandList()->DrawIndexedInstanced(36, 1, 0, 0, 0);
 
     
     GUI.Render();

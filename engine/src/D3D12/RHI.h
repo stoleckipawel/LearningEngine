@@ -22,7 +22,6 @@ public:
 	void Flush();
 
 	void CloseCommandListScene();	
-	void CloseCommandListUI();
 	void ResetCommandAllocator();
 	void ResetCommandList();
 
@@ -41,10 +40,7 @@ public:
 	ComPtr<ID3D12Device10> GetDevice() const { return m_Device; }
 	ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return m_CmdQueue; }
 	ComPtr<ID3D12CommandAllocator> GetCommandAllocatorScene(UINT FrameInFlightIndex) const { return m_CmdAllocatorScene[FrameInFlightIndex]; }
-	ComPtr<ID3D12GraphicsCommandList7> GetCommandListScene() const { return m_CmdListScene; }
-	ComPtr<ID3D12GraphicsCommandList7> GetCommandListUI() const { return m_CmdListUI; }
-	ComPtr<ID3D12CommandAllocator> GetCommandAllocatorUI(UINT FrameInFlightIndex) const { return m_CmdAllocatorUI[FrameInFlightIndex]; }
-	ComPtr<ID3D12GraphicsCommandList7> GetUICommandList() const { return m_CmdListUI; }
+	ComPtr<ID3D12GraphicsCommandList7> GetCommandList() const { return m_CmdListScene; }
 	ComPtr<ID3D12Fence1> GetFence() const { return m_Fence; }
 	UINT64 GetFenceValueForFrame(UINT FrameInFlightIndex) const { return m_FenceValues[FrameInFlightIndex]; }
 	void SetFenceValueForFrame(UINT FrameInFlightIndex, UINT64 value) { m_FenceValues[FrameInFlightIndex] = value; }
@@ -58,8 +54,6 @@ private:
 	ComPtr<ID3D12CommandQueue> m_CmdQueue = nullptr;
 	ComPtr<ID3D12CommandAllocator> m_CmdAllocatorScene[NumFramesInFlight] = {};
 	ComPtr<ID3D12GraphicsCommandList7> m_CmdListScene = nullptr;
-	ComPtr<ID3D12CommandAllocator> m_CmdAllocatorUI[NumFramesInFlight] = {};
-	ComPtr<ID3D12GraphicsCommandList7> m_CmdListUI = nullptr;
 
 	// Fence values for each frame in flight
 	UINT64 m_FenceValues[NumFramesInFlight] = { 0 };

@@ -5,7 +5,7 @@
 // Forward declarations
 class ShaderCompiler;
 class Texture;
-class Geometry;
+class PrimitiveFactory;
 class PSO;
 class RootSignature;
 class Sampler;
@@ -46,11 +46,12 @@ private:
 	// Updates per-frame data and constant buffers
 	void OnUpdate();
 
+	void GatherPrimitives();
 private:
 	std::unique_ptr<Texture> m_texture;
 	std::unique_ptr<DepthStencil> m_depthStencil;
 	std::unique_ptr<Sampler> m_sampler;
-	std::unique_ptr<Geometry> m_vertecies; 
+	std::unique_ptr<PrimitiveFactory> m_primitiveFactory;
 	std::unique_ptr<PSO> m_pso;
 	std::unique_ptr<RootSignature> m_rootSignature;
 	std::unique_ptr<ShaderCompiler> m_vertexShader;

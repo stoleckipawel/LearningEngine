@@ -109,7 +109,7 @@ void UI::Update(float deltaSeconds)
 // Submits ImGui draw data using the current DX12 command list.
 void UI::Render()
 {
-    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), GRHI.GetCommandListScene().Get());
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), GRHI.GetCommandList().Get());
 }
 
 // Shuts down ImGui backends and destroys the context.

@@ -76,7 +76,7 @@ void Texture::UploadToGPU()
 
 	// Upload the data to the GPU texture resource
 	UpdateSubresources(
-		GRHI.GetCommandListScene().Get(),
+		GRHI.GetCommandList().Get(),
 		m_textureResource.Get(),
 		m_uploadResource.Get(),
 		0, 0,
@@ -90,7 +90,7 @@ void Texture::UploadToGPU()
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
 	);
-	GRHI.GetCommandListScene()->ResourceBarrier(1, &barrier);
+	GRHI.GetCommandList()->ResourceBarrier(1, &barrier);
 }
 
 // Creates the shader resource view (SRV) for the texture

@@ -74,7 +74,7 @@ void PSO::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12
 }
 
 // Constructs and creates the graphics pipeline state object (PSO)
-PSO::PSO(Geometry& vertecies, RootSignature& rootSignature, ShaderCompiler& vertexShader, ShaderCompiler& pixelShader)
+PSO::PSO(Primitive& vertecies, RootSignature& rootSignature, ShaderCompiler& vertexShader, ShaderCompiler& pixelShader)
 {
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -190,5 +190,5 @@ PSO::~PSO()
 // Sets the pipeline state object for the current command list.
 void PSO::Set()
 {
-	GRHI.GetCommandListScene()->SetPipelineState(m_pso.Get());
+	GRHI.GetCommandList()->SetPipelineState(m_pso.Get());
 }

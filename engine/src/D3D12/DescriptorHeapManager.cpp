@@ -53,7 +53,7 @@ void DescriptorHeapManager::SetShaderVisibleHeaps() const
 		m_HeapSampler->GetRaw()    // Sampler heap (optional for UI; harmless)
 	};
 
-	GRHI.GetCommandListScene()->SetDescriptorHeaps(_countof(heaps), heaps);
+	GRHI.GetCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
 }
 
 // Allocates a descriptor of the given type and returns raw CPU/GPU handles.

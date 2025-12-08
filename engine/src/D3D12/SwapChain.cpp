@@ -66,7 +66,7 @@ void SwapChain::Create()
 void SwapChain::Clear()
 {
 	float clearColor[4] = { 1.0f, 0.05f, 0.05f, 1.0f };
-	GRHI.GetCommandListScene()->ClearRenderTargetView(GSwapChain.GetCPUHandle(), clearColor, 0, nullptr);
+	GRHI.GetCommandList()->ClearRenderTargetView(GSwapChain.GetCPUHandle(), clearColor, 0, nullptr);
 }
 
 

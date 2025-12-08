@@ -108,14 +108,12 @@ void RHI::CreateCommandAllocators()
 	for (size_t i = 0; i < NumFramesInFlight; ++i)
 	{
 		ThrowIfFailed(m_Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_CmdAllocatorScene[i].ReleaseAndGetAddressOf())), "RHI: Failed To Create Scene Command Allocator");
-		ThrowIfFailed(m_Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_CmdAllocatorUI[i].ReleaseAndGetAddressOf())), "RHI: Failed To Create UI Command Allocator");
 	}
 }
 
 void RHI::CreateCommandLists()
 {
 	ThrowIfFailed(m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()].Get(), nullptr, IID_PPV_ARGS(m_CmdListScene.ReleaseAndGetAddressOf())), "RHI: Failed To Create Scene Command List");
-	ThrowIfFailed(m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_CmdAllocatorUI[GSwapChain.GetFrameInFlightIndex()].Get(), nullptr, IID_PPV_ARGS(m_CmdListUI.ReleaseAndGetAddressOf())), "RHI: Failed To Create UI Command List");
 }
 
 void RHI::CreateFenceAndEvent()
@@ -137,11 +135,6 @@ void RHI::CreateFenceAndEvent()
 void RHI::CloseCommandListScene()
 {
 	ThrowIfFailed(m_CmdListScene->Close(), "RHI: Failed To Close Scene Command List");
-}
-
-void RHI::CloseCommandListUI()
-{
-	ThrowIfFailed(m_CmdListUI->Close(), "RHI: Failed To Close UI Command List");
 }
 
 void RHI::ResetCommandAllocator()
@@ -215,12 +208,10 @@ void RHI::Flush()
 void RHI::Shutdown()
 {
 	m_CmdListScene.Reset();
-	m_CmdListUI.Reset();
 
 	for (UINT i = 0; i < NumFramesInFlight; ++i)
 	{
 		m_CmdAllocatorScene[i].Reset();
-		m_CmdAllocatorUI[i].Reset();
 		m_FenceValues[i] = 0;
 	}
 

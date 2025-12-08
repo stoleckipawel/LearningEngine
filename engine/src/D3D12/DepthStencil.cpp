@@ -70,7 +70,7 @@ void DepthStencil::CreateDepthStencilView()
 
 void DepthStencil::Clear()
 {
-	GRHI.GetCommandListScene()->ClearDepthStencilView(GetCPUHandle(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 0.0f, 0, 0, nullptr);
+	GRHI.GetCommandList()->ClearDepthStencilView(GetCPUHandle(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 0.0f, 0, 0, nullptr);
 }
 
 // Transition depth buffer to write state before rendering
