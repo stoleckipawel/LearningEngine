@@ -21,18 +21,14 @@ public:
 	// Flush the command queue (signal and wait)
 	void Flush();
 
-	// Use swap chain's frame-in-flight index for per-frame resources
-	
 	void CloseCommandListScene();	
 	void CloseCommandListUI();
-	void ResetCommandAllocatorScene();
-	void ResetCommandListScene();
+	void ResetCommandAllocator();
+	void ResetCommandList();
 
-	// Checks for Shader Model 6.0 support
 	void CheckShaderModel6Support();
 private:
 	void SelectAdapter();
-	// Initialization helpers (called by Initialize)
 	void CreateFactory();
 	void CreateDevice(bool requireDXRSupport);
 	void CreateCommandQueue();

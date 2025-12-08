@@ -4,78 +4,117 @@
 // Global instance of DescriptorHeapManager for engine-wide access
 DescriptorHeapManager GDescriptorHeapManager;
 
-// Initializes all descriptor heaps required by the engine
+// Initializes all descriptor heaps required by the engine.
 void DescriptorHeapManager::Initialize()
 {
-	// Number of descriptors for each heap type
-	constexpr UINT CBVCount = 2; // Constant Buffer Views
-	constexpr UINT SRVCount = 2; // Shader Resource Views
-	constexpr UINT SamplerCount = 1; // Samplers Views
-	constexpr UINT DepthStencilCount = 1; // Depth Stencil Views
-
 	// Create CBV/SRV/UAV heap (shader visible)
-	m_CBVSRVUAVHeap = std::make_unique<DescriptorHeap>(
-		CBVCount,
-		SRVCount,
+	m_HeapSRV = std::make_unique<DescriptorHeap>(
+		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
 		D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
 		L"CBVSRVUAVHeap"
 	);
+	// Initialize SRV allocator to manage SRV indices within the unified CBV/SRV/UAV heap
+	m_AllocatorSRV = std::make_unique<DescriptorAllocator>(m_HeapSRV.get());
 
 	// Create Sampler heap (shader visible)
-	m_SamplerHeap = std::make_unique<DescriptorHeap>(
+	m_HeapSampler = std::make_unique<DescriptorHeap>(
 		D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
-		SamplerCount,
 		D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
 		L"SamplerHeap"
 	);
+	// Initialize Sampler allocator
+	m_AllocatorSampler = std::make_unique<DescriptorAllocator>(m_HeapSampler.get());
 
 	// Create Depth Stencil View heap (not shader visible)
-	m_DepthStencilViewHeap = std::make_unique<DescriptorHeap>(
+	m_HeapDepthStencil = std::make_unique<DescriptorHeap>(
 		D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
-		DepthStencilCount,
 		D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
 		L"DepthStencilHeap"
 	);
+	// Initialize DSV allocator
+	m_AllocatorDepthStencil = std::make_unique<DescriptorAllocator>(m_HeapDepthStencil.get());
 
 	// Create Render Target View heap (not shader visible)
-	m_RenderTargetViewHeap = std::make_unique<DescriptorHeap>(
+	m_HeapRenderTarget = std::make_unique<DescriptorHeap>(
 		D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
-		NumFramesInFlight,
 		D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
 		L"RenderTargetHeap"
 	);
+	// Initialize RTV allocator
+	m_AllocatorRenderTarget = std::make_unique<DescriptorAllocator>(m_HeapRenderTarget.get());
 }
 
-
-// Core: set shader-visible heaps on a given command list
-void DescriptorHeapManager::SetShaderVisibleHeaps(ComPtr<ID3D12GraphicsCommandList7> cmdList)
+// Binds shader-visible heaps (SRV/CBV/UAV and Sampler) on the command list.
+void DescriptorHeapManager::SetShaderVisibleHeaps() const
 {
 	ID3D12DescriptorHeap* heaps[] =
 	{
-		m_CBVSRVUAVHeap->GetRaw(), // CBV/SRV/UAV heap
-		m_SamplerHeap->GetRaw()    // Sampler heap (optional for UI; harmless)
+		m_HeapSRV->GetRaw(), // CBV/SRV/UAV heap
+		m_HeapSampler->GetRaw()    // Sampler heap (optional for UI; harmless)
 	};
-	cmdList->SetDescriptorHeaps(_countof(heaps), heaps);
+
+	GRHI.GetCommandListScene()->SetDescriptorHeaps(_countof(heaps), heaps);
 }
 
-// Convenience: scene command list
-void DescriptorHeapManager::SetShaderVisibleHeapsScene()
+// Allocates a descriptor of the given type and returns raw CPU/GPU handles.
+void DescriptorHeapManager::AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_CPU_DESCRIPTOR_HANDLE& outCPU, D3D12_GPU_DESCRIPTOR_HANDLE& outGPU)
 {
-	SetShaderVisibleHeaps(GRHI.GetCommandListScene());
+	DescriptorAllocator* allocator = GetAllocator(type);
+	const DescriptorHandle handle = allocator->Allocate();
+	outCPU = handle.GetCPU();
+	outGPU = handle.GetGPU();
 }
 
-// Convenience: UI command list
-void DescriptorHeapManager::SetShaderVisibleHeapsUI()
+// Frees a descriptor of the given type using raw CPU/GPU handles.
+void DescriptorHeapManager::FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle)
 {
-	SetShaderVisibleHeaps(GRHI.GetCommandListUI());
+	DescriptorHeap* heap = GetHeap(type);
+	DescriptorAllocator* allocator = GetAllocator(type);
+
+	const auto heapCPUStart = heap->GetRaw()->GetCPUDescriptorHandleForHeapStart();
+	const auto heapGPUStart = heap->GetRaw()->GetGPUDescriptorHandleForHeapStart();
+	const UINT increment = GRHI.GetDevice()->GetDescriptorHandleIncrementSize(type);
+	const UINT index = static_cast<UINT>((cpuHandle.ptr - heapCPUStart.ptr) / increment);
+	const DescriptorHandle handle(index, type, heapCPUStart, heapGPUStart);
+	allocator->Free(handle);
 }
 
+DescriptorHeap* DescriptorHeapManager::GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE type) noexcept
+{
+	switch (type)
+	{
+	case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV: return m_HeapSRV.get();
+	case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER: return m_HeapSampler.get();
+	case D3D12_DESCRIPTOR_HEAP_TYPE_RTV: return m_HeapRenderTarget.get();
+	case D3D12_DESCRIPTOR_HEAP_TYPE_DSV: return m_HeapDepthStencil.get();
+	default: return nullptr;
+	}
+}
+
+DescriptorAllocator* DescriptorHeapManager::GetAllocator(D3D12_DESCRIPTOR_HEAP_TYPE type) noexcept
+{
+	switch (type)
+	{
+	case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV: return m_AllocatorSRV.get();
+	case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER: return m_AllocatorSampler.get();
+	case D3D12_DESCRIPTOR_HEAP_TYPE_RTV: return m_AllocatorRenderTarget.get();
+	case D3D12_DESCRIPTOR_HEAP_TYPE_DSV: return m_AllocatorDepthStencil.get();
+	default: return nullptr;
+	}
+}
 
 // Resets all descriptor heap resources
-void DescriptorHeapManager::Reset()
+void DescriptorHeapManager::Shutdown() noexcept
 {
-	m_CBVSRVUAVHeap.reset();
-	m_SamplerHeap.reset();
-	m_DepthStencilViewHeap.reset();
-	m_RenderTargetViewHeap.reset();
+	m_HeapSRV.reset();
+	m_AllocatorSRV.reset();
+
+	m_HeapSampler.reset();
+	m_AllocatorSampler.reset();
+
+	m_HeapDepthStencil.reset();
+	m_AllocatorDepthStencil.reset();
+
+	m_HeapRenderTarget.reset();
+	m_AllocatorRenderTarget.reset();	
 }

@@ -4,9 +4,8 @@
 // PSO.cpp
 // Implements Pipeline State Object (PSO) setup and configuration for D3D12 rendering.
 
-/**
- * @brief Configures stream output for the pipeline state (disabled by default).
- */
+
+//Configures stream output for the pipeline state (disabled by default).
 void PSO::SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc)
 {
 	psoDesc.StreamOutput.NumEntries = 0;
@@ -162,9 +161,11 @@ PSO::PSO(Geometry& vertecies, RootSignature& rootSignature, ShaderCompiler& vert
 	{	
 		// If debug layer is enabled, query InfoQueue for messages
 		ComPtr<ID3D12InfoQueue> infoQueue;
-		if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf())))) {
+		if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf())))) 
+		{
 			UINT64 numMessages = infoQueue->GetNumStoredMessages();
-			for (UINT64 i = 0; i < numMessages; ++i) {
+			for (UINT64 i = 0; i < numMessages; ++i) 
+			{
 				SIZE_T messageLength = 0;
 				infoQueue->GetMessage(i, nullptr, &messageLength);
 				std::vector<char> messageData(messageLength);

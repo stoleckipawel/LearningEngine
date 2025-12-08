@@ -10,6 +10,21 @@ SwapChain GSwapChain;
 // Initializes the swap chain and creates render target views
 void SwapChain::Initialize()	
 {
+	AllocateHandles();
+	Create();
+
+	m_swapChain->SetMaximumFrameLatency(NumFramesInFlight);
+	m_WaitableObject = m_swapChain->GetFrameLatencyWaitableObject();
+
+	// Initialize current frame-in-flight index from swap chain
+	UpdateFrameInFlightIndex();
+
+	// Create render target views for all buffers
+	CreateRenderTargetViews();
+}
+
+void SwapChain::Create()
+{
 	// Create swap chain description
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	swapChainDesc.Width = GWindow.GetWidth();
@@ -44,16 +59,8 @@ void SwapChain::Initialize()
 
 	// Query for IDXGISwapChain3 interface
 	ThrowIfFailed(swapChain.As(&m_swapChain), "Failed to Query Swap Chain Interface");
-
-	m_swapChain->SetMaximumFrameLatency(NumFramesInFlight);
-	m_WaitableObject = m_swapChain->GetFrameLatencyWaitableObject();
-
-	// Initialize current frame-in-flight index from swap chain
-	UpdateFrameInFlightIndex();
-
-	// Create render target views for all buffers
-	CreateRenderTargetViews();
 }
+
 
 // Clears the current render target view with a solid color
 void SwapChain::Clear()
@@ -81,18 +88,13 @@ void SwapChain::Resize()
 	UpdateFrameInFlightIndex();
 }
 
-
-// Returns the CPU descriptor handle for the specified buffer index
-D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::GetCPUHandle(UINT index)
-{
-	return GDescriptorHeapManager.GetRenderTargetViewHeap().GetCPUHandle(index);
-}
-
-
 // Returns the CPU descriptor handle for the current back buffer
-D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::GetCPUHandle()
+void SwapChain::AllocateHandles()
 {
-	return GetCPUHandle(m_frameInFlightIndex);
+	for (UINT i = 0; i < NumFramesInFlight; i++)
+	{
+		m_rtvHandles[i] = GDescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	}
 }
 
 // Creates render target views for all swap chain buffers
@@ -126,12 +128,6 @@ UINT SwapChain::GetAllowTearingFlag() const
 		sizeof(allowTearing));
 
 	return (allowTearing == TRUE) ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u;
-}
-
-UINT SwapChain::GetFrameLatencyWaitableFlag() const
-{
-	// Only meaningful for flip-model and multi-buffering
-	return (NumFramesInFlight > 1) ? DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT : 0u;
 }
 
 UINT SwapChain::ComputeSwapChainFlags() const
@@ -173,6 +169,7 @@ D3D12_RECT SwapChain::GetDefaultScissorRect()
 // Presents the current back buffer to the screen
 void SwapChain::Present()
 {
+	//ToDo: Support variable refresh rate / tearing
 	ThrowIfFailed(m_swapChain->Present(1, 0), "Failed to Present Swap Chain");
 }
 
@@ -205,9 +202,12 @@ void SwapChain::ReleaseBuffers()
 	for (UINT i = 0; i < NumFramesInFlight; i++)
 	{
 		m_buffers[i].Reset();
+		if (m_rtvHandles[i].IsValid())
+		{
+			GDescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, m_rtvHandles[i]);
+		}
 	}
 }
-
 
 // Releases all resources associated with the swap chain
 void SwapChain::Shutdown()

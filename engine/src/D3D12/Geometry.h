@@ -41,8 +41,6 @@ private:
 	void UploadIndexBuffer();
 	// Uploads both vertex and index buffers
 	void Upload();
-	// Resets geometry resources
-	void Reset();
 private:
 	ComPtr<ID3D12Resource2> VertexBuffer = nullptr;
 	ComPtr<ID3D12Resource2> IndexBuffer = nullptr; 

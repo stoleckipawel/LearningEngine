@@ -3,12 +3,13 @@
 #include "D3D12/Texture.h"
 #include "D3D12/DescriptorHeapManager.h"
 
-// Loads the texture from disk and creates all required GPU resources
-Texture::Texture(const std::filesystem::path& fileName, UINT descriptorHandleIndex)
-	: m_descriptorHandleIndex(descriptorHandleIndex)
+// Loads the texture from disk and creates all required GPU resources.
+// Allocates an SRV descriptor from the CBV/SRV/UAV heap.
+Texture::Texture(const std::filesystem::path& fileName)
+    : m_loader(std::make_unique<TextureLoader>(fileName))
+    , m_srvHandle(GDescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV))
 {
 	// TODO: Switch to DirectXTex for better format support and mipmap generation
-	m_loader = std::make_unique<TextureLoader>(fileName);
 	CreateResource();
 	UploadToGPU();
 	CreateShaderResourceView();
@@ -109,27 +110,15 @@ void Texture::CreateShaderResourceView()
 	);
 }
 
-// Returns the GPU descriptor handle for shader access
-D3D12_GPU_DESCRIPTOR_HANDLE Texture::GetGPUHandle() const
-{
-	return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetGPUHandle(m_descriptorHandleIndex, DescriptorType::SRV);
-}
-
-// Returns the CPU descriptor handle for descriptor heap management
-D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetCPUHandle() const
-{
-	return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCPUHandle(m_descriptorHandleIndex, DescriptorType::SRV);
-}
-
-// Releases all GPU resources associated with the texture
-void Texture::Reset()
-{
-	m_textureResource.Reset();
-	m_uploadResource.Reset();
-}
-
 // Destructor releases resources
 Texture::~Texture()
 {
-	Reset();
+	m_textureResource.Reset();
+	m_uploadResource.Reset();
+
+	// Return SRV descriptor to allocator
+	if (m_srvHandle.IsValid())
+	{
+		GDescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, m_srvHandle);
+	}
 }

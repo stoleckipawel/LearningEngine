@@ -26,11 +26,6 @@ class ConstantBufferManager
 public:
 	// Initializes all constant buffers for each frame in flight
 	void Initialize();
-
-	UINT GetDescriptorHandleIndex(UINT ConstantBufferID, UINT GroupIndex);
-
-	// Resets all constant buffers
-	void Reset();
 	// Updates the constant buffers
 	void Update(size_t FrameInFlightIndex);
 

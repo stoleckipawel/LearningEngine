@@ -9,14 +9,10 @@ template <typename T>
 class ConstantBuffer
 {
 public:
-    // Create and map constant buffer, create a cbv view
-    explicit ConstantBuffer(UINT DescriptorHandleIndex)
-        : m_DescriptorHandleIndex(DescriptorHandleIndex),
-          m_ConstantBufferData{},
-          m_ConstantBufferViewDesc{},
-          m_MappedData(nullptr),
-          m_ConstantBufferSize((sizeof(T) + 255) & ~255),
-          Resource(nullptr)
+    // Create and map constant buffer, create a CBV view. Allocates a descriptor via the manager.
+    explicit ConstantBuffer()
+        : m_cbvHandle(GDescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)),
+          m_ConstantBufferSize((sizeof(T) + 255) & ~255)
     {
         ZeroMemory(&m_ConstantBufferData, sizeof(T));
         CreateResource();
@@ -31,54 +27,27 @@ public:
     }
 
     // Returns the GPU descriptor handle for shader access
-    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept
-    {
-        return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetGPUHandle(m_DescriptorHandleIndex, DescriptorType::CBV);
-    }
+    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept { return m_cbvHandle.GetGPU(); }
 
     // Returns the CPU descriptor handle for descriptor heap management
-    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const noexcept
-    {
-        return GDescriptorHeapManager.GetCBVSRVUAVHeap().GetCPUHandle(m_DescriptorHandleIndex, DescriptorType::CBV);
-    }    
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const noexcept { return m_cbvHandle.GetCPU(); }
 public:
-    // No copy allowed, strict ownership
+    // No copy or move allowed, strict ownership
     ConstantBuffer(const ConstantBuffer&) = delete;
     ConstantBuffer& operator=(const ConstantBuffer&) = delete;
+    ConstantBuffer(ConstantBuffer&&) = delete;
+    ConstantBuffer& operator=(ConstantBuffer&&) = delete;
 
-    // Move constructor
-    ConstantBuffer(ConstantBuffer&& other) noexcept
-        : m_DescriptorHandleIndex(other.m_DescriptorHandleIndex),
-          m_ConstantBufferData(std::move(other.m_ConstantBufferData)),
-          m_ConstantBufferViewDesc(other.m_ConstantBufferViewDesc),
-          m_MappedData(other.m_MappedData),
-          m_ConstantBufferSize(other.m_ConstantBufferSize),
-          Resource(std::move(other.Resource))
-    {
-        other.m_MappedData = nullptr;
-    }
-
-    // Move assignment
-    ConstantBuffer& operator=(ConstantBuffer&& other) noexcept
-    {
-        if (this != &other)
-        {
-            Reset();
-            m_DescriptorHandleIndex = other.m_DescriptorHandleIndex;
-            m_ConstantBufferData = std::move(other.m_ConstantBufferData);
-            m_ConstantBufferViewDesc = other.m_ConstantBufferViewDesc;
-            m_MappedData = other.m_MappedData;
-            m_ConstantBufferSize = other.m_ConstantBufferSize;
-            Resource = std::move(other.Resource);
-            other.m_MappedData = nullptr;
-        }
-        return *this;
-    }
-
-    // Destructor: Resets the buffer resource
     ~ConstantBuffer() noexcept
     {
-        Reset();
+        Resource->Unmap(0, nullptr);
+        Resource.Reset();
+        m_MappedData = nullptr;
+
+        if (m_cbvHandle.IsValid())
+        {
+            GDescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, m_cbvHandle);
+        }
     }
 private:
     // Create the committed resource and map for CPU writes
@@ -116,28 +85,15 @@ private:
     void CreateConstantBufferView()
     {
         m_ConstantBufferViewDesc.BufferLocation = Resource->GetGPUVirtualAddress();
-        m_ConstantBufferViewDesc.SizeInBytes = static_cast<UINT>(m_ConstantBufferSize);
+        m_ConstantBufferViewDesc.SizeInBytes = m_ConstantBufferSize;
         GRHI.GetDevice()->CreateConstantBufferView(&m_ConstantBufferViewDesc, GetCPUHandle());
-    }
-
-    UINT GetDescriptorHandleIndex() const noexcept { return m_DescriptorHandleIndex; }
-
-    // Reset buffer resource
-    void Reset() noexcept
-    {
-        if (Resource)
-        {
-            Resource->Unmap(0, nullptr);
-            Resource.Reset();
-            m_MappedData = nullptr;
-        }
     }
 private:
     ComPtr<ID3D12Resource2> Resource = nullptr;
-    UINT m_DescriptorHandleIndex = 0; // Index in descriptor heap
+    DescriptorHandle m_cbvHandle; // CBV descriptor handle
     T m_ConstantBufferData; // Cached buffer data
     D3D12_CONSTANT_BUFFER_VIEW_DESC m_ConstantBufferViewDesc = {}; 
     void* m_MappedData = nullptr; // Pointer to mapped memory
-    UINT m_ConstantBufferSize = 0; // Aligned buffer size (256 bytes)
+    UINT m_ConstantBufferSize; // Aligned buffer size (256 bytes)
 };
 

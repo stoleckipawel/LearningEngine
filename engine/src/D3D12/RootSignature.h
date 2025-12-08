@@ -6,22 +6,15 @@
 class RootSignature
 {
 public:
-	// Constructs and creates the root signature for the graphics pipeline
-	RootSignature();
+    RootSignature();
+    ~RootSignature();
+    RootSignature(const RootSignature&) = delete;
+    RootSignature& operator=(const RootSignature&) = delete;
 
-	// Destructor releases the root signature
-	~RootSignature();
-
-	// Deleted copy constructor and assignment operator to enforce unique ownership
-	RootSignature(const RootSignature&) = delete;
-	RootSignature& operator=(const RootSignature&) = delete;
-
-	// Returns the COM pointer to the root signature
-	ComPtr<ID3D12RootSignature> Get() { return m_rootSignature; }
-	// Returns raw pointer for APIs expecting ID3D12RootSignature*
-	ID3D12RootSignature* GetRaw() const { return m_rootSignature.Get(); }
+    ComPtr<ID3D12RootSignature> Get() { return m_rootSignature; }
+    ID3D12RootSignature* GetRaw() const { return m_rootSignature.Get(); }
 private:
-	void Create();
-	void Reset();
-	ComPtr<ID3D12RootSignature> m_rootSignature = nullptr; // Root signature COM pointer
+    void Create();
+    void SetupRootParameters(CD3DX12_ROOT_PARAMETER* rootParameters, CD3DX12_DESCRIPTOR_RANGE* ranges);
+    ComPtr<ID3D12RootSignature> m_rootSignature = nullptr;
 };

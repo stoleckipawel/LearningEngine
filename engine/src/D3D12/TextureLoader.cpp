@@ -102,4 +102,3 @@ TextureLoader::TextureLoader(const std::filesystem::path& fileName)
         wicFrame->CopyPixels(&copyRect, m_data.stride, m_data.slicePitch, reinterpret_cast<BYTE*>(m_data.data.data())),
         "TextureLoader: Failed To Copy Pixels", ELogType::Fatal);
 }
-TextureLoader::~TextureLoader() = default;

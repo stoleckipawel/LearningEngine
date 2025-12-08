@@ -11,14 +11,9 @@ void ConstantBufferManager::Initialize()
 	for (UINT FrameInFlightIndex = 0; FrameInFlightIndex < NumFramesInFlight; ++FrameInFlightIndex)
 	{
 		// Create and initialize constant buffers	
-		VertexConstantBuffers[FrameInFlightIndex] = std::make_unique<ConstantBuffer<FVertexConstantBufferData>>(GetDescriptorHandleIndex(0, FrameInFlightIndex));
-		PixelConstantBuffers[FrameInFlightIndex] = std::make_unique<ConstantBuffer<PixelConstantBufferData>>(GetDescriptorHandleIndex(1, FrameInFlightIndex));
+		VertexConstantBuffers[FrameInFlightIndex] = std::make_unique<ConstantBuffer<FVertexConstantBufferData>>();
+		PixelConstantBuffers[FrameInFlightIndex] = std::make_unique<ConstantBuffer<PixelConstantBufferData>>();
 	}
-}
-
-UINT ConstantBufferManager::GetDescriptorHandleIndex(UINT ConstantBufferID, UINT FrameInFlightIndex)
-{
-	return NumFramesInFlight * ConstantBufferID + FrameInFlightIndex;
 }
 
 // Updates the constant buffers for the current frame
@@ -56,14 +51,4 @@ void ConstantBufferManager::Update(size_t FrameInFlightIndex)
 	pixelData.Color.z = 0.5f + 0.5f * sinf(speed + 4.0f);
 	pixelData.Color.w = 1.0f;
 	PixelConstantBuffers[GSwapChain.GetFrameInFlightIndex()]->Update(pixelData);
-}
-
-// Resets all constant buffers
-void ConstantBufferManager::Reset()
-{
-	for (size_t i = 0; i < NumFramesInFlight; ++i)
-	{
-		VertexConstantBuffers[i].reset();
-		PixelConstantBuffers[i].reset();
-	}
 }

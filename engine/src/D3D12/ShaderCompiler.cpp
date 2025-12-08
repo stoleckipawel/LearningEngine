@@ -26,12 +26,6 @@ ShaderCompiler::ShaderCompiler(const std::filesystem::path& fileName, const std:
 // Releases shader compiler resources
 ShaderCompiler::~ShaderCompiler()
 {
-    Reset();
-}
-
-// Releases shader compiler resources
-void ShaderCompiler::Reset()
-{
     m_shaderBytecode.BytecodeLength = 0;
     m_shaderBytecode.pShaderBytecode = nullptr;
 }

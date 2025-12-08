@@ -4,9 +4,9 @@
 #include "D3D12/RHI.h"
 #include "D3D12/DescriptorHeapManager.h"
 
-// Constructs a Sampler and creates the D3D12 sampler in the descriptor heap
-Sampler::Sampler(UINT DescriptorHandleIndex)
-    : m_DescriptorHandleIndex(DescriptorHandleIndex)
+// Sampler: constructs and creates the D3D12 sampler in the descriptor heap via allocator.
+Sampler::Sampler()
+    : m_samplerHandle(GDescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER))
 {
     D3D12_SAMPLER_DESC samplerDesc = {};
     samplerDesc.Filter = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
@@ -19,18 +19,14 @@ Sampler::Sampler(UINT DescriptorHandleIndex)
     samplerDesc.MinLOD = 0.0f;
     samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 
-    // Create the sampler in the descriptor heap
+    // Create the sampler in the descriptor heap.
     GRHI.GetDevice()->CreateSampler(&samplerDesc, GetCPUHandle());
 }
 
-// Returns the GPU descriptor handle for this sampler
-D3D12_GPU_DESCRIPTOR_HANDLE Sampler::GetGPUHandle() const
+Sampler::~Sampler()
 {
-    return GDescriptorHeapManager.GetSamplerHeap().GetGPUHandle(m_DescriptorHandleIndex);
-}
-
-// Returns the CPU descriptor handle for this sampler
-D3D12_CPU_DESCRIPTOR_HANDLE Sampler::GetCPUHandle() const
-{
-    return GDescriptorHeapManager.GetSamplerHeap().GetCPUHandle(m_DescriptorHandleIndex);
+    if (m_samplerHandle.IsValid())
+    {
+        GDescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, m_samplerHandle);
+    }
 }

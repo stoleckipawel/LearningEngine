@@ -2,13 +2,15 @@
 #pragma once
 #include "D3D12/TextureLoader.h"
 #include "RHI.h"
+#include "D3D12/DescriptorHandle.h"
 
 // Texture class manages loading, uploading, and resource creation for a 2D texture in Direct3D 12.
 class Texture 
 {
 public:
-    // Loads texture from disk and creates GPU resources
-    Texture(const std::filesystem::path& fileName, UINT descriptorHandleIndex);
+    // Loads texture from disk and creates GPU resources.
+    // Allocates an SRV descriptor via DescriptorHeapManager.
+    Texture(const std::filesystem::path& fileName);
     // Destructor releases resources
     ~Texture();
 
@@ -17,15 +19,13 @@ public:
     Texture& operator=(const Texture&) = delete;
 
     // Returns the GPU descriptor handle for shader access
-    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const;
+    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const { return m_srvHandle.GetGPU(); }
     // Returns the CPU descriptor handle for descriptor heap management
-    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const;
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const { return m_srvHandle.GetCPU(); }
 
 private:
     // Creates the committed resource for the texture on the GPU
     void CreateResource();
-    // Releases all GPU resources associated with the texture
-    void Reset();    
     // Uploads the texture data to the GPU resource
     void UploadToGPU();
     // Creates the shader resource view (SRV) for the texture
@@ -37,8 +37,8 @@ private:
     ComPtr<ID3D12Resource2> m_uploadResource = nullptr;
     // RAII loader for image data
     std::unique_ptr<TextureLoader> m_loader;
-    // Index in the descriptor heap
-    UINT m_descriptorHandleIndex = 0;
+    // Allocated SRV descriptor handle
+    DescriptorHandle m_srvHandle;
     // Cached resource description for the texture
     D3D12_RESOURCE_DESC m_texResourceDesc = {};
 };

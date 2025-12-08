@@ -14,7 +14,6 @@ public:
 	inline size_t GetSize() const { return m_shaderBytecode.BytecodeLength; }
 
 private:
-	void Reset();
 	void ResolveAndValidatePath(const std::filesystem::path& fileName);
 	void CreateDXCInterfaces();
 	void LogDXCArguments();

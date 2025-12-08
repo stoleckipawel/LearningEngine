@@ -1,4 +1,5 @@
 #include "PCH.h"
+#include "D3D12/DescriptorHandle.h"
 
 #pragma once
 // Number of frames that can be processed simultaneously
@@ -24,14 +25,13 @@ public:
 	void Resize();
 
 	// Returns the CPU descriptor handle for the specified buffer index
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(UINT index);
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(UINT index) { return m_rtvHandles[index].GetCPU(); }
 	// Returns the CPU descriptor handle for the current back buffer
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle();
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() { return GetCPUHandle(m_frameInFlightIndex); }
 	// Returns the current back buffer index
 	UINT GetFrameInFlightIndex() { return m_frameInFlightIndex; }
 	// Updates the current back buffer index from the swap chain
 	void UpdateFrameInFlightIndex() { m_frameInFlightIndex = m_swapChain->GetCurrentBackBufferIndex(); }
-
 	HANDLE GetWaitableObject() const { return m_WaitableObject; }
 
 	// Returns the default viewport for rendering
@@ -43,7 +43,8 @@ public:
 
 	// Feature flag helpers
 	UINT GetAllowTearingFlag() const; // queries DXGI and returns DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING if supported
-	UINT GetFrameLatencyWaitableFlag() const; // returns DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT when applicable
+	// Returns DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT when applicable
+	UINT GetFrameLatencyWaitableFlag() const { return (NumFramesInFlight > 1) ? DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT : 0u; }
 	UINT ComputeSwapChainFlags() const; // aggregates all feature flags
 private:
 	// Current back buffer index
@@ -52,12 +53,16 @@ private:
 	ComPtr<IDXGISwapChain3> m_swapChain = nullptr;
 	// Array of render target resources (one per frame)
 	ComPtr<ID3D12Resource2> m_buffers[NumFramesInFlight];
+	// Array of RTV descriptor handles (allocated via manager)
+	DescriptorHandle m_rtvHandles[NumFramesInFlight];
 	// Back buffer format used by the swap chain
 	DXGI_FORMAT m_backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 	HANDLE m_WaitableObject = nullptr;	
 private:
 	// Creates render target views for all swap chain buffers
 	void CreateRenderTargetViews();
+	void AllocateHandles();
+	void Create();
 
 	// Releases all buffer resources
 	void ReleaseBuffers();

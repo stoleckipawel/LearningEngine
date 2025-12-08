@@ -1,48 +1,37 @@
+
 #include "PCH.h"
 #include "D3D12/RootSignature.h"
 
-// Constructs and creates the root signature for the graphics pipeline
+
 RootSignature::RootSignature()
 {
     Create();
 }
 
-// Destructor releases the root signature
-RootSignature::~RootSignature()
-{
-    Reset();
-}
-
-void RootSignature::Reset()
-{
-    m_rootSignature.Reset();
-}
-
-// Creates the root signature for the graphics pipeline
-void RootSignature::Create()
-{
-    // Descriptor range for vertex shader constant buffer views (CBV)
-    CD3DX12_DESCRIPTOR_RANGE cbvVertexRange;
-    cbvVertexRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, NumFramesInFlight, 0); // b0
-
-    // Descriptor range for pixel shader constant buffer views (CBV)
-    CD3DX12_DESCRIPTOR_RANGE cbvPixelRange;
-    cbvPixelRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, NumFramesInFlight, 0); // b0
-
-    // Descriptor range for samplers
-    CD3DX12_DESCRIPTOR_RANGE samplerRange;
-    samplerRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // s0
-
-    // Descriptor range for shader resource views (SRV) for textures
-    CD3DX12_DESCRIPTOR_RANGE textureRange;
-    textureRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // t0
+// Helper: Sets up all root parameters and descriptor ranges
+void RootSignature::SetupRootParameters(CD3DX12_ROOT_PARAMETER* rootParameters, CD3DX12_DESCRIPTOR_RANGE* ranges) {
+    // Vertex shader CBV (b0)
+    ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, NumFramesInFlight, 0);
+    // Pixel shader CBV (b0)
+    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, NumFramesInFlight, 0);
+    // Sampler (s0)
+    ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
+    // Texture SRV (t0)
+    ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 
     // Root parameters: texture SRV, sampler, vertex CBV, pixel CBV
-    CD3DX12_ROOT_PARAMETER rootParameters[4];
-    rootParameters[0].InitAsDescriptorTable(1, &textureRange, D3D12_SHADER_VISIBILITY_PIXEL);
-    rootParameters[1].InitAsDescriptorTable(1, &samplerRange, D3D12_SHADER_VISIBILITY_PIXEL);
-    rootParameters[2].InitAsDescriptorTable(1, &cbvVertexRange, D3D12_SHADER_VISIBILITY_VERTEX);
-    rootParameters[3].InitAsDescriptorTable(1, &cbvPixelRange, D3D12_SHADER_VISIBILITY_PIXEL);
+    rootParameters[0].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_PIXEL);
+    rootParameters[1].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
+    rootParameters[2].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_VERTEX);
+    rootParameters[3].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+}
+
+void RootSignature::Create()
+{
+    // Modular: Setup root parameters and descriptor ranges
+    CD3DX12_ROOT_PARAMETER rootParameters[4] = {};
+    CD3DX12_DESCRIPTOR_RANGE ranges[4] = {};
+    SetupRootParameters(rootParameters, ranges);
 
     // Root signature description
     CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
@@ -64,4 +53,9 @@ void RootSignature::Create()
 
     ThrowIfFailed(GRHI.GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(m_rootSignature.ReleaseAndGetAddressOf())), "Failed To Create Root Signature");
     m_rootSignature->SetName(L"RHI_RootSignature");
+}
+
+RootSignature::~RootSignature()
+{
+    m_rootSignature.Reset();
 }

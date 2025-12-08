@@ -1,14 +1,10 @@
 #pragma once
 
-/**
- * @brief TextureLoader provides static methods for loading images from disk using WIC.
- */
+//TextureLoader provides static methods for loading images from disk using WIC.
 class TextureLoader
 {
 public:
-    /**
-     * @brief Structure holding loaded image data and metadata.
-     */
+    // Structure holding loaded image data and metadata.
     struct Data
     {
         std::vector<char> data;         // Raw image pixel data
@@ -23,19 +19,9 @@ public:
         DXGI_FORMAT dxgiPixelFormat = DXGI_FORMAT_UNKNOWN;
     };
 
-    /**
-     * @brief Loads an image from disk and populates Data.
-     * @param fileName Path to the image file.
-     */
     TextureLoader(const std::filesystem::path& fileName);
-    ~TextureLoader();
 
-    /**
-     * @brief Returns loaded image data.
-     */
-    const Data& GetData() const { return m_data; }
-
-
+    const Data& GetData() const { return m_data; } 
 private:
     Data m_data;
 

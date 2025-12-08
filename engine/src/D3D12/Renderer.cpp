@@ -13,7 +13,7 @@
 #include "D3D12/ConstantBuffer.h"
 #include "D3D12/Sampler.h"
 #include "D3D12/DepthStencil.h"
-#include "UI.h"
+#include "D3D12/UI.h"
 
 // Global renderer instance
 Renderer GRenderer;
@@ -26,54 +26,21 @@ void Renderer::Initialize()
     // Initialize the rendering hardware interface (RHI)
     GRHI.Initialize();
 
-    // Load all graphics resources and pipeline objects
-    Load();
-}
-
-// -----------------------------------------------------------------------------
-// Loads geometry (vertex/index buffers) and uploads to GPU
-// -----------------------------------------------------------------------------
-void Renderer::LoadGeometry()
-{
+    m_rootSignature = std::make_unique<RootSignature>();
     m_vertecies = std::make_unique<Geometry>();
-}
-
-// -----------------------------------------------------------------------------
-// Loads texture resources
-// -----------------------------------------------------------------------------
-void Renderer::LoadTextures()
-{
-    m_texture = std::make_unique<Texture>("Test1.png", 0);
-}
-
-// -----------------------------------------------------------------------------
-// Initializes sampler state
-// -----------------------------------------------------------------------------
-void Renderer::LoadSamplers()
-{
-    m_sampler = std::make_unique<Sampler>(0);
-}
-
-// -----------------------------------------------------------------------------
-// Compiles and loads vertex and pixel shaders
-// -----------------------------------------------------------------------------
-void Renderer::LoadShaders()
-{
     m_vertexShader = std::make_unique<ShaderCompiler>("SimpleVS.hlsl", "vs_6_0", "main");
     m_pixelShader = std::make_unique<ShaderCompiler>("SimplePS.hlsl", "ps_6_0", "main");
-}
-
-// Creates the root signature for the pipeline
-void Renderer::CreateRootSignatures()
-{
-    m_rootSignature = std::make_unique<RootSignature>();
-}
-
-// Creates the pipeline state object (PSO)
-void Renderer::CreatePSOs()
-{
+    GDescriptorHeapManager.Initialize();
+    GSwapChain.Initialize();
+    GConstantBufferManager.Initialize();
+    m_texture = std::make_unique<Texture>(std::filesystem::path("Test1.png"));
+    m_sampler = std::make_unique<Sampler>();
     m_pso = std::make_unique<PSO>(*m_vertecies, *m_rootSignature, *m_vertexShader, *m_pixelShader);
+    CreateFrameBuffers();
+    GUI.Initialize();
+    PostLoad();
 }
+
 
 // -----------------------------------------------------------------------------
 // Finalizes resource uploads and flushes the command queue
@@ -83,26 +50,6 @@ void Renderer::PostLoad()
     GRHI.CloseCommandListScene();
     GRHI.ExecuteCommandList();
     GRHI.Flush();
-}
-
-// -----------------------------------------------------------------------------
-// Loads all resources and initializes the rendering pipeline
-// -----------------------------------------------------------------------------
-void Renderer::Load()
-{
-    // Order matters: root signature, geometry, shaders, heaps, swapchain, buffers, textures, samplers, PSO, frame buffers
-    CreateRootSignatures();
-    LoadGeometry();
-    LoadShaders();
-    GDescriptorHeapManager.Initialize();
-    GSwapChain.Initialize();
-    GConstantBufferManager.Initialize();
-    LoadTextures();
-    LoadSamplers();
-    CreatePSOs();
-    CreateFrameBuffers();
-    GUI.Initialize();
-    PostLoad();
 }
 
 // -----------------------------------------------------------------------------
@@ -177,15 +124,14 @@ void Renderer::PopulateCommandList()
     m_vertecies->Set();
 
     // Bind descriptor heaps and tables
-    GDescriptorHeapManager.SetShaderVisibleHeapsScene();
+    GDescriptorHeapManager.SetShaderVisibleHeaps();
     BindDescriptorTables();
     m_pso->Set();
 
     // Draw geometry (hardcoded cube: 36 indices)
     GRHI.GetCommandListScene()->DrawIndexedInstanced(36, 1, 0, 0, 0);
 
-    GUI.BeginFrame(0.0f);
-    GUI.Build();    
+    
     GUI.Render();
 
     // Prepare for present
@@ -199,7 +145,7 @@ void Renderer::PopulateCommandList()
 // -----------------------------------------------------------------------------
 void Renderer::CreateFrameBuffers()
 {
-    m_depthStencil = std::make_unique<DepthStencil>(0);
+    m_depthStencil = std::make_unique<DepthStencil>();
 }
 
 // -----------------------------------------------------------------------------
@@ -209,6 +155,7 @@ void Renderer::OnUpdate()
 {
     m_FrameInFlightIndex++;
     GConstantBufferManager.Update(m_FrameInFlightIndex);
+    GUI.Update(0.0f);  
 }
 
 // -----------------------------------------------------------------------------
@@ -231,8 +178,8 @@ void Renderer::OnRender()
     // Wait for GPU to finish previous frame
     GRHI.WaitForGPU();
 
-    GRHI.ResetCommandAllocatorScene();
-    GRHI.ResetCommandListScene();  
+    GRHI.ResetCommandAllocator();
+    GRHI.ResetCommandList();  
 
     // Update per-frame data
     OnUpdate();
@@ -261,9 +208,9 @@ void Renderer::OnRender()
 void Renderer::Shutdown()
 {
     GRHI.Flush();       
-    GUI.Shutdown();
+    GUI.Shutdown();    
     GSwapChain.Shutdown();
     GWindow.Shutdown();
-    GDescriptorHeapManager.Reset();
+    GDescriptorHeapManager.Shutdown();
     GRHI.Shutdown();
 }

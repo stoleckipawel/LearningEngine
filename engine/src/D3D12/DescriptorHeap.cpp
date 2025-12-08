@@ -1,106 +1,55 @@
 #include "PCH.h"
 #include "D3D12/DescriptorHeap.h"
 
-// General descriptor heap (RTV, DSV, Sampler, etc)
-DescriptorHeap::DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numDescriptors, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name)
+
+// General descriptor heap (RTV, DSV, Sampler, SRV/CBV/UAV).
+DescriptorHeap::DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name)
 {
-	m_heapDesc.NumDescriptors = numDescriptors;
-	m_heapDesc.Type = type;
-	m_heapDesc.Flags = flags;
+	m_desc.Type = type;
+	m_desc.Flags = flags;
+	m_desc.NumDescriptors = GetNumDescriptors();
 
 	// Create descriptor heap
 	ThrowIfFailed(GRHI.GetDevice()->CreateDescriptorHeap(
-		&m_heapDesc,
+		&m_desc,
 		IID_PPV_ARGS(m_heap.ReleaseAndGetAddressOf())), "DescriptorHeap: Failed To Create Descriptor Heap");
 	m_heap->SetName(name);
 }
 
-// CBV/SRV/UAV descriptor heap
-DescriptorHeap::DescriptorHeap(UINT numCBV, UINT numSRV, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name)
-	: m_numCBV(numCBV),
-	  m_numSRV(numSRV)
-{
-	// Calculate total descriptors
-	UINT numDescriptors = numCBV * NumFramesInFlight + numSRV;
-
-	m_heapDesc.NumDescriptors = numDescriptors;
-	m_heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	m_heapDesc.Flags = flags;
-	m_heapDesc.NodeMask = 1;
-
-	// Create descriptor heap
-	ThrowIfFailed(GRHI.GetDevice()->CreateDescriptorHeap(
-		&m_heapDesc,
-		IID_PPV_ARGS(m_heap.ReleaseAndGetAddressOf())), "DescriptorHeap: Failed To Create Descriptor Heap");
-	m_heap->SetName(name);
-}
-
-// Move constructor
-DescriptorHeap::DescriptorHeap(DescriptorHeap&& other) noexcept
-	: m_heap(std::move(other.m_heap)),
-	  m_heapDesc(other.m_heapDesc),
-	  m_numCBV(other.m_numCBV),
-	  m_numSRV(other.m_numSRV)
-{
-	other.m_heap.Reset();
-}
-
-// Move assignment
-DescriptorHeap& DescriptorHeap::operator=(DescriptorHeap&& other) noexcept
-{
-	if (this != &other)
-	{
-		m_heap.Reset();
-		m_heap = std::move(other.m_heap);
-		m_heapDesc = other.m_heapDesc;
-		m_numCBV = other.m_numCBV;
-		m_numSRV = other.m_numSRV;
-		other.m_heap.Reset();
-	}
-	return *this;
-}
-
-// Destructor
 DescriptorHeap::~DescriptorHeap() noexcept
 {
 	m_heap.Reset();
 }
 
-// Get offset for descriptor type
-UINT DescriptorHeap::GetTypeOffset(DescriptorType type) const
+DescriptorHandle DescriptorHeap::GetHandleAt(UINT index) const
 {
-	switch (type)
+	if (index >= m_desc.NumDescriptors)
 	{
-	case DescriptorType::CBV:
-		return 0;
-	case DescriptorType::SRV:
-		// SRV starts after CBVs
-		return m_numCBV * NumFramesInFlight;
-	case DescriptorType::UI:
-		return m_numCBV * NumFramesInFlight + (m_numSRV - 1);//UI is last SRV descriptor	
-	case DescriptorType::Other:
-	default:
-		return 0;
+		// Guard: index must be within heap descriptor count
+		LogMessage("DescriptorHeap: index out of range", ELogType::Fatal);
+		// Return an invalid handle to avoid undefined pointer math
+		return DescriptorHandle(~0u, m_desc.Type, { 0 }, { 0 });
 	}
+
+	// Materialize a typed handle using heap start CPU/GPU handles.
+	// The handle computes final CPU/GPU pointer by adding index * increment size.
+	// Only call GetGPUDescriptorHandleForHeapStart for shader-visible heaps.
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = { 0 };
+	if (m_desc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE)
+	{
+		gpuHandle = m_heap->GetGPUDescriptorHandleForHeapStart();
+	}
+
+	return DescriptorHandle(
+		index,
+		m_desc.Type,
+		m_heap->GetCPUDescriptorHandleForHeapStart(),
+		gpuHandle);
 }
 
-// Get CPU descriptor handle
-D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeap::GetCPUHandle(UINT indexInType, DescriptorType type)
+UINT DescriptorHeap::GetNumDescriptors() const
 {
-	D3D12_CPU_DESCRIPTOR_HANDLE handle = m_heap->GetCPUDescriptorHandleForHeapStart();
-	UINT descriptorSize = GRHI.GetDevice()->GetDescriptorHandleIncrementSize(m_heapDesc.Type);
-	// Offset by type and index
-	handle.ptr += descriptorSize * (indexInType + GetTypeOffset(type));
-	return handle;
+	return m_desc.Type == D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
+		? D3D12_MAX_SHADER_VISIBLE_SAMPLER_HEAP_SIZE
+		: D3D12_MAX_SHADER_VISIBLE_DESCRIPTOR_HEAP_SIZE_TIER_2;
 }
-
-// Get GPU descriptor handle
-D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeap::GetGPUHandle(UINT indexInType, DescriptorType type)
-{
-	D3D12_GPU_DESCRIPTOR_HANDLE handle = m_heap->GetGPUDescriptorHandleForHeapStart();
-	UINT descriptorSize = GRHI.GetDevice()->GetDescriptorHandleIncrementSize(m_heapDesc.Type);
-	// Offset by type and index
-	handle.ptr += descriptorSize * (indexInType + GetTypeOffset(type));
-	return handle;
-}
-

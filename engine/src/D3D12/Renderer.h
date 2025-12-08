@@ -1,6 +1,7 @@
 
 #pragma once
 
+
 // Forward declarations
 class ShaderCompiler;
 class Texture;
@@ -21,9 +22,6 @@ class Renderer
 public:
 	void Initialize();
 
-	// Releases graphics resources 
-	void Reset();
-
 	// Shuts down the renderer and all owned subsystems
 	void Shutdown();
 
@@ -34,21 +32,8 @@ public:
 	void OnResize();
 
 private:
-	// Loads graphics resources
-	void Load();
-	// Loads geometry (vertex/index buffers)
-	void LoadGeometry();
-	// Loads texture resources
-	void LoadTextures();
-	// Loads/initializes sampler states
-	void LoadSamplers();
-	// Compiles and loads shaders
-	void LoadShaders();
 	// Finalizes resource uploads and flushes command queue
 	void PostLoad();
-
-	void CreateRootSignatures();
-	void CreatePSOs();
 	void CreateFrameBuffers();
 	void SetViewport();
 	void SetBackBufferRTV();

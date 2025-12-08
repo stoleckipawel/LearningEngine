@@ -144,12 +144,12 @@ void RHI::CloseCommandListUI()
 	ThrowIfFailed(m_CmdListUI->Close(), "RHI: Failed To Close UI Command List");
 }
 
-void RHI::ResetCommandAllocatorScene()
+void RHI::ResetCommandAllocator()
 {
 	ThrowIfFailed(m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()]->Reset(), "RHI: Failed To Reset Scene Command Allocator");
 }
 
-void RHI::ResetCommandListScene()
+void RHI::ResetCommandList()
 {
 	ThrowIfFailed(m_CmdListScene->Reset(m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()].Get(), nullptr), "RHI: Failed To Reset Scene Command List");
 }
@@ -180,6 +180,9 @@ void RHI::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore
 // Waits for the GPU to finish executing commands
 void RHI::WaitForGPU()
 {
+	//ToDO: Implement Wait For Multiple Objects
+	//Essential for correct frame bufering & frame pacing!!!
+
 	UINT FenceCurrentValue = m_FenceValues[GSwapChain.GetFrameInFlightIndex()];
 	UINT FenceCompletedValue = m_Fence->GetCompletedValue();
 
@@ -187,7 +190,6 @@ void RHI::WaitForGPU()
 	{
 		ThrowIfFailed(m_Fence->SetEventOnCompletion(FenceCurrentValue, m_FenceEvent), "RHI: Failed To Signal Command Queue");
 		WaitForSingleObject(m_FenceEvent, INFINITE);
-		//ToDO: Implement Wait For Multiple Objects
 	}
 }
 

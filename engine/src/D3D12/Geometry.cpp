@@ -6,8 +6,6 @@
 // Geometry.cpp
 // Implements geometry setup, upload, and binding for rendering.
 
-
-
 // Constructs and uploads geometry resources
 Geometry::Geometry()
 {
@@ -17,7 +15,8 @@ Geometry::Geometry()
 // Destructor Resets geometry resources
 Geometry::~Geometry()
 {
-	Reset();
+	IndexBuffer.Reset();
+	VertexBuffer.Reset();
 }
 
 void Geometry::UploadVertexBuffer()
@@ -81,14 +80,6 @@ void Geometry::Upload()
 {
 	UploadIndexBuffer();
 	UploadVertexBuffer();
-}
-
-
-// Resets geometry resources
-void Geometry::Reset()
-{
-	IndexBuffer.Reset();
-	VertexBuffer.Reset();
 }
 
 

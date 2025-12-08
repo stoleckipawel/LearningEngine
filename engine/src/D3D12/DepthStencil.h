@@ -1,13 +1,14 @@
 #pragma once
 
 #include "RHI.h"
+#include "D3D12/DescriptorHandle.h"
 
 // DepthStencil manages a depth-stencil buffer resource and its view for Direct3D 12 rendering.
 class DepthStencil 
 {
 public:
     // Constructs and initializes the depth stencil resource and view
-    explicit DepthStencil(UINT DescriptorHandleIndex);
+    DepthStencil();
 
     // Destructor Resets resources
     ~DepthStencil();
@@ -17,9 +18,9 @@ public:
     DepthStencil& operator=(const DepthStencil&) = delete;
 
     // Returns the GPU descriptor handle for shader access
-    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle();
+    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() { return m_dsvHandle.GetGPU(); }
     // Returns the CPU descriptor handle for descriptor heap management
-    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(); 
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() { return m_dsvHandle.GetCPU(); } 
 
     // Clears the depth stencil view
     void Clear();
@@ -38,6 +39,6 @@ private:
 private:
     ComPtr<ID3D12Resource> m_resource;                     // Depth stencil resource
     D3D12_DEPTH_STENCIL_VIEW_DESC m_depthStencilDesc = {};     // DSV description
-    UINT m_DescriptorHandleIndex = 0;                          // Index in descriptor heap
+    DescriptorHandle m_dsvHandle;                              // Allocated DSV descriptor handle
 };
 
