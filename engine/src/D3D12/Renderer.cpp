@@ -1,4 +1,3 @@
-
 #include "PCH.h"
 #include "Renderer.h"
 #include "D3D12/DebugLayer.h"
@@ -170,7 +169,7 @@ void Renderer::PopulateCommandList()
             primitive->GetPixelConstantBuffer()->GetGPUHandle());            
 
         // Issue the draw call for this primitive
-        GRHI.GetCommandList()->DrawIndexedInstanced(36, 1, 0, 0, 0);
+        GRHI.GetCommandList()->DrawIndexedInstanced(primitive->GetIndexCount(), 1, 0, 0, 0);
     }
 
     GUI.Render();

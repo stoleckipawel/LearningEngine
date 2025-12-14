@@ -66,10 +66,17 @@ void RHI::CheckShaderModel6Support()
 // Initializes the RHI and all required resources
 void RHI::Initialize(bool RequireDXRSupport)
 {
-	GDebugLayer.Initialize(); 
+	#if defined(_DEBUG)
+		GDebugLayer.Initialize(); 
+	#endif
+
 	CreateFactory();
 	CreateDevice(RequireDXRSupport);
-	GDebugLayer.InitializeInfoQueue();
+
+	#if defined(_DEBUG)
+		GDebugLayer.InitializeInfoQueue();
+	#endif
+	
 	CheckShaderModel6Support();
 	CreateCommandQueue();
 	CreateCommandAllocators();
@@ -223,9 +230,16 @@ void RHI::Shutdown()
 
 	m_Fence.Reset();
 	m_CmdQueue.Reset();
-	GDebugLayer.ReportLiveDeviceObjects();
+
+	#if defined(_DEBUG)	
+		GDebugLayer.ReportLiveDeviceObjects();
+	#endif
+	
 	m_Device.Reset();
 	m_Adapter.Reset();
 	m_DxgiFactory.Reset();
-	GDebugLayer.Shutdown();
+
+	#if defined(_DEBUG)
+		GDebugLayer.Shutdown();
+	#endif
 }

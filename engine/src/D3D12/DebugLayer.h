@@ -2,6 +2,7 @@
 
 //#define REPORT_LIVE_OBJECTS 1
 
+#ifdef _DEBUG
 // DebugLayer manages Direct3D 12 and DXGI debug layers for diagnostics and leak tracking (debug builds only).
 class DebugLayer
 {
@@ -28,3 +29,4 @@ private:
 
 // Global debug layer instance
 extern DebugLayer GDebugLayer;
+#endif

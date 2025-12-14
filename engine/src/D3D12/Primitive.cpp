@@ -1,4 +1,3 @@
-
 #include "PCH.h"
 #include "D3D12/Primitive.h"
 #include "D3D12/UploadBuffer.h"
@@ -76,6 +75,7 @@ void Primitive::UploadIndexBuffer()
 {
     std::vector<DWORD> indexList;
     GenerateIndices(indexList);
+    m_indexCount = static_cast<UINT>(indexList.size());
     UINT indexDataSize = static_cast<UINT>(sizeof(DWORD) * indexList.size());
     IndexBuffer = UploadBuffer::Upload(indexList.data(), indexDataSize);
     m_indexBufferView.BufferLocation = IndexBuffer->GetGPUVirtualAddress();

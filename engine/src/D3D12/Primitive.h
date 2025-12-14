@@ -93,6 +93,11 @@ public:
     ConstantBuffer<PixelConstantBufferData>* GetPixelConstantBuffer() { return PixelConstantBuffer[GSwapChain.GetFrameInFlightIndex()].get(); }
 
     /**
+     * @brief Get the number of indices in the index buffer.
+     */
+    UINT GetIndexCount() const { return m_indexCount; }
+
+    /**
      * @brief Sets geometry buffers and topology for rendering.
      * Override to bind additional resources if needed.
      */
@@ -154,6 +159,7 @@ protected:
     ComPtr<ID3D12Resource2> IndexBuffer = nullptr;  ///< Index buffer resource
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {}; ///< Vertex buffer view
     D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};   ///< Index buffer view
+    UINT m_indexCount = 0; ///< Number of indices in the index buffer
 
     // Per-frame constant buffers
     std::unique_ptr<ConstantBuffer<FVertexConstantBufferData>> VertexConstantBuffer[NumFramesInFlight];
