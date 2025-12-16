@@ -21,61 +21,61 @@ TextureLoader::TextureLoader(const std::filesystem::path& fileName)
     ComPtr<IWICImagingFactory> wicFactory;
     ThrowIfFailed(
         CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(wicFactory.ReleaseAndGetAddressOf())),
-        "TextureLoader: Failed To Create Factory", ELogType::Fatal);
+        "Failed To Create Factory");
 
     // Create WIC Stream for file
     ComPtr<IWICStream> wicFileStream;
     ThrowIfFailed(
         wicFactory->CreateStream(wicFileStream.ReleaseAndGetAddressOf()),
-        "TextureLoader: Failed To Create Stream", ELogType::Fatal);
+        "Failed To Create Stream");
 
     // Initialize stream from resolvedPath
     ThrowIfFailed(
         wicFileStream->InitializeFromFilename(resolvedPath.wstring().c_str(), GENERIC_READ),
-        "TextureLoader: Failed To Initialize From Name", ELogType::Fatal);
+        "Failed To Initialize From Name");
 
     // Create decoder from stream
     ComPtr<IWICBitmapDecoder> wicDecoder;
     ThrowIfFailed(
         wicFactory->CreateDecoderFromStream(wicFileStream.Get(), nullptr, WICDecodeMetadataCacheOnDemand, wicDecoder.ReleaseAndGetAddressOf()),
-        "TextureLoader: Failed To Create Decoder From Stream", ELogType::Fatal);
+        "Failed To Create Decoder From Stream");
 
     // Get first frame of image
     ComPtr<IWICBitmapFrameDecode> wicFrame;
     ThrowIfFailed(
         wicDecoder->GetFrame(0, wicFrame.ReleaseAndGetAddressOf()),
-        "TextureLoader: Failed To Get Frame", ELogType::Fatal);
+        "Failed To Get Frame");
 
     // Get image dimensions
     ThrowIfFailed(
         wicFrame->GetSize(&m_data.width, &m_data.height),
-        "TextureLoader: Failed To Get Size", ELogType::Fatal);
+        "Failed To Get Size");
 
     // Get WIC pixel format
     ThrowIfFailed(
         wicFrame->GetPixelFormat(&m_data.wicPixelFormat),
-        "TextureLoader: Failed To Get Pixel Format", ELogType::Fatal);
+        "Failed To Get Pixel Format");
 
     // Get pixel format metadata
     ComPtr<IWICComponentInfo> wicComponentInfo;
     ThrowIfFailed(
         wicFactory->CreateComponentInfo(m_data.wicPixelFormat, wicComponentInfo.ReleaseAndGetAddressOf()),
-        "TextureLoader: Failed To Get Component Info", ELogType::Fatal);
+        "Failed To Get Component Info");
 
     ComPtr<IWICPixelFormatInfo> wicPixelFormatInfo;
     ThrowIfFailed(
         wicComponentInfo->QueryInterface(IID_PPV_ARGS(wicPixelFormatInfo.ReleaseAndGetAddressOf())),
-        "TextureLoader: Failed To Query Interface", ELogType::Fatal);
+        "Failed To Query Interface");
 
     // Get bits per pixel
     ThrowIfFailed(
         wicPixelFormatInfo->GetBitsPerPixel(&m_data.bitsPerPixel),
-        "TextureLoader: Failed To Get Bits Per Pixel", ELogType::Fatal);
+        "Failed To Get Bits Per Pixel");
 
     // Get channel count
     ThrowIfFailed(
         wicPixelFormatInfo->GetChannelCount(&m_data.channelCount),
-        "TextureLoader: Failed To Get Channel Count", ELogType::Fatal);
+        "Failed To Get Channel Count");
 
     // Map WIC pixel format to DXGI format
     auto findIt = std::find_if(
@@ -85,7 +85,7 @@ TextureLoader::TextureLoader(const std::filesystem::path& fileName)
         }
     );
     if (findIt == TextureLoader::s_lookupTable.end()) {
-        LogMessage("TextureLoader: Unsupported pixel format", ELogType::Fatal);
+        LogMessage("Unsupported pixel format", ELogType::Fatal);
     }
     m_data.dxgiPixelFormat = findIt->dxgiFormat;
 
@@ -100,5 +100,5 @@ TextureLoader::TextureLoader(const std::filesystem::path& fileName)
     // Copy pixel data to output buffer
     ThrowIfFailed(
         wicFrame->CopyPixels(&copyRect, m_data.stride, m_data.slicePitch, reinterpret_cast<BYTE*>(m_data.data.data())),
-        "TextureLoader: Failed To Copy Pixels", ELogType::Fatal);
+        "Failed To Copy Pixels");
 }

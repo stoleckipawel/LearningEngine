@@ -31,7 +31,7 @@ ComPtr<ID3D12Resource2> UploadBuffer::Upload(void* data, uint32_t dataSize)
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
 			IID_PPV_ARGS(uploadBuffer.ReleaseAndGetAddressOf())),
-		"UploadBuffer: Failed to create upload buffer"
+		"Failed to create upload buffer"
 	);
 
 	uploadBuffer->SetName(L"RHI_UploadBuffer");
@@ -40,7 +40,7 @@ ComPtr<ID3D12Resource2> UploadBuffer::Upload(void* data, uint32_t dataSize)
 	D3D12_RANGE readRange = { 0, 0 }; // We do not intend to read from this resource on CPU
 	ThrowIfFailed(
 		uploadBuffer->Map(0, &readRange, &mappedData),
-		"UploadBuffer: Failed To Map Upload Buffer"
+		"Failed To Map Upload Buffer"
 	);
 	memcpy(mappedData, data, dataSize);
 	uploadBuffer->Unmap(0, nullptr);

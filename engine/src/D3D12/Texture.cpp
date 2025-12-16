@@ -42,7 +42,7 @@ void Texture::CreateResource()
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
 			IID_PPV_ARGS(m_textureResource.ReleaseAndGetAddressOf())),
-		"Texture: Failed To Create Texture Resource"
+		"Failed To Create Texture Resource"
 	);
 	m_textureResource->SetName(L"RHI_Texture");
 
@@ -60,7 +60,7 @@ void Texture::CreateResource()
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
 			IID_PPV_ARGS(m_uploadResource.ReleaseAndGetAddressOf())),
-		"Texture: Failed To Create Upload Buffer"
+		"Failed To Create Upload Buffer"
 	);
 }
 

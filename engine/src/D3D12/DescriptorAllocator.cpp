@@ -37,7 +37,7 @@ DescriptorHandle DescriptorAllocator::Allocate()
     }
     else
     {
-        LogMessage("DescriptorAllocator: Heap is full and cannot grow (max capacity reached).", ELogType::Fatal);
+        LogMessage("Heap is full and cannot grow (max capacity reached).", ELogType::Fatal);
     }
 
     // Convert the index to a typed DescriptorHandle via the heap.

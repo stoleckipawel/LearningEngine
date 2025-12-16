@@ -59,7 +59,7 @@ void RHI::CheckShaderModel6Support()
 	D3D12_FEATURE_DATA_SHADER_MODEL shaderModel = { D3D_SHADER_MODEL_6_0 };
 	if (m_Device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(shaderModel)) || shaderModel.HighestShaderModel < D3D_SHADER_MODEL_6_0)
 	{
-		LogMessage("RHI: Device does not support Shader Model 6.0. Minimum required for engine.", ELogType::Fatal);
+		LogMessage("Device does not support Shader Model 6.0. Minimum required for engine.", ELogType::Fatal);
 	}
 }
 
@@ -91,13 +91,13 @@ void RHI::CreateFactory()
 #else
 	UINT dxgiFactoryFlags = 0;
 #endif
-	ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(m_DxgiFactory.ReleaseAndGetAddressOf())), "RHI: Failed To Create Factory");
+	ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(m_DxgiFactory.ReleaseAndGetAddressOf())), "Failed To Create Factory");
 }
 
 void RHI::CreateDevice(bool /*requireDXRSupport*/)
 {
 	SelectAdapter();
-	ThrowIfFailed(D3D12CreateDevice(m_Adapter.Get(), m_DesiredD3DFeatureLevel, IID_PPV_ARGS(m_Device.ReleaseAndGetAddressOf())), "RHI: Failed To Create Device");
+	ThrowIfFailed(D3D12CreateDevice(m_Adapter.Get(), m_DesiredD3DFeatureLevel, IID_PPV_ARGS(m_Device.ReleaseAndGetAddressOf())), "Failed To Create Device");
 }
 
 void RHI::CreateCommandQueue()
@@ -107,20 +107,20 @@ void RHI::CreateCommandQueue()
 	cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
 	cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	cmdQueueDesc.NodeMask = 0;
-	ThrowIfFailed(m_Device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(m_CmdQueue.ReleaseAndGetAddressOf())), "RHI: Failed To Create Command Queue");
+	ThrowIfFailed(m_Device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(m_CmdQueue.ReleaseAndGetAddressOf())), "Failed To Create Command Queue");
 }
 
 void RHI::CreateCommandAllocators()
 {
 	for (size_t i = 0; i < NumFramesInFlight; ++i)
 	{
-		ThrowIfFailed(m_Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_CmdAllocatorScene[i].ReleaseAndGetAddressOf())), "RHI: Failed To Create Scene Command Allocator");
+		ThrowIfFailed(m_Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_CmdAllocatorScene[i].ReleaseAndGetAddressOf())), "Failed To Create Scene Command Allocator");
 	}
 }
 
 void RHI::CreateCommandLists()
 {
-	ThrowIfFailed(m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()].Get(), nullptr, IID_PPV_ARGS(m_CmdListScene.ReleaseAndGetAddressOf())), "RHI: Failed To Create Scene Command List");
+	ThrowIfFailed(m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()].Get(), nullptr, IID_PPV_ARGS(m_CmdListScene.ReleaseAndGetAddressOf())), "Failed To Create Scene Command List");
 }
 
 void RHI::CreateFenceAndEvent()
@@ -130,28 +130,28 @@ void RHI::CreateFenceAndEvent()
 		m_FenceValues[i] = 0;
 	}
 
-	ThrowIfFailed(m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_Fence.ReleaseAndGetAddressOf())), "RHI: Failed To Create Fence");
+	ThrowIfFailed(m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_Fence.ReleaseAndGetAddressOf())), "Failed To Create Fence");
 
 	m_FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 	if (!m_FenceEvent)
 	{
-		LogMessage("RHI: Failed To Create Fence Event", ELogType::Fatal);
+		LogMessage("Failed To Create Fence Event", ELogType::Fatal);
 	}
 }
 
 void RHI::CloseCommandListScene()
 {
-	ThrowIfFailed(m_CmdListScene->Close(), "RHI: Failed To Close Scene Command List");
+	ThrowIfFailed(m_CmdListScene->Close(), "Failed To Close Scene Command List");
 }
 
 void RHI::ResetCommandAllocator()
 {
-	ThrowIfFailed(m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()]->Reset(), "RHI: Failed To Reset Scene Command Allocator");
+	ThrowIfFailed(m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()]->Reset(), "Failed To Reset Scene Command Allocator");
 }
 
 void RHI::ResetCommandList()
 {
-	ThrowIfFailed(m_CmdListScene->Reset(m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()].Get(), nullptr), "RHI: Failed To Reset Scene Command List");
+	ThrowIfFailed(m_CmdListScene->Reset(m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()].Get(), nullptr), "Failed To Reset Scene Command List");
 }
 
 // Executes the current command list on the command queue
@@ -188,7 +188,7 @@ void RHI::WaitForGPU()
 
 	if (FenceCompletedValue < FenceCurrentValue)
 	{
-		ThrowIfFailed(m_Fence->SetEventOnCompletion(FenceCurrentValue, m_FenceEvent), "RHI: Failed To Signal Command Queue");
+		ThrowIfFailed(m_Fence->SetEventOnCompletion(FenceCurrentValue, m_FenceEvent), "Failed To Signal Command Queue");
 		WaitForSingleObject(m_FenceEvent, INFINITE);
 	}
 }
@@ -198,7 +198,7 @@ void RHI::Signal()
 {
 	// Schedule a Signal command in the queue. -> Updates Fence Completed Value
 	UINT64 currentFenceValue = m_NextFenceValue++;
-	ThrowIfFailed(m_CmdQueue->Signal(m_Fence.Get(), currentFenceValue), "RHI: Failed To Signal Command Queue");
+	ThrowIfFailed(m_CmdQueue->Signal(m_Fence.Get(), currentFenceValue), "Failed To Signal Command Queue");
 
 	// Set the fence value for the next frame.
 	m_FenceValues[GSwapChain.GetFrameInFlightIndex()] = currentFenceValue;

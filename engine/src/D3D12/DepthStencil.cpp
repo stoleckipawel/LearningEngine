@@ -57,7 +57,7 @@ void DepthStencil::CreateResource()
 			D3D12_RESOURCE_STATE_DEPTH_READ,
 			&depthOptimizedClearValue,
 			IID_PPV_ARGS(m_resource.ReleaseAndGetAddressOf())),
-		"Depth Stencil: Failed To Create Resource"
+		"Failed To Create Resource"
 	);
 	m_resource->SetName(L"RHI_DepthStencil");
 }

@@ -44,7 +44,7 @@ void Window::Initialize()
 	m_wndClass = RegisterClassExW(&windowClass);
 	if (!m_wndClass)
 	{
-		LogMessage("Window: Failed to register window class", ELogType::Fatal);
+		LogMessage("Failed to register window class", ELogType::Fatal);
 	}
 
 	// Create the window
@@ -62,7 +62,7 @@ void Window::Initialize()
 
 	if (WindowHWND == nullptr)
 	{
-		LogMessage("Window: Failed to Create a Window", ELogType::Fatal);
+		LogMessage("Failed to Create a Window", ELogType::Fatal);
 	}
 }
 
