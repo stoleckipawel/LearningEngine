@@ -25,10 +25,10 @@ add_subdirectory(third_party/imgui)
 target_include_directories(Engine 
   PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
   PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/D3D12"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party"    
 )
 
 # Require C++20
