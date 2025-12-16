@@ -1,6 +1,8 @@
 
 #pragma once
-#include "PCH.h"
+
+#include <filesystem>
+#include <cstdlib>
 
 // AssetPathResolver: Utility for resolving asset file paths for engine and samples.
 

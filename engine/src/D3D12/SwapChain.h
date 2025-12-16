@@ -1,7 +1,17 @@
-#include "PCH.h"
+#pragma once
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <Windows.h>
+#include <d3d12.h>
+#include <dxgi1_6.h>
+#include <wrl/client.h>
 #include "D3D12/DescriptorHandle.h"
 
-#pragma once
 // Number of frames that can be processed simultaneously
 static const UINT NumFramesInFlight = 2;
 
@@ -50,9 +60,9 @@ private:
 	// Current back buffer index
 	UINT m_frameInFlightIndex = 0;
 	// Swap chain interface
-	ComPtr<IDXGISwapChain3> m_swapChain = nullptr;
+	Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain = nullptr;
 	// Array of render target resources (one per frame)
-	ComPtr<ID3D12Resource2> m_buffers[NumFramesInFlight];
+	Microsoft::WRL::ComPtr<ID3D12Resource2> m_buffers[NumFramesInFlight];
 	// Array of RTV descriptor handles (allocated via manager)
 	DescriptorHandle m_rtvHandles[NumFramesInFlight];
 	// Back buffer format used by the swap chain
