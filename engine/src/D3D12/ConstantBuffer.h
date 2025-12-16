@@ -3,6 +3,7 @@
 #include "DescriptorHeap.h"
 #include "UploadBuffer.h"
 #include "DescriptorHeapManager.h"
+#include "DebugUtils.h"
 
 // ConstantBuffer manages a GPU constant buffer for type T, including creation, mapping, updating, and descriptor views.
 template <typename T>
@@ -74,7 +75,7 @@ private:
             nullptr,
             IID_PPV_ARGS(&Resource)),
             "Failed to create constant buffer resource.");
-        Resource->SetName(L"RHI_ConstantBuffer");
+        DebugUtils::SetDebugName(Resource, L"RHI_ConstantBuffer");
 
         // Map the resource for CPU writes
         D3D12_RANGE readRange = { 0, 0 };

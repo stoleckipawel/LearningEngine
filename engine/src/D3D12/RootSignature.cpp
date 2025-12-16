@@ -11,10 +11,10 @@ RootSignature::RootSignature()
 // Helper: Sets up all root parameters and descriptor ranges
 void RootSignature::SetupRootParameters(CD3DX12_ROOT_PARAMETER* rootParameters, CD3DX12_DESCRIPTOR_RANGE* ranges) {
     // Vertex shader CBV (b0)
-    ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, NumFramesInFlight, 0);
     // Pixel shader CBV (b0)
-    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, NumFramesInFlight, 0);
     // Sampler (s0)
+    ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, EngineSettings::FramesInFlight, 0);
+    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, EngineSettings::FramesInFlight, 0);
     ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
     // Texture SRV (t0)
     ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
@@ -52,7 +52,7 @@ void RootSignature::Create()
     );
 
     ThrowIfFailed(GRHI.GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(m_rootSignature.ReleaseAndGetAddressOf())), "Failed To Create Root Signature");
-    m_rootSignature->SetName(L"RHI_RootSignature");
+    DebugUtils::SetDebugName(m_rootSignature, L"RHI_RootSignature");
 }
 
 RootSignature::~RootSignature()

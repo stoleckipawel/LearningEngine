@@ -3,6 +3,7 @@
 #include "Renderer.h"
 #include "D3D12/RHI.h"
 #include "UI.h"
+#include "EngineConfig.h"
 
 Window GWindow;
 
@@ -47,11 +48,14 @@ void Window::Initialize()
 		LogMessage("Failed to register window class", ELogType::Fatal);
 	}
 
-	// Create the window
-		WindowHWND = CreateWindowExW(
+	// Convert configured window title to wide string
+	std::wstring wtitle(EngineSettings::WindowTitle.begin(), EngineSettings::WindowTitle.end());
+
+	// Create the window with configured initial size
+	WindowHWND = CreateWindowExW(
 		WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW,
 		L"Default Window Name", // class name string
-		L"Playground Engine",    // window name string
+		wtitle.c_str(),          // window name string
 		WS_OVERLAPPEDWINDOW | WS_VISIBLE,
 		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 		nullptr,
@@ -63,6 +67,12 @@ void Window::Initialize()
 	if (WindowHWND == nullptr)
 	{
 		LogMessage("Failed to Create a Window", ELogType::Fatal);
+	}
+
+	// Apply fullscreen if requested by settings
+	if (EngineSettings::StartFullscreen)
+	{
+		SetFullScreen(true);
 	}
 }
 
@@ -144,7 +154,9 @@ void Window::SetFullScreen(bool bSetFullScreen)
 // Window message handler (WndProc)
 LRESULT Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+#if USE_GUI
 	if (GUI.OnWindowMessage(wnd, msg, wParam, lParam))
+#endif
 	{
 		//GUI Layer enforces being first & if it returns true we must stop processing further events
 		return true;

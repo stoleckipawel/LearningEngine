@@ -59,7 +59,7 @@ void DepthStencil::CreateResource()
 			IID_PPV_ARGS(m_resource.ReleaseAndGetAddressOf())),
 		"Failed To Create Resource"
 	);
-	m_resource->SetName(L"RHI_DepthStencil");
+	DebugUtils::SetDebugName(m_resource, L"RHI_DepthStencil");
 }
 
 // Creates the depth stencil view in the descriptor heap

@@ -112,7 +112,7 @@ void RHI::CreateCommandQueue()
 
 void RHI::CreateCommandAllocators()
 {
-	for (size_t i = 0; i < NumFramesInFlight; ++i)
+	for (size_t i = 0; i < EngineSettings::FramesInFlight; ++i)
 	{
 		ThrowIfFailed(m_Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_CmdAllocatorScene[i].ReleaseAndGetAddressOf())), "Failed To Create Scene Command Allocator");
 	}
@@ -125,7 +125,7 @@ void RHI::CreateCommandLists()
 
 void RHI::CreateFenceAndEvent()
 {
-	for (UINT i = 0; i < NumFramesInFlight; ++i)
+	for (UINT i = 0; i < EngineSettings::FramesInFlight; ++i)
 	{
 		m_FenceValues[i] = 0;
 	}
@@ -216,7 +216,7 @@ void RHI::Shutdown()
 {
 	m_CmdListScene.Reset();
 
-	for (UINT i = 0; i < NumFramesInFlight; ++i)
+	for (UINT i = 0; i < EngineSettings::FramesInFlight; ++i)
 	{
 		m_CmdAllocatorScene[i].Reset();
 		m_FenceValues[i] = 0;

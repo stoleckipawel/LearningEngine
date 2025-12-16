@@ -34,7 +34,7 @@ ComPtr<ID3D12Resource2> UploadBuffer::Upload(void* data, uint32_t dataSize)
 		"Failed to create upload buffer"
 	);
 
-	uploadBuffer->SetName(L"RHI_UploadBuffer");
+	DebugUtils::SetDebugName(uploadBuffer, L"RHI_UploadBuffer");
 	// Map the buffer and copy the data
 	void* mappedData = nullptr;
 	D3D12_RANGE readRange = { 0, 0 }; // We do not intend to read from this resource on CPU

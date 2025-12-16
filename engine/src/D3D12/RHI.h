@@ -52,11 +52,11 @@ private:
 	ComPtr<IDXGIAdapter1> m_Adapter = nullptr;
 	ComPtr<ID3D12Device10> m_Device = nullptr;
 	ComPtr<ID3D12CommandQueue> m_CmdQueue = nullptr;
-	ComPtr<ID3D12CommandAllocator> m_CmdAllocatorScene[NumFramesInFlight] = {};
+	ComPtr<ID3D12CommandAllocator> m_CmdAllocatorScene[EngineSettings::FramesInFlight] = {};
 	ComPtr<ID3D12GraphicsCommandList7> m_CmdListScene = nullptr;
 
 	// Fence values for each frame in flight
-	UINT64 m_FenceValues[NumFramesInFlight] = { 0 };
+	UINT64 m_FenceValues[EngineSettings::FramesInFlight] = { 0 };
 	// Next fence value to signal
 	UINT64 m_NextFenceValue = 1;
 	// Fence for GPU/CPU synchronization

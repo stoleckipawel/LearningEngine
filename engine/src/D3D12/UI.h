@@ -1,4 +1,6 @@
 #pragma once
+
+#if USE_GUI
 class UI
 {
 public:
@@ -28,5 +30,8 @@ private:
 
 // Global UI instance used by the engine.
 extern UI GUI;
+#endif
+
+
 
 

@@ -51,5 +51,6 @@
 using namespace DirectX;
 using namespace Microsoft::WRL;
 
-// Error handling utilities
 #include "Error.h"
+#include "D3D12/DebugUtils.h"
+#include "EngineConfig.h"

@@ -162,7 +162,7 @@ protected:
     UINT m_indexCount = 0; ///< Number of indices in the index buffer
 
     // Per-frame constant buffers
-    std::unique_ptr<ConstantBuffer<FVertexConstantBufferData>> VertexConstantBuffer[NumFramesInFlight];
-    std::unique_ptr<ConstantBuffer<PixelConstantBufferData>> PixelConstantBuffer[NumFramesInFlight];
+    std::unique_ptr<ConstantBuffer<FVertexConstantBufferData>> VertexConstantBuffer[EngineSettings::FramesInFlight];
+    std::unique_ptr<ConstantBuffer<PixelConstantBufferData>> PixelConstantBuffer[EngineSettings::FramesInFlight];
 };
 

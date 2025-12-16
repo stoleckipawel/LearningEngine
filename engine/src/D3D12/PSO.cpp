@@ -179,7 +179,7 @@ PSO::PSO(Primitive& vertecies, RootSignature& rootSignature, ShaderCompiler& ver
 		LogMessage(buf, ELogType::Fatal);
 	}
 
-	m_pso->SetName(L"RHI_PipelineState");
+	DebugUtils::SetDebugName(m_pso, L"RHI_PipelineState");
 }
 
 PSO::~PSO()

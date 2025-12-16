@@ -57,7 +57,7 @@ endif()
 # --- PCH setup ---
 target_precompile_headers(Engine
     PRIVATE
-      include/PCH.h
+      src/PCH.h
 )
 
 # Set ENGINE_PATH environment variable for engine

@@ -13,7 +13,7 @@ DescriptorHeap::DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_DESCRIPTOR
 	ThrowIfFailed(GRHI.GetDevice()->CreateDescriptorHeap(
 		&m_desc,
 		IID_PPV_ARGS(m_heap.ReleaseAndGetAddressOf())), "Failed To Create Descriptor Heap");
-	m_heap->SetName(name);
+	DebugUtils::SetDebugName(m_heap, name);
 }
 
 DescriptorHeap::~DescriptorHeap() noexcept

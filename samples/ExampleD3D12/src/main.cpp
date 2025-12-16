@@ -1,4 +1,3 @@
-#include "PCH.h"
 #include "App.h"
 
 // Example D3D12 app demonstrating engine lifecycle hooks.

@@ -33,7 +33,9 @@ void Renderer::Initialize()
     GatherPrimitives();
     m_pso = std::make_unique<PSO>(m_primitiveFactory->GetFirstPrimitive(), *m_rootSignature, *m_vertexShader, *m_pixelShader);
     CreateFrameBuffers();
+#if USE_GUI
     GUI.Initialize();
+#endif
     PostLoad();
 }
 
@@ -172,7 +174,9 @@ void Renderer::PopulateCommandList()
         GRHI.GetCommandList()->DrawIndexedInstanced(primitive->GetIndexCount(), 1, 0, 0, 0);
     }
 
+#if USE_GUI
     GUI.Render();
+#endif
 
     // Prepare for present
     // Transition depth buffer to read state before presenting
@@ -195,7 +199,9 @@ void Renderer::OnUpdate()
 {
     m_FrameInFlightIndex++;
     m_primitiveFactory->UpdateConstantBuffers();
-    GUI.Update(0.0f);  
+#if USE_GUI
+    GUI.Update(0.0f);
+#endif
 }
 
 // -----------------------------------------------------------------------------

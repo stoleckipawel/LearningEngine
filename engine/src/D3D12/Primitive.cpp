@@ -8,7 +8,7 @@
 Primitive::Primitive(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale)
     : Translation(translation), Rotation(rotation), Scale(scale)
 {
-    for (size_t i = 0; i < NumFramesInFlight; ++i)
+    for (size_t i = 0; i < EngineSettings::FramesInFlight; ++i)
     {
         VertexConstantBuffer[i] = std::make_unique<ConstantBuffer<FVertexConstantBufferData>>();
         PixelConstantBuffer[i] = std::make_unique<ConstantBuffer<PixelConstantBufferData>>();

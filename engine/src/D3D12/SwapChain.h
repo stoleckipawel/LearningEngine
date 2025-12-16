@@ -11,9 +11,7 @@
 #include <dxgi1_6.h>
 #include <wrl/client.h>
 #include "D3D12/DescriptorHandle.h"
-
-// Number of frames that can be processed simultaneously
-static const UINT NumFramesInFlight = 2;
+#include "EngineConfig.h"
 
 // SwapChain manages the Direct3D 12 swap chain and its associated render targets.
 class SwapChain
@@ -49,12 +47,12 @@ public:
 	// Returns the default scissor rectangle for rendering
 	D3D12_RECT GetDefaultScissorRect();
 	// Returns the DXGI format used for back buffers
-	DXGI_FORMAT GetBackBufferFormat() const { return m_backBufferFormat; }
+	DXGI_FORMAT GetBackBufferFormat() const { return EngineSettings::BackBufferFormat; }
 
 	// Feature flag helpers
 	UINT GetAllowTearingFlag() const; // queries DXGI and returns DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING if supported
 	// Returns DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT when applicable
-	UINT GetFrameLatencyWaitableFlag() const { return (NumFramesInFlight > 1) ? DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT : 0u; }
+	UINT GetFrameLatencyWaitableFlag() const { return (EngineSettings::FramesInFlight > 1) ? DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT : 0u; }
 	UINT ComputeSwapChainFlags() const; // aggregates all feature flags
 private:
 	// Current back buffer index
@@ -62,11 +60,9 @@ private:
 	// Swap chain interface
 	Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain = nullptr;
 	// Array of render target resources (one per frame)
-	Microsoft::WRL::ComPtr<ID3D12Resource2> m_buffers[NumFramesInFlight];
+	Microsoft::WRL::ComPtr<ID3D12Resource2> m_buffers[EngineSettings::FramesInFlight];
 	// Array of RTV descriptor handles (allocated via manager)
-	DescriptorHandle m_rtvHandles[NumFramesInFlight];
-	// Back buffer format used by the swap chain
-	DXGI_FORMAT m_backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+	DescriptorHandle m_rtvHandles[EngineSettings::FramesInFlight];
 	HANDLE m_WaitableObject = nullptr;	
 private:
 	// Creates render target views for all swap chain buffers

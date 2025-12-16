@@ -44,7 +44,7 @@ void Texture::CreateResource()
 			IID_PPV_ARGS(m_textureResource.ReleaseAndGetAddressOf())),
 		"Failed To Create Texture Resource"
 	);
-	m_textureResource->SetName(L"RHI_Texture");
+	DebugUtils::SetDebugName(m_textureResource, L"RHI_Texture");
 
 	// Calculate required size for the upload buffer
 	UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_textureResource.Get(), 0, 1); // Update when adding mipmaps

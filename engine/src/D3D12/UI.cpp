@@ -4,10 +4,13 @@
 #include "Window.h"
 #include "D3D12/RHI.h"
 #include "D3D12/DescriptorHeapManager.h"
+
+
+
+#if USE_GUI
 #include <imgui.h>
 #include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_dx12.h>
-
 // Global UI instance used by the engine
 UI GUI;
 
@@ -46,11 +49,10 @@ void UI::Initialize()
     // Initialize platform backend with the window handle.
     ImGui_ImplWin32_Init(GWindow.WindowHWND);
 
- 
     ImGui_ImplDX12_InitInfo init_info = {};
     init_info.Device = GRHI.GetDevice().Get();
     init_info.CommandQueue = GRHI.GetCommandQueue().Get();
-    init_info.NumFramesInFlight = NumFramesInFlight;
+    init_info.NumFramesInFlight = static_cast<int>(EngineSettings::FramesInFlight);
     init_info.RTVFormat = GSwapChain.GetBackBufferFormat();
     init_info.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
     init_info.SrvDescriptorHeap = GDescriptorHeapManager.GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)->GetRaw();
@@ -130,3 +132,4 @@ void UI::SetupDPIScaling()
     // Bake a fixed style scale until dynamic style scaling is supported.
     style.ScaleAllSizes(mainScale);
 }
+#endif
