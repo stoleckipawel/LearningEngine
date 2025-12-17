@@ -9,22 +9,44 @@
 
 // Compile-time toggle to completely exclude GUI from builds when set to 0.
 #ifndef USE_GUI
-    #define USE_GUI 1
+#define USE_GUI 1
 #endif
+
+// Shader compilation helpers. These are enabled by default for debug builds
+// to include extra debug info and to ease shader debugging. 
+#if defined(_DEBUG)
+#define ENGINE_SHADERS_OPTIMIZED 1
+#define ENGINE_SHADERS_DEBUG 1
+#endif
+
+// Enable GPU validation (D3D12/DXGI SDK layers). On in debug builds by default.
+#if defined(_DEBUG)
+#define ENGINE_GPU_VALIDATION 1
+#endif
+
+// Report live D3D/DXGI objects at shutdown (useful for leak detection).
+#if defined(_DEBUG)
+#define ENGINE_REPORT_LIVE_OBJECTS 1
+#endif
+
 
 namespace EngineSettings
 {
     // Number of frames that can be processed simultaneously (frames in flight).
-    // Increase to reduce CPU-GPU synchronization stalls at the cost of higher memory usage and latency.
+    // Increasing this reduces CPU-GPU synchronization but increases latency and
+    // memory usage because more per-frame resources are required.
     inline constexpr unsigned FramesInFlight = 2u;
 
     // Back buffer format
     inline constexpr DXGI_FORMAT BackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-    // Presentation (runtime toggle)
-    inline bool VSync = true;                    // SwapChain::Present will use vsync when true
+    // Presentation: when true, `SwapChain::Present` uses
+    // vertical-sync. Setting to false allows uncapped presents (or tearing
+    // if supported) and can reduce latency for benchmarking.
+    inline bool VSync = true;
 
-    // Window (runtime)
+    // Start the application fullscreen when true.
     inline bool StartFullscreen = false;
+    // Initial window title; application code may modify at runtime.
     inline std::string WindowTitle = "PlaygroundEngine";
 }

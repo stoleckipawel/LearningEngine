@@ -3,11 +3,11 @@
 #include "D3D12/DebugLayer.h"
 #include "D3D12/RHI.h"
 
-#ifdef _DEBUG
+#if ENGINE_GPU_VALIDATION
 	// Global debug layer instance
 	DebugLayer GDebugLayer;
 
-	// Initializes the Direct3D 12 and DXGI debug layers (only in debug builds)
+	// Initializes the Direct3D 12 and DXGI debug layers
 	void DebugLayer::Initialize()
 	{
 		// Enable D3D12 and DXGI debug layers for validation and leak tracking.
@@ -64,7 +64,7 @@
 		}
 	}
 
-	// Shuts down the debug layers and reports live objects (only in debug builds).
+	// Shuts down the debug layers and reports live objects.
 	// Call before device destruction to catch leaks and report live objects.
 	void DebugLayer::Shutdown()
 	{
@@ -76,7 +76,7 @@
 	// Reports live D3D12 device objects (must be called before device is Reset).
 	void DebugLayer::ReportLiveDeviceObjects()
 	{
-	#if defined(REPORT_LIVE_OBJECTS)
+	#if ENGINE_REPORT_LIVE_OBJECTS
 		ComPtr<ID3D12DebugDevice> debugDevice;
 		if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(debugDevice.ReleaseAndGetAddressOf()))))
 		{
@@ -89,7 +89,7 @@
 	// Reports DXGI live objects (factory, adapters, swapchains).
 	void DebugLayer::ReportLiveDXGIObjects()
 	{
-	#if defined(REPORT_LIVE_OBJECTS)
+	#if ENGINE_REPORT_LIVE_OBJECTS
 		if (m_dxgiDebug)
 		{
 			OutputDebugStringW(L"DXGI Live Objects (all flags):\n");

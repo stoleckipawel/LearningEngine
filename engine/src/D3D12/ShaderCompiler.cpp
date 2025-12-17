@@ -150,11 +150,15 @@ void ShaderCompiler::CompileShader(const std::string& model, const std::string& 
         DXC_ARG_WARNINGS_ARE_ERRORS, // Treat warnings as errors
         L"-Qstrip_reflect",    // Strip reflection data into a separate blob
         L"-Qstrip_debug",      // Strip debug info from output
-    #if defined(_DEBUG)
+    
+    #if defined(ENGINE_SHADERS_DEBUG)
         DXC_ARG_DEBUG,          // Enable debug info (full format)
-        DXC_ARG_SKIP_OPTIMIZATIONS // Skip optimizations for easier debugging
+    #endif    
+
+    #if defined(ENGINE_SHADERS_OPTIMIZED)    
+        DXC_ARG_OPTIMIZATION_LEVEL3, // Enable full optimizations for release    
     #else
-        DXC_ARG_OPTIMIZATION_LEVEL3 // Enable full optimizations for reset
+        DXC_ARG_SKIP_OPTIMIZATIONS, // Skip optimizations for easier debugging
     #endif
         };
 
