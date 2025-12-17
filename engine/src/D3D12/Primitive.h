@@ -8,21 +8,13 @@
 // Constant buffer and vertex data structures
 //------------------------------------------------------------------------------
 
-/**
- * @brief Per-pixel constant buffer data (aligned to 256 bytes for D3D12)
- *
- * Used to pass color and other per-pixel data to the pixel shader.
- */
+// Per-pixel constant buffer data (aligned to 256 bytes). Used by the pixel shader.
 struct alignas(256) PixelConstantBufferData
 {
     XMFLOAT4 Color;           // RGBA color
 };
 
-/**
- * @brief Per-vertex constant buffer data (aligned to 256 bytes for D3D12)
- *
- * Used to pass transformation matrices to the vertex shader.
- */
+// Per-vertex constant buffer data (aligned to 256 bytes). Holds matrices for the vertex shader.
 struct alignas(256) FVertexConstantBufferData
 {
     XMFLOAT4X4 WorldMTX;      // World transformation matrix
@@ -31,11 +23,7 @@ struct alignas(256) FVertexConstantBufferData
     XMFLOAT4X4 WorldViewProjMTX; // Combined World-View-Projection matrix
 };
 
-/**
- * @brief Vertex structure for geometry
- *
- * Contains position, texture coordinates, and color for each vertex.
- */
+// Vertex structure for geometry: position, UV, and color.
 struct Vertex
 {
     XMFLOAT3 position; // Vertex position (x, y, z)
@@ -44,23 +32,11 @@ struct Vertex
 };
 
 
-/**
- * @brief Base class for all renderable primitives (geometry objects).
- *
- * Handles uploading, releasing, and binding geometry resources for rendering.
- * Extend this class to implement custom shapes by providing vertex/index data.
- */
+// Base class for renderable primitives. Handles upload/binding and per-frame resources.
 class Primitive
 {
 public:
-    /**
-     * @brief Construct a new Primitive object
-     * @param translation Initial translation (position) in world space
-     * @param rotation Initial rotation (Euler angles, radians)
-     * @param scale Initial scale
-     *
-     * All parameters default to identity (no translation, no rotation, unit scale).
-     */
+    // Construct a new Primitive. translation/rotation/scale default to identity (no transform).
     Primitive(
         const XMFLOAT3& translation = {0.0f, 0.0f, 0.0f},
         const XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
@@ -71,87 +47,50 @@ public:
     XMFLOAT3 Rotation = {0.0f, 0.0f, 0.0f};    ///< Euler angles in radians
     XMFLOAT3 Scale = {1.0f, 1.0f, 1.0f};       ///< Local scale
 
-    /**
-     * @brief Computes the world transformation matrix from TRS.
-     * @return XMMATRIX The world matrix.
-     */
+    // Compute the world transformation matrix from TRS and return it.
     XMMATRIX GetWorldMatrix() const;
 
-    /**
-     * @brief Updates all constant buffers for this primitive (vertex & pixel).
-     */
+    // Update all constant buffers for this primitive (vertex & pixel).
     void UpdateConstantBuffers();
 
-    /**
-     * @brief Get the vertex constant buffer for the current frame.
-     */
+    // Get the vertex constant buffer for the current frame.
     ConstantBuffer<FVertexConstantBufferData>* GetVertexConstantBuffer() { return VertexConstantBuffer[GSwapChain.GetFrameInFlightIndex()].get(); }
 
-    /**
-     * @brief Get the pixel constant buffer for the current frame.
-     */
+    // Get the pixel constant buffer for the current frame.
     ConstantBuffer<PixelConstantBufferData>* GetPixelConstantBuffer() { return PixelConstantBuffer[GSwapChain.GetFrameInFlightIndex()].get(); }
 
-    /**
-     * @brief Get the number of indices in the index buffer.
-     */
+    // Return the number of indices in the index buffer.
     UINT GetIndexCount() const { return m_indexCount; }
 
-    /**
-     * @brief Sets geometry buffers and topology for rendering.
-     * Override to bind additional resources if needed.
-     */
+    // Set geometry buffers and topology for rendering. Override to bind more resources.
     virtual void Set();
 
-    /**
-     * @brief Returns the input layout for the vertex structure.
-     * Override to provide custom layouts.
-     */
+    // Return the input layout for the vertex structure. Override to customize.
     virtual std::vector<D3D12_INPUT_ELEMENT_DESC> GetVertexLayout();
 
-    /**
-     * @brief Creates a resource description for a vertex buffer.
-     * @param VertexCount Number of vertices.
-     * @return D3D12_RESOURCE_DESC Resource description.
-     */
+    // Create a D3D12 resource description for a vertex buffer with VertexCount vertices.
     virtual D3D12_RESOURCE_DESC CreateVertexBufferDesc(uint32_t VertexCount);
 
-    /**
-     * @brief Uploads both vertex and index buffers to the GPU.
-     */
+    // Upload both vertex and index buffers to the GPU.
     void Upload();
 
 protected:
-    /**
-     * @brief Must be implemented by derived classes to provide mesh vertex data.
-     * @param outVertices Output vector to be filled with vertex data.
-     */
+    // Must be implemented by derived classes to populate mesh vertex data into outVertices.
     virtual void GenerateVertices(std::vector<Vertex>& outVertices) const = 0;
 
-    /**
-     * @brief Must be implemented by derived classes to provide mesh index data.
-     * @param outIndices Output vector to be filled with index data.
-     */
+    // Must be implemented by derived classes to populate mesh index data into outIndices.
     virtual void GenerateIndices(std::vector<DWORD>& outIndices) const = 0;
 
-    /**
-     * @brief Uploads the vertex buffer for the geometry.
-     */
+    // Upload the vertex buffer for the geometry.
     void UploadVertexBuffer();
 
-    /**
-     * @brief Uploads the index buffer for the geometry.
-     */
+    // Upload the index buffer for the geometry.
     void UploadIndexBuffer();
 
-    /**
-     * @brief Updates the vertex constant buffer for the current frame.
-     */
+    // Update the vertex constant buffer for the current frame.
     void UpdateVertexConstantBuffer();
 
-    /**
-     * @brief Updates the pixel constant buffer for the current frame.
-     */
+    // Update the pixel constant buffer for the current frame.
     void UpdatePixelConstantBuffer();
 
     // GPU resources and views

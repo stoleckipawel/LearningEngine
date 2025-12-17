@@ -4,17 +4,13 @@
 #include "DescriptorHeap.h"
 #include "DescriptorAllocator.h"
 
-/**
- * Manages all descriptor heaps required by the engine.
- *
- * This class encapsulates creation, binding, and Reset of descriptor heaps for:
- * - CBV/SRV/UAV (shader visible)
- * - Sampler (shader visible)
- * - Depth Stencil View (DSV)
- * - Render Target View (RTV)
- *
- * Provides accessors for each heap and methods for initialization, binding, and cleanup.
- */
+// Manages all descriptor heaps required by the engine.
+// Encapsulates creation, binding, reset, and cleanup for:
+// - CBV/SRV/UAV (shader visible)
+// - Sampler (shader visible)
+// - Depth Stencil View (DSV)
+// - Render Target View (RTV)
+// Provides accessors and lifecycle methods.
 class DescriptorHeapManager
 {
 public:
