@@ -205,7 +205,8 @@ void Renderer::OnUpdate()
     // Update the global time source and feed UI with delta
     gTimer.Tick();
 #if USE_GUI
-    GUI.Update(gTimer.GetDeltaSeconds());
+    // Pass seconds to UI which expects seconds-precision delta
+    GUI.Update();
 #endif
 }
 

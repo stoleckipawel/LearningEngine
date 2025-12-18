@@ -68,10 +68,10 @@ void UI::Initialize()
 }
 
 // Begins an ImGui frame. Updates delta time and display size; binds heaps.
-void UI::NewFrame(double deltaSeconds)
+void UI::NewFrame()
 {
     ImGuiIO& io = ImGui::GetIO();
-    io.DeltaTime = deltaSeconds > 0.0 ? static_cast<float>(deltaSeconds) : io.DeltaTime; // Preserve previous if not provided.
+    io.DeltaTime = gTimer.GetDelta(TimeUnit::Seconds);
     io.DisplaySize = ImVec2(GWindow.GetWidth(), GWindow.GetHeight());
 
     ImGui_ImplDX12_NewFrame();
@@ -106,9 +106,9 @@ void UI::Build()
     ImGui::Render();    
 }
 
-void UI::Update(double deltaSeconds)
+void UI::Update()
 {
-    NewFrame(deltaSeconds);
+    NewFrame();
     Build();
 }
 

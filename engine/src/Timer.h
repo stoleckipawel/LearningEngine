@@ -7,6 +7,22 @@ using Clock     = std::chrono::steady_clock;       // monotonic clock
 using TimePoint = Clock::time_point;               // point in time from Clock
 using Rep  = std::chrono::duration<double>;   // seconds (double precision)
 
+// Units supported by the API. Default is Milliseconds for convenient UI/workers.
+enum class TimeUnit : uint8_t { Seconds, Milliseconds, Microseconds, Nanoseconds };
+
+// Convert a Rep duration to a double value in the requested unit.
+static inline double RepToUnit(const Rep &d, TimeUnit u) noexcept
+{
+    switch (u) 
+    {
+        case TimeUnit::Seconds:     return d.count();
+        case TimeUnit::Milliseconds:return d.count() * 1e3;
+        case TimeUnit::Microseconds:return d.count() * 1e6;
+        case TimeUnit::Nanoseconds: return d.count() * 1e9;
+        default: return d.count();
+    }
+}
+
 // FrameInfo is a compact snapshot describing the current frame timing.
 struct TimeInfo
 {
@@ -29,17 +45,15 @@ public:
 
     // Queries
     TimeInfo GetTimeInfo() const { return m_timeInfo; }
-    Rep GetDelta() const { return m_timeInfo.scaledDelta; }
-    Rep GetUnscaledDelta() const { return m_unscaledDelta; }
+    // Raw duration accessors (Rep) for low-level consumers
+    Rep GetDeltaRaw() const { return m_timeInfo.scaledDelta; }
+    Rep GetUnscaledDeltaRaw() const { return m_unscaledDelta; }
     uint64_t GetFrameCount() const { return m_frameCount; }    
 
-    // Conversions
-    double GetDeltaSeconds() const { return GetDelta().count(); }
-    double GetUnscaledDeltaSeconds() const { return GetUnscaledDelta().count(); }
-    double GetDeltaMillis() const { return GetDelta().count() * 1000.0; }
-    double GetUnscaledDeltaMillis() const { return GetUnscaledDelta().count() * 1000.0; }
-    double GetTotalTimeSeconds() const { return m_unscaledTotal.count(); }
-    double GetTotalTimeMillis() const { return m_unscaledTotal.count() * 1000.0; }
+    // Unified accessors returning a double in requested unit (default ms)
+    double GetDelta(TimeUnit unit = TimeUnit::Milliseconds) const { return RepToUnit(GetDeltaRaw(), unit); }
+    double GetUnscaledDelta(TimeUnit unit = TimeUnit::Milliseconds) const { return RepToUnit(GetUnscaledDeltaRaw(), unit); }
+    double GetTotalTime(TimeUnit unit = TimeUnit::Milliseconds) const { return RepToUnit(m_unscaledTotal, unit); }
 
     // Controls
     void SetTimeScale(double s) { m_timeScale = s; }

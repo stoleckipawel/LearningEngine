@@ -12,13 +12,13 @@ public:
     // Forwards Win32 messages to ImGui. Returns true if handled.
     bool OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-    void Update(double deltaSeconds);
+    void Update();
 
     // Submits ImGui draw data to the current DX12 command list.
     void Render();
 private:
     // Begins an ImGui frame. Updates delta time and display size.
-    void NewFrame(double deltaSeconds);
+    void NewFrame();
     // Builds a simple FPS overlay in the top-right corner.
     void BuildFPSOverlay();
     // Builds demo/UI content and finalizes draw data.
