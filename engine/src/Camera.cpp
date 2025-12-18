@@ -1,6 +1,6 @@
 #include "PCH.h"
-#include "D3D12/Camera.h"
-#include "D3D12/SwapChain.h"
+#include "Camera.h"
+#include "SwapChain.h"
 
 using namespace DirectX;
 

@@ -1,8 +1,3 @@
-
-#pragma once
-
-// Precompiled header for Windows/DirectX engine
-
 // Windows macros
 #define NOMINMAX
 #ifndef WIN32_LEAN_AND_MEAN
@@ -10,6 +5,7 @@
 #endif
 
 // Standard library
+#include <chrono>
 #include <cstdlib>
 #include <vector>
 #include <filesystem>
@@ -52,5 +48,4 @@ using namespace DirectX;
 using namespace Microsoft::WRL;
 
 #include "Error.h"
-#include "D3D12/DebugUtils.h"
 #include "EngineConfig.h"

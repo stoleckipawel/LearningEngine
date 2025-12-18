@@ -1,6 +1,6 @@
 #include "PCH.h"
-#include "D3D12/DescriptorHandle.h"
-#include "D3D12/RHI.h"
+#include "DescriptorHandle.h"
+#include "RHI.h"
 
 // Constructs a descriptor handle for a given heap type and index.
 // Computes CPU/GPU handles using heap start and device increment size.

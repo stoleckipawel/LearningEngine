@@ -1,7 +1,8 @@
 
 #include "PCH.h"
-#include "D3D12/Texture.h"
-#include "D3D12/DescriptorHeapManager.h"
+#include "Texture.h"
+#include "DescriptorHeapManager.h"
+#include "DebugUtils.h"
 
 // Loads the texture from disk and creates all required GPU resources.
 // Allocates an SRV descriptor from the CBV/SRV/UAV heap.

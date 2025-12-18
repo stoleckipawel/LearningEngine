@@ -1,6 +1,6 @@
 #pragma once
 
-#include "D3D12/Primitive.h"
+#include "Primitive.h"
 
 // PrimitivePlane — a simple 2D plane primitive for rendering (XZ plane). Inherits from Primitive.
 class PrimitivePlane : public Primitive 

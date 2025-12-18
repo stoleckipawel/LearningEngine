@@ -1,7 +1,7 @@
 
 #include "PCH.h"
-#include "D3D12/DebugLayer.h"
-#include "D3D12/RHI.h"
+#include "DebugLayer.h"
+#include "RHI.h"
 
 #if ENGINE_GPU_VALIDATION
 	// Global debug layer instance

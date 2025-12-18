@@ -10,6 +10,7 @@
 // Compile-time toggle to completely exclude GUI from builds when set to 0.
 #ifndef USE_GUI
 #define USE_GUI 1
+//#define USE_IMGUI_DEMO_WINDOW 1
 #endif
 
 // Shader compilation helpers. These are enabled by default for debug builds

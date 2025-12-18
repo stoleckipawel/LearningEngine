@@ -1,7 +1,8 @@
 #include "PCH.h"
-#include "D3D12/DepthStencil.h"
+#include "DepthStencil.h"
 #include "Window.h"
-#include "D3D12/DescriptorHeapManager.h"
+#include "DescriptorHeapManager.h"
+#include "DebugUtils.h"
 
 // Constructs and initializes the depth stencil resource and view
 DepthStencil::DepthStencil()

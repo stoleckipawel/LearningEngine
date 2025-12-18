@@ -10,7 +10,7 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl/client.h>
-#include "D3D12/DescriptorHandle.h"
+#include "DescriptorHandle.h"
 #include "EngineConfig.h"
 
 // SwapChain manages the Direct3D 12 swap chain and its associated render targets.

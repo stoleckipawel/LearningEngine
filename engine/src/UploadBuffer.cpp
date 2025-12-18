@@ -1,5 +1,6 @@
 #include "PCH.h"
-#include "D3D12/UploadBuffer.h"
+#include "UploadBuffer.h"
+#include "DebugUtils.h"
 
 // Uploads data to a GPU-accessible buffer using an upload heap.
 // Returns a ComPtr to the created ID3D12Resource2 buffer.

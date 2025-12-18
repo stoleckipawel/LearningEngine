@@ -1,8 +1,8 @@
 
 #pragma once
-#include "D3D12/TextureLoader.h"
+#include "TextureLoader.h"
 #include "RHI.h"
-#include "D3D12/DescriptorHandle.h"
+#include "DescriptorHandle.h"
 
 // Texture class manages loading, uploading, and resource creation for a 2D texture in Direct3D 12.
 class Texture 

@@ -1,8 +1,9 @@
 #include "PCH.h"
-#include "D3D12/SwapChain.h"
+#include "SwapChain.h"
 #include "Window.h"
-#include "D3D12/RHI.h"
-#include "D3D12/DescriptorHeapManager.h"
+#include "RHI.h"
+#include "DescriptorHeapManager.h"
+#include "DebugUtils.h"
 
 SwapChain GSwapChain;
 

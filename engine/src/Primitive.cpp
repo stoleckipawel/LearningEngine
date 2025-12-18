@@ -1,6 +1,6 @@
 #include "PCH.h"
-#include "D3D12/Primitive.h"
-#include "D3D12/UploadBuffer.h"
+#include "Primitive.h"
+#include "UploadBuffer.h"
 #include "SwapChain.h"
 #include "Camera.h"
 

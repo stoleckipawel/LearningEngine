@@ -1,6 +1,6 @@
 
 #include "PCH.h"
-#include "D3D12/PrimitiveFactory.h"
+#include "PrimitiveFactory.h"
 
 void PrimitiveFactory::UpdateConstantBuffers()
 {

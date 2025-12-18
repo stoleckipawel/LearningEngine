@@ -1,6 +1,6 @@
 #pragma once
 
-#include "D3D12/Primitive.h"
+#include "Primitive.h"
 
 // PrimitiveBox — a 3D cube/box primitive for rendering. Inherits from Primitive.
 // Provides mesh data for a unit cube centered at the origin.

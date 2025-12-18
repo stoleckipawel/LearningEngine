@@ -2,8 +2,9 @@
 #include "PCH.h"
 #include "UI.h"
 #include "Window.h"
-#include "D3D12/RHI.h"
-#include "D3D12/DescriptorHeapManager.h"
+#include "RHI.h"
+#include "DescriptorHeapManager.h"
+#include "Timer.h"
 
 
 
@@ -67,10 +68,10 @@ void UI::Initialize()
 }
 
 // Begins an ImGui frame. Updates delta time and display size; binds heaps.
-void UI::NewFrame(float deltaSeconds)
+void UI::NewFrame(double deltaSeconds)
 {
     ImGuiIO& io = ImGui::GetIO();
-    io.DeltaTime = deltaSeconds > 0.0f ? deltaSeconds : io.DeltaTime; // Preserve previous if not provided.
+    io.DeltaTime = deltaSeconds > 0.0 ? static_cast<float>(deltaSeconds) : io.DeltaTime; // Preserve previous if not provided.
     io.DisplaySize = ImVec2(GWindow.GetWidth(), GWindow.GetHeight());
 
     ImGui_ImplDX12_NewFrame();
@@ -82,27 +83,30 @@ void UI::NewFrame(float deltaSeconds)
 void UI::BuildFPSOverlay()
 {
     ImGuiIO& io = ImGui::GetIO();
-    const float panelWidth = 220.0f;
+    const float panelWidth = 250.0f;
     ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - panelWidth, 0.0f), ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(panelWidth, 100.0f), ImGuiCond_Always);
     ImGui::Begin("Stats", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
     ImGui::Text("FPS: %.1f", io.Framerate);
-    ImGui::Text("Frame: %.2f ms", 1000.0f / io.Framerate);
+    ImGui::Text("FrameTime: %.2f ms", io.DeltaTime * 1000.0f);
+    ImGui::Text("FrameIndex: %llu", static_cast<unsigned long long>(gTimer.GetFrameCount()));
     ImGui::End();
 }
 
 // Builds demo UI and finalizes draw data for this frame.
 void UI::Build()
 {
-    //BuildFPSOverlay();
+    BuildFPSOverlay();
 
-    bool showDemoWindow = true;
-    ImGui::ShowDemoWindow(&showDemoWindow);
+    #if USE_IMGUI_DEMO_WINDOW
+        bool showDemoWindow = true;
+        ImGui::ShowDemoWindow(&showDemoWindow);
+    #endif
 
     ImGui::Render();    
 }
 
-void UI::Update(float deltaSeconds)
+void UI::Update(double deltaSeconds)
 {
     NewFrame(deltaSeconds);
     Build();

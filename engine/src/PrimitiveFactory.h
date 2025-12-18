@@ -3,9 +3,9 @@
 
 #include <memory>
 #include <vector>
-#include "D3D12/Primitive.h"
-#include "D3D12/PrimitiveBox.h"
-#include "D3D12/PrimitivePlane.h"
+#include "Primitive.h"
+#include "PrimitiveBox.h"
+#include "PrimitivePlane.h"
 
 // Factory for creating and managing renderable primitives; append, upload, and update them.
 class PrimitiveFactory {

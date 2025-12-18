@@ -1,7 +1,7 @@
 #include "PCH.h"
 #include "Window.h"
 #include "Renderer.h"
-#include "D3D12/RHI.h"
+#include "RHI.h"
 #include "UI.h"
 #include "EngineConfig.h"
 

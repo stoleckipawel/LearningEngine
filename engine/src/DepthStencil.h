@@ -1,7 +1,7 @@
 #pragma once
 
 #include "RHI.h"
-#include "D3D12/DescriptorHandle.h"
+#include "DescriptorHandle.h"
 
 // DepthStencil manages a depth-stencil buffer resource and its view for Direct3D 12 rendering.
 class DepthStencil 

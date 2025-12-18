@@ -1,7 +1,7 @@
 
 #include "PCH.h"
-#include "D3D12/RootSignature.h"
-
+#include "RootSignature.h"
+#include "DebugUtils.h"
 
 RootSignature::RootSignature()
 {

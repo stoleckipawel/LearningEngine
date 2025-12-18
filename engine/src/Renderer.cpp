@@ -1,17 +1,18 @@
 #include "PCH.h"
 #include "Renderer.h"
-#include "D3D12/DebugLayer.h"
-#include "D3D12/RHI.h"
+#include "DebugLayer.h"
+#include "RHI.h"
 #include "Window.h"
-#include "D3D12/ShaderCompiler.h"
-#include "D3D12/Texture.h"
-#include "D3D12/PrimitiveFactory.h"
-#include "D3D12/PSO.h"
-#include "D3D12/RootSignature.h"
-#include "D3D12/ConstantBuffer.h"
-#include "D3D12/Sampler.h"
-#include "D3D12/DepthStencil.h"
-#include "D3D12/UI.h"
+#include "ShaderCompiler.h"
+#include "Texture.h"
+#include "PrimitiveFactory.h"
+#include "PSO.h"
+#include "RootSignature.h"
+#include "ConstantBuffer.h"
+#include "Sampler.h"
+#include "DepthStencil.h"
+#include "UI.h"
+#include "Timer.h"
 
 // Global renderer instance
 Renderer GRenderer;
@@ -197,10 +198,14 @@ void Renderer::CreateFrameBuffers()
 // -----------------------------------------------------------------------------
 void Renderer::OnUpdate()
 {
+    // Advance frame index for per-frame resources
     m_FrameInFlightIndex++;
     m_primitiveFactory->UpdateConstantBuffers();
+
+    // Update the global time source and feed UI with delta
+    gTimer.Tick();
 #if USE_GUI
-    GUI.Update(0.0f);
+    GUI.Update(gTimer.GetDeltaSeconds());
 #endif
 }
 

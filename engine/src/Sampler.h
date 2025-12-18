@@ -1,5 +1,5 @@
 #pragma once
-#include "D3D12/DescriptorHandle.h"
+#include "DescriptorHandle.h"
 
 // Sampler class manages a D3D12 sampler and its descriptor handles
 class Sampler
