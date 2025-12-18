@@ -71,7 +71,7 @@ void UI::Initialize()
 void UI::NewFrame()
 {
     ImGuiIO& io = ImGui::GetIO();
-    io.DeltaTime = gTimer.GetDelta(TimeUnit::Seconds);
+    io.DeltaTime = gTimer.GetDelta(Engine::TimeUnit::Seconds);
     io.DisplaySize = ImVec2(GWindow.GetWidth(), GWindow.GetHeight());
 
     ImGui_ImplDX12_NewFrame();

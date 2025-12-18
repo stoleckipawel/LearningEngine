@@ -1,92 +1,147 @@
+#pragma once
 #include <chrono>
 #include <atomic>
 #include <cstdint>
 
-// Primary clock types and aliases (still accessible from the namespace)
-using Clock     = std::chrono::steady_clock;       // monotonic clock
-using TimePoint = Clock::time_point;               // point in time from Clock
-using Rep  = std::chrono::duration<double>;   // seconds (double precision)
-
-// Units supported by the API. Default is Milliseconds for convenient UI/workers.
-enum class TimeUnit : uint8_t { Seconds, Milliseconds, Microseconds, Nanoseconds };
-
-// Convert a Rep duration to a double value in the requested unit.
-static inline double RepToUnit(const Rep &d, TimeUnit u) noexcept
+namespace Engine
 {
-    switch (u) 
+    // ─────────────────────────────────────────────────────────────────────────
+    // Clock types (internal). Kept inside namespace to avoid global pollution.
+    // ─────────────────────────────────────────────────────────────────────────
+    using Clock     = std::chrono::steady_clock;
+    using TimePoint = Clock::time_point;
+    using Duration  = std::chrono::duration<double>; // seconds, double-precision
+
+    // Supported time display units. Default is Milliseconds (convenient for UI).
+    enum class TimeUnit : uint8_t
     {
-        case TimeUnit::Seconds:     return d.count();
-        case TimeUnit::Milliseconds:return d.count() * 1e3;
-        case TimeUnit::Microseconds:return d.count() * 1e6;
-        case TimeUnit::Nanoseconds: return d.count() * 1e9;
-        default: return d.count();
-    }
-}
-
-// FrameInfo is a compact snapshot describing the current frame timing.
-struct TimeInfo
-{
-    uint64_t frameIndex = 0;        // 1-based frame counter
-    Rep unscaledTime  = Rep::zero(); // total wall time since Initialize
-    Rep unscaledDelta = Rep::zero(); // raw delta for this frame (seconds)
-    double   timeScale     = 1.0;   // game time scale multiplier
-    Rep scaledDelta   = Rep::zero(); // unscaledDelta * timeScale (0 if paused)
-    bool     paused = false;        // true if scaled time is paused
-};
-
-// Timer: singleton-style class (instance exposed as `gTimer`).
-class Timer
-{
-public:
-    Timer() noexcept;
-    // Initialization / per-frame
-    void Initialize();
-    void Tick();
-
-    // Queries
-    TimeInfo GetTimeInfo() const { return m_timeInfo; }
-    // Raw duration accessors (Rep) for low-level consumers
-    Rep GetDeltaRaw() const { return m_timeInfo.scaledDelta; }
-    Rep GetUnscaledDeltaRaw() const { return m_unscaledDelta; }
-    uint64_t GetFrameCount() const { return m_frameCount; }    
-
-    // Unified accessors returning a double in requested unit (default ms)
-    double GetDelta(TimeUnit unit = TimeUnit::Milliseconds) const { return RepToUnit(GetDeltaRaw(), unit); }
-    double GetUnscaledDelta(TimeUnit unit = TimeUnit::Milliseconds) const { return RepToUnit(GetUnscaledDeltaRaw(), unit); }
-    double GetTotalTime(TimeUnit unit = TimeUnit::Milliseconds) const { return RepToUnit(m_unscaledTotal, unit); }
-
-    // Controls
-    void SetTimeScale(double s) { m_timeScale = s; }
-    double GetTimeScale() const { return m_timeScale; }
-    void Pause() { m_paused = true; }
-    void Resume() { m_paused = false; }
-    bool IsPaused() const { return m_paused.load(std::memory_order_relaxed); }
-
-    // Stopwatch (nested for convenience)
-    struct Stopwatch
-    {
-        TimePoint start;
-        Stopwatch::Stopwatch() : start(Clock::now()) {}
-        void Stopwatch::Reset() { start = Clock::now(); }
-        Rep Stopwatch::Elapsed() const { return std::chrono::duration_cast<Rep>(Clock::now() - start); }
-        double Stopwatch::ElapsedSeconds() const { return Elapsed().count(); }
-        double Stopwatch::ElapsedMillis() const { return Elapsed().count() * 1000.0; }
+        Seconds,
+        Milliseconds,
+        Microseconds,
+        Nanoseconds
     };
-private:
-    TimePoint m_start;
-    TimePoint m_last;
-    Rep  m_unscaledDelta;
-    Rep  m_unscaledTotal;
-    Rep  m_scaledTotal;
-    double    m_timeScale;
-    std::atomic<bool> m_paused;
-    uint64_t  m_frameCount;
-    TimeInfo m_timeInfo;
-    std::atomic<bool> m_initialized;
-};
 
-// Global singleton instance
-extern Timer gTimer;
+    // ─────────────────────────────────────────────────────────────────────────
+    // TimeInfo: immutable snapshot of frame timing. Cheap to copy by value.
+    // ─────────────────────────────────────────────────────────────────────────
+    struct TimeInfo
+    {
+        uint64_t frameIndex   = 0;                  // 1-based frame counter
+        Duration unscaledTime = Duration::zero();   // total wall time since init
+        Duration unscaledDelta= Duration::zero();   // raw delta this frame (seconds)
+        double   timeScale    = 1.0;                // game-time multiplier
+        Duration scaledDelta  = Duration::zero();   // delta * timeScale (0 if paused)
+        bool     paused       = false;              // true when scaled time is paused
+    };
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Timer: authoritative frame-timing service for the engine.
+    //
+    // Responsibilities:
+    //   - Maintain a monotonic high-precision clock.
+    //   - Provide per-frame TimeInfo snapshot for subsystems.
+    //   - Offer unit-aware accessors (ms, s, µs, ns) for UI/profiling.
+    //
+    // Usage:
+    //   Call Tick() once per frame from the main loop before update/render.
+    //   Query GetTimeInfo() or GetDelta() from any subsystem that needs timing.
+    //
+    // Thread-safety:
+    //   Tick() must be called from the main thread only.
+    //   Pause/Resume use relaxed atomics; safe to call from other threads.
+    // ─────────────────────────────────────────────────────────────────────────
+    class Timer final
+    {
+    public:
+        Timer() noexcept;
+        ~Timer() = default;
+
+        // Non-copyable, non-movable (singleton pattern).
+        Timer(const Timer&) = delete;
+        Timer& operator=(const Timer&) = delete;
+        Timer(Timer&&) = delete;
+        Timer& operator=(Timer&&) = delete;
+
+        // Initialization. Called automatically on first Tick() if omitted.
+        void Initialize() noexcept;
+
+        // Advance clocks. Call once per rendered frame.
+        void Tick() noexcept;
+
+        // ─────────────────────────────────────────────────────────────────
+        // Queries
+        // ─────────────────────────────────────────────────────────────────
+
+        // Immutable snapshot of current frame timing.
+        [[nodiscard]] TimeInfo GetTimeInfo() const noexcept { return m_timeInfo; }
+
+        // Raw duration accessors for advanced/internal use.
+        [[nodiscard]] Duration GetDeltaRaw() const noexcept { return m_timeInfo.scaledDelta; }
+        [[nodiscard]] Duration GetUnscaledDeltaRaw() const noexcept { return m_unscaledDelta; }
+        [[nodiscard]] Duration GetTotalTimeRaw() const noexcept { return m_unscaledTotal; }
+
+        // Frame counter (1-based, incremented each Tick).
+        [[nodiscard]] uint64_t GetFrameCount() const noexcept { return m_frameCount; }
+
+        // ─────────────────────────────────────────────────────────────────
+        // Unit-aware accessors (default: Milliseconds)
+        // ─────────────────────────────────────────────────────────────────
+
+        [[nodiscard]] double GetDelta(TimeUnit unit = TimeUnit::Milliseconds) const noexcept;
+        [[nodiscard]] double GetUnscaledDelta(TimeUnit unit = TimeUnit::Milliseconds) const noexcept;
+        [[nodiscard]] double GetTotalTime(TimeUnit unit = TimeUnit::Milliseconds) const noexcept;
+
+        // ─────────────────────────────────────────────────────────────────
+        // Time-scale controls
+        // ─────────────────────────────────────────────────────────────────
+
+        void SetTimeScale(double scale) noexcept { m_timeScale = scale; }
+        [[nodiscard]] double GetTimeScale() const noexcept { return m_timeScale; }
+
+        void Pause() noexcept  { m_paused.store(true, std::memory_order_relaxed); }
+        void Resume() noexcept { m_paused.store(false, std::memory_order_relaxed); }
+        [[nodiscard]] bool IsPaused() const noexcept { return m_paused.load(std::memory_order_relaxed); }
+
+        // ─────────────────────────────────────────────────────────────────
+        // Stopwatch: lightweight RAII timer for profiling code sections.
+        // ─────────────────────────────────────────────────────────────────
+
+        struct Stopwatch
+        {
+            TimePoint start;
+
+            Stopwatch() noexcept : start(Clock::now()) {}
+            void Reset() noexcept { start = Clock::now(); }
+
+            [[nodiscard]] Duration Elapsed() const noexcept
+            {
+                return std::chrono::duration_cast<Duration>(Clock::now() - start);
+            }
+            [[nodiscard]] double ElapsedSeconds() const noexcept { return Elapsed().count(); }
+            [[nodiscard]] double ElapsedMillis() const noexcept  { return Elapsed().count() * 1e3; }
+        };
+
+    private:
+        // Convert Duration to double in requested unit.
+        [[nodiscard]] static double ToUnit(Duration d, TimeUnit u) noexcept;
+    private:
+        TimePoint m_start{};
+        TimePoint m_last{};
+        Duration  m_unscaledDelta{ 1.0 / 60.0 }; // sensible default until first Tick
+        Duration  m_unscaledTotal{ Duration::zero() };
+        Duration  m_scaledTotal{ Duration::zero() };
+        double    m_timeScale{ 1.0 };
+        std::atomic<bool> m_paused{ false };
+        uint64_t  m_frameCount{ 0 };
+        TimeInfo  m_timeInfo{};
+        bool      m_initialized{ false };
+    };
+
+} // namespace Engine
+
+// Global singleton instance. Prefer accessing via `gTimer`.
+extern Engine::Timer gTimer;
+
 
 
 
