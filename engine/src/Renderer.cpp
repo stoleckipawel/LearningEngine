@@ -198,12 +198,12 @@ void Renderer::CreateFrameBuffers()
 // -----------------------------------------------------------------------------
 void Renderer::OnUpdate()
 {
-    // Advance frame index for per-frame resources
-    m_FrameInFlightIndex++;
-    m_primitiveFactory->UpdateConstantBuffers();
-
     // Update the global time source and feed UI with delta
     gTimer.Tick();
+
+    // Advance frame index for per-frame resources
+    m_primitiveFactory->UpdateConstantBuffers();
+
 #if USE_GUI
     // Pass seconds to UI which expects seconds-precision delta
     GUI.Update();

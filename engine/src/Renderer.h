@@ -56,7 +56,6 @@ private:
 	std::unique_ptr<RootSignature> m_rootSignature;
 	std::unique_ptr<ShaderCompiler> m_vertexShader;
 	std::unique_ptr<ShaderCompiler> m_pixelShader;
-	UINT m_FrameInFlightIndex = 0;
 };
 
 // Global renderer instance

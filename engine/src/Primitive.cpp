@@ -4,7 +4,6 @@
 #include "SwapChain.h"
 #include "Camera.h"
 
-
 Primitive::Primitive(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale)
     : Translation(translation), Rotation(rotation), Scale(scale)
 {
