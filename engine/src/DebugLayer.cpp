@@ -7,17 +7,23 @@
 	// Global debug layer instance
 	DebugLayer GDebugLayer;
 
+
 	// Initializes the Direct3D 12 and DXGI debug layers
 	void DebugLayer::Initialize()
 	{
+		if (m_initialized)
+			return;
+
 		// Enable D3D12 and DXGI debug layers for validation and leak tracking.
 		InitD3D12Debug();
 		InitDXGIDebug();
+		m_initialized = true;
 	}
 
 	// Initializes InfoQueue debugging after device creation.
 	void DebugLayer::InitializeInfoQueue()
 	{   
+		// Configure InfoQueue only when device supports it.
 		ConfigureInfoQueue();      // Set break on error/warning/corruption
 		ApplyInfoQueueFilters();   
 	}
@@ -54,11 +60,12 @@
 		ComPtr<ID3D12InfoQueue> infoQueue;
 		if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf()))))
 		{
-			// Suppress FENCE_ZERO_WAIT (SDK layer noise/bug); not always present in headers.
-			const int D3D12_MESSAGE_ID_FENCE_ZERO_WAIT_ = 1424;
-			D3D12_MESSAGE_ID disabledMessages[] = { (D3D12_MESSAGE_ID)D3D12_MESSAGE_ID_FENCE_ZERO_WAIT_ };
+			// Suppress known noisy message id (if present). Keep list small and explicit.
+			D3D12_MESSAGE_ID disabledMessages[] = {
+				static_cast<D3D12_MESSAGE_ID>(1424) // FENCE_ZERO_WAIT (SDK noise)
+			};
 			D3D12_INFO_QUEUE_FILTER filter = {};
-			filter.DenyList.NumIDs = 1;
+			filter.DenyList.NumIDs = static_cast<UINT>(std::size(disabledMessages));
 			filter.DenyList.pIDList = disabledMessages;
 			infoQueue->AddStorageFilterEntries(&filter);
 		}
@@ -68,9 +75,13 @@
 	// Call before device destruction to catch leaks and report live objects.
 	void DebugLayer::Shutdown()
 	{
-		ReportLiveDXGIObjects(); 
-		m_dxgiDebug.Reset();       
-		m_d3d12Debug.Reset();     
+		if (!m_initialized)
+			return;
+
+		ReportLiveDXGIObjects();
+		m_dxgiDebug.Reset();
+		m_d3d12Debug.Reset();
+		m_initialized = false;
 	}
 
 	// Reports live D3D12 device objects (must be called before device is Reset).
@@ -78,7 +89,7 @@
 	{
 	#if ENGINE_REPORT_LIVE_OBJECTS
 		ComPtr<ID3D12DebugDevice> debugDevice;
-		if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(debugDevice.ReleaseAndGetAddressOf()))))
+		if (GRHI.GetDevice() && SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(debugDevice.ReleaseAndGetAddressOf()))))
 		{
 			OutputDebugStringW(L"D3D12 Live Device Objects (detail + summary):\n");
 			debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL | D3D12_RLDO_SUMMARY);

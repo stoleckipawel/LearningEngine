@@ -11,12 +11,12 @@ DescriptorHandle::DescriptorHandle(UINT idx,
     : m_index(idx), m_heapType(type)
 {
     // Compute CPU handle: heap start + index * increment size
-    m_cpuHandle.ptr = cpuStartHandle.ptr + GetIncrementSize() * m_index;
+    m_cpuHandle.ptr = cpuStartHandle.ptr + static_cast<SIZE_T>(GetIncrementSize()) * static_cast<SIZE_T>(m_index);
 
     // Compute GPU handle only for shader-visible heaps
     if (IsShaderVisible())
     {
-        m_gpuHandle.ptr = gpuStartHandle.ptr + GetIncrementSize() * m_index;
+        m_gpuHandle.ptr = gpuStartHandle.ptr + static_cast<SIZE_T>(GetIncrementSize()) * static_cast<SIZE_T>(m_index);
     }
 }
 

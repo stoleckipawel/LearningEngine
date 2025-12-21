@@ -31,9 +31,7 @@ DescriptorHandle DescriptorHeap::GetHandleAt(UINT index) const
 		return DescriptorHandle(~0u, m_desc.Type, { 0 }, { 0 });
 	}
 
-	// Materialize a typed handle using heap start CPU/GPU handles.
-	// The handle computes final CPU/GPU pointer by adding index * increment size.
-	// Only call GetGPUDescriptorHandleForHeapStart for shader-visible heaps.
+	// For shader-visible heaps, provide the GPU start handle; otherwise leave GPU handle zeroed.
 	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = { 0 };
 	if (m_desc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE)
 	{

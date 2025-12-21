@@ -2,6 +2,8 @@
 
 #include "RHI.h"
 
+using Microsoft::WRL::ComPtr;
+
 // RootSignature manages the creation and access to the D3D12 root signature
 class RootSignature
 {
@@ -15,6 +17,5 @@ public:
     ID3D12RootSignature* GetRaw() const { return m_rootSignature.Get(); }
 private:
     void Create();
-    void SetupRootParameters(CD3DX12_ROOT_PARAMETER* rootParameters, CD3DX12_DESCRIPTOR_RANGE* ranges);
     ComPtr<ID3D12RootSignature> m_rootSignature = nullptr;
 };

@@ -6,6 +6,8 @@
 #include "RHI.h"
 #include "DescriptorHandle.h" 
 
+using Microsoft::WRL::ComPtr;
+
 // Manages a single D3D12 descriptor heap.
 class DescriptorHeap
 {

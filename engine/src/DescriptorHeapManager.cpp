@@ -71,10 +71,26 @@ void DescriptorHeapManager::FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_CP
 	DescriptorHeap* heap = GetHeap(type);
 	DescriptorAllocator* allocator = GetAllocator(type);
 
+	if (!heap || !allocator)
+	{
+		LogMessage("FreeHandle: invalid heap or allocator", ELogType::Warning);
+		return;
+	}
+
+	// Compute index from CPU handle pointer arithmetic against the heap's CPU start
 	const auto heapCPUStart = heap->GetRaw()->GetCPUDescriptorHandleForHeapStart();
-	const auto heapGPUStart = heap->GetRaw()->GetGPUDescriptorHandleForHeapStart();
 	const UINT increment = GRHI.GetDevice()->GetDescriptorHandleIncrementSize(type);
-	const UINT index = static_cast<UINT>((cpuHandle.ptr - heapCPUStart.ptr) / increment);
+	const SIZE_T delta = (cpuHandle.ptr - heapCPUStart.ptr);
+	const UINT index = static_cast<UINT>(delta / static_cast<SIZE_T>(increment));
+
+	// Only request GPU start for shader-visible heaps; otherwise pass a zeroed GPU handle.
+	D3D12_GPU_DESCRIPTOR_HANDLE heapGPUStart = { 0 };
+	const auto heapDesc = heap->GetRaw()->GetDesc();
+	if (heapDesc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE)
+	{
+		heapGPUStart = heap->GetRaw()->GetGPUDescriptorHandleForHeapStart();
+	}
+
 	const DescriptorHandle handle(index, type, heapCPUStart, heapGPUStart);
 	allocator->Free(handle);
 }

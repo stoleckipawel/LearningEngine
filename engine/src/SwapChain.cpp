@@ -50,7 +50,7 @@ void SwapChain::Create()
 	ThrowIfFailed(
 		GRHI.GetDxgiFactory()->CreateSwapChainForHwnd(
 			GRHI.GetCommandQueue().Get(),
-			GWindow.WindowHWND,
+			GWindow.GetHWND(),
 			&swapChainDesc,
 			&swapChainFullsceenDesc,
 			nullptr,

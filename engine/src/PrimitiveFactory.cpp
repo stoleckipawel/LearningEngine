@@ -2,14 +2,6 @@
 #include "PCH.h"
 #include "PrimitiveFactory.h"
 
-void PrimitiveFactory::UpdateConstantBuffers()
-{
-    for (size_t i = 0; i < m_primitives.size(); ++i)
-    {
-        m_primitives[i]->UpdateConstantBuffers();
-    }
-}
-
 void PrimitiveFactory::AppendBox(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale)
 {
     auto box = std::make_unique<PrimitiveBox>(translation, rotation, scale);

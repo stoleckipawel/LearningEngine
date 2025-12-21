@@ -1,6 +1,7 @@
 
 #include "PCH.h"
 #include "RootSignature.h"
+#include "RootBindings.h"
 #include "DebugUtils.h"
 
 RootSignature::RootSignature()
@@ -8,35 +9,69 @@ RootSignature::RootSignature()
     Create();
 }
 
-// Helper: Sets up all root parameters and descriptor ranges
-void RootSignature::SetupRootParameters(CD3DX12_ROOT_PARAMETER* rootParameters, CD3DX12_DESCRIPTOR_RANGE* ranges) {
-    // Vertex shader CBV (b0)
-    // Pixel shader CBV (b0)
-    // Sampler (s0)
-    ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, EngineSettings::FramesInFlight, 0);
-    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, EngineSettings::FramesInFlight, 0);
-    ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
-    // Texture SRV (t0)
-    ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-
-    // Root parameters: texture SRV, sampler, vertex CBV, pixel CBV
-    rootParameters[0].InitAsDescriptorTable(1, &ranges[3], D3D12_SHADER_VISIBILITY_PIXEL);
-    rootParameters[1].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_PIXEL);
-    rootParameters[2].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_VERTEX);
-    rootParameters[3].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_PIXEL);
-}
-
 void RootSignature::Create()
 {
-    // Modular: Setup root parameters and descriptor ranges
-    CD3DX12_ROOT_PARAMETER rootParameters[4] = {};
-    CD3DX12_DESCRIPTOR_RANGE ranges[4] = {};
-    SetupRootParameters(rootParameters, ranges);
+    // -------------------------------------------------------------------------
+    // Root Signature Layout - Defines shader resource binding points
+    // -------------------------------------------------------------------------
+    // Uses root CBVs for constant buffers (low overhead, direct GPU VA binding)
+    // Uses descriptor tables for SRVs/Samplers (flexible, heap-based)
+    //
+    // See RootBindings.h for the canonical binding slot definitions.
+    // -------------------------------------------------------------------------
+    
+    CD3DX12_ROOT_PARAMETER rootParameters[RootBindings::RootParam::Count] = {};
+    
+    // Descriptor ranges for tables
+    CD3DX12_DESCRIPTOR_RANGE ranges[2] = {};
+    ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, RootBindings::SRVRegister::BaseTexture);     // t0: texture 
+    ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, RootBindings::SamplerRegister::LinearWrap); // s0: sampler
 
-    // Root signature description
+    // -------------------------------------------------------------------------
+    // Root CBVs: Direct GPU virtual address binding for constant buffers
+    // Low overhead: no descriptor heap indirection, just a 64-bit GPU VA
+    // -------------------------------------------------------------------------
+    
+    // b0 - PerFrame 
+    rootParameters[RootBindings::RootParam::PerFrame].InitAsConstantBufferView(
+        RootBindings::CBRegister::PerFrame, 0, 
+        RootBindings::Visibility::PerFrame);
+    
+    // b1 - PerView 
+    rootParameters[RootBindings::RootParam::PerView].InitAsConstantBufferView(
+        RootBindings::CBRegister::PerView, 0,
+        RootBindings::Visibility::PerView);
+    
+    // b2 - PerObjectVS
+    rootParameters[RootBindings::RootParam::PerObjectVS].InitAsConstantBufferView(
+        RootBindings::CBRegister::PerObjectVS, 0,
+        RootBindings::Visibility::PerObjectVS);
+    
+    // b3 - PerObjectPS
+    rootParameters[RootBindings::RootParam::PerObjectPS].InitAsConstantBufferView(
+        RootBindings::CBRegister::PerObjectPS, 0,
+        RootBindings::Visibility::PerObjectPS);
+
+    // -------------------------------------------------------------------------
+    // Descriptor Tables: Heap-based binding for textures and samplers
+    // More flexible but requires descriptor heap management
+    // -------------------------------------------------------------------------
+    
+    rootParameters[RootBindings::RootParam::TextureSRV].InitAsDescriptorTable(
+        1, &ranges[0],
+        RootBindings::Visibility::TextureSRV);
+    
+    rootParameters[RootBindings::RootParam::Sampler].InitAsDescriptorTable(
+        1, &ranges[1],
+        RootBindings::Visibility::Sampler);
+
+    // -------------------------------------------------------------------------
+    // Create the root signature
+    // -------------------------------------------------------------------------
+    
     CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
     rootSignatureDesc.Init(
-        _countof(rootParameters),
+        RootBindings::RootParam::Count,
         rootParameters,
         0,
         nullptr,

@@ -8,26 +8,24 @@
 #include <dxgi1_6.h>
 
 // Compile-time toggle to completely exclude GUI from builds when set to 0.
-#ifndef USE_GUI
 #define USE_GUI 1
 //#define USE_IMGUI_DEMO_WINDOW 1
-#endif
 
 // Shader compilation helpers. These are enabled by default for debug builds
 // to include extra debug info and to ease shader debugging. 
 #if defined(_DEBUG)
-#define ENGINE_SHADERS_OPTIMIZED 1
-#define ENGINE_SHADERS_DEBUG 1
+    #define ENGINE_SHADERS_OPTIMIZED 1
+    #define ENGINE_SHADERS_DEBUG 1
 #endif
 
 // Enable GPU validation (D3D12/DXGI SDK layers). On in debug builds by default.
 #if defined(_DEBUG)
-#define ENGINE_GPU_VALIDATION 1
+    #define ENGINE_GPU_VALIDATION 1
 #endif
 
 // Report live D3D/DXGI objects at shutdown (useful for leak detection).
 #if defined(_DEBUG)
-#define ENGINE_REPORT_LIVE_OBJECTS 1
+    #define ENGINE_REPORT_LIVE_OBJECTS 1
 #endif
 
 
@@ -50,4 +48,8 @@ namespace EngineSettings
     inline bool StartFullscreen = false;
     // Initial window title; application code may modify at runtime.
     inline std::string WindowTitle = "PlaygroundEngine";
+
+    // Prefer high-performance adapter when enumerating GPUs. When true, queries
+    // adapters by GPU preference; otherwise falls back to power-saving preference.
+    inline bool PreferHighPerformanceAdapter = true;
 }

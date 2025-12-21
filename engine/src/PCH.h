@@ -22,6 +22,7 @@
 #include <unordered_set>
 #include <cmath>
 #include <functional>
+#include <cstdint>
 
 // Windows
 #include <Windows.h>

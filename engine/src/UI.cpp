@@ -29,7 +29,7 @@ static void FreeSRV(ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE cpu_ha
 }
 
 // Forwards Win32 messages to ImGui; returns true if handled.
-bool UI::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
+bool UI::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept
 {
     return ImGui_ImplWin32_WndProcHandler(wnd, msg, wParam, lParam);
 }
@@ -47,8 +47,14 @@ void UI::Initialize()
 
     ImGui::StyleColorsDark();
 
-    // Initialize platform backend with the window handle.
-    ImGui_ImplWin32_Init(GWindow.WindowHWND);
+    // Initialize platform backend with the window handle. Guard against missing HWND.
+    if (!GWindow.GetHWND())
+    {
+        LogMessage("UI::Initialize: invalid window handle", ELogType::Fatal);
+        return;
+    }
+
+    ImGui_ImplWin32_Init(GWindow.GetHWND());
 
     ImGui_ImplDX12_InitInfo init_info = {};
     init_info.Device = GRHI.GetDevice().Get();
@@ -59,6 +65,13 @@ void UI::Initialize()
     init_info.SrvDescriptorHeap = GDescriptorHeapManager.GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)->GetRaw();
     init_info.SrvDescriptorAllocFn = &AllocSRV;
     init_info.SrvDescriptorFreeFn = &FreeSRV;
+    // Validate required D3D12 objects before calling ImGui init.
+    if (init_info.Device == nullptr || init_info.CommandQueue == nullptr || init_info.SrvDescriptorHeap == nullptr)
+    {
+        LogMessage("UI::Initialize: missing DX12 device/queue/descriptor-heap for ImGui initialization", ELogType::Fatal);
+        return;
+    }
+
     ImGui_ImplDX12_Init(&init_info);
 
     io.Fonts->AddFontDefault();        
@@ -71,7 +84,7 @@ void UI::Initialize()
 void UI::NewFrame()
 {
     ImGuiIO& io = ImGui::GetIO();
-    io.DeltaTime = gTimer.GetDelta(Engine::TimeUnit::Seconds);
+    io.DeltaTime = GTimer.GetDelta(Engine::TimeUnit::Seconds);
     io.DisplaySize = ImVec2(GWindow.GetWidth(), GWindow.GetHeight());
 
     ImGui_ImplDX12_NewFrame();
@@ -89,7 +102,7 @@ void UI::BuildFPSOverlay()
     ImGui::Begin("Stats", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
     ImGui::Text("FPS: %.1f", io.Framerate);
     ImGui::Text("FrameTime: %.2f ms", io.DeltaTime * 1000.0f);
-    ImGui::Text("FrameIndex: %llu", static_cast<unsigned long long>(gTimer.GetFrameCount()));
+    ImGui::Text("FrameIndex: %llu", static_cast<unsigned long long>(GTimer.GetFrameCount()));
     ImGui::End();
 }
 
@@ -113,13 +126,13 @@ void UI::Update()
 }
 
 // Submits ImGui draw data using the current DX12 command list.
-void UI::Render()
+void UI::Render() noexcept
 {
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), GRHI.GetCommandList().Get());
 }
 
 // Shuts down ImGui backends and destroys the context.
-void UI::Shutdown()
+void UI::Shutdown() noexcept
 {
     ImGui_ImplDX12_Shutdown();
     ImGui_ImplWin32_Shutdown();
@@ -127,7 +140,7 @@ void UI::Shutdown()
 }
 
 // Configures DPI awareness and scales style/font sizes accordingly.
-void UI::SetupDPIScaling()
+void UI::SetupDPIScaling() noexcept
 {
     ImGui_ImplWin32_EnableDpiAwareness();
     float mainScale = ImGui_ImplWin32_GetDpiScaleForMonitor(::MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));

@@ -3,11 +3,20 @@
 #include "Sampler.h"
 #include "RHI.h"
 #include "DescriptorHeapManager.h"
+#include "Error.h"
 
 // Sampler: constructs and creates the D3D12 sampler in the descriptor heap via allocator.
 Sampler::Sampler()
-    : m_samplerHandle(GDescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER))
 {
+    // Allocate a descriptor slot from the sampler heap. If allocation fails
+    // the allocator will have already logged; defensively check here too.
+    m_samplerHandle = GDescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+    if (!m_samplerHandle.IsValid())
+    {
+        LogMessage("Sampler: failed to allocate sampler descriptor.", ELogType::Fatal);
+        return;
+    }
+
     D3D12_SAMPLER_DESC samplerDesc = {};
     samplerDesc.Filter = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
     samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -19,11 +28,18 @@ Sampler::Sampler()
     samplerDesc.MinLOD = 0.0f;
     samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 
-    // Create the sampler in the descriptor heap.
-    GRHI.GetDevice()->CreateSampler(&samplerDesc, GetCPUHandle());
+    // Write sampler into the descriptor heap at the allocated CPU handle.
+    GRHI.GetDevice()->CreateSampler(&samplerDesc, m_samplerHandle.GetCPU());
 }
 
-Sampler::~Sampler()
+Sampler::Sampler(Sampler&& other) noexcept
+    : m_samplerHandle(other.m_samplerHandle)
+{
+    // Invalidate source to transfer ownership.
+    other.m_samplerHandle = DescriptorHandle();
+}
+
+Sampler::~Sampler() noexcept
 {
     if (m_samplerHandle.IsValid())
     {

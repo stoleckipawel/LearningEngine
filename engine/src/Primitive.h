@@ -1,27 +1,10 @@
 #pragma once
 
 #include "RHI.h"
-#include "ConstantBuffer.h"
+#include <DirectXMath.h>
 
-
-//------------------------------------------------------------------------------
-// Constant buffer and vertex data structures
-//------------------------------------------------------------------------------
-
-// Per-pixel constant buffer data (aligned to 256 bytes). Used by the pixel shader.
-struct alignas(256) PixelConstantBufferData
-{
-    XMFLOAT4 Color;           // RGBA color
-};
-
-// Per-vertex constant buffer data (aligned to 256 bytes). Holds matrices for the vertex shader.
-struct alignas(256) FVertexConstantBufferData
-{
-    XMFLOAT4X4 WorldMTX;      // World transformation matrix
-    XMFLOAT4X4 ViewMTX;       // View transformation matrix
-    XMFLOAT4X4 ProjectionMTX; // Projection transformation matrix
-    XMFLOAT4X4 WorldViewProjMTX; // Combined World-View-Projection matrix
-};
+using Microsoft::WRL::ComPtr;
+using namespace DirectX;
 
 // Vertex structure for geometry: position, UV, and color.
 struct Vertex
@@ -30,7 +13,6 @@ struct Vertex
     XMFLOAT2 uv;       // Texture coordinates (u, v)
     XMFLOAT4 color;    // Vertex color (r, g, b, a)
 };
-
 
 // Base class for renderable primitives. Handles upload/binding and per-frame resources.
 class Primitive
@@ -42,25 +24,31 @@ public:
         const XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
         const XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});
 
-    // Transformation inputs
-    XMFLOAT3 Translation = {0.0f, 0.0f, 0.0f}; ///< World position
-    XMFLOAT3 Rotation = {0.0f, 0.0f, 0.0f};    ///< Euler angles in radians
-    XMFLOAT3 Scale = {1.0f, 1.0f, 1.0f};       ///< Local scale
+    // Virtual destructor for polymorphic base
+    virtual ~Primitive() = default;
 
-    // Compute the world transformation matrix from TRS and return it.
-    XMMATRIX GetWorldMatrix() const;
+    // Transform API:  explicit setters/getters
+    void SetTranslation(const XMFLOAT3& t) noexcept;
+    XMFLOAT3 GetTranslation() const noexcept;
 
-    // Update all constant buffers for this primitive (vertex & pixel).
-    void UpdateConstantBuffers();
+    void SetRotationEuler(const XMFLOAT3& r) noexcept; // Euler angles (radians)
+    XMFLOAT3 GetRotationEuler() const noexcept;
 
-    // Get the vertex constant buffer for the current frame.
-    ConstantBuffer<FVertexConstantBufferData>* GetVertexConstantBuffer() { return VertexConstantBuffer[GSwapChain.GetFrameInFlightIndex()].get(); }
+    void SetScale(const XMFLOAT3& s) noexcept;
+    XMFLOAT3 GetScale() const noexcept;
 
-    // Get the pixel constant buffer for the current frame.
-    ConstantBuffer<PixelConstantBufferData>* GetPixelConstantBuffer() { return PixelConstantBuffer[GSwapChain.GetFrameInFlightIndex()].get(); }
+    // Compute the world transformation matrix from TRS and return it. This is cached
+    // internally and lazily rebuilt on transform changes to avoid repeated work.
+    XMMATRIX GetWorldMatrix() const noexcept;
+
+    // Return the 3x3 rotation-only matrix (useful for normal transforms on CPU).
+    XMFLOAT3X3 GetWorldRotationMatrix3x3() const noexcept;
+
+    // Return inverse-transpose of world for correct normal transformation in shaders.
+    XMMATRIX GetWorldInverseTransposeMatrix() const noexcept;
 
     // Return the number of indices in the index buffer.
-    UINT GetIndexCount() const { return m_indexCount; }
+    UINT GetIndexCount() const noexcept { return m_indexCount; }
 
     // Set geometry buffers and topology for rendering. Override to bind more resources.
     virtual void Set();
@@ -87,21 +75,29 @@ protected:
     // Upload the index buffer for the geometry.
     void UploadIndexBuffer();
 
-    // Update the vertex constant buffer for the current frame.
-    void UpdateVertexConstantBuffer();
+    // Internal: mark cached world invalid (called from setters)
+    void InvalidateWorldCache() noexcept { m_worldDirty = true; }
 
-    // Update the pixel constant buffer for the current frame.
-    void UpdatePixelConstantBuffer();
+private:
+    // Transform state (encapsulated)
+    XMFLOAT3 m_translation{0.0f, 0.0f, 0.0f};
+    XMFLOAT3 m_rotationEuler{0.0f, 0.0f, 0.0f};
+    XMFLOAT3 m_scale{1.0f, 1.0f, 1.0f};
 
+    // Cached world matrix to avoid recomputing each time. Mutable so const accessors
+    // can rebuild lazily without exposing mutability to callers.
+    mutable XMFLOAT4X4 m_worldMatrixCache{};
+    mutable bool m_worldDirty = true;
+
+    // Lazy rebuild helper: rebuild the cached world matrix when dirty.
+    void RebuildWorldIfNeeded() const noexcept;
+
+protected:
     // GPU resources and views
     ComPtr<ID3D12Resource2> VertexBuffer = nullptr; ///< Vertex buffer resource
     ComPtr<ID3D12Resource2> IndexBuffer = nullptr;  ///< Index buffer resource
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {}; ///< Vertex buffer view
     D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};   ///< Index buffer view
     UINT m_indexCount = 0; ///< Number of indices in the index buffer
-
-    // Per-frame constant buffers
-    std::unique_ptr<ConstantBuffer<FVertexConstantBufferData>> VertexConstantBuffer[EngineSettings::FramesInFlight];
-    std::unique_ptr<ConstantBuffer<PixelConstantBufferData>> PixelConstantBuffer[EngineSettings::FramesInFlight];
 };
 

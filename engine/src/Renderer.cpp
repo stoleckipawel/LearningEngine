@@ -8,11 +8,14 @@
 #include "PrimitiveFactory.h"
 #include "PSO.h"
 #include "RootSignature.h"
+#include "RootBindings.h"
 #include "ConstantBuffer.h"
+#include "ConstantBufferManager.h"
 #include "Sampler.h"
 #include "DepthStencil.h"
 #include "UI.h"
 #include "Timer.h"
+#include "Camera.h"
 
 // Global renderer instance
 Renderer GRenderer;
@@ -20,23 +23,42 @@ Renderer GRenderer;
 // -----------------------------------------------------------------------------
 // Initializes all graphics subsystems and resources
 // -----------------------------------------------------------------------------
-void Renderer::Initialize()
+void Renderer::Initialize() noexcept
 {
     // Initialize the rendering hardware interface (RHI)
     GRHI.Initialize();
+    
+    // Create root signature first - defines shader resource binding layout
     m_rootSignature = std::make_unique<RootSignature>();
+
+    // Compile shaders
     m_vertexShader = std::make_unique<ShaderCompiler>("SimpleVS.hlsl", "vs_6_0", "main");
     m_pixelShader = std::make_unique<ShaderCompiler>("SimplePS.hlsl", "ps_6_0", "main");
+
+    // Initialize descriptor heap manager and swap chain
     GDescriptorHeapManager.Initialize();
     GSwapChain.Initialize();
+    
+    // Initialize the global constant buffer manager (manages per-frame CB instances)
+    GConstantBufferManager.Initialize();
+    
+    // Load textures and create sampler
     m_texture = std::make_unique<Texture>(std::filesystem::path("Test1.png"));
     m_sampler = std::make_unique<Sampler>();
+    
+    // Create geometry
     GatherPrimitives();
+    
+    // Create pipeline state object
     m_pso = std::make_unique<PSO>(m_primitiveFactory->GetFirstPrimitive(), *m_rootSignature, *m_vertexShader, *m_pixelShader);
+    
+    // Create depth stencil and other frame buffers
     CreateFrameBuffers();
+    
 #if USE_GUI
     GUI.Initialize();
 #endif
+    
     PostLoad();
 }
 
@@ -81,7 +103,7 @@ void Renderer::GatherPrimitives()
 // -----------------------------------------------------------------------------
 // Finalizes resource uploads and flushes the command queue
 // -----------------------------------------------------------------------------
-void Renderer::PostLoad()
+void Renderer::PostLoad() noexcept
 {
     GRHI.CloseCommandListScene();
     GRHI.ExecuteCommandList();
@@ -91,7 +113,7 @@ void Renderer::PostLoad()
 // -----------------------------------------------------------------------------
 // Sets viewport and scissor rectangle for rasterization
 // -----------------------------------------------------------------------------
-void Renderer::SetViewport()
+void Renderer::SetViewport() noexcept
 {
     D3D12_VIEWPORT viewport = GSwapChain.GetDefaultViewport();
     GRHI.GetCommandList()->RSSetViewports(1, &viewport);
@@ -103,7 +125,7 @@ void Renderer::SetViewport()
 // -----------------------------------------------------------------------------
 // Sets render target and depth stencil views for output merger
 // -----------------------------------------------------------------------------
-void Renderer::SetBackBufferRTV()
+void Renderer::SetBackBufferRTV() noexcept
 {
     D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GSwapChain.GetCPUHandle();
     D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle = m_depthStencil->GetCPUHandle();
@@ -111,19 +133,84 @@ void Renderer::SetBackBufferRTV()
 }
 
 // -----------------------------------------------------------------------------
-// Binds descriptor tables for textures, samplers, and constant buffers
+// Binds per-frame resources: textures, samplers, and frame/view constant buffers
+// These bindings remain constant for all draw calls within a frame.
 // -----------------------------------------------------------------------------
-void Renderer::BindDescriptorTables()
+void Renderer::BindPerFrameResources() noexcept
 {
-    // Texture
-    GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
-        0,
-        m_texture->GetGPUHandle());
+    // -------------------------------------------------------------------------
+    // Bind Per-Frame Constant Buffer - updated once per CPU frame
+    // Contains: FrameIndex, TotalTime, DeltaTime, ViewportSize..........
+    // -------------------------------------------------------------------------
+    if (auto* perFrameCB = GConstantBufferManager.GetPerFrameConstantBuffer())
+    {
+        GRHI.GetCommandList()->SetGraphicsRootConstantBufferView(
+            RootBindings::RootParam::PerFrame,
+            perFrameCB->GetGPUVirtualAddress());
+    }
 
-    // Sampler
-    GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
-        1,
-        m_sampler->GetGPUHandle());
+    // -------------------------------------------------------------------------
+    // Bind Per-View Constant Buffer - updated once per view/camera
+    // Contains: View/Proj matrices, CameraPosition, Near/Far planes.............
+    // -------------------------------------------------------------------------
+    if (auto* perViewCB = GConstantBufferManager.GetPerViewConstantBuffer())
+    {
+        GRHI.GetCommandList()->SetGraphicsRootConstantBufferView(
+            RootBindings::RootParam::PerView,
+            perViewCB->GetGPUVirtualAddress());
+    }
+
+    // -------------------------------------------------------------------------
+    // Bind Textures SRV - descriptor table
+    // -------------------------------------------------------------------------
+    if (m_texture)
+    {
+        GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
+            RootBindings::RootParam::TextureSRV,
+            m_texture->GetGPUHandle());
+    }
+
+    // -------------------------------------------------------------------------
+    // Bind Samplers - descriptor table
+    // -------------------------------------------------------------------------
+    if (m_sampler)
+    {
+        GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
+            RootBindings::RootParam::Sampler,
+            m_sampler->GetGPUHandle());
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Binds per-object resources before each draw call
+// These bindings change for every primitive/mesh being rendered.
+// -----------------------------------------------------------------------------
+void Renderer::BindPerObjectResources(const Primitive& primitive) noexcept
+{
+    // -------------------------------------------------------------------------
+    // Update and Bind Per-Object VS Constant Buffer (b2)
+    // Contains: WorldMatrix for this primitive
+    // -------------------------------------------------------------------------
+    GConstantBufferManager.UpdatePerObjectVS(primitive);
+    if (auto* perObjectVSCB = GConstantBufferManager.GetPerObjectVSConstantBuffer())
+    {
+        GRHI.GetCommandList()->SetGraphicsRootConstantBufferView(
+            RootBindings::RootParam::PerObjectVS,
+            perObjectVSCB->GetGPUVirtualAddress());
+    }
+
+    // -------------------------------------------------------------------------
+    // Update and Bind Per-Object PS Constant Buffer (b3)
+    // Contains: Material properties (BaseColor, Metallic, Roughness, F0)
+    // TODO: Pass material data from primitive when material system is implemented
+    // -------------------------------------------------------------------------
+    GConstantBufferManager.UpdatePerObjectPS();
+    if (auto* perObjectPSCB = GConstantBufferManager.GetPerObjectPSConstantBuffer())
+    {
+        GRHI.GetCommandList()->SetGraphicsRootConstantBufferView(
+            RootBindings::RootParam::PerObjectPS,
+            perObjectPSCB->GetGPUVirtualAddress());
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -131,57 +218,70 @@ void Renderer::BindDescriptorTables()
 // -----------------------------------------------------------------------------
 void Renderer::PopulateCommandList()
 {
-    // Prepare render target
+    // =========================================================================
+    // FRAME SETUP - Execute once per frame
+    // =========================================================================
+    
+    // Prepare render target - transition to render target state
     GSwapChain.SetRenderTargetState();
 
     // Transition depth buffer to write state before rendering
     m_depthStencil->SetWriteState();
 
-    // Bind root signature
+    // Bind root signature - defines the shader resource layout
     GRHI.GetCommandList()->SetGraphicsRootSignature(m_rootSignature->GetRaw());
 
-    // Set viewport and render targets
+    // Set viewport and scissor rect
     SetViewport();
+    
+    // Set render targets (back buffer + depth stencil)
     SetBackBufferRTV();
+    
+    // Clear render targets
     GSwapChain.Clear();
-
-    // Clear depth stencil and set geometry
     m_depthStencil->Clear();
 
+    // Set shader-visible descriptor heaps
     GDescriptorHeapManager.SetShaderVisibleHeaps();
 
-    // Bind descriptor heaps and tables
-    BindDescriptorTables();
+    // =========================================================================
+    // PER-FRAME BINDINGS - Resources that don't change during the frame
+    // =========================================================================
+    BindPerFrameResources();
+
+    // =========================================================================
+    // DRAW LOOP - Per-object bindings and draw calls
+    // =========================================================================
+    const auto& primitives = m_primitiveFactory->GetPrimitives();
     
-    // Render all primitives
-    for (const auto& primitive : m_primitiveFactory->GetPrimitives())
+    for (const auto& primitive : primitives)
     {
-        // Set geometry buffers and topology for this primitive
+        // Set geometry buffers (VB, IB) and topology for this primitive
         primitive->Set();
+        
         // Set the pipeline state object (PSO)
+        // ToDo: sort by PSO to minimize state changes
         m_pso->Set();
 
-        // Bind the vertex constant buffer for this primitive
-        GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
-            2,
-            primitive->GetVertexConstantBuffer()->GetGPUHandle());
-
-        // Bind the pixel constant buffer for this primitive
-        GRHI.GetCommandList()->SetGraphicsRootDescriptorTable(
-            3,
-            primitive->GetPixelConstantBuffer()->GetGPUHandle());            
+        // Bind per-object constant buffers (world matrix, material)
+        BindPerObjectResources(*primitive);
 
         // Issue the draw call for this primitive
         GRHI.GetCommandList()->DrawIndexedInstanced(primitive->GetIndexCount(), 1, 0, 0, 0);
     }
 
+    // =========================================================================
+    // POST-RENDER
+    // =========================================================================
+    
 #if USE_GUI
     GUI.Render();
 #endif
 
-    // Prepare for present
     // Transition depth buffer to read state before presenting
     m_depthStencil->SetReadState();
+    
+    // Transition back buffer to present state
     GSwapChain.SetPresentState();
 }
 
@@ -195,14 +295,29 @@ void Renderer::CreateFrameBuffers()
 
 // -----------------------------------------------------------------------------
 // Updates per-frame data and constant buffers
+// Called once per frame before PopulateCommandList
 // -----------------------------------------------------------------------------
 void Renderer::OnUpdate()
 {
-    // Update the global time source and feed UI with delta
-    gTimer.Tick();
+    // =========================================================================
+    // TIMING - Update global time source first (other systems depend on it)
+    // =========================================================================
+    GTimer.Tick();
 
-    // Advance frame index for per-frame resources
-    m_primitiveFactory->UpdateConstantBuffers();
+    // =========================================================================
+    // CONSTANT BUFFER UPDATES - Update CB data at appropriate frequencies
+    // =========================================================================
+    
+    // Per-Frame CB (b0): Updated once per CPU frame
+    // Contains: FrameIndex, TotalTime, DeltaTime, ViewportSize
+    GConstantBufferManager.UpdatePerFrame();
+    
+    // Per-View CB (b1): Updated once per camera/view
+    // Contains: View/Proj matrices, CameraPosition, Near/Far
+    // ToDo: Camera matrices are lazily rebuilt when accessed via GCamera.
+    //       In a multi-view scenario (shadows, reflections), UpdatePerView()
+    //       would be called once per view, not once per frame.
+    GConstantBufferManager.UpdatePerView();
 
 #if USE_GUI
     // Pass seconds to UI which expects seconds-precision delta
@@ -213,7 +328,7 @@ void Renderer::OnUpdate()
 // -----------------------------------------------------------------------------
 // Handles window resize events and recreates frame buffers
 // -----------------------------------------------------------------------------
-void Renderer::OnResize()
+void Renderer::OnResize() noexcept
 {
     GRHI.Flush();
     // Resize swap chain to match new window dimensions
@@ -225,39 +340,80 @@ void Renderer::OnResize()
 // -----------------------------------------------------------------------------
 // Main render loop: called once per frame
 // -----------------------------------------------------------------------------
-void Renderer::OnRender()
+void Renderer::OnRender() noexcept
 {
-    // Wait for GPU to finish previous frame
+    // Modular frame sequence
+    // 1) Wait / reset / prepare GPU and command allocators
+    BeginFrame();
+
+    // 2) Update CPU-side state, timers, and constant buffers
+    SetupFrame();
+
+    // 3) Build command list entries (draw calls, dispatches)
+    RecordFrame();
+
+    // 4) Submit to GPU and present
+    SubmitFrame();
+
+    // 5) Finalize frame bookkeeping (advance indices, cleanup)
+    EndFrame();
+}
+
+// -----------------------------------------------------------------------------
+// BeginFrame: prepare GPU and command allocators for a new frame
+// - WaitForGPU may be necessary depending on sync design
+// - Reset command allocator / list
+// -----------------------------------------------------------------------------
+void Renderer::BeginFrame() noexcept
+{
     GRHI.WaitForGPU();
-
     GRHI.ResetCommandAllocator();
-    GRHI.ResetCommandList();  
+    GRHI.ResetCommandList();
+}
 
-    // Update per-frame data
-    OnUpdate();
+// -----------------------------------------------------------------------------
+// SetupFrame: perform per-frame CPU updates (timing, camera, per-frame CBs)
+// This is where heavy CPU work and culling would occur in a full engine.
+// -----------------------------------------------------------------------------
+void Renderer::SetupFrame() noexcept
+{
+    OnUpdate(); // existing per-frame update entry
+}
 
-    // Record rendering commands
+// -----------------------------------------------------------------------------
+// RecordFrame: record rendering commands into the command list
+// This intentionally delegates to PopulateCommandList which contains
+// the detailed recording logic. In the future this function will
+// orchestrate culling, batching, and multi-pass rendering.
+// -----------------------------------------------------------------------------
+void Renderer::RecordFrame() noexcept
+{
     PopulateCommandList();
+}
 
+// -----------------------------------------------------------------------------
+// SubmitFrame: close, execute, and present recorded command lists
+// -----------------------------------------------------------------------------
+void Renderer::SubmitFrame() noexcept
+{
     GRHI.CloseCommandListScene();
-
-    // Execute command list
     GRHI.ExecuteCommandList();
-
-    // Signal fence for GPU completion
     GRHI.Signal();
-
-    // Present the frame
     GSwapChain.Present();
+}
 
-    // Advance frame-in-flight index for next frame's per-frame resources
+// -----------------------------------------------------------------------------
+// EndFrame: advance frame indices and perform end-of-frame housekeeping
+// -----------------------------------------------------------------------------
+void Renderer::EndFrame() noexcept
+{
     GSwapChain.UpdateFrameInFlightIndex();
 }
 
 // -----------------------------------------------------------------------------
 // Shuts down the renderer and all owned subsystems
 // -----------------------------------------------------------------------------
-void Renderer::Shutdown()
+void Renderer::Shutdown() noexcept
 {
     GRHI.Flush();       
     GUI.Shutdown();    

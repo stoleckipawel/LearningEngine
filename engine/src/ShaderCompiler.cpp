@@ -79,7 +79,6 @@ void ShaderCompiler::HandleCompileResult()
     if (FAILED(hrStatus)) {
         LogMessage("DXC Compilation Failed", ELogType::Fatal);
         DumpShaderDebugInfo();
-        return;
     }
 
     // Save compiled shader binary to disk and store bytecode for engine use

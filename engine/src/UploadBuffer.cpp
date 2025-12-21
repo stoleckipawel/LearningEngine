@@ -1,17 +1,19 @@
 #include "PCH.h"
 #include "UploadBuffer.h"
 #include "DebugUtils.h"
+#include "Error.h"
+#include <cstring>
 
 // Uploads data to a GPU-accessible buffer using an upload heap.
 // Returns a ComPtr to the created ID3D12Resource2 buffer.
 // Note: For optimal performance, consider using a default heap and staging resource for large or frequent uploads.
-ComPtr<ID3D12Resource2> UploadBuffer::Upload(void* data, uint32_t dataSize)
+ComPtr<ID3D12Resource2> UploadBuffer::Upload(const void* data, size_t dataSize)
 {
 	// Describe the buffer resource
 	D3D12_RESOURCE_DESC resourceDesc = {};
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	resourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-	resourceDesc.Width = dataSize;
+	resourceDesc.Width = static_cast<UINT64>(dataSize);
 	resourceDesc.Height = 1;
 	resourceDesc.DepthOrArraySize = 1;
 	resourceDesc.MipLevels = 1;
@@ -36,17 +38,25 @@ ComPtr<ID3D12Resource2> UploadBuffer::Upload(void* data, uint32_t dataSize)
 	);
 
 	DebugUtils::SetDebugName(uploadBuffer, L"RHI_UploadBuffer");
-	// Map the buffer and copy the data
+
+	// Map the buffer and copy the data. Use std::memcpy for portability; the
+	// upload heap is write-combined so large copies should be minimized.
 	void* mappedData = nullptr;
 	D3D12_RANGE readRange = { 0, 0 }; // We do not intend to read from this resource on CPU
-	ThrowIfFailed(
-		uploadBuffer->Map(0, &readRange, &mappedData),
-		"Failed To Map Upload Buffer"
-	);
-	memcpy(mappedData, data, dataSize);
+	ThrowIfFailed(uploadBuffer->Map(0, &readRange, &mappedData), "Failed To Map Upload Buffer");
+
+	if (dataSize > 0 && data != nullptr && mappedData != nullptr)
+	{
+		std::memcpy(mappedData, data, dataSize);
+	}
+
+	// Unmap with null written range to indicate full range may have changed.
 	uploadBuffer->Unmap(0, nullptr);
 
-	// TODO: For large or frequent uploads, use a default heap and a staging upload resource for best performance.
+	// NOTE: For large or frequent uploads prefer:
+	//  - a persistent upload ring/linear allocator (single upload resource mapped)
+	//  - or staging into an upload resource and issuing a CopyBufferRegion into
+	//    a default-heap GPU resource for optimal GPU access.
 
 	return uploadBuffer;
 }

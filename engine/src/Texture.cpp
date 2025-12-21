@@ -10,7 +10,20 @@ Texture::Texture(const std::filesystem::path& fileName)
     : m_loader(std::make_unique<TextureLoader>(fileName))
     , m_srvHandle(GDescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV))
 {
-	// TODO: Switch to DirectXTex for better format support and mipmap generation
+	// TODO: Switch to DirectXTex for better format support and mipmap generation.
+	// Basic validation: ensure SRV descriptor allocated and loader produced data.
+	if (!m_srvHandle.IsValid())
+	{
+		LogMessage("Texture: failed to allocate SRV descriptor.", ELogType::Fatal);
+		return;
+	}
+
+	if (!m_loader)
+	{
+		LogMessage("Texture: loader failed to initialize.", ELogType::Fatal);
+		return;
+	}
+
 	CreateResource();
 	UploadToGPU();
 	CreateShaderResourceView();
@@ -23,8 +36,8 @@ void Texture::CreateResource()
 	m_texResourceDesc = {};
 	m_texResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	const auto& img = m_loader->GetData();
-	m_texResourceDesc.Width = img.width;
-	m_texResourceDesc.Height = img.height;
+	m_texResourceDesc.Width = static_cast<UINT64>(img.width);
+	m_texResourceDesc.Height = static_cast<UINT>(img.height);
 	m_texResourceDesc.DepthOrArraySize = 1;
 	m_texResourceDesc.MipLevels = 1; // TODO: Generate mipmaps
 	m_texResourceDesc.Format = img.dxgiPixelFormat;
@@ -71,9 +84,9 @@ void Texture::UploadToGPU()
 	// Prepare subresource data for upload
 	const auto& img = m_loader->GetData();
 	D3D12_SUBRESOURCE_DATA subResourceData = {};
-	subResourceData.pData = img.data.data();
-	subResourceData.RowPitch = (LONG_PTR)img.stride;
-	subResourceData.SlicePitch = (LONG_PTR)img.slicePitch;
+	subResourceData.pData = img.data.empty() ? nullptr : img.data.data();
+	subResourceData.RowPitch = static_cast<LONG_PTR>(img.stride);
+	subResourceData.SlicePitch = static_cast<LONG_PTR>(img.slicePitch);
 
 	// Upload the data to the GPU texture resource
 	UpdateSubresources(
@@ -112,14 +125,15 @@ void Texture::CreateShaderResourceView()
 }
 
 // Destructor releases resources
-Texture::~Texture()
+Texture::~Texture() noexcept
 {
 	m_textureResource.Reset();
 	m_uploadResource.Reset();
-
 	// Return SRV descriptor to allocator
 	if (m_srvHandle.IsValid())
 	{
 		GDescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, m_srvHandle);
+		m_srvHandle = DescriptorHandle();
 	}
 }
+

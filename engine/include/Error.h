@@ -6,8 +6,6 @@
 //
 // Goals:
 // - Every log/error includes the call-site (file:line)
-// - Works with both C++20 `std::source_location` and older toolchains
-// - Implementation lives in Error.cpp (header only contains API + small wrappers)
 // -----------------------------------------------------------------------------
 
 #include <Windows.h>
@@ -81,14 +79,14 @@ namespace ErrorDetail
 
 // Shows an error message and returns the user's choice.
 // Return values: IDOK/IDRETRY/IDCANCEL depending on buttons shown.
-[[nodiscard]] int ShowErrorMessageAt(std::string_view msg, ELogType logType, ErrorDetail::SourceLocation location);
+[[nodiscard]] int ShowErrorMessageAt(std::string_view msg, ELogType logType, ErrorDetail::SourceLocation location) noexcept;
 
 // Logs a message (and for Fatal: may exit on Cancel).
-void LogMessageAt(std::string_view message, ELogType logType, ErrorDetail::SourceLocation location);
+void LogMessageAt(std::string_view message, ELogType logType, ErrorDetail::SourceLocation location) noexcept;
 
 // If `hr` indicates failure, logs as Fatal (may exit on Cancel).
 // Callers should use `ThrowIfFailed(hr, "message")`.
-void ThrowIfFailedAt(HRESULT hr, std::string_view message, ErrorDetail::SourceLocation location);
+void ThrowIfFailedAt(HRESULT hr, std::string_view message, ErrorDetail::SourceLocation location) noexcept;
 
 // -----------------------------------------------------------------------------
 // Public API

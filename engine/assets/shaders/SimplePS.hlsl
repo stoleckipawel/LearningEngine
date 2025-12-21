@@ -1,5 +1,4 @@
-
-
+#include "Common.hlsli"
 
 struct PsInput
 {
@@ -12,20 +11,15 @@ struct PsOutput
     float4 Color0 : SV_Target;
 };
 
-cbuffer PixelConstantBuffer : register(b0)
-{
-    float4 color;
-};
-
 Texture2D myTexture : register(t0);
 sampler textureSampler : register(s0);
 
 void main(in PsInput Input, out PsOutput Output)
 {
     float3 texel = myTexture.SampleLevel(textureSampler, Input.TexCoord, 0.0f).xyz;
-    //float3 texel = float3(1.0f, 0.0f, 0.0f); // Override with solid red color
-    texel *= color.rgb;
-    texel *= Input.Color.rgb;
+
+    //texel *= BaseColor.rgb;
+    texel = Input.Color.rgb;
     
     Output.Color0 = float4(texel, 1.0f);
 }

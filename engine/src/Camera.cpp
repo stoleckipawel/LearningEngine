@@ -6,79 +6,198 @@ using namespace DirectX;
 
 // Global camera instance
 Camera GCamera;
+// Constructor
+Camera::Camera() noexcept
+{
+    XMStoreFloat4x4(&m_viewMat, XMMatrixIdentity());
+    XMStoreFloat4x4(&m_projMat, XMMatrixIdentity());
+}
 
-// Sets the camera rotation (Euler angles in degrees)
+void Camera::SetFovYDegrees(float fovDegrees) noexcept
+{
+    m_fovYDegrees = fovDegrees;
+    m_projDirty = true;
+}
+
+void Camera::SetAspectRatio(float aspect) noexcept
+{
+    m_aspect = aspect;
+    m_projDirty = true;
+}
+
+void Camera::SetNearFar(float nearZ, float farZ) noexcept
+{
+    m_nearZ = nearZ;
+    m_farZ = farZ;
+    m_projDirty = true;
+}
+
+void Camera::SetPosition(const XMFLOAT3& position) noexcept
+{
+    m_position = position;
+    InvalidateMatrices();
+}
+
 void Camera::SetRotationDegrees(const XMFLOAT3& eulerDegrees) noexcept
 {
-    // Clamp or wrap angles to [0, 360)
-    auto wrap = [](float angle) noexcept {
-        float a = fmodf(angle, 360.0f);
-        return a < 0.0f ? a + 360.0f : a;
-    };
-    m_rotationDegrees.x = wrap(eulerDegrees.x);
-    m_rotationDegrees.y = wrap(eulerDegrees.y);
-    m_rotationDegrees.z = wrap(eulerDegrees.z);
+    // Convert degrees to radians and create quaternion
+    const float pitch = XMConvertToRadians(eulerDegrees.x);
+    const float yaw = XMConvertToRadians(eulerDegrees.y);
+    const float roll = XMConvertToRadians(eulerDegrees.z);
+    XMVECTOR quat = XMQuaternionRotationRollPitchYaw(pitch, yaw, roll);
+    XMStoreFloat4(&m_orientation, quat);
+    InvalidateMatrices();
 }
 
-// Moves the camera forward in its local space
+void Camera::SetRotationQuaternion(const XMFLOAT4& quat) noexcept
+{
+    m_orientation = quat;
+    InvalidateMatrices();
+}
+
+void Camera::LookAt(const XMFLOAT3& target, const XMFLOAT3& up) noexcept
+{
+    // Build a look-at view matrix from current eye position -> target.
+    // We then invert the view (to obtain world) and extract a quaternion
+    // representing camera orientation. This keeps orientation and position
+    // consistent for subsequent local-space motion (TranslateLocal/Move*).
+    const XMVECTOR eyePositionVec = XMLoadFloat3(&m_position);
+    const XMVECTOR targetVec = XMLoadFloat3(&target);
+    const XMVECTOR upDirectionVec = XMLoadFloat3(&up);
+
+    XMMATRIX viewMatrix = XMMatrixLookAtLH(eyePositionVec, targetVec, upDirectionVec);
+
+    // Invert view -> world and extract rotation. Using matrix->quat is
+    // numerically stable for rigid transforms and is efficient with
+    // DirectXMath intrinsics.
+    XMMATRIX worldMatrix = XMMatrixInverse(nullptr, viewMatrix);
+    XMVECTOR rotationQuat = XMQuaternionRotationMatrix(worldMatrix);
+    XMStoreFloat4(&m_orientation, rotationQuat);
+
+    // Mark dependent cached data dirty so callers get fresh matrices/CB.
+    InvalidateMatrices();
+}
+
+void Camera::TranslateLocal(const XMFLOAT3& delta) noexcept
+{
+    // Translate in the camera's local space. We rotate the provided delta by
+    // the camera quaternion and add to position. This keeps the API simple
+    // and avoids constructing intermediate matrices.
+    const XMVECTOR rotationQuat = XMLoadFloat4(&m_orientation);
+    const XMVECTOR deltaVec = XMLoadFloat3(&delta);
+    const XMVECTOR movedVec = XMVector3Rotate(deltaVec, rotationQuat);
+    XMVECTOR positionVec = XMLoadFloat3(&m_position);
+    positionVec = XMVectorAdd(positionVec, movedVec);
+    XMStoreFloat3(&m_position, positionVec);
+    InvalidateMatrices();
+}
+
 void Camera::MoveForward(float distance) noexcept
 {
-    const XMMATRIX rotation = GetRotationMatrix();
-    const XMVECTOR forward = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rotation);
-    XMVECTOR pos = XMLoadFloat3(&m_position);
-    pos = XMVectorAdd(pos, XMVectorScale(forward, distance));
-    XMStoreFloat3(&m_position, pos);
+    XMVECTOR rotationQuat = XMLoadFloat4(&m_orientation);
+    XMVECTOR forwardVec = XMVector3Rotate(XMVectorSet(0, 0, 1, 0), rotationQuat);
+    XMVECTOR positionVec = XMLoadFloat3(&m_position);
+    positionVec = XMVectorAdd(positionVec, XMVectorScale(forwardVec, distance));
+    XMStoreFloat3(&m_position, positionVec);
+    InvalidateMatrices();
 }
 
-// Moves the camera right in its local space
 void Camera::MoveRight(float distance) noexcept
 {
-    const XMMATRIX rotation = GetRotationMatrix();
-    const XMVECTOR right = XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), rotation);
-    XMVECTOR pos = XMLoadFloat3(&m_position);
-    pos = XMVectorAdd(pos, XMVectorScale(right, distance));
-    XMStoreFloat3(&m_position, pos);
+    XMVECTOR rotationQuat = XMLoadFloat4(&m_orientation);
+    XMVECTOR rightVec = XMVector3Rotate(XMVectorSet(1, 0, 0, 0), rotationQuat);
+    XMVECTOR positionVec = XMLoadFloat3(&m_position);
+    positionVec = XMVectorAdd(positionVec, XMVectorScale(rightVec, distance));
+    XMStoreFloat3(&m_position, positionVec);
+    InvalidateMatrices();
 }
 
-// Moves the camera up in its local space
 void Camera::MoveUp(float distance) noexcept
 {
-    const XMMATRIX rotation = GetRotationMatrix();
-    const XMVECTOR up = XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rotation);
-    XMVECTOR pos = XMLoadFloat3(&m_position);
-    pos = XMVectorAdd(pos, XMVectorScale(up, distance));
-    XMStoreFloat3(&m_position, pos);
+    XMVECTOR rotationQuat = XMLoadFloat4(&m_orientation);
+    XMVECTOR upVec = XMVector3Rotate(XMVectorSet(0, 1, 0, 0), rotationQuat);
+    XMVECTOR positionVec = XMLoadFloat3(&m_position);
+    positionVec = XMVectorAdd(positionVec, XMVectorScale(upVec, distance));
+    XMStoreFloat3(&m_position, positionVec);
+    InvalidateMatrices();
 }
 
+XMFLOAT3 Camera::GetDirection() const noexcept
+{
+    // Returns the camera's forward vector in world space (normalized).
+    // Constructed from the orientation quaternion and normalized for safety.
+    const XMVECTOR rotationQuat = XMLoadFloat4(&m_orientation);
+    XMVECTOR forwardVec = XMVector3Rotate(XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f), rotationQuat);
+    forwardVec = XMVector3Normalize(forwardVec);
+    XMFLOAT3 dir;
+    XMStoreFloat3(&dir, forwardVec);
+    return dir;
+}
 
-// Returns the view matrix for the camera
+XMFLOAT3 Camera::GetRight() const noexcept
+{
+    XMVECTOR rotationQuat = XMLoadFloat4(&m_orientation);
+    XMVECTOR rightVec = XMVector3Rotate(XMVectorSet(1, 0, 0, 0), rotationQuat);
+    XMFLOAT3 r;
+    XMStoreFloat3(&r, rightVec);
+    return r;
+}
+
+XMFLOAT3 Camera::GetUp() const noexcept
+{
+    XMVECTOR rotationQuat = XMLoadFloat4(&m_orientation);
+    XMVECTOR upVec = XMVector3Rotate(XMVectorSet(0, 1, 0, 0), rotationQuat);
+    XMFLOAT3 u;
+    XMStoreFloat3(&u, upVec);
+    return u;
+}
+
+DirectX::XMFLOAT3 Camera::GetPosition() const noexcept
+{
+    return m_position;
+}
+
+DirectX::XMFLOAT4 Camera::GetRotationQuaternion() const noexcept
+{
+    return m_orientation;
+}
+
 XMMATRIX Camera::GetViewMatrix() const noexcept
 {
-    const XMMATRIX rotation = GetRotationMatrix();
-    const XMVECTOR eyePosition = XMLoadFloat3(&m_position);
-    const XMVECTOR focusPoint = XMVectorAdd(eyePosition, XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rotation));
-    const XMVECTOR upDirection = XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rotation);
-    return XMMatrixLookAtLH(eyePosition, focusPoint, upDirection);
-}
-
-// Helper: Builds a rotation matrix from Euler angles in degrees
-XMMATRIX Camera::GetRotationMatrix() const noexcept
-{
-    const float pitch = XMConvertToRadians(m_rotationDegrees.x);
-    const float yaw   = XMConvertToRadians(m_rotationDegrees.y);
-    const float roll  = XMConvertToRadians(m_rotationDegrees.z);
-    return XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
+    RebuildViewIfNeeded();
+    return XMLoadFloat4x4(&m_viewMat);
 }
 
 XMMATRIX Camera::GetProjectionMatrix() const noexcept
 {
-    constexpr float NearZ = 0.01f;
-    constexpr float FarZ = 10000.0f;
-    constexpr float fovY = XMConvertToRadians(60.0f); // 60 degree vertical FOV
+    RebuildProjectionIfNeeded();
+    return XMLoadFloat4x4(&m_projMat);
+}
 
-    const D3D12_VIEWPORT viewport = GSwapChain.GetDefaultViewport();
-    const float aspectRatio = viewport.Width / viewport.Height;
+void Camera::InvalidateMatrices() noexcept
+{
+    // Invalidate both the view matrix 
+    m_viewDirty = true;
+}
 
-    // Use perspective projection (not orthographic)
-    return XMMatrixPerspectiveFovLH(fovY, aspectRatio, NearZ, FarZ);
+void Camera::RebuildViewIfNeeded() const noexcept
+{
+    if (!m_viewDirty) return;
+    const XMVECTOR positionVec = XMLoadFloat3(&m_position);
+    const XMVECTOR rotationQuat = XMLoadFloat4(&m_orientation);
+    const XMVECTOR forwardVec = XMVector3Rotate(XMVectorSet(0, 0, 1, 0), rotationQuat);
+    const XMVECTOR upVec = XMVector3Rotate(XMVectorSet(0, 1, 0, 0), rotationQuat);
+    const XMVECTOR targetVec = XMVectorAdd(positionVec, forwardVec);
+    XMMATRIX viewMatrix = XMMatrixLookAtLH(positionVec, targetVec, upVec);
+    XMStoreFloat4x4(&m_viewMat, viewMatrix);
+    m_viewDirty = false;
+}
+
+void Camera::RebuildProjectionIfNeeded() const noexcept
+{
+    if (!m_projDirty) return;
+    const float fovRadians = XMConvertToRadians(m_fovYDegrees);
+    XMMATRIX projMatrix = XMMatrixPerspectiveFovLH(fovRadians, m_aspect, m_nearZ, m_farZ);
+    XMStoreFloat4x4(&m_projMat, projMatrix);
+    m_projDirty = false;
 }

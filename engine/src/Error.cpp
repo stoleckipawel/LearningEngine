@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <cstring>
 
 namespace
 {
@@ -73,7 +74,9 @@ namespace
     }
 }
 
-int ShowErrorMessageAt(std::string_view msg, ELogType logType, ErrorDetail::SourceLocation location)
+// Shows an error dialog and returns the user's choice. noexcept because errors
+// reported here are fatal/diagnostic and the function won't throw.
+int ShowErrorMessageAt(std::string_view msg, ELogType logType, ErrorDetail::SourceLocation location) noexcept
 {
     const std::string msgWithLocation = FormatMessageWithLocation(msg, location);
 
@@ -81,9 +84,11 @@ int ShowErrorMessageAt(std::string_view msg, ELogType logType, ErrorDetail::Sour
     std::cerr << msgWithLocation << std::endl;
 
 #if defined(_DEBUG)
-    // Trigger a debugger breakpoint first in debug builds.
+    // Trigger a debugger breakpoint first in debug builds (if a debugger is attached).
     if (IsDebuggerPresent())
+    {
         DebugBreak();
+    }
 #endif
 
     UINT flags = GetErrorIcon(logType);
@@ -92,7 +97,9 @@ int ShowErrorMessageAt(std::string_view msg, ELogType logType, ErrorDetail::Sour
     return MessageBoxA(nullptr, msgWithLocation.c_str(), GetErrorTitle(logType), flags);
 }
 
-void LogMessageAt(std::string_view message, ELogType logType, ErrorDetail::SourceLocation location)
+// Log a message and show the dialog. Marked noexcept to indicate this
+// diagnostic path won't throw exceptions.
+void LogMessageAt(std::string_view message, ELogType logType, ErrorDetail::SourceLocation location) noexcept
 {
     const std::string formatted = std::string(GetSeverityPrefix(logType)) + std::string(message);
     const int choice = ShowErrorMessageAt(formatted, logType, location);
@@ -106,7 +113,9 @@ void LogMessageAt(std::string_view message, ELogType logType, ErrorDetail::Sourc
     }
 }
 
-void ThrowIfFailedAt(HRESULT hr, std::string_view message, ErrorDetail::SourceLocation location)
+// Helper to throw on failing HRESULTs. This will present a fatal dialog
+// and may exit the process depending on user choice; marked noexcept.
+void ThrowIfFailedAt(HRESULT hr, std::string_view message, ErrorDetail::SourceLocation location) noexcept
 {
     if (!FAILED(hr))
         return;
@@ -114,11 +123,12 @@ void ThrowIfFailedAt(HRESULT hr, std::string_view message, ErrorDetail::SourceLo
     char hrBuf[64];
     std::snprintf(hrBuf, sizeof(hrBuf), "HRESULT 0x%08X", static_cast<unsigned int>(hr));
 
+    // Build the combined message efficiently.
     std::string combined;
-    combined.reserve(message.size() + 1 + 32);
+    combined.reserve(message.size() + 1 + sizeof(hrBuf));
     combined.append(message.data(), message.size());
     combined.push_back('\n');
-    combined += hrBuf;
+    combined.append(hrBuf, hrBuf + std::strlen(hrBuf));
 
     LogMessageAt(combined, ELogType::Fatal, location);
 }

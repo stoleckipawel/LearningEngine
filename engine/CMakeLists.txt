@@ -45,13 +45,15 @@ target_link_libraries(Engine PUBLIC
   imgui
 )
 
-# Set compiler flags for debug builds
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-  set(CMAKE_C_FLAGS_DEBUG "-O0 -g")
-else()
+# Set compiler flags for debug builds.
+# Use MSVC-style flags when building with Visual Studio/MSVC (including clang-cl),
+# otherwise use GNU/Clang-style flags.
+if (MSVC)
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi")
   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /Od /Zi")
+else()
+  set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+  set(CMAKE_C_FLAGS_DEBUG "-O0 -g")
 endif()
 
 # --- PCH setup ---

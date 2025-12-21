@@ -13,6 +13,8 @@
 #include "DescriptorHandle.h"
 #include "EngineConfig.h"
 
+using Microsoft::WRL::ComPtr;
+
 // SwapChain manages the Direct3D 12 swap chain and its associated render targets.
 class SwapChain
 {

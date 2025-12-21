@@ -1,22 +1,32 @@
 #pragma once
-#include "DescriptorHandle.h"
 
-// Sampler class manages a D3D12 sampler and its descriptor handles
+#include "DescriptorHandle.h"
+#include <d3d12.h>
+
+// Sampler: lightweight RAII wrapper for a D3D12 sampler descriptor.
+// Ownership:
+//  - Allocates a descriptor slot from the sampler heap on construction.
+//  - Frees the slot on destruction.
+// Move semantics transfer descriptor ownership; copy is disabled to avoid
+// double-freeing a descriptor index.
 class Sampler
 {
 public:
-    // Constructs a sampler and creates it in the descriptor heap via allocator
+    // Default constructs and creates a sampler descriptor in the sampler heap.
+    // If allocation fails an error will be reported (engine fatal path).
     Sampler();
 
     Sampler(const Sampler&) = delete;
-    Sampler& operator=(const Sampler&) = delete;
+    Sampler(Sampler&& other) noexcept;
 
-    // Returns the GPU descriptor handle for this sampler
-    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const { return m_samplerHandle.GetGPU(); }
+    // Accessors are noexcept and const-correct. Return by-value is cheap
+    // (handles are small PODs).
+    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept { return m_samplerHandle.GetGPU(); }
+    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const noexcept { return m_samplerHandle.GetCPU(); }
+    bool IsValid() const noexcept { return m_samplerHandle.IsValid(); }
 
-    // Returns the CPU descriptor handle for this sampler
-    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const { return m_samplerHandle.GetCPU(); }
-    ~Sampler();
+    ~Sampler() noexcept;
+
 private:
     DescriptorHandle m_samplerHandle;  // Allocated sampler descriptor handle
 };

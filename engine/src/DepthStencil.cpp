@@ -40,8 +40,8 @@ void DepthStencil::CreateResource()
 	depthStencilResourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	depthStencilResourceDesc.MipLevels = 1;
 	depthStencilResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	depthStencilResourceDesc.Height = GWindow.GetHeight();
-	depthStencilResourceDesc.Width = GWindow.GetWidth();
+	depthStencilResourceDesc.Height = static_cast<UINT>(GWindow.GetHeight());
+	depthStencilResourceDesc.Width = static_cast<UINT>(GWindow.GetWidth());
 	depthStencilResourceDesc.DepthOrArraySize = 1;
 	depthStencilResourceDesc.SampleDesc.Count = 1;
 	depthStencilResourceDesc.SampleDesc.Quality = 0;
@@ -50,33 +50,38 @@ void DepthStencil::CreateResource()
 	depthStencilResourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
 
 	// Create the committed resource for depth stencil
-	ThrowIfFailed(
-		GRHI.GetDevice()->CreateCommittedResource(
-			&heapDefaultProperties,
-			D3D12_HEAP_FLAG_NONE,
-			&depthStencilResourceDesc,
-			D3D12_RESOURCE_STATE_DEPTH_READ,
-			&depthOptimizedClearValue,
-			IID_PPV_ARGS(m_resource.ReleaseAndGetAddressOf())),
-		"Failed To Create Resource"
-	);
+		ThrowIfFailed(
+			GRHI.GetDevice()->CreateCommittedResource(
+				&heapDefaultProperties,
+				D3D12_HEAP_FLAG_NONE,
+				&depthStencilResourceDesc,
+				D3D12_RESOURCE_STATE_DEPTH_READ,
+				&depthOptimizedClearValue,
+				IID_PPV_ARGS(m_resource.ReleaseAndGetAddressOf())),
+			"Failed To Create Resource"
+		);
+
+	// Name the resource for easier debugging (no-op in release via DebugUtils)
 	DebugUtils::SetDebugName(m_resource, L"RHI_DepthStencil");
 }
 
 // Creates the depth stencil view in the descriptor heap
 void DepthStencil::CreateDepthStencilView()
 {
+	// Create the depth-stencil view in the allocated descriptor slot
 	GRHI.GetDevice()->CreateDepthStencilView(m_resource.Get(), &m_depthStencilDesc, GetCPUHandle());
 }
 
-void DepthStencil::Clear()
+void DepthStencil::Clear() noexcept
 {
+	// Clear both depth and stencil. Reversed-Z convention clears depth to 0.0f.
 	GRHI.GetCommandList()->ClearDepthStencilView(GetCPUHandle(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 0.0f, 0, 0, nullptr);
 }
 
 // Transition depth buffer to write state before rendering
-void DepthStencil::SetWriteState()
+void DepthStencil::SetWriteState() noexcept
 {
+	// Transition to depth-write for rendering.
 	GRHI.SetBarrier(
 		m_resource.Get(),
 		D3D12_RESOURCE_STATE_DEPTH_READ,
@@ -85,8 +90,9 @@ void DepthStencil::SetWriteState()
 }
 
 // Transition depth buffer to read state after rendering
-void DepthStencil::SetReadState()
+void DepthStencil::SetReadState() noexcept
 {
+	// Transition to depth-read for shader sampling / post-processing.
 	GRHI.SetBarrier(
 		m_resource.Get(),
 		D3D12_RESOURCE_STATE_DEPTH_WRITE,
@@ -95,8 +101,9 @@ void DepthStencil::SetReadState()
 }
 
 // Destructor resets resources
-DepthStencil::~DepthStencil()
+DepthStencil::~DepthStencil() noexcept
 {
+	// Release GPU resource and free descriptor handle. Descriptor manager handles no-op for invalid handles.
 	m_resource.Reset();
 	if (m_dsvHandle.IsValid())
 	{

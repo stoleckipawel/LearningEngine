@@ -1,12 +1,20 @@
 #pragma once
 
 #include "RHI.h"
+#include <cstddef>
+#include <type_traits>
 
-// UploadBuffer provides a utility for uploading data to GPU-accessible buffers using an upload heap.
+using Microsoft::WRL::ComPtr;
+
+// UploadBuffer provides utilities for uploading small blobs to GPU memory using
+// committed upload-heap resources. For large or frequent uploads prefer a
+// ring/linear upload allocator or staging to a default heap and an explicit
+// copy command (see engine design notes).
 class UploadBuffer
 {
 public:
-	// Uploads the given data to a buffer of the specified size.
-	// Returns a ComPtr to the created ID3D12Resource2 buffer.
-	static ComPtr<ID3D12Resource2> Upload(void* data, uint32_t dataSize);
+	// Uploads the given data to a newly created upload-heap buffer and returns
+	// a ComPtr to the GPU resource. `data` must point to at least `dataSize`
+	// bytes. `dataSize` is size in bytes.
+	static ComPtr<ID3D12Resource2> Upload(const void* data, size_t dataSize);
 };

@@ -4,23 +4,27 @@
 #include "RHI.h"
 #include "UI.h"
 #include "EngineConfig.h"
+#include <string>
 
 Window GWindow;
 
-RECT Window::GetRect()
+RECT Window::GetRect() const noexcept
 {
-	RECT rect;
-	GetClientRect(WindowHWND, &rect);
+	RECT rect{};
+	if (m_windowHWND)
+	{
+		GetClientRect(m_windowHWND, &rect);
+	}
 	return rect;
 }
 
-UINT Window::GetWidth()
+UINT Window::GetWidth() const noexcept
 {
 	RECT rect = GetRect();
 	return rect.right - rect.left;
 }
 
-UINT Window::GetHeight()
+UINT Window::GetHeight() const noexcept
 {
 	RECT rect = GetRect();
 	return rect.bottom - rect.top;
@@ -52,7 +56,7 @@ void Window::Initialize()
 	std::wstring wtitle(EngineSettings::WindowTitle.begin(), EngineSettings::WindowTitle.end());
 
 	// Create the window with configured initial size
-	WindowHWND = CreateWindowExW(
+	m_windowHWND = CreateWindowExW(
 		WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW,
 		L"Default Window Name", // class name string
 		wtitle.c_str(),          // window name string
@@ -64,7 +68,7 @@ void Window::Initialize()
 		nullptr
 	);
 
-	if (WindowHWND == nullptr)
+	if (m_windowHWND == nullptr)
 	{
 		LogMessage("Failed to Create a Window", ELogType::Fatal);
 	}
@@ -80,9 +84,9 @@ void Window::Initialize()
 // Shuts down the window and unregisters its class
 void Window::Shutdown()
 {
-	if (WindowHWND)
+	if (m_windowHWND)
 	{
-		DestroyWindow(WindowHWND);
+		DestroyWindow(m_windowHWND);
 	}
 
 	if (m_wndClass)
@@ -94,10 +98,10 @@ void Window::Shutdown()
 
 
 // Polls and dispatches pending window messages (event loop)
-void Window::PollEvents()
+void Window::PollEvents() noexcept
 {
 	MSG msg;
-	while (PeekMessageW(&msg, WindowHWND, 0, 0, PM_REMOVE))
+	while (PeekMessageW(&msg, m_windowHWND, 0, 0, PM_REMOVE))
 	{
 		TranslateMessage(&msg);
 		DispatchMessageW(&msg);
@@ -121,18 +125,18 @@ void Window::SetFullScreen(bool bSetFullScreen)
 		exStyle = WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW;
 	}
 
-	SetWindowLongW(WindowHWND, GWL_STYLE, style);
-	SetWindowLongW(WindowHWND, GWL_EXSTYLE, exStyle);
+	SetWindowLongW(m_windowHWND, GWL_STYLE, style);
+	SetWindowLongW(m_windowHWND, GWL_EXSTYLE, exStyle);
 
 	if (bSetFullScreen)
 	{
 		// Resize window to cover the monitor
-		HMONITOR monitorFromWindow = MonitorFromWindow(WindowHWND, MONITOR_DEFAULTTONEAREST);
+		HMONITOR monitorFromWindow = MonitorFromWindow(m_windowHWND, MONITOR_DEFAULTTONEAREST);
 		MONITORINFO monitorInfo{};
 		monitorInfo.cbSize = sizeof(MONITORINFO);
 		if (GetMonitorInfoW(monitorFromWindow, &monitorInfo))
 		{
-			SetWindowPos(WindowHWND, nullptr,
+			SetWindowPos(m_windowHWND, nullptr,
 				monitorInfo.rcMonitor.left,
 				monitorInfo.rcMonitor.top,
 				monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
@@ -143,7 +147,7 @@ void Window::SetFullScreen(bool bSetFullScreen)
 	else
 	{
 		// Maximize window in windowed mode
-		ShowWindow(WindowHWND, SW_MAXIMIZE);
+		ShowWindow(m_windowHWND, SW_MAXIMIZE);
 	}
 
 	m_bIsFullScreen = bSetFullScreen;    

@@ -2,7 +2,7 @@
 // Provides fast Allocate/Free of individual descriptor slots by index.
 // Thread-safe via internal mutex.
 
-#include <stack>
+#include <vector>
 #include <mutex>
 #include "DescriptorHeap.h"
 
@@ -25,7 +25,10 @@ public:
     void Free(const DescriptorHandle& handle) noexcept;    
 private:
     DescriptorHeap* m_Heap;           // Heap being managed (not owned)
-    std::stack<UINT> m_freeIndices;   // LIFO container of freed indices available for reuse
-    UINT m_currentOffset = 0;         // Next unallocated index for linear growth when free-list is empty
+    // Vector-backed LIFO free-list.
+    std::vector<UINT> m_freeIndices;
+
+    // Next unallocated index for linear growth when free-list is empty.
+    UINT m_currentOffset = 0;
     std::mutex m_mutex;               // Guards all Allocate/Free operations for thread safety
 };

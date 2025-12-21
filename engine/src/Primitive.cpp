@@ -5,58 +5,80 @@
 #include "Camera.h"
 
 Primitive::Primitive(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale)
-    : Translation(translation), Rotation(rotation), Scale(scale)
+    : m_translation(translation), m_rotationEuler(rotation), m_scale(scale)
 {
-    for (size_t i = 0; i < EngineSettings::FramesInFlight; ++i)
-    {
-        VertexConstantBuffer[i] = std::make_unique<ConstantBuffer<FVertexConstantBufferData>>();
-        PixelConstantBuffer[i] = std::make_unique<ConstantBuffer<PixelConstantBufferData>>();
-    }
+    m_worldDirty = true;
 }
 
-XMMATRIX Primitive::GetWorldMatrix() const
+// -- Transform setters/getters -------------------------------------------------
+void Primitive::SetTranslation(const XMFLOAT3& t) noexcept
 {
-    XMMATRIX translation = XMMatrixTranslation(Translation.x, Translation.y, Translation.z);
-    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(Rotation.x, Rotation.y, Rotation.z);
-    XMMATRIX scale = XMMatrixScaling(Scale.x, Scale.y, Scale.z);
+    m_translation = t;
+    InvalidateWorldCache();
+}
+
+XMFLOAT3 Primitive::GetTranslation() const noexcept
+{
+    return m_translation;
+}
+
+void Primitive::SetRotationEuler(const XMFLOAT3& r) noexcept
+{
+    m_rotationEuler = r;
+    InvalidateWorldCache();
+}
+
+XMFLOAT3 Primitive::GetRotationEuler() const noexcept
+{
+    return m_rotationEuler;
+}
+
+void Primitive::SetScale(const XMFLOAT3& s) noexcept
+{
+    m_scale = s;
+    InvalidateWorldCache();
+}
+
+XMFLOAT3 Primitive::GetScale() const noexcept
+{
+    return m_scale;
+}
+
+// Lazy rebuild of the cached world matrix. Mutable members are used so const
+// accessors (GetWorldMatrix) can rebuild transparently and remain logically const.
+void Primitive::RebuildWorldIfNeeded() const noexcept
+{
+    if (!m_worldDirty)
+        return;
+
+    XMMATRIX translation = XMMatrixTranslation(m_translation.x, m_translation.y, m_translation.z);
+    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(m_rotationEuler.x, m_rotationEuler.y, m_rotationEuler.z);
+    XMMATRIX scale = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
     XMMATRIX world = scale * rotation * translation;
-    return world;
+    XMStoreFloat4x4(&m_worldMatrixCache, world);
+    m_worldDirty = false;
 }
 
-void Primitive::UpdateVertexConstantBuffer()
+XMMATRIX Primitive::GetWorldMatrix() const noexcept
 {
-	// Update vertex constant buffer with world, view, and projection matrices
-	FVertexConstantBufferData vertexData;
-	XMMATRIX world = GetWorldMatrix();
-	XMStoreFloat4x4(&vertexData.WorldMTX, world);
-
-	XMMATRIX view = GCamera.GetViewMatrix();
-	XMStoreFloat4x4(&vertexData.ViewMTX, view);
-
-	XMMATRIX projection = GCamera.GetProjectionMatrix();
-	XMStoreFloat4x4(&vertexData.ProjectionMTX, projection);
-
-	XMMATRIX worldViewProj = world * view * projection;
-	XMStoreFloat4x4(&vertexData.WorldViewProjMTX, worldViewProj);
-	
-	VertexConstantBuffer[GSwapChain.GetFrameInFlightIndex()]->Update(vertexData);
+    RebuildWorldIfNeeded();
+    return XMLoadFloat4x4(&m_worldMatrixCache);
 }
 
-void Primitive::UpdatePixelConstantBuffer()
+XMMATRIX Primitive::GetWorldInverseTransposeMatrix() const noexcept
 {
-    float speed = 0.5;
-	PixelConstantBufferData pixelData;
-	pixelData.Color.x = 0.5f + 0.5f * sinf(speed);
-	pixelData.Color.y = 0.5f + 0.5f * sinf(speed + 2.0f);
-	pixelData.Color.z = 0.5f + 0.5f * sinf(speed + 4.0f);
-	pixelData.Color.w = 1.0f;
-	PixelConstantBuffer[GSwapChain.GetFrameInFlightIndex()]->Update(pixelData);
+    RebuildWorldIfNeeded();
+    XMMATRIX world = XMLoadFloat4x4(&m_worldMatrixCache);
+    XMMATRIX invWorld = XMMatrixInverse(nullptr, world);
+    return XMMatrixTranspose(invWorld);
 }
 
-void Primitive::UpdateConstantBuffers()
+DirectX::XMFLOAT3X3 Primitive::GetWorldRotationMatrix3x3() const noexcept
 {
-    UpdateVertexConstantBuffer();
-    UpdatePixelConstantBuffer();
+    XMMATRIX rotation = XMMatrixRotationRollPitchYaw(m_rotationEuler.x, m_rotationEuler.y, m_rotationEuler.z);
+    DirectX::XMFLOAT3X3 rot3x3;
+    XMStoreFloat3x3(&rot3x3, rotation);
+    return rot3x3;
 }
 
 void Primitive::UploadVertexBuffer()

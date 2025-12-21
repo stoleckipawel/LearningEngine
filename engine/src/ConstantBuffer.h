@@ -4,6 +4,9 @@
 #include "UploadBuffer.h"
 #include "DescriptorHeapManager.h"
 #include "DebugUtils.h"
+#include <cstring>
+
+using Microsoft::WRL::ComPtr;
 
 // ConstantBuffer manages a GPU constant buffer for type T, including creation, mapping, updating, and descriptor views.
 template <typename T>
@@ -15,23 +18,37 @@ public:
         : m_cbvHandle(GDescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)),
           m_ConstantBufferSize((sizeof(T) + 255) & ~255)
     {
-        ZeroMemory(&m_ConstantBufferData, sizeof(T));
+        std::memset(&m_ConstantBufferData, 0, sizeof(T));
         CreateResource();
         CreateConstantBufferView();
     }
 
     // Updates the buffer with new data
-    void Update(const T& Data)
+    void Update(const T& Data) noexcept
     {
         m_ConstantBufferData = Data;
-        memcpy(m_MappedData, &m_ConstantBufferData, sizeof(T));
+        if (m_MappedData)
+        {
+            std::memcpy(m_MappedData, &m_ConstantBufferData, sizeof(T));
+        }
     }
 
-    // Returns the GPU descriptor handle for shader access
+    // Returns the GPU virtual address for root CBV binding (SetGraphicsRootConstantBufferView)
+    // This is the preferred binding method for frequently-updated constant buffers.
+    D3D12_GPU_VIRTUAL_ADDRESS GetGPUVirtualAddress() const noexcept { return Resource ? Resource->GetGPUVirtualAddress() : 0; }
+
+    // Returns the GPU descriptor handle for descriptor table binding
+    // Use this only when binding via descriptor tables, not for root CBVs.
     D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept { return m_cbvHandle.GetGPU(); }
 
     // Returns the CPU descriptor handle for descriptor heap management
     D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const noexcept { return m_cbvHandle.GetCPU(); }
+
+    // Returns the aligned size of the backing constant buffer in bytes (256-byte aligned)
+    UINT GetSizeInBytes() const noexcept { return m_ConstantBufferSize; }
+
+    // Returns true if the buffer resource is valid and mapped
+    bool IsValid() const noexcept { return Resource != nullptr && m_MappedData != nullptr; }
 public:
     // No copy or move allowed, strict ownership
     ConstantBuffer(const ConstantBuffer&) = delete;
@@ -41,8 +58,11 @@ public:
 
     ~ConstantBuffer() noexcept
     {
-        Resource->Unmap(0, nullptr);
-        Resource.Reset();
+        if (Resource)
+        {
+            Resource->Unmap(0, nullptr);
+            Resource.Reset();
+        }
         m_MappedData = nullptr;
 
         if (m_cbvHandle.IsValid())
@@ -79,7 +99,9 @@ private:
 
         // Map the resource for CPU writes
         D3D12_RANGE readRange = { 0, 0 };
-        ThrowIfFailed(Resource->Map(0, &readRange, &m_MappedData), "Failed to map constant buffer resource.");
+        void* mapped = nullptr;
+        ThrowIfFailed(Resource->Map(0, &readRange, &mapped), "Failed to map constant buffer resource.");
+        m_MappedData = mapped;
     }
 
     // Creates a constant buffer view at the given CPU descriptor handle

@@ -2,6 +2,7 @@
 #pragma once
 
 #include <filesystem>
+#include <string>
 #include <cstdlib>
 
 // AssetPathResolver: Utility for resolving asset file paths for engine and samples.
@@ -25,6 +26,25 @@ inline std::filesystem::path GetAssetSubdir(AssetType type)
     }
 }
 
+
+inline std::string GetEnvVar(const char* name)
+{
+#if defined(_WIN32)
+    char* buffer = nullptr;
+    size_t len = 0;
+    if (_dupenv_s(&buffer, &len, name) == 0 && buffer)
+    {
+        std::string result(buffer);
+        free(buffer);
+        return result;
+    }
+    return std::string();
+#else
+    const char* val = std::getenv(name);
+    return val ? std::string(val) : std::string();
+#endif
+}
+
 // Attempts to resolve an asset path by searching:
 //   1. Absolute path (if provided and exists)
 //   2. Sample asset directories (SAMPLES_PATH env)
@@ -40,8 +60,8 @@ inline std::filesystem::path ResolveAssetPath(const std::filesystem::path& input
     std::filesystem::path assetSubdir = "assets" / GetAssetSubdir(type);
 
     // Check sample asset directories (SAMPLES_PATH)
-    const char* samplesPathEnv = std::getenv("SAMPLES_PATH");
-    if (samplesPathEnv) {
+    const std::string samplesPathEnv = GetEnvVar("SAMPLES_PATH");
+    if (!samplesPathEnv.empty()) {
         std::filesystem::path samplesDir(samplesPathEnv);
         if (std::filesystem::exists(samplesDir) && std::filesystem::is_directory(samplesDir)) {
             for (const auto& entry : std::filesystem::directory_iterator(samplesDir)) {
@@ -58,8 +78,8 @@ inline std::filesystem::path ResolveAssetPath(const std::filesystem::path& input
     }
 
     // Check engine asset directory (ENGINE_PATH)
-    const char* enginePathEnv = std::getenv("ENGINE_PATH");
-    if (enginePathEnv) {
+    const std::string enginePathEnv = GetEnvVar("ENGINE_PATH");
+    if (!enginePathEnv.empty()) {
         std::filesystem::path engineAsset(enginePathEnv);
         if (!assetSubdir.empty())
             engineAsset /= assetSubdir;

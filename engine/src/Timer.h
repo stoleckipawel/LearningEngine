@@ -139,8 +139,8 @@ namespace Engine
 
 } // namespace Engine
 
-// Global singleton instance. Prefer accessing via `gTimer`.
-extern Engine::Timer gTimer;
+// Global singleton instance. Prefer accessing via `GTimer`.
+extern Engine::Timer GTimer;
 
 
 

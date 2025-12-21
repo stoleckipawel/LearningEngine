@@ -34,10 +34,6 @@ public:
 
     // Get reference to the first primitive (useful for PSO setup).
     Primitive& GetFirstPrimitive() const;
-
-    // Update all primitives' constant buffers for the current frame.
-    void UpdateConstantBuffers();
-
 private:
     // Storage for all managed primitives.
     std::vector<std::unique_ptr<Primitive>> m_primitives;
