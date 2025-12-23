@@ -11,6 +11,7 @@
 #include "RootBindings.h"
 #include "ConstantBuffer.h"
 #include "ConstantBufferManager.h"
+#include "FrameResource.h"
 #include "Sampler.h"
 #include "DepthStencil.h"
 #include "UI.h"
@@ -38,6 +39,9 @@ void Renderer::Initialize() noexcept
     // Initialize descriptor heap manager and swap chain
     GDescriptorHeapManager.Initialize();
     GSwapChain.Initialize();
+
+    // Initialize frame resource manager (per-frame ring buffer for dynamic CBs)
+    GFrameResourceManager.Initialize(FrameResourceManager::DefaultCapacityPerFrame);
     
     // Initialize the global constant buffer manager (manages per-frame CB instances)
     GConstantBufferManager.Initialize();
@@ -142,23 +146,17 @@ void Renderer::BindPerFrameResources() noexcept
     // Bind Per-Frame Constant Buffer - updated once per CPU frame
     // Contains: FrameIndex, TotalTime, DeltaTime, ViewportSize..........
     // -------------------------------------------------------------------------
-    if (auto* perFrameCB = GConstantBufferManager.GetPerFrameConstantBuffer())
-    {
-        GRHI.GetCommandList()->SetGraphicsRootConstantBufferView(
-            RootBindings::RootParam::PerFrame,
-            perFrameCB->GetGPUVirtualAddress());
-    }
+    GRHI.GetCommandList()->SetGraphicsRootConstantBufferView(
+        RootBindings::RootParam::PerFrame,
+        GConstantBufferManager.GetPerFrameGpuAddress());
 
     // -------------------------------------------------------------------------
     // Bind Per-View Constant Buffer - updated once per view/camera
     // Contains: View/Proj matrices, CameraPosition, Near/Far planes.............
     // -------------------------------------------------------------------------
-    if (auto* perViewCB = GConstantBufferManager.GetPerViewConstantBuffer())
-    {
-        GRHI.GetCommandList()->SetGraphicsRootConstantBufferView(
-            RootBindings::RootParam::PerView,
-            perViewCB->GetGPUVirtualAddress());
-    }
+    GRHI.GetCommandList()->SetGraphicsRootConstantBufferView(
+        RootBindings::RootParam::PerView,
+        GConstantBufferManager.GetPerViewGpuAddress());
 
     // -------------------------------------------------------------------------
     // Bind Textures SRV - descriptor table
@@ -190,27 +188,21 @@ void Renderer::BindPerObjectResources(const Primitive& primitive) noexcept
     // -------------------------------------------------------------------------
     // Update and Bind Per-Object VS Constant Buffer (b2)
     // Contains: WorldMatrix for this primitive
+    // Uses ring buffer allocation - each call returns a unique GPU VA
     // -------------------------------------------------------------------------
-    GConstantBufferManager.UpdatePerObjectVS(primitive);
-    if (auto* perObjectVSCB = GConstantBufferManager.GetPerObjectVSConstantBuffer())
-    {
-        GRHI.GetCommandList()->SetGraphicsRootConstantBufferView(
-            RootBindings::RootParam::PerObjectVS,
-            perObjectVSCB->GetGPUVirtualAddress());
-    }
+    GRHI.GetCommandList()->SetGraphicsRootConstantBufferView(
+        RootBindings::RootParam::PerObjectVS,
+        GConstantBufferManager.UpdatePerObjectVS(primitive));
 
     // -------------------------------------------------------------------------
     // Update and Bind Per-Object PS Constant Buffer (b3)
     // Contains: Material properties (BaseColor, Metallic, Roughness, F0)
+    // Uses ring buffer allocation - each call returns a unique GPU VA
     // TODO: Pass material data from primitive when material system is implemented
     // -------------------------------------------------------------------------
-    GConstantBufferManager.UpdatePerObjectPS();
-    if (auto* perObjectPSCB = GConstantBufferManager.GetPerObjectPSConstantBuffer())
-    {
-        GRHI.GetCommandList()->SetGraphicsRootConstantBufferView(
-            RootBindings::RootParam::PerObjectPS,
-            perObjectPSCB->GetGPUVirtualAddress());
-    }
+    GRHI.GetCommandList()->SetGraphicsRootConstantBufferView(
+        RootBindings::RootParam::PerObjectPS,
+        GConstantBufferManager.UpdatePerObjectPS());
 }
 
 // -----------------------------------------------------------------------------
@@ -366,6 +358,9 @@ void Renderer::OnRender() noexcept
 // -----------------------------------------------------------------------------
 void Renderer::BeginFrame() noexcept
 {
+    // Wait for GPU to finish with this frame's resources before reusing: This is where the ring buffer synchronization happens
+    GFrameResourceManager.BeginFrame(GRHI.GetFenceEvent(), GSwapChain.GetFrameInFlightIndex());
+
     GRHI.WaitForGPU();
     GRHI.ResetCommandAllocator();
     GRHI.ResetCommandList();
@@ -399,6 +394,11 @@ void Renderer::SubmitFrame() noexcept
     GRHI.CloseCommandListScene();
     GRHI.ExecuteCommandList();
     GRHI.Signal();
+
+    // Record the fence value for this frame so we know when GPU is done
+    // This enables safe ring buffer reuse after FramesInFlight frames
+    GFrameResourceManager.EndFrame(GRHI.GetNextFenceValue() - 1);
+
     GSwapChain.Present();
 }
 
@@ -415,8 +415,11 @@ void Renderer::EndFrame() noexcept
 // -----------------------------------------------------------------------------
 void Renderer::Shutdown() noexcept
 {
-    GRHI.Flush();       
-    GUI.Shutdown();    
+    GRHI.Flush();
+
+    GUI.Shutdown();
+    GConstantBufferManager.Shutdown();
+    GFrameResourceManager.Shutdown();
     GSwapChain.Shutdown();
     GWindow.Shutdown();
     GDescriptorHeapManager.Shutdown();

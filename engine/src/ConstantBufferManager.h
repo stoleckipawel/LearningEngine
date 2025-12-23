@@ -7,44 +7,69 @@
 #include "ConstantBuffer.h"
 #include "Primitive.h"
 
+//------------------------------------------------------------------------------
+// ConstantBufferManager
+//------------------------------------------------------------------------------
+// Manages constant buffer updates with proper GPU/CPU synchronization.
+//
+// Architecture:
+//   - Per-Frame/Per-View CBs: Use persistent ConstantBuffer<T> instances
+//     (one per frame-in-flight). These are updated once per frame and bound
+//     to root CBV slots. Simple and efficient for low-frequency updates.
+//
+//   - Per-Object CBs: Use FrameResourceManager's linear allocator to
+//     suballocate per-draw. 
+//
+// Binding Pattern:
+//   - Per-Frame/Per-View: Bound once per frame via GetXXXGpuAddress()
+//   - Per-Object: UpdatePerObjectXXX() returns a unique GPU VA per call
+//
+// Thread Safety:
+//   - Per-object allocations are thread-safe (atomic linear allocator)
+//   - Per-frame/per-view updates should be called from main thread
+//------------------------------------------------------------------------------
 
 class ConstantBufferManager
 {
 public:
+    /// Initialize all constant buffers.
     void Initialize();
 
-    // Accessors
-    const ConstantBuffer<PerFrameConstantBufferData>* GetPerFrameConstantBuffer() const noexcept { return PerFrameConstantBuffer[GSwapChain.GetFrameInFlightIndex()].get(); }
-    const ConstantBuffer<PerViewConstantBufferData>* GetPerViewConstantBuffer() const noexcept { return PerViewConstantBuffer[GSwapChain.GetFrameInFlightIndex()].get(); }
-    const ConstantBuffer<PerObjectVSConstantBufferData>* GetPerObjectVSConstantBuffer() const noexcept { return PerObjectVSConstantBuffer[GSwapChain.GetFrameInFlightIndex()].get(); }
-    const ConstantBuffer<PerObjectPSConstantBufferData>* GetPerObjectPSConstantBuffer() const noexcept { return PerObjectPSConstantBuffer[GSwapChain.GetFrameInFlightIndex()].get(); }
+    /// Cleanup resources.
+    void Shutdown();
 
     // -------------------------------------------------------------------------
-    // Update methods: copy POD data to GPU memory, return GPU VA for binding
+    // GPU Address Accessors (for binding root CBVs)
     // -------------------------------------------------------------------------
 
-    // PerFrame: updated once per frame by Renderer using Timer + Viewport data
+    /// Get GPU address of current frame's per-frame CB.
+    [[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS GetPerFrameGpuAddress() const;
+
+    /// Get GPU address of current frame's per-view CB.
+    [[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS GetPerViewGpuAddress() const;
+
+    // -------------------------------------------------------------------------
+    // Update Methods
+    // -------------------------------------------------------------------------
+
+    /// Update per-frame constant buffer. Call once per frame.
     void UpdatePerFrame();
 
-    // PerView: updated per camera/view by Renderer using Camera data
+    /// Update per-view constant buffer. Call once per camera/view.
     void UpdatePerView();
 
-    // PerObjectVS: updated per draw by Renderer using Primitive transform data
-    void UpdatePerObjectVS(const Primitive& primitive);
+    /// Update per-object VS constant buffer for a primitive.
+    [[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS UpdatePerObjectVS(const Primitive& primitive);
 
-    // PerObjectPS: updated per draw by Renderer using Material data
-    void UpdatePerObjectPS();
-
+    /// Update per-object PS constant buffer (material data).
+    [[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS UpdatePerObjectPS();
 private:
-    // Per Frame constant buffers
-    std::unique_ptr<ConstantBuffer<PerFrameConstantBufferData>> PerFrameConstantBuffer[EngineSettings::FramesInFlight];
+    // Per-Frame constant buffers (persistent, one per frame-in-flight)
+    std::unique_ptr<ConstantBuffer<PerFrameConstantBufferData>> m_PerFrameCB[EngineSettings::FramesInFlight];
 
-    // Per View constant buffers
-    std::unique_ptr<ConstantBuffer<PerViewConstantBufferData>> PerViewConstantBuffer[EngineSettings::FramesInFlight];
+    // Per-View constant buffers (persistent, one per frame-in-flight)
+    std::unique_ptr<ConstantBuffer<PerViewConstantBufferData>> m_PerViewCB[EngineSettings::FramesInFlight];
 
-    //Per Object constant buffers
-    std::unique_ptr<ConstantBuffer<PerObjectVSConstantBufferData>> PerObjectVSConstantBuffer[EngineSettings::FramesInFlight];
-    std::unique_ptr<ConstantBuffer<PerObjectPSConstantBufferData>> PerObjectPSConstantBuffer[EngineSettings::FramesInFlight];    
 };
 
 extern ConstantBufferManager GConstantBufferManager;
