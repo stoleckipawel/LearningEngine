@@ -21,14 +21,32 @@ add_library(Engine STATIC
 # Add ImGui third-party library
 add_subdirectory(third_party/imgui)
 
-# Public include directory
+# Include directories
+# Public: exposed to consumers (samples, games)
+# Private: internal engine modules organized by responsibility
 target_include_directories(Engine 
   PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
   PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/D3D12"
-    "${CMAKE_CURRENT_SOURCE_DIR}/third_party"    
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Core"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Platform"
+    # RHI abstraction layer
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI"
+    # D3D12 backend
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/D3D12"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/D3D12/Descriptors"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/D3D12/Resources"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/D3D12/Pipeline"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/D3D12/Shaders"
+    # Vulkan backend (placeholder)
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/Vulkan"
+    # High-level modules
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Renderer"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Resources"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Scene"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/UI"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
 )
 
 # Require C++20
@@ -59,7 +77,7 @@ endif()
 # --- PCH setup ---
 target_precompile_headers(Engine
     PRIVATE
-      src/PCH.h
+      src/Core/PCH.h
 )
 
 # Set ENGINE_PATH environment variable for engine
