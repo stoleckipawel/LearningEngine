@@ -27,90 +27,82 @@ class Primitive;
 // -----------------------------------------------------------------------------
 class Renderer
 {
-public:
-    // Initialize all graphics subsystems and resources
-    void Initialize() noexcept;
+  public:
+	// Initialize all graphics subsystems and resources
+	void Initialize() noexcept;
 
-    // Shut down the renderer and release all owned resources
-    void Shutdown() noexcept;
+	// Shut down the renderer and release all owned resources
+	void Shutdown() noexcept;
 
-    // Main render loop entry point: called once per frame
-    void OnRender() noexcept;
+	// Main render loop entry point: called once per frame
+	void OnRender() noexcept;
 
-    // Handle window resize events (recreates swap chain and frame buffers)
-    void OnResize() noexcept;
+	// Handle window resize events (recreates swap chain and frame buffers)
+	void OnResize() noexcept;
 
-private:
-    // -------------------------------------------------------------------------
-    // Initialization helpers
-    // -------------------------------------------------------------------------
-    
-    // Finalize resource uploads and flush command queue after init
-    void PostLoad() noexcept;
-    
-    // Create depth stencil and other frame buffer resources
-    void CreateFrameBuffers();
-    
-    // Populate primitive factory with scene geometry
-    void GatherPrimitives();
+  private:
+	// -------------------------------------------------------------------------
+	// Initialization helpers
+	// -------------------------------------------------------------------------
 
-    // -------------------------------------------------------------------------
-    // Per-frame update
-    // -------------------------------------------------------------------------
-    
-    // Update per-frame data: timing, camera, constant buffers
-    void OnUpdate();
+	// Finalize resource uploads and flush command queue after init
+	void PostLoad() noexcept;
 
-    // -------------------------------------------------------------------------
-    // Command list recording
-    // -------------------------------------------------------------------------
-    
-    // Record all rendering commands for the current frame
-    void PopulateCommandList();
+	// Create depth stencil and other frame buffer resources
+	void CreateFrameBuffers();
 
-    // Called at start of frame to wait, reset allocators, and prepare GPU
-    void BeginFrame() noexcept;
+	// Populate primitive factory with scene geometry
+	void GatherPrimitives();
 
-    // Prepare per-frame CPU-side state (timing, camera, per-frame CB updates)
-    void SetupFrame() noexcept;
+	// -------------------------------------------------------------------------
+	// Command list recording
+	// -------------------------------------------------------------------------
 
-    // Record draw/dispatch work into the command list
-    void RecordFrame() noexcept;
+	// Record all rendering commands for the current frame
+	void PopulateCommandList();
 
-    // Submit recorded command lists and present
-    void SubmitFrame() noexcept;
+	// Called at start of frame to wait, reset allocators, and prepare GPU
+	void BeginFrame() noexcept;
 
-    // Finalize frame: advance frame index, perform end-of-frame housekeeping
-    void EndFrame() noexcept;
-    
-    // Set viewport and scissor rectangle for rasterization
-    void SetViewport() noexcept;
-    
-    // Set render target (back buffer) and depth stencil for output merger
-    void SetBackBufferRTV() noexcept;
-    
-    // Bind resources that remain constant for all draws in a frame
-    // (per-frame CB, per-view CB, textures, samplers)
-    void BindPerFrameResources() noexcept;
-    
-    // Bind per-object resources before each draw call
-    // (world matrix CB, material CB)
-    void BindPerObjectResources(const Primitive& primitive) noexcept;
+	// Prepare per-frame CPU-side state (timing, camera, per-frame CB updates)
+	void SetupFrame() noexcept;
 
-private:
-    // -------------------------------------------------------------------------
-    // Owned resources (unique_ptr for RAII and clear ownership)
-    // -------------------------------------------------------------------------
-    std::unique_ptr<Texture> m_texture;
-    std::unique_ptr<D3D12DepthStencil> m_depthStencil;
-    std::unique_ptr<D3D12Sampler> m_sampler;
-    std::unique_ptr<PrimitiveFactory> m_primitiveFactory;
-    std::unique_ptr<D3D12PipelineState> m_pso;
-    std::unique_ptr<D3D12RootSignature> m_rootSignature;
-    std::unique_ptr<DxcShaderCompiler> m_vertexShader;
-    std::unique_ptr<DxcShaderCompiler> m_pixelShader;
+	// Record draw/dispatch work into the command list
+	void RecordFrame() noexcept;
+
+	// Submit recorded command lists and present
+	void SubmitFrame() noexcept;
+
+	// Finalize frame: advance frame index, perform end-of-frame housekeeping
+	void EndFrame() noexcept;
+
+	// Set viewport and scissor rectangle for rasterization
+	void SetViewport() noexcept;
+
+	// Set render target (back buffer) and depth stencil for output merger
+	void SetBackBufferRTV() noexcept;
+
+	// Bind resources that remain constant for all draws in a frame
+	// (per-frame CB, per-view CB, textures, samplers)
+	void BindPerFrameResources() noexcept;
+
+	// Bind per-object resources before each draw call
+	// (world matrix CB, material CB)
+	void BindPerObjectResources(const Primitive& primitive) noexcept;
+
+  private:
+	// -------------------------------------------------------------------------
+	// Owned resources (unique_ptr for RAII and clear ownership)
+	// -------------------------------------------------------------------------
+	std::unique_ptr<Texture> m_texture;
+	std::unique_ptr<D3D12DepthStencil> m_depthStencil;
+	std::unique_ptr<D3D12Sampler> m_sampler;
+	std::unique_ptr<PrimitiveFactory> m_primitiveFactory;
+	std::unique_ptr<D3D12PipelineState> m_pso;
+	std::unique_ptr<D3D12RootSignature> m_rootSignature;
+	std::unique_ptr<DxcShaderCompiler> m_vertexShader;
+	std::unique_ptr<DxcShaderCompiler> m_pixelShader;
 };
 
 // Global renderer instance
 extern Renderer GRenderer;
-

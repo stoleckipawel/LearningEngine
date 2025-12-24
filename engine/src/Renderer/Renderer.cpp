@@ -26,82 +26,82 @@ Renderer GRenderer;
 // -----------------------------------------------------------------------------
 void Renderer::Initialize() noexcept
 {
-    // Initialize the rendering hardware interface (RHI)
-    GD3D12Rhi.Initialize();
-    
-    // Create root signature first - defines shader resource binding layout
-    m_rootSignature = std::make_unique<D3D12RootSignature>();
+	// Initialize the rendering hardware interface (RHI)
+	GD3D12Rhi.Initialize();
 
-    // Compile shaders
-    m_vertexShader = std::make_unique<DxcShaderCompiler>("SimpleVS.hlsl", "vs_6_0", "main");
-    m_pixelShader = std::make_unique<DxcShaderCompiler>("SimplePS.hlsl", "ps_6_0", "main");
+	// Create root signature first - defines shader resource binding layout
+	m_rootSignature = std::make_unique<D3D12RootSignature>();
 
-    // Initialize descriptor heap manager and swap chain
-    GD3D12DescriptorHeapManager.Initialize();
-    GD3D12SwapChain.Initialize();
+	m_vertexShader = std::make_unique<DxcShaderCompiler>(
+		"SimpleVS.hlsl", DxcShaderCompiler::ShaderStage::Vertex, "main");
+	m_pixelShader = std::make_unique<DxcShaderCompiler>(
+		"SimplePS.hlsl", DxcShaderCompiler::ShaderStage::Pixel, "main");
 
-    // Initialize frame resource manager (per-frame ring buffer for dynamic CBs)
-    GD3D12FrameResourceManager.Initialize(D3D12FrameResourceManager::DefaultCapacityPerFrame);
-    
-    // Initialize the global constant buffer manager (manages per-frame CB instances)
-    GD3D12ConstantBufferManager.Initialize();
-    
-    // Load textures and create sampler
-    m_texture = std::make_unique<Texture>(std::filesystem::path("Test1.png"));
-    m_sampler = std::make_unique<D3D12Sampler>();
-    
-    // Create geometry
-    GatherPrimitives();
-    
-    // Create pipeline state object
-    m_pso = std::make_unique<D3D12PipelineState>(m_primitiveFactory->GetFirstPrimitive(), *m_rootSignature, *m_vertexShader, *m_pixelShader);
-    
-    // Create depth stencil and other frame buffers
-    CreateFrameBuffers();
-    
+	// Initialize descriptor heap manager and swap chain
+	GD3D12DescriptorHeapManager.Initialize();
+	GD3D12SwapChain.Initialize();
+
+	// Initialize frame resource manager (per-frame ring buffer for dynamic CBs)
+	GD3D12FrameResourceManager.Initialize(D3D12FrameResourceManager::DefaultCapacityPerFrame);
+
+	// Initialize the global constant buffer manager (manages per-frame CB instances)
+	GD3D12ConstantBufferManager.Initialize();
+
+	// Load textures and create sampler
+	m_texture = std::make_unique<Texture>(std::filesystem::path("ColorCheckerBoard.png"));
+	m_sampler = std::make_unique<D3D12Sampler>();
+
+	// Create geometry
+	GatherPrimitives();
+
+	// Create pipeline state object
+	m_pso = std::make_unique<D3D12PipelineState>(
+	    m_primitiveFactory->GetFirstPrimitive(), *m_rootSignature, *m_vertexShader, *m_pixelShader);
+
+	// Create depth stencil and other frame buffers
+	CreateFrameBuffers();
+
 #if USE_GUI
-    GUI.Initialize();
+	GUI.Initialize();
 #endif
-    
-    PostLoad();
+
+	PostLoad();
 }
 
 void Renderer::GatherPrimitives()
 {
-    m_primitiveFactory = std::make_unique<PrimitiveFactory>();
+	m_primitiveFactory = std::make_unique<PrimitiveFactory>();
 
+	// Hard-coded 20 cubes with varied translation, rotation, and smaller scale or further from camera
+	std::vector<std::tuple<XMFLOAT3, XMFLOAT3, XMFLOAT3>> boxParams = {
+	    // translation                rotation (radians)           scale
+	    {{-10.0f, 0.0f, -5.0f}, {0.0f, 0.0f, 0.0f}, {1.2f, 1.2f, 1.2f}},
+	    {{-8.0f, 2.0f, 6.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.5f, 1.0f}},
+	    {{-6.0f, -2.0f, -8.0f}, {0.5f, 0.5f, 0.0f}, {1.5f, 1.0f, 1.2f}},
+	    {{-4.0f, 0.0f, 8.0f}, {0.0f, 0.7f, 0.0f}, {1.3f, 1.3f, 1.3f}},
+	    {{-2.0f, 2.0f, -6.0f}, {1.0f, 0.0f, 0.5f}, {1.0f, 0.8f, 1.2f}},
+	    {{0.0f, -2.0f, 6.0f}, {0.0f, 0.0f, 1.0f}, {0.9f, 1.1f, 1.3f}},
+	    {{2.0f, 0.0f, -8.0f}, {0.3f, 0.8f, 0.2f}, {1.2f, 1.2f, 0.8f}},
+	    {{4.0f, 4.0f, 8.0f}, {0.0f, 1.2f, 0.0f}, {1.0f, 0.7f, 1.5f}},
+	    {{6.0f, -4.0f, -6.0f}, {1.0f, 0.5f, 0.0f}, {0.7f, 1.5f, 1.0f}},
+	    {{8.0f, 0.0f, 6.0f}, {0.7f, 0.0f, 1.0f}, {1.3f, 1.0f, 1.0f}},
+	    {{-9.0f, -3.0f, 10.0f}, {0.2f, 0.3f, 0.4f}, {0.8f, 1.0f, 1.2f}},
+	    {{-7.0f, 3.0f, -10.0f}, {0.6f, 0.1f, 0.2f}, {1.1f, 0.9f, 1.0f}},
+	    {{-5.0f, -1.0f, 9.0f}, {0.4f, 0.6f, 0.8f}, {1.0f, 1.0f, 0.7f}},
+	    {{-3.0f, 1.0f, -9.0f}, {0.9f, 0.2f, 0.3f}, {0.9f, 1.2f, 1.1f}},
+	    {{-1.0f, -3.0f, 8.0f}, {0.1f, 0.4f, 0.7f}, {1.2f, 0.8f, 1.0f}},
+	    {{1.0f, 3.0f, -8.0f}, {0.5f, 0.9f, 0.1f}, {1.0f, 1.0f, 1.0f}},
+	    {{3.0f, -1.0f, 7.0f}, {0.8f, 0.3f, 0.6f}, {0.7f, 1.1f, 1.2f}},
+	    {{5.0f, 1.0f, -7.0f}, {0.2f, 0.7f, 0.5f}, {1.1f, 0.9f, 0.8f}},
+	    {{7.0f, -3.0f, 6.0f}, {0.3f, 0.6f, 0.9f}, {0.8f, 1.0f, 1.0f}},
+	    {{9.0f, 3.0f, -5.0f}, {0.7f, 0.2f, 0.4f}, {1.0f, 0.8f, 1.2f}}};
 
-    // Hard-coded 20 cubes with varied translation, rotation, and smaller scale or further from camera
-    std::vector<std::tuple<XMFLOAT3, XMFLOAT3, XMFLOAT3>> boxParams = {
-        // translation                rotation (radians)           scale
-        { { -10.0f,  0.0f,  -5.0f }, { 0.0f, 0.0f, 0.0f }, { 1.2f, 1.2f, 1.2f } },
-        { { -8.0f,   2.0f,   6.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.5f, 1.0f } },
-        { { -6.0f,  -2.0f,  -8.0f }, { 0.5f, 0.5f, 0.0f }, { 1.5f, 1.0f, 1.2f } },
-        { { -4.0f,   0.0f,   8.0f }, { 0.0f, 0.7f, 0.0f }, { 1.3f, 1.3f, 1.3f } },
-        { { -2.0f,   2.0f,  -6.0f }, { 1.0f, 0.0f, 0.5f }, { 1.0f, 0.8f, 1.2f } },
-        { {  0.0f,  -2.0f,   6.0f }, { 0.0f, 0.0f, 1.0f }, { 0.9f, 1.1f, 1.3f } },
-        { {  2.0f,   0.0f,  -8.0f }, { 0.3f, 0.8f, 0.2f }, { 1.2f, 1.2f, 0.8f } },
-        { {  4.0f,   4.0f,   8.0f }, { 0.0f, 1.2f, 0.0f }, { 1.0f, 0.7f, 1.5f } },
-        { {  6.0f,  -4.0f,  -6.0f }, { 1.0f, 0.5f, 0.0f }, { 0.7f, 1.5f, 1.0f } },
-        { {  8.0f,   0.0f,   6.0f }, { 0.7f, 0.0f, 1.0f }, { 1.3f, 1.0f, 1.0f } },
-        { { -9.0f,  -3.0f,  10.0f }, { 0.2f, 0.3f, 0.4f }, { 0.8f, 1.0f, 1.2f } },
-        { { -7.0f,   3.0f, -10.0f }, { 0.6f, 0.1f, 0.2f }, { 1.1f, 0.9f, 1.0f } },
-        { { -5.0f,  -1.0f,   9.0f }, { 0.4f, 0.6f, 0.8f }, { 1.0f, 1.0f, 0.7f } },
-        { { -3.0f,   1.0f,  -9.0f }, { 0.9f, 0.2f, 0.3f }, { 0.9f, 1.2f, 1.1f } },
-        { { -1.0f,  -3.0f,   8.0f }, { 0.1f, 0.4f, 0.7f }, { 1.2f, 0.8f, 1.0f } },
-        { {  1.0f,   3.0f,  -8.0f }, { 0.5f, 0.9f, 0.1f }, { 1.0f, 1.0f, 1.0f } },
-        { {  3.0f,  -1.0f,   7.0f }, { 0.8f, 0.3f, 0.6f }, { 0.7f, 1.1f, 1.2f } },
-        { {  5.0f,   1.0f,  -7.0f }, { 0.2f, 0.7f, 0.5f }, { 1.1f, 0.9f, 0.8f } },
-        { {  7.0f,  -3.0f,   6.0f }, { 0.3f, 0.6f, 0.9f }, { 0.8f, 1.0f, 1.0f } },
-        { {  9.0f,   3.0f,  -5.0f }, { 0.7f, 0.2f, 0.4f }, { 1.0f, 0.8f, 1.2f } }
-    };
+	for (const auto& [translation, rotation, scale] : boxParams)
+	{
+		m_primitiveFactory->AppendBox(translation, rotation, scale);
+	}
 
-    for (const auto& [translation, rotation, scale] : boxParams)
-    {
-        m_primitiveFactory->AppendBox(translation, rotation, scale);
-    }
-
-    m_primitiveFactory->Upload();
+	m_primitiveFactory->Upload();
 }
 
 // -----------------------------------------------------------------------------
@@ -109,9 +109,9 @@ void Renderer::GatherPrimitives()
 // -----------------------------------------------------------------------------
 void Renderer::PostLoad() noexcept
 {
-    GD3D12Rhi.CloseCommandListScene();
-    GD3D12Rhi.ExecuteCommandList();
-    GD3D12Rhi.Flush();
+	GD3D12Rhi.CloseCommandListScene();
+	GD3D12Rhi.ExecuteCommandList();
+	GD3D12Rhi.Flush();
 }
 
 // -----------------------------------------------------------------------------
@@ -119,11 +119,11 @@ void Renderer::PostLoad() noexcept
 // -----------------------------------------------------------------------------
 void Renderer::SetViewport() noexcept
 {
-    D3D12_VIEWPORT viewport = GD3D12SwapChain.GetDefaultViewport();
-    GD3D12Rhi.GetCommandList()->RSSetViewports(1, &viewport);
+	D3D12_VIEWPORT viewport = GD3D12SwapChain.GetDefaultViewport();
+	GD3D12Rhi.GetCommandList()->RSSetViewports(1, &viewport);
 
-    D3D12_RECT scissorRect = GD3D12SwapChain.GetDefaultScissorRect();
-    GD3D12Rhi.GetCommandList()->RSSetScissorRects(1, &scissorRect);
+	D3D12_RECT scissorRect = GD3D12SwapChain.GetDefaultScissorRect();
+	GD3D12Rhi.GetCommandList()->RSSetScissorRects(1, &scissorRect);
 }
 
 // -----------------------------------------------------------------------------
@@ -131,9 +131,9 @@ void Renderer::SetViewport() noexcept
 // -----------------------------------------------------------------------------
 void Renderer::SetBackBufferRTV() noexcept
 {
-    D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GD3D12SwapChain.GetCPUHandle();
-    D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle = m_depthStencil->GetCPUHandle();
-    GD3D12Rhi.GetCommandList()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &depthStencilHandle);
+	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GD3D12SwapChain.GetCPUHandle();
+	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle = m_depthStencil->GetCPUHandle();
+	GD3D12Rhi.GetCommandList()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &depthStencilHandle);
 }
 
 // -----------------------------------------------------------------------------
@@ -142,41 +142,37 @@ void Renderer::SetBackBufferRTV() noexcept
 // -----------------------------------------------------------------------------
 void Renderer::BindPerFrameResources() noexcept
 {
-    // -------------------------------------------------------------------------
-    // Bind Per-Frame Constant Buffer - updated once per CPU frame
-    // Contains: FrameIndex, TotalTime, DeltaTime, ViewportSize..........
-    // -------------------------------------------------------------------------
-    GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(
-        RootBindings::RootParam::PerFrame,
-        GD3D12ConstantBufferManager.GetPerFrameGpuAddress());
+	// -------------------------------------------------------------------------
+	// Bind Per-Frame Constant Buffer - updated once per CPU frame
+	// Contains: FrameIndex, TotalTime, DeltaTime, ViewportSize..........
+	// -------------------------------------------------------------------------
+	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(RootBindings::RootParam::PerFrame,
+	                                                              GD3D12ConstantBufferManager.GetPerFrameGpuAddress());
 
-    // -------------------------------------------------------------------------
-    // Bind Per-View Constant Buffer - updated once per view/camera
-    // Contains: View/Proj matrices, CameraPosition, Near/Far planes.............
-    // -------------------------------------------------------------------------
-    GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(
-        RootBindings::RootParam::PerView,
-        GD3D12ConstantBufferManager.GetPerViewGpuAddress());
+	// -------------------------------------------------------------------------
+	// Bind Per-View Constant Buffer - updated once per view/camera
+	// Contains: View/Proj matrices, CameraPosition, Near/Far planes.............
+	// -------------------------------------------------------------------------
+	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(RootBindings::RootParam::PerView,
+	                                                              GD3D12ConstantBufferManager.GetPerViewGpuAddress());
 
-    // -------------------------------------------------------------------------
-    // Bind Textures SRV - descriptor table
-    // -------------------------------------------------------------------------
-    if (m_texture)
-    {
-        GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(
-            RootBindings::RootParam::TextureSRV,
-            m_texture->GetGPUHandle());
-    }
+	// -------------------------------------------------------------------------
+	// Bind Textures SRV - descriptor table
+	// -------------------------------------------------------------------------
+	if (m_texture)
+	{
+		GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(RootBindings::RootParam::TextureSRV,
+		                                                           m_texture->GetGPUHandle());
+	}
 
-    // -------------------------------------------------------------------------
-    // Bind Samplers - descriptor table
-    // -------------------------------------------------------------------------
-    if (m_sampler)
-    {
-        GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(
-            RootBindings::RootParam::Sampler,
-            m_sampler->GetGPUHandle());
-    }
+	// -------------------------------------------------------------------------
+	// Bind Samplers - descriptor table
+	// -------------------------------------------------------------------------
+	if (m_sampler)
+	{
+		GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(RootBindings::RootParam::Sampler,
+		                                                           m_sampler->GetGPUHandle());
+	}
 }
 
 // -----------------------------------------------------------------------------
@@ -185,24 +181,22 @@ void Renderer::BindPerFrameResources() noexcept
 // -----------------------------------------------------------------------------
 void Renderer::BindPerObjectResources(const Primitive& primitive) noexcept
 {
-    // -------------------------------------------------------------------------
-    // Update and Bind Per-Object VS Constant Buffer (b2)
-    // Contains: WorldMatrix for this primitive
-    // Uses ring buffer allocation - each call returns a unique GPU VA
-    // -------------------------------------------------------------------------
-    GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(
-        RootBindings::RootParam::PerObjectVS,
-        GD3D12ConstantBufferManager.UpdatePerObjectVS(primitive));
+	// -------------------------------------------------------------------------
+	// Update and Bind Per-Object VS Constant Buffer (b2)
+	// Contains: WorldMatrix for this primitive
+	// Uses ring buffer allocation - each call returns a unique GPU VA
+	// -------------------------------------------------------------------------
+	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(
+	    RootBindings::RootParam::PerObjectVS, GD3D12ConstantBufferManager.UpdatePerObjectVS(primitive));
 
-    // -------------------------------------------------------------------------
-    // Update and Bind Per-Object PS Constant Buffer (b3)
-    // Contains: Material properties (BaseColor, Metallic, Roughness, F0)
-    // Uses ring buffer allocation - each call returns a unique GPU VA
-    // TODO: Pass material data from primitive when material system is implemented
-    // -------------------------------------------------------------------------
-    GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(
-        RootBindings::RootParam::PerObjectPS,
-        GD3D12ConstantBufferManager.UpdatePerObjectPS());
+	// -------------------------------------------------------------------------
+	// Update and Bind Per-Object PS Constant Buffer (b3)
+	// Contains: Material properties (BaseColor, Metallic, Roughness, F0)
+	// Uses ring buffer allocation - each call returns a unique GPU VA
+	// TODO: Pass material data from primitive when material system is implemented
+	// -------------------------------------------------------------------------
+	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(RootBindings::RootParam::PerObjectPS,
+	                                                              GD3D12ConstantBufferManager.UpdatePerObjectPS());
 }
 
 // -----------------------------------------------------------------------------
@@ -210,71 +204,71 @@ void Renderer::BindPerObjectResources(const Primitive& primitive) noexcept
 // -----------------------------------------------------------------------------
 void Renderer::PopulateCommandList()
 {
-    // =========================================================================
-    // FRAME SETUP - Execute once per frame
-    // =========================================================================
-    
-    // Prepare render target - transition to render target state
-    GD3D12SwapChain.SetRenderTargetState();
+	// -----------------------------------------------------------------------------
+	// FRAME SETUP - Execute once per frame
+	// -----------------------------------------------------------------------------
 
-    // Transition depth buffer to write state before rendering
-    m_depthStencil->SetWriteState();
+	// Prepare render target - transition to render target state
+	GD3D12SwapChain.SetRenderTargetState();
 
-    // Bind root signature - defines the shader resource layout
-    GD3D12Rhi.GetCommandList()->SetGraphicsRootSignature(m_rootSignature->GetRaw());
+	// Transition depth buffer to write state before rendering
+	m_depthStencil->SetWriteState();
 
-    // Set viewport and scissor rect
-    SetViewport();
-    
-    // Set render targets (back buffer + depth stencil)
-    SetBackBufferRTV();
-    
-    // Clear render targets
-    GD3D12SwapChain.Clear();
-    m_depthStencil->Clear();
+	// Bind root signature - defines the shader resource layout
+	GD3D12Rhi.GetCommandList()->SetGraphicsRootSignature(m_rootSignature->GetRaw());
 
-    // Set shader-visible descriptor heaps
-    GD3D12DescriptorHeapManager.SetShaderVisibleHeaps();
+	// Set viewport and scissor rect
+	SetViewport();
 
-    // =========================================================================
-    // PER-FRAME BINDINGS - Resources that don't change during the frame
-    // =========================================================================
-    BindPerFrameResources();
+	// Set render targets (back buffer + depth stencil)
+	SetBackBufferRTV();
 
-    // =========================================================================
-    // DRAW LOOP - Per-object bindings and draw calls
-    // =========================================================================
-    const auto& primitives = m_primitiveFactory->GetPrimitives();
-    
-    for (const auto& primitive : primitives)
-    {
-        // Set geometry buffers (VB, IB) and topology for this primitive
-        primitive->Set();
-        
-        // Set the pipeline state object (PSO)
-        // ToDo: sort by PSO to minimize state changes
-        m_pso->Set();
+	// Clear render targets
+	GD3D12SwapChain.Clear();
+	m_depthStencil->Clear();
 
-        // Bind per-object constant buffers (world matrix, material)
-        BindPerObjectResources(*primitive);
+	// Set shader-visible descriptor heaps
+	GD3D12DescriptorHeapManager.SetShaderVisibleHeaps();
 
-        // Issue the draw call for this primitive
-        GD3D12Rhi.GetCommandList()->DrawIndexedInstanced(primitive->GetIndexCount(), 1, 0, 0, 0);
-    }
+	// -----------------------------------------------------------------------------
+	// PER-FRAME BINDINGS - Resources that don't change during the frame
+	// -----------------------------------------------------------------------------
+	BindPerFrameResources();
 
-    // =========================================================================
-    // POST-RENDER
-    // =========================================================================
-    
+	// -----------------------------------------------------------------------------
+	// DRAW LOOP - Per-object bindings and draw calls
+	// -----------------------------------------------------------------------------
+	const auto& primitives = m_primitiveFactory->GetPrimitives();
+
+	for (const auto& primitive : primitives)
+	{
+		// Set geometry buffers (VB, IB) and topology for this primitive
+		primitive->Set();
+
+		// Set the pipeline state object (PSO)
+		// ToDo: sort by PSO to minimize state changes
+		m_pso->Set();
+
+		// Bind per-object constant buffers (world matrix, material)
+		BindPerObjectResources(*primitive);
+
+		// Issue the draw call for this primitive
+		GD3D12Rhi.GetCommandList()->DrawIndexedInstanced(primitive->GetIndexCount(), 1, 0, 0, 0);
+	}
+
+	// -----------------------------------------------------------------------------
+	// POST-RENDER
+	// -----------------------------------------------------------------------------
+
 #if USE_GUI
-    GUI.Render();
+	GUI.Render();
 #endif
 
-    // Transition depth buffer to read state before presenting
-    m_depthStencil->SetReadState();
-    
-    // Transition back buffer to present state
-    GD3D12SwapChain.SetPresentState();
+	// Transition depth buffer to read state before presenting
+	m_depthStencil->SetReadState();
+
+	// Transition back buffer to present state
+	GD3D12SwapChain.SetPresentState();
 }
 
 // -----------------------------------------------------------------------------
@@ -282,39 +276,7 @@ void Renderer::PopulateCommandList()
 // -----------------------------------------------------------------------------
 void Renderer::CreateFrameBuffers()
 {
-    m_depthStencil = std::make_unique<D3D12DepthStencil>();
-}
-
-// -----------------------------------------------------------------------------
-// Updates per-frame data and constant buffers
-// Called once per frame before PopulateCommandList
-// -----------------------------------------------------------------------------
-void Renderer::OnUpdate()
-{
-    // =========================================================================
-    // TIMING - Update global time source first (other systems depend on it)
-    // =========================================================================
-    GTimer.Tick();
-
-    // =========================================================================
-    // CONSTANT BUFFER UPDATES - Update CB data at appropriate frequencies
-    // =========================================================================
-    
-    // Per-Frame CB (b0): Updated once per CPU frame
-    // Contains: FrameIndex, TotalTime, DeltaTime, ViewportSize
-    GD3D12ConstantBufferManager.UpdatePerFrame();
-    
-    // Per-View CB (b1): Updated once per camera/view
-    // Contains: View/Proj matrices, CameraPosition, Near/Far
-    // ToDo: Camera matrices are lazily rebuilt when accessed via GCamera.
-    //       In a multi-view scenario (shadows, reflections), UpdatePerView()
-    //       would be called once per view, not once per frame.
-    GD3D12ConstantBufferManager.UpdatePerView();
-
-#if USE_GUI
-    // Pass seconds to UI which expects seconds-precision delta
-    GUI.Update();
-#endif
+	m_depthStencil = std::make_unique<D3D12DepthStencil>();
 }
 
 // -----------------------------------------------------------------------------
@@ -322,11 +284,11 @@ void Renderer::OnUpdate()
 // -----------------------------------------------------------------------------
 void Renderer::OnResize() noexcept
 {
-    GD3D12Rhi.Flush();
-    // Resize swap chain to match new window dimensions
-    GD3D12SwapChain.Resize();
-    // Recreate frame buffers (depth stencil) for new size
-    CreateFrameBuffers();
+	GD3D12Rhi.Flush();
+	// Resize swap chain to match new window dimensions
+	GD3D12SwapChain.Resize();
+	// Recreate frame buffers (depth stencil) for new size
+	CreateFrameBuffers();
 }
 
 // -----------------------------------------------------------------------------
@@ -334,21 +296,21 @@ void Renderer::OnResize() noexcept
 // -----------------------------------------------------------------------------
 void Renderer::OnRender() noexcept
 {
-    // Modular frame sequence
-    // 1) Wait / reset / prepare GPU and command allocators
-    BeginFrame();
+	// Modular frame sequence
+	// 1) Wait / reset / prepare GPU and command allocators
+	BeginFrame();
 
-    // 2) Update CPU-side state, timers, and constant buffers
-    SetupFrame();
+	// 2) Update CPU-side state, timers, and constant buffers
+	SetupFrame();
 
-    // 3) Build command list entries (draw calls, dispatches)
-    RecordFrame();
+	// 3) Build command list entries (draw calls, dispatches)
+	RecordFrame();
 
-    // 4) Submit to GPU and present
-    SubmitFrame();
+	// 4) Submit to GPU and present
+	SubmitFrame();
 
-    // 5) Finalize frame bookkeeping (advance indices, cleanup)
-    EndFrame();
+	// 5) Finalize frame bookkeeping (advance indices, cleanup)
+	EndFrame();
 }
 
 // -----------------------------------------------------------------------------
@@ -358,12 +320,13 @@ void Renderer::OnRender() noexcept
 // -----------------------------------------------------------------------------
 void Renderer::BeginFrame() noexcept
 {
-    // Wait for GPU to finish with this frame's resources before reusing: This is where the ring buffer synchronization happens
-    GD3D12FrameResourceManager.BeginFrame(GD3D12Rhi.GetFenceEvent(), GD3D12SwapChain.GetFrameInFlightIndex());
+	// Wait for GPU to finish with this frame's resources before reusing: This is where the ring buffer synchronization
+	// happens
+	GD3D12FrameResourceManager.BeginFrame(GD3D12Rhi.GetFenceEvent(), GD3D12SwapChain.GetFrameInFlightIndex());
 
-    GD3D12Rhi.WaitForGPU();
-    GD3D12Rhi.ResetCommandAllocator();
-    GD3D12Rhi.ResetCommandList();
+	GD3D12Rhi.WaitForGPU();
+	GD3D12Rhi.ResetCommandAllocator();
+	GD3D12Rhi.ResetCommandList();
 }
 
 // -----------------------------------------------------------------------------
@@ -372,7 +335,30 @@ void Renderer::BeginFrame() noexcept
 // -----------------------------------------------------------------------------
 void Renderer::SetupFrame() noexcept
 {
-    OnUpdate(); // existing per-frame update entry
+	// -----------------------------------------------------------------------------
+	// TIMING - Update global time source first (other systems depend on it)
+	// -----------------------------------------------------------------------------
+	GTimer.Tick();
+
+	// -----------------------------------------------------------------------------
+	// CONSTANT BUFFER UPDATES - Update CB data at appropriate frequencies
+	// -----------------------------------------------------------------------------
+
+	// Per-Frame CB (b0): Updated once per CPU frame
+	// Contains: FrameIndex, TotalTime, DeltaTime, ViewportSize
+	GD3D12ConstantBufferManager.UpdatePerFrame();
+
+	// Per-View CB (b1): Updated once per camera/view
+	// Contains: View/Proj matrices, CameraPosition, Near/Far
+	// ToDo: Camera matrices are lazily rebuilt when accessed via GCamera.
+	//       In a multi-view scenario (shadows, reflections), UpdatePerView()
+	//       would be called once per view, not once per frame.
+	GD3D12ConstantBufferManager.UpdatePerView();
+
+#if USE_GUI
+	// Pass seconds to UI which expects seconds-precision delta
+	GUI.Update();
+#endif
 }
 
 // -----------------------------------------------------------------------------
@@ -383,7 +369,7 @@ void Renderer::SetupFrame() noexcept
 // -----------------------------------------------------------------------------
 void Renderer::RecordFrame() noexcept
 {
-    PopulateCommandList();
+	PopulateCommandList();
 }
 
 // -----------------------------------------------------------------------------
@@ -391,15 +377,15 @@ void Renderer::RecordFrame() noexcept
 // -----------------------------------------------------------------------------
 void Renderer::SubmitFrame() noexcept
 {
-    GD3D12Rhi.CloseCommandListScene();
-    GD3D12Rhi.ExecuteCommandList();
-    GD3D12Rhi.Signal();
+	GD3D12Rhi.CloseCommandListScene();
+	GD3D12Rhi.ExecuteCommandList();
+	GD3D12Rhi.Signal();
 
-    // Record the fence value for this frame so we know when GPU is done
-    // This enables safe ring buffer reuse after FramesInFlight frames
-    GD3D12FrameResourceManager.EndFrame(GD3D12Rhi.GetNextFenceValue() - 1);
+	// Record the fence value for this frame so we know when GPU is done
+	// This enables safe ring buffer reuse after FramesInFlight frames
+	GD3D12FrameResourceManager.EndFrame(GD3D12Rhi.GetNextFenceValue() - 1);
 
-    GD3D12SwapChain.Present();
+	GD3D12SwapChain.Present();
 }
 
 // -----------------------------------------------------------------------------
@@ -407,7 +393,7 @@ void Renderer::SubmitFrame() noexcept
 // -----------------------------------------------------------------------------
 void Renderer::EndFrame() noexcept
 {
-    GD3D12SwapChain.UpdateFrameInFlightIndex();
+	GD3D12SwapChain.UpdateFrameInFlightIndex();
 }
 
 // -----------------------------------------------------------------------------
@@ -415,13 +401,13 @@ void Renderer::EndFrame() noexcept
 // -----------------------------------------------------------------------------
 void Renderer::Shutdown() noexcept
 {
-    GD3D12Rhi.Flush();
+	GD3D12Rhi.Flush();
 
-    GUI.Shutdown();
-    GD3D12ConstantBufferManager.Shutdown();
-    GD3D12FrameResourceManager.Shutdown();
-    GD3D12SwapChain.Shutdown();
-    GWindow.Shutdown();
-    GD3D12DescriptorHeapManager.Shutdown();
-    GD3D12Rhi.Shutdown();
+	GUI.Shutdown();
+	GD3D12ConstantBufferManager.Shutdown();
+	GD3D12FrameResourceManager.Shutdown();
+	GD3D12SwapChain.Shutdown();
+	GWindow.Shutdown();
+	GD3D12DescriptorHeapManager.Shutdown();
+	GD3D12Rhi.Shutdown();
 }

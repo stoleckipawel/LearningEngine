@@ -6,7 +6,7 @@
 
 // Constructs and initializes the depth stencil resource and view
 D3D12DepthStencil::D3D12DepthStencil()
-	: m_dsvHandle(GD3D12DescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_DSV))
+    : m_dsvHandle(GD3D12DescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_DSV))
 {
 	CreateResource();
 	CreateDepthStencilView();
@@ -50,13 +50,12 @@ void D3D12DepthStencil::CreateResource()
 	depthStencilResourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
 
 	// Create the committed resource for depth stencil
-	CHECK(GD3D12Rhi.GetDevice()->CreateCommittedResource(
-		&heapDefaultProperties,
-		D3D12_HEAP_FLAG_NONE,
-		&depthStencilResourceDesc,
-		D3D12_RESOURCE_STATE_DEPTH_READ,
-		&depthOptimizedClearValue,
-		IID_PPV_ARGS(m_resource.ReleaseAndGetAddressOf())));
+	CHECK(GD3D12Rhi.GetDevice()->CreateCommittedResource(&heapDefaultProperties,
+	                                                     D3D12_HEAP_FLAG_NONE,
+	                                                     &depthStencilResourceDesc,
+	                                                     D3D12_RESOURCE_STATE_DEPTH_READ,
+	                                                     &depthOptimizedClearValue,
+	                                                     IID_PPV_ARGS(m_resource.ReleaseAndGetAddressOf())));
 
 	// Name the resource for easier debugging (no-op in release via DebugUtils)
 	DebugUtils::SetDebugName(m_resource, L"RHI_DepthStencil");
@@ -72,29 +71,22 @@ void D3D12DepthStencil::CreateDepthStencilView()
 void D3D12DepthStencil::Clear() noexcept
 {
 	// Clear both depth and stencil. Reversed-Z convention clears depth to 0.0f.
-	GD3D12Rhi.GetCommandList()->ClearDepthStencilView(GetCPUHandle(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 0.0f, 0, 0, nullptr);
+	GD3D12Rhi.GetCommandList()->ClearDepthStencilView(
+	    GetCPUHandle(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 0.0f, 0, 0, nullptr);
 }
 
 // Transition depth buffer to write state before rendering
 void D3D12DepthStencil::SetWriteState() noexcept
 {
 	// Transition to depth-write for rendering.
-	GD3D12Rhi.SetBarrier(
-		m_resource.Get(),
-		D3D12_RESOURCE_STATE_DEPTH_READ,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE
-	);
+	GD3D12Rhi.SetBarrier(m_resource.Get(), D3D12_RESOURCE_STATE_DEPTH_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 }
 
 // Transition depth buffer to read state after rendering
 void D3D12DepthStencil::SetReadState() noexcept
 {
 	// Transition to depth-read for shader sampling / post-processing.
-	GD3D12Rhi.SetBarrier(
-		m_resource.Get(),
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		D3D12_RESOURCE_STATE_DEPTH_READ
-	);
+	GD3D12Rhi.SetBarrier(m_resource.Get(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_DEPTH_READ);
 }
 
 // Destructor resets resources

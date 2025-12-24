@@ -12,7 +12,7 @@ using Microsoft::WRL::ComPtr;
 // available when `ENGINE_GPU_VALIDATION` is enabled (typically debug builds).
 class D3D12DebugLayer
 {
-public:
+  public:
 	D3D12DebugLayer() = default;
 	~D3D12DebugLayer() = default;
 
@@ -32,16 +32,16 @@ public:
 	void ReportLiveDeviceObjects();
 	void ReportLiveDXGIObjects();
 
-private:
+  private:
 	void InitD3D12Debug();
 	void InitDXGIDebug();
 	void ConfigureInfoQueue();
 	void ApplyInfoQueueFilters();
 
-private:
-	ComPtr<ID3D12Debug> m_d3d12Debug;   // D3D12 debug interface
-	ComPtr<IDXGIDebug1> m_dxgiDebug;    // DXGI debug interface
-	bool m_initialized = false;                         // guard to make Initialize/Shutdown idempotent
+  private:
+	ComPtr<ID3D12Debug> m_d3d12Debug; // D3D12 debug interface
+	ComPtr<IDXGIDebug1> m_dxgiDebug;  // DXGI debug interface
+	bool m_bInitialized = false;       // guard to make Initialize/Shutdown idempotent
 };
 
 // Global debug layer instance

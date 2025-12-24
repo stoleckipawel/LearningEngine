@@ -3517,7 +3517,7 @@ bool ImGui::TableBeginContextMenuPopup(ImGuiTable* table)
 // Sections to display are pulled from 'flags_for_section_to_display', which is typically == table->Flags.
 // - ImGuiTableFlags_Resizable   -> display Sizing menu items
 // - ImGuiTableFlags_Reorderable -> display "Reset Order"
-////- ImGuiTableFlags_Sortable   -> display sorting options (disabled)
+///- ImGuiTableFlags_Sortable   -> display sorting options (disabled)
 // - ImGuiTableFlags_Hideable    -> display columns visibility menu items
 // It means if you have a custom context menus you can call this section and omit some sections, and add your own.
 void ImGui::TableDrawDefaultContextMenu(ImGuiTable* table, ImGuiTableFlags flags_for_section_to_display)

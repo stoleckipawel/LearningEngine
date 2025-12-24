@@ -7,9 +7,8 @@
 
 D3D12SwapChain GD3D12SwapChain;
 
-
 // Initializes the swap chain and creates render target views
-void D3D12SwapChain::Initialize()	
+void D3D12SwapChain::Initialize()
 {
 	AllocateHandles();
 	Create();
@@ -47,39 +46,34 @@ void D3D12SwapChain::Create()
 
 	// Create the swap chain for the window
 	ComPtr<IDXGISwapChain1> swapChain;
-	CHECK(GD3D12Rhi.GetDxgiFactory()->CreateSwapChainForHwnd(
-		GD3D12Rhi.GetCommandQueue().Get(),
-		GWindow.GetHWND(),
-		&swapChainDesc,
-		&swapChainFullsceenDesc,
-		nullptr,
-		&swapChain));
+	CHECK(GD3D12Rhi.GetDxgiFactory()->CreateSwapChainForHwnd(GD3D12Rhi.GetCommandQueue().Get(),
+	                                                         GWindow.GetHWND(),
+	                                                         &swapChainDesc,
+	                                                         &swapChainFullsceenDesc,
+	                                                         nullptr,
+	                                                         &swapChain));
 
 	// Query for IDXGISwapChain3 interface
 	CHECK(swapChain.As(&m_swapChain));
 }
 
-
 // Clears the current render target view with a solid color
 void D3D12SwapChain::Clear()
 {
-	float clearColor[4] = { 1.0f, 0.05f, 0.05f, 1.0f };
+	float clearColor[4] = {1.0f, 0.05f, 0.05f, 1.0f};
 	GD3D12Rhi.GetCommandList()->ClearRenderTargetView(GD3D12SwapChain.GetCPUHandle(), clearColor, 0, nullptr);
 }
-
 
 // Resizes the swap chain buffers and recreates render target views
 void D3D12SwapChain::Resize()
 {
 	ReleaseBuffers();
 
-	m_swapChain->ResizeBuffers(
-		EngineSettings::FramesInFlight,
-		GWindow.GetWidth(),
-		GWindow.GetHeight(),
-		EngineSettings::BackBufferFormat,
-		ComputeSwapChainFlags()
-	);
+	m_swapChain->ResizeBuffers(EngineSettings::FramesInFlight,
+	                           GWindow.GetWidth(),
+	                           GWindow.GetHeight(),
+	                           EngineSettings::BackBufferFormat,
+	                           ComputeSwapChainFlags());
 
 	CreateRenderTargetViews();
 
@@ -121,9 +115,7 @@ UINT D3D12SwapChain::GetAllowTearingFlag() const
 	BOOL allowTearing = FALSE;
 
 	GD3D12Rhi.GetDxgiFactory()->CheckFeatureSupport(
-		DXGI_FEATURE_PRESENT_ALLOW_TEARING,
-		&allowTearing,
-		sizeof(allowTearing));
+	    DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
 
 	return (allowTearing == TRUE) ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u;
 }
@@ -136,9 +128,8 @@ UINT D3D12SwapChain::ComputeSwapChainFlags() const
 	return flags;
 }
 
-
 // Returns the default viewport for rendering
-D3D12_VIEWPORT D3D12SwapChain::GetDefaultViewport()
+D3D12_VIEWPORT D3D12SwapChain::GetDefaultViewport() const
 {
 	D3D12_VIEWPORT vp;
 	vp.TopLeftX = 0;
@@ -151,9 +142,8 @@ D3D12_VIEWPORT D3D12SwapChain::GetDefaultViewport()
 	return vp;
 }
 
-
 // Returns the default scissor rectangle for rendering
-D3D12_RECT D3D12SwapChain::GetDefaultScissorRect()
+D3D12_RECT D3D12SwapChain::GetDefaultScissorRect() const
 {
 	D3D12_RECT scissorRect;
 	scissorRect.left = 0;
@@ -162,7 +152,6 @@ D3D12_RECT D3D12SwapChain::GetDefaultScissorRect()
 	scissorRect.bottom = GWindow.GetHeight();
 	return scissorRect;
 }
-
 
 // Presents the current back buffer to the screen
 void D3D12SwapChain::Present()
@@ -174,7 +163,8 @@ void D3D12SwapChain::Present()
 	{
 		// If tearing is supported by the runtime, request it when presenting without vsync.
 		BOOL allowTearing = FALSE;
-		GD3D12Rhi.GetDxgiFactory()->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+		GD3D12Rhi.GetDxgiFactory()->CheckFeatureSupport(
+		    DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
 		presentFlags = (allowTearing == TRUE) ? DXGI_PRESENT_ALLOW_TEARING : 0u;
 	}
 
@@ -182,29 +172,20 @@ void D3D12SwapChain::Present()
 	CHECK(m_swapChain->Present(presentInterval, presentFlags));
 }
 
-
 // Sets the current buffer to render target state
 void D3D12SwapChain::SetRenderTargetState()
 {
 	GD3D12Rhi.SetBarrier(
-		m_buffers[m_frameInFlightIndex].Get(),
-		D3D12_RESOURCE_STATE_PRESENT,
-		D3D12_RESOURCE_STATE_RENDER_TARGET
-	);
+	    m_buffers[m_frameInFlightIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
-
 
 // Sets the current buffer to present state
 void D3D12SwapChain::SetPresentState()
 {
 	GD3D12Rhi.SetBarrier(
 
-		m_buffers[m_frameInFlightIndex].Get(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET,
-		D3D12_RESOURCE_STATE_PRESENT
-	);
+	    m_buffers[m_frameInFlightIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 }
-
 
 // Releases all buffer resources
 void D3D12SwapChain::ReleaseBuffers()

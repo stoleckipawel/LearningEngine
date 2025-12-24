@@ -2,16 +2,12 @@
 
 ## Overview
 
-LearningEngine is a modular DirectX 12 rendering engine built for learning and experimentation. The codebase follows industry-standard patterns inspired by AAA engines (Unreal, Frostbite, id Tech) with a focus on clean architecture, performance, and extensibility.
+LearningEngine is a modular DirectX 12 rendering engine built for learning and experimentation. 
 
 **Key Features:**
-- Modern C++20 codebase with zero-allocation logging and efficient resource management
-- Modular architecture separating Core, Platform, RHI, Renderer, Resources, Scene, and UI
-- D3D12 backend with explicit, backend-prefixed types/files (e.g. `D3D12Rhi`, `D3D12SwapChain`, `D3D12PipelineState`)
+- D3D12 backend.
 - DXC-based shader compilation via `DxcShaderCompiler`
-- Compile-time and runtime log level filtering
-- ImGui integration for debug UI
-- Clean public API / private implementation separation
+- ImGui integration
 
 ## Prerequisites
 

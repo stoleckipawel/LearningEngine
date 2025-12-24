@@ -1,6 +1,6 @@
 #pragma once
 
-// =============================================================================
+// -----------------------------------------------------------------------------
 // VulkanRHI.h — Vulkan Backend (Placeholder)
 //
 // This file serves as a placeholder for the future Vulkan implementation.

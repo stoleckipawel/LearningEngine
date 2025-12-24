@@ -27,30 +27,30 @@
 
 struct D3D12FrameResource
 {
-    LinearAllocator     CbAllocator;           // Per-frame CB ring buffer
-    uint64_t            FenceValue = 0;        // Fence value when this frame was submitted
-    uint32_t            FrameIndex = 0;        // Debug: which frame index this represents
+	LinearAllocator CbAllocator; // Per-frame CB ring buffer
+	uint64_t FenceValue = 0;     // Fence value when this frame was submitted
+	uint32_t FrameIndex = 0;     // Debug: which frame index this represents
 
-    void Initialize(uint64_t allocatorCapacity, uint32_t frameIdx)
-    {
-        FrameIndex = frameIdx;
-        FenceValue = 0;
+	void Initialize(uint64_t allocatorCapacity, uint32_t frameIdx)
+	{
+		FrameIndex = frameIdx;
+		FenceValue = 0;
 
-        wchar_t name[64];
-        swprintf_s(name, L"FrameAllocator_%u", frameIdx);
-        CbAllocator.Initialize(allocatorCapacity, name);
-    }
+		wchar_t name[64];
+		swprintf_s(name, L"FrameAllocator_%u", frameIdx);
+		CbAllocator.Initialize(allocatorCapacity, name);
+	}
 
-    void Shutdown()
-    {
-        CbAllocator.Shutdown();
-    }
+	void Shutdown()
+	{
+		CbAllocator.Shutdown();
+	}
 
-    /// Reset allocator for new frame. Only call after fence confirms GPU completion.
-    void Reset()
-    {
-        CbAllocator.Reset();
-    }
+	// Reset allocator for new frame. Only call after fence confirms GPU completion.
+	void Reset()
+	{
+		CbAllocator.Reset();
+	}
 };
 
 //------------------------------------------------------------------------------
@@ -75,142 +75,149 @@ struct D3D12FrameResource
 
 class D3D12FrameResourceManager
 {
-public:
-    // Default capacity: 4MB per frame (16384 draws × 256 bytes)
-    static constexpr uint64_t DefaultCapacityPerFrame = 4 * 1024 * 1024;
+  public:
+	// Default capacity: 4MB per frame (16384 draws × 256 bytes)
+	static constexpr uint64_t DefaultCapacityPerFrame = 4 * 1024 * 1024;
 
-    D3D12FrameResourceManager() = default;
-    ~D3D12FrameResourceManager() { Shutdown(); }
+	D3D12FrameResourceManager() = default;
+	~D3D12FrameResourceManager()
+	{
+		Shutdown();
+	}
 
-    // Non-copyable
-    D3D12FrameResourceManager(const D3D12FrameResourceManager&) = delete;
-    D3D12FrameResourceManager& operator=(const D3D12FrameResourceManager&) = delete;
+	// Non-copyable
+	D3D12FrameResourceManager(const D3D12FrameResourceManager&) = delete;
+	D3D12FrameResourceManager& operator=(const D3D12FrameResourceManager&) = delete;
 
-    //--------------------------------------------------------------------------
-    // Initialization
-    //--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	// Initialization
+	//--------------------------------------------------------------------------
 
-    /// Initialize all frame resources.
-    /// @param capacityPerFrame Allocator capacity per frame (default 4MB).
-    void Initialize(uint64_t capacityPerFrame = DefaultCapacityPerFrame)
-    {
-        m_CapacityPerFrame = capacityPerFrame;
+	// Initialize all frame resources.
+	// @param capacityPerFrame Allocator capacity per frame (default 4MB).
+	void Initialize(uint64_t capacityPerFrame = DefaultCapacityPerFrame)
+	{
+		m_CapacityPerFrame = capacityPerFrame;
 
-        for (uint32_t i = 0; i < EngineSettings::FramesInFlight; ++i)
-        {
-            m_FrameResources[i].Initialize(capacityPerFrame, i);
-        }
+		for (uint32_t i = 0; i < EngineSettings::FramesInFlight; ++i)
+		{
+			m_FrameResources[i].Initialize(capacityPerFrame, i);
+		}
 
-        m_CurrentFrameIndex = 0;
-        m_Initialized = true;
-    }
+		m_CurrentFrameIndex = 0;
+		m_bInitialized = true;
+	}
 
-    /// Shutdown and release all resources.
-    void Shutdown()
-    {
-        if (!m_Initialized) return;
+	// Shutdown and release all resources.
+	void Shutdown()
+	{
+		if (!m_bInitialized)
+			return;
 
-        for (auto& frame : m_FrameResources)
-        {
-            frame.Shutdown();
-        }
+		for (auto& frame : m_FrameResources)
+		{
+			frame.Shutdown();
+		}
 
-        m_Initialized = false;
-    }
+		m_bInitialized = false;
+	}
 
-    //--------------------------------------------------------------------------
-    // Frame Lifecycle
-    //--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	// Frame Lifecycle
+	//--------------------------------------------------------------------------
 
-    /// Begin a new frame. Waits for GPU if necessary, resets allocator.
-    /// @param fenceEvent Event handle for fence wait.
-    /// @param frameIndex Current swap chain back buffer index.
-    void BeginFrame(HANDLE fenceEvent, uint32_t frameIndex)
-    {
-        assert(m_Initialized);
-        
-        m_CurrentFrameIndex = frameIndex;
-        D3D12FrameResource& frame = m_FrameResources[frameIndex];
+	// Begin a new frame. Waits for GPU if necessary, resets allocator.
+	void BeginFrame(HANDLE fenceEvent, uint32_t frameIndex)
+	{
+		assert(m_bInitialized);
 
-        // Wait for GPU to finish with this frame's resources before reusing
-        // This is the critical synchronization point that prevents races
-        const uint64_t completedFence = GD3D12Rhi.GetFence()->GetCompletedValue();
-        if (completedFence < frame.FenceValue)
-        {
-            // GPU hasn't finished with this frame yet - must wait
-            HRESULT hr = GD3D12Rhi.GetFence()->SetEventOnCompletion(frame.FenceValue, fenceEvent);
-            if (SUCCEEDED(hr))
-            {
-                WaitForSingleObject(fenceEvent, INFINITE);
-            }
-        }
+		m_CurrentFrameIndex = frameIndex;
+		D3D12FrameResource& frame = m_FrameResources[frameIndex];
 
-        // Now safe to reset - GPU is done with this frame's data
-        frame.Reset();
-    }
+		// Wait for GPU to finish with this frame's resources before reusing
+		// This is the critical synchronization point that prevents races
+		const uint64_t completedFence = GD3D12Rhi.GetFence()->GetCompletedValue();
+		if (completedFence < frame.FenceValue)
+		{
+			// GPU hasn't finished with this frame yet - must wait
+			HRESULT hr = GD3D12Rhi.GetFence()->SetEventOnCompletion(frame.FenceValue, fenceEvent);
+			if (SUCCEEDED(hr))
+			{
+				WaitForSingleObject(fenceEvent, INFINITE);
+			}
+		}
 
-    /// Record fence value for current frame. Call after ExecuteCommandLists.
-    /// @param fenceValue The fence value that was signaled for this frame.
-    void EndFrame(uint64_t fenceValue)
-    {
-        m_FrameResources[m_CurrentFrameIndex].FenceValue = fenceValue;
-    }
+		// Now safe to reset - GPU is done with this frame's data
+		frame.Reset();
+	}
 
-    //--------------------------------------------------------------------------
-    // Allocation
-    //--------------------------------------------------------------------------
+	// Record fence value for current frame. Call after ExecuteCommandLists.
+	// fenceValue The fence value that was signaled for this frame.
+	void EndFrame(uint64_t fenceValue)
+	{
+		m_FrameResources[m_CurrentFrameIndex].FenceValue = fenceValue;
+	}
 
-    /// Get the current frame's linear allocator.
-    [[nodiscard]] LinearAllocator& GetCurrentAllocator()
-    {
-        return m_FrameResources[m_CurrentFrameIndex].CbAllocator;
-    }
+	//--------------------------------------------------------------------------
+	// Allocation
+	//--------------------------------------------------------------------------
 
-    /// Allocate from current frame's allocator.
-    [[nodiscard]] LinearAllocation Allocate(uint64_t size, uint64_t alignment = 256)
-    {
-        return GetCurrentAllocator().Allocate(size, alignment);
-    }
+	// Get the current frame's linear allocator.
+	[[nodiscard]] LinearAllocator& GetCurrentAllocator()
+	{
+		return m_FrameResources[m_CurrentFrameIndex].CbAllocator;
+	}
 
-    /// Allocate and copy data, return GPU address for CBV binding.
-    template<typename T>
-    [[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS AllocateConstantBuffer(const T& data)
-    {
-        return GetCurrentAllocator().AllocateAndCopy(data);
-    }
+	// Allocate from current frame's allocator.
+	[[nodiscard]] LinearAllocation Allocate(uint64_t size, uint64_t alignment = 256)
+	{
+		return GetCurrentAllocator().Allocate(size, alignment);
+	}
 
-    //--------------------------------------------------------------------------
-    // Diagnostics
-    //--------------------------------------------------------------------------
+	// Allocate and copy data, return GPU address for CBV binding.
+	template <typename T> [[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS AllocateConstantBuffer(const T& data)
+	{
+		return GetCurrentAllocator().AllocateAndCopy(data);
+	}
 
-    /// Get current frame's allocator usage percentage.
-    [[nodiscard]] float GetCurrentUsagePercent() const
-    {
-        return m_FrameResources[m_CurrentFrameIndex].CbAllocator.GetUsagePercent();
-    }
+	//--------------------------------------------------------------------------
+	// Diagnostics
+	//--------------------------------------------------------------------------
 
-    /// Get high water mark across all frames (for capacity tuning).
-    [[nodiscard]] uint64_t GetMaxHighWaterMark() const
-    {
-        uint64_t maxHwm = 0;
-        for (const auto& frame : m_FrameResources)
-        {
-            maxHwm = (std::max)(maxHwm, frame.CbAllocator.GetHighWaterMark());
-        }
-        return maxHwm;
-    }
+	// Get current frame's allocator usage percentage.
+	[[nodiscard]] float GetCurrentUsagePercent() const
+	{
+		return m_FrameResources[m_CurrentFrameIndex].CbAllocator.GetUsagePercent();
+	}
 
-    /// Get capacity per frame.
-    [[nodiscard]] uint64_t GetCapacityPerFrame() const { return m_CapacityPerFrame; }
+	// Get high water mark across all frames (for capacity tuning).
+	[[nodiscard]] uint64_t GetMaxHighWaterMark() const
+	{
+		uint64_t maxHwm = 0;
+		for (const auto& frame : m_FrameResources)
+		{
+			maxHwm = (std::max)(maxHwm, frame.CbAllocator.GetHighWaterMark());
+		}
+		return maxHwm;
+	}
 
-    /// Check if initialized.
-    [[nodiscard]] bool IsInitialized() const { return m_Initialized; }
+	// Get capacity per frame.
+	[[nodiscard]] uint64_t GetCapacityPerFrame() const
+	{
+		return m_CapacityPerFrame;
+	}
 
-private:
-    std::array<D3D12FrameResource, EngineSettings::FramesInFlight> m_FrameResources;
-    uint64_t                m_CapacityPerFrame = DefaultCapacityPerFrame;
-    uint32_t                m_CurrentFrameIndex = 0;
-    bool                    m_Initialized = false;
+	// Check if initialized.
+	[[nodiscard]] bool IsInitialized() const
+	{
+		return m_bInitialized;
+	}
+
+  private:
+	std::array<D3D12FrameResource, EngineSettings::FramesInFlight> m_FrameResources;
+	uint64_t m_CapacityPerFrame = DefaultCapacityPerFrame;
+	uint32_t m_CurrentFrameIndex = 0;
+	bool m_bInitialized = false;
 };
 
 // Global frame resource manager

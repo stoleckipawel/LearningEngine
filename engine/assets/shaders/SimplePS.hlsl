@@ -18,7 +18,7 @@ void main(in PsInput Input, out PsOutput Output)
 {
     float3 texel = myTexture.SampleLevel(textureSampler, Input.TexCoord, 0.0f).xyz;
 
-    //texel *= BaseColor.rgb;
+    texel *= BaseColor.rgb;
     texel *= Input.Color.rgb;
     
     Output.Color0 = float4(texel, 1.0f);

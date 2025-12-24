@@ -1,0 +1,40 @@
+# ClangFormat configuration for LearningEngine
+# - Allman braces
+# - Tabs for indentation (4-wide)
+# - Preserved include ordering (PCH remains first in .cpp by convention)
+
+BasedOnStyle: LLVM
+Language: Cpp
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: ForIndentation
+
+BreakBeforeBraces: Allman
+
+ColumnLimit: 120
+
+# Keep includes in the order they appear; the engine relies on stable ordering
+# (e.g. PCH first in translation units).
+SortIncludes: false
+IncludeBlocks: Preserve
+
+PointerAlignment: Left
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+
+SpaceBeforeParens: ControlStatements
+
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: Empty
+
+BinPackParameters: false
+BinPackArguments: false
+
+AlignAfterOpenBracket: Align
+ContinuationIndentWidth: 4
+
+Cpp11BracedListStyle: true

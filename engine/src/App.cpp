@@ -6,74 +6,74 @@
 
 void App::Run()
 {
-    // Initialize platform window + renderer
-    Initialize();
+	// Initialize platform window + renderer
+	Initialize();
 
-    // Main loop
-    RenderLoop();
+	// Main loop
+	RenderLoop();
 
-    // Shutdown engine
-    Shutdown();
+	// Shutdown engine
+	Shutdown();
 }
 
 void App::RenderLoop()
 {
-    while (!GWindow.ShouldClose())
-    {
-        // Engine input & message pump
-        GWindow.PollEvents();
+	while (!GWindow.ShouldClose())
+	{
+		// Engine input & message pump
+		GWindow.PollEvents();
 
-        // Optional scene extension
-        Render();
-    }
+		//Renders the scene
+		Render();
+	}
 }
 
 // --- NVI implementations ---
 void App::Initialize()
 {
-    // User can inject work before engine init
-    PreInitialize();
+	// User can inject work before engine init
+	PreInitialize();
 
-    // Engine base init
-    GWindow.Initialize();
-    GRenderer.Initialize();
+	// Engine base init
+	GWindow.Initialize();
+	GRenderer.Initialize();
 
-    // User can extend after engine init
-    PostInitialize();
+	// User can extend after engine init
+	PostInitialize();
 }
 
 void App::Render()
 {
-    // User can record/prepare before engine render
-    PreRender();
+	// User can record/prepare before engine render
+	PreRender();
 
-    // Engine render frame
-    GRenderer.OnRender();
+	// Engine render frame
+	GRenderer.OnRender();
 
-    // User can extend after engine render
-    PostRender();
+	// User can extend after engine render
+	PostRender();
 }
 
 void App::Resize()
 {
-    // User hook before engine resize
-    PreResize();
+	// User hook before engine resize
+	PreResize();
 
-    // Engine resize
-    GRenderer.OnResize();
+	// Engine resize
+	GRenderer.OnResize();
 
-    // User hook after engine resize
-    PostResize();
+	// User hook after engine resize
+	PostResize();
 }
 
 void App::Shutdown()
 {
-    // User hook before engine shutdown
-    PreShutdown();
+	// User hook before engine shutdown
+	PreShutdown();
 
-    // Engine shutdown
-    GRenderer.Shutdown();
+	// Engine shutdown
+	GRenderer.Shutdown();
 
-    // User hook after engine shutdown
-    PostShutdown();
+	// User hook after engine shutdown
+	PostShutdown();
 }

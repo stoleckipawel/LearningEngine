@@ -3,16 +3,15 @@
 // Engine-wide configuration constants.
 // Keep very small and header-only so they are cheap to include everywhere.
 
-
 #include <string>
 #include <dxgi1_6.h>
 
 // Compile-time toggle to completely exclude GUI from builds when set to 0.
 #define USE_GUI 1
-//#define USE_IMGUI_DEMO_WINDOW 1
+// #define USE_IMGUI_DEMO_WINDOW 1
 
 // Shader compilation helpers. These are enabled by default for debug builds
-// to include extra debug info and to ease shader debugging. 
+// to include extra debug info and to ease shader debugging.
 #if defined(_DEBUG)
     #define ENGINE_SHADERS_OPTIMIZED 1
     #define ENGINE_SHADERS_DEBUG 1
@@ -27,7 +26,6 @@
 #if defined(_DEBUG)
     #define ENGINE_REPORT_LIVE_OBJECTS 1
 #endif
-
 
 namespace EngineSettings
 {
@@ -52,4 +50,9 @@ namespace EngineSettings
     // Prefer high-performance adapter when enumerating GPUs. When true, queries
     // adapters by GPU preference; otherwise falls back to power-saving preference.
     inline bool PreferHighPerformanceAdapter = true;
-}
+
+    // Global shader model level (major/minor) used by shader compiler.
+    // Change these to target a different shader model for the whole engine.
+    inline constexpr int ShaderModelMajor = 6;
+    inline constexpr int ShaderModelMinor = 0;
+} 

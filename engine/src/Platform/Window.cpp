@@ -30,12 +30,22 @@ UINT Window::GetHeight() const noexcept
 	return rect.bottom - rect.top;
 }
 
+DirectX::XMFLOAT2 Window::GetViewportSize() const noexcept
+{
+	return DirectX::XMFLOAT2(static_cast<float>(GetWidth()), static_cast<float>(GetHeight()));
+}
+
+DirectX::XMFLOAT2 Window::GetViewportSizeInv() const noexcept
+{
+	const auto s = GetViewportSize();
+	return DirectX::XMFLOAT2(s.x != 0.0f ? 1.0f / s.x : 0.0f, s.y != 0.0f ? 1.0f / s.y : 0.0f);
+}
 
 // Initializes the window and registers its class
 void Window::Initialize()
 {
 	// Create window class description
-	WNDCLASSEXW windowClass{ 0 };
+	WNDCLASSEXW windowClass{0};
 	windowClass.cbSize = sizeof(windowClass);
 	windowClass.style = CS_OWNDC; // Own device context
 	windowClass.lpfnWndProc = &Window::OnWindowMessage;
@@ -56,17 +66,18 @@ void Window::Initialize()
 	std::wstring wtitle(EngineSettings::WindowTitle.begin(), EngineSettings::WindowTitle.end());
 
 	// Create the window with configured initial size
-	m_windowHWND = CreateWindowExW(
-		WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW,
-		L"Default Window Name", // class name string
-		wtitle.c_str(),          // window name string
-		WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-		nullptr,
-		nullptr,
-		windowClass.hInstance,
-		nullptr
-	);
+	m_windowHWND = CreateWindowExW(WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW,
+	                               L"Default Window Name", // class name string
+	                               wtitle.c_str(),         // window name string
+	                               WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+	                               CW_USEDEFAULT,
+	                               CW_USEDEFAULT,
+	                               CW_USEDEFAULT,
+	                               CW_USEDEFAULT,
+	                               nullptr,
+	                               nullptr,
+	                               windowClass.hInstance,
+	                               nullptr);
 
 	if (m_windowHWND == nullptr)
 	{
@@ -79,7 +90,6 @@ void Window::Initialize()
 		SetFullScreen(true);
 	}
 }
-
 
 // Shuts down the window and unregisters its class
 void Window::Shutdown()
@@ -96,7 +106,6 @@ void Window::Shutdown()
 	}
 }
 
-
 // Polls and dispatches pending window messages (event loop)
 void Window::PollEvents() noexcept
 {
@@ -107,7 +116,6 @@ void Window::PollEvents() noexcept
 		DispatchMessageW(&msg);
 	}
 }
-
 
 // Sets the window to fullscreen or windowed mode
 void Window::SetFullScreen(bool bSetFullScreen)
@@ -136,12 +144,13 @@ void Window::SetFullScreen(bool bSetFullScreen)
 		monitorInfo.cbSize = sizeof(MONITORINFO);
 		if (GetMonitorInfoW(monitorFromWindow, &monitorInfo))
 		{
-			SetWindowPos(m_windowHWND, nullptr,
-				monitorInfo.rcMonitor.left,
-				monitorInfo.rcMonitor.top,
-				monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
-				monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
-				SWP_NOZORDER);
+			SetWindowPos(m_windowHWND,
+			             nullptr,
+			             monitorInfo.rcMonitor.left,
+			             monitorInfo.rcMonitor.top,
+			             monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+			             monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
+			             SWP_NOZORDER);
 		}
 	}
 	else
@@ -150,10 +159,8 @@ void Window::SetFullScreen(bool bSetFullScreen)
 		ShowWindow(m_windowHWND, SW_MAXIMIZE);
 	}
 
-	m_bIsFullScreen = bSetFullScreen;    
+	m_bIsFullScreen = bSetFullScreen;
 }
-
-
 
 // Window message handler (WndProc)
 LRESULT Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -162,34 +169,32 @@ LRESULT Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam
 	if (GUI.OnWindowMessage(wnd, msg, wParam, lParam))
 #endif
 	{
-		//GUI Layer enforces being first & if it returns true we must stop processing further events
+		// GUI Layer enforces being first & if it returns true we must stop processing further events
 		return true;
 	}
 
 	switch (msg)
 	{
-		case WM_KEYDOWN:
-			// Toggle fullscreen on F11
-			if (wParam == VK_F11)
-			{
-				GWindow.SetFullScreen(!GWindow.IsFullScreen());
-			}
-			return 0;
-		case WM_SIZE:
-			// Trigger resize when the window is not minimized and device is ready
-			if (wParam != SIZE_MINIMIZED && GD3D12Rhi.GetDevice() != nullptr)
-			{
-				GRenderer.OnResize();
-			}
-			return 0;
-		case WM_CLOSE:
-		case WM_QUIT:
-			// Signal to close the window
-			GWindow.m_bShouldClose = true;
-			return 0;
+	case WM_KEYDOWN:
+		// Toggle fullscreen on F11
+		if (wParam == VK_F11)
+		{
+			GWindow.SetFullScreen(!GWindow.IsFullScreen());
+		}
+		return 0;
+	case WM_SIZE:
+		// Trigger resize when the window is not minimized and device is ready
+		if (wParam != SIZE_MINIMIZED && GD3D12Rhi.GetDevice() != nullptr)
+		{
+			GRenderer.OnResize();
+		}
+		return 0;
+	case WM_CLOSE:
+	case WM_QUIT:
+		// Signal to close the window
+		GWindow.m_bShouldClose = true;
+		return 0;
 	}
 	// Default message handling
 	return DefWindowProcW(wnd, msg, wParam, lParam);
 }
-
-

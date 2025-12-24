@@ -12,7 +12,7 @@ using Microsoft::WRL::ComPtr;
 // copy command (see engine design notes).
 class D3D12UploadBuffer
 {
-public:
+  public:
 	// Uploads the given data to a newly created upload-heap buffer and returns
 	// a ComPtr to the GPU resource. `data` must point to at least `dataSize`
 	// bytes. `dataSize` is size in bytes.

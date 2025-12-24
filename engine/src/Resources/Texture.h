@@ -14,32 +14,38 @@ using Microsoft::WRL::ComPtr;
 // transfer ownership efficiently.
 class Texture
 {
-public:
-    explicit Texture(const std::filesystem::path& fileName);
-    ~Texture() noexcept;
+  public:
+	explicit Texture(const std::filesystem::path& fileName);
+	~Texture() noexcept;
 
-    Texture(const Texture&) = delete;
-    Texture& operator=(const Texture&) = delete;
+	Texture(const Texture&) = delete;
+	Texture& operator=(const Texture&) = delete;
 
-    // Strict ownership: disallow moves to prevent accidental transfer of
-    // descriptor ownership which could lead to double-free or dangling
-    // descriptors. The class remains non-copyable and non-movable.
-    Texture(Texture&&) = delete;
-    Texture& operator=(Texture&&) = delete;
+	// Strict ownership: disallow moves to prevent accidental transfer of
+	// descriptor ownership which could lead to double-free or dangling
+	// descriptors. The class remains non-copyable and non-movable.
+	Texture(Texture&&) = delete;
+	Texture& operator=(Texture&&) = delete;
 
-    // Descriptor handle accessors
-    D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept { return m_srvHandle.GetGPU(); }
-    D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const noexcept { return m_srvHandle.GetCPU(); }
+	// Descriptor handle accessors
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept
+	{
+		return m_srvHandle.GetGPU();
+	}
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const noexcept
+	{
+		return m_srvHandle.GetCPU();
+	}
 
-private:
-    void CreateResource();
-    void UploadToGPU();
-    void CreateShaderResourceView();
-private:
-    ComPtr<ID3D12Resource2> m_textureResource;
-    ComPtr<ID3D12Resource2> m_uploadResource;
-    std::unique_ptr<TextureLoader> m_loader;
-    D3D12DescriptorHandle m_srvHandle;
-    D3D12_RESOURCE_DESC m_texResourceDesc = {};
+  private:
+	void CreateResource();
+	void UploadToGPU();
+	void CreateShaderResourceView();
+
+  private:
+	ComPtr<ID3D12Resource2> m_textureResource;
+	ComPtr<ID3D12Resource2> m_uploadResource;
+	std::unique_ptr<TextureLoader> m_loader;
+	D3D12DescriptorHandle m_srvHandle;
+	D3D12_RESOURCE_DESC m_texResourceDesc = {};
 };
-
