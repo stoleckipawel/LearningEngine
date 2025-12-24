@@ -6,4 +6,4 @@ REM This script builds all sample projects in the samples folder for Release con
 REM Delegates logic to BuildSamples.bat.
 REM ---------------------------------------------------
 
-call BuildSamples.bat Release %1
+call Tools\BuildSamples.bat Release %1

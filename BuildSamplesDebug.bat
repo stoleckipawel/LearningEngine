@@ -8,4 +8,4 @@ REM This script builds all sample projects in the samples folder for Debug confi
 REM Delegates logic to BuildSamples.bat.
 REM ---------------------------------------------------
 
-call BuildSamples.bat Debug %1
+call Tools\BuildSamples.bat Debug %1

@@ -12,7 +12,9 @@ REM ---------------------------------------------------
 setlocal
 
 REM --- Set key directory variables ---
-set "SRC_DIR=%~dp0"
+set "SCRIPT_DIR=%~dp0"
+REM Use its parent directory as the project root.
+for %%I in ("%SCRIPT_DIR%..") do set "SRC_DIR=%%~fI\"
 set "BUILD_DIR=%SRC_DIR%build"
 set "BIN_DIR=%SRC_DIR%bin"
 set "OBJ_DIR=%SRC_DIR%obj"

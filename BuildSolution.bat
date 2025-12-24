@@ -15,7 +15,7 @@ setlocal enabledelayedexpansion
 
 REM Step 0: Check dependencies before proceeding
 echo [LOG] Checking build dependencies...
-call CheckDependencies.bat CONTINUE
+call Tools\CheckDependencies.bat CONTINUE
 if errorlevel 1 (
     echo [ERROR] Dependency check failed. Please review missing dependencies above.
     pause
@@ -24,7 +24,7 @@ if errorlevel 1 (
 
 REM Step 1: Clean all intermediate files
 echo [LOG] Cleaning intermediate files...
-call CleanIntermediateFiles.bat CONTINUE
+call Tools\CleanIntermediateFiles.bat CONTINUE
 if errorlevel 1 (
     echo [ERROR] CleanIntermediateFiles.bat failed.
     pause

@@ -12,7 +12,7 @@ UseTab: ForIndentation
 
 BreakBeforeBraces: Allman
 
-ColumnLimit: 120
+ColumnLimit: 180
 
 # Keep includes in the order they appear; the engine relies on stable ordering
 # (e.g. PCH first in translation units).

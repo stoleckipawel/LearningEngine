@@ -1,6 +1,48 @@
 #include "PCH.h"
 #include "DxcShaderCompiler.h"
 #include "AssetPathResolver.h"
+// Return the DXC target profile string for `stage` (for example "vs_6_0").
+// Implementation is in this cpp file so the public header remains small
+// and callers do not need the implementation details.
+std::string DxcShaderCompiler::BuildShaderProfile(ShaderStage stage)
+{
+	const char* prefix = "ps";
+	switch (stage)
+	{
+	case DxcShaderCompiler::ShaderStage::Vertex:
+		prefix = "vs";
+		break;
+	case DxcShaderCompiler::ShaderStage::Pixel:
+		prefix = "ps";
+		break;
+	case DxcShaderCompiler::ShaderStage::Geometry:
+		prefix = "gs";
+		break;
+	case DxcShaderCompiler::ShaderStage::Hull:
+		prefix = "hs";
+		break;
+	case DxcShaderCompiler::ShaderStage::Domain:
+		prefix = "ds";
+		break;
+	case DxcShaderCompiler::ShaderStage::Compute:
+		prefix = "cs";
+		break;
+	default:
+		prefix = "ps";
+		break;
+	}
+
+	// Reserve a small buffer to avoid multiple reallocations. Typical output
+	// is short (e.g. "vs_6_0").
+	std::string out;
+	out.reserve(8);
+	out.append(prefix);
+	out.push_back('_');
+	out.append(std::to_string(EngineSettings::ShaderModelMajor));
+	out.push_back('_');
+	out.append(std::to_string(EngineSettings::ShaderModelMinor));
+	return out;
+}
 
 // Compiles a shader from file and stores the bytecode using DXC
 // fileName: name of HLSL file
@@ -69,110 +111,6 @@ void DxcShaderCompiler::CreateDXCInterfaces()
 	}
 }
 
-// Return the DXC target profile string for `stage` (for example "vs_6_0").
-// Implementation is in this cpp file so the public header remains small
-// and callers do not need the implementation details.
-std::string DxcShaderCompiler::BuildShaderProfile(ShaderStage stage)
-{
-	const char* prefix = "ps";
-	switch (stage)
-	{
-	case DxcShaderCompiler::ShaderStage::Vertex:
-		prefix = "vs";
-		break;
-	case DxcShaderCompiler::ShaderStage::Pixel:
-		prefix = "ps";
-		break;
-	case DxcShaderCompiler::ShaderStage::Geometry:
-		prefix = "gs";
-		break;
-	case DxcShaderCompiler::ShaderStage::Hull:
-		prefix = "hs";
-		break;
-	case DxcShaderCompiler::ShaderStage::Domain:
-		prefix = "ds";
-		break;
-	case DxcShaderCompiler::ShaderStage::Compute:
-		prefix = "cs";
-		break;
-	default:
-		prefix = "ps";
-		break;
-	}
-
-	// Reserve a small buffer to avoid multiple reallocations. Typical output
-	// is short (e.g. "vs_6_0").
-	std::string out;
-	out.reserve(8);
-	out.append(prefix);
-	out.push_back('_');
-	out.append(std::to_string(EngineSettings::ShaderModelMajor));
-	out.push_back('_');
-	out.append(std::to_string(EngineSettings::ShaderModelMinor));
-	return out;
-}
-
-// Handles DXC compilation result: logs errors, checks status, saves binary and PDB outputs.
-void DxcShaderCompiler::HandleCompileResult()
-{
-	// Print errors and warnings if present from DXC
-	ComPtr<IDxcBlobUtf8> errorBlob = nullptr;
-	m_compileResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errorBlob.ReleaseAndGetAddressOf()), nullptr);
-	if (errorBlob != nullptr && errorBlob->GetStringLength() != 0)
-	{
-		LOG_FATAL(std::string("DXC Warnings/Errors: ") +
-		          std::string(errorBlob->GetStringPointer(), errorBlob->GetStringLength()));
-	}
-
-	// Check compilation status and abort if failed
-	HRESULT hrStatus;
-	m_compileResult->GetStatus(&hrStatus);
-	if (FAILED(hrStatus))
-	{
-		LOG_FATAL("DXC Compilation Failed");
-		DumpShaderDebugInfo();
-	}
-
-	// Save compiled shader binary to disk and store bytecode for engine use
-	ComPtr<IDxcBlob> shaderBlob = nullptr;
-	ComPtr<IDxcBlobUtf16> shaderNameBlob = nullptr;
-	m_compileResult->GetOutput(
-	    DXC_OUT_OBJECT, IID_PPV_ARGS(shaderBlob.ReleaseAndGetAddressOf()), shaderNameBlob.ReleaseAndGetAddressOf());
-	if (shaderBlob != nullptr && shaderNameBlob != nullptr)
-	{
-		FILE* fp = nullptr;
-		_wfopen_s(&fp, shaderNameBlob->GetStringPointer(), L"wb");
-		fwrite(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), 1, fp);
-		fclose(fp);
-		// Convert wide string to UTF-8 for logging
-		std::wstring ws(shaderNameBlob->GetStringPointer());
-		std::string filename(ws.begin(), ws.end());
-		LOG_INFO("Shader binary saved: " + filename);
-	}
-	m_shaderBytecode.BytecodeLength = shaderBlob->GetBufferSize();
-	m_shaderBytecode.pShaderBytecode = shaderBlob->GetBufferPointer();
-
-	// Save PDB (debug info) to disk for debugging and PIX integration
-	ComPtr<IDxcBlob> pdbBlob = nullptr;
-	ComPtr<IDxcBlobUtf16> pdbNameBlob = nullptr;
-	m_compileResult->GetOutput(
-	    DXC_OUT_PDB, IID_PPV_ARGS(pdbBlob.ReleaseAndGetAddressOf()), pdbNameBlob.ReleaseAndGetAddressOf());
-	if (pdbBlob != nullptr && pdbNameBlob != nullptr)
-	{
-		FILE* fp = nullptr;
-		_wfopen_s(&fp, pdbNameBlob->GetStringPointer(), L"wb");
-		fwrite(pdbBlob->GetBufferPointer(), pdbBlob->GetBufferSize(), 1, fp);
-		fclose(fp);
-	}
-}
-
-// Log DXC Shader Debug Info
-void DxcShaderCompiler::DumpShaderDebugInfo()
-{
-	LogDXCVersion();
-	LogDXCArguments();
-}
-
 // Loads the shader source file into a DXC blob for compilation.
 void DxcShaderCompiler::LoadShaderSource()
 {
@@ -201,24 +139,24 @@ void DxcShaderCompiler::CompileShader(ShaderStage stage, const std::string& entr
 	std::wstring wModel(model.begin(), model.end());
 	// Build LPCWSTR argument array as in Microsoft DXC samples
 	LPCWSTR pszArgs[] = {
-	    m_resolvedPath.c_str(),      // Shader source file path (for error reporting and PIX source view)
-	    L"-E",                       // Entry point flag
-	    wEntry.c_str(),              // Entry point function name
-	    L"-T",                       // Target profile flag
-	    wModel.c_str(),              // Target profile (e.g., "vs_6_0", "ps_6_0")
-	    DXC_ARG_ALL_RESOURCES_BOUND, // Assume all resources are bound
-	    DXC_ARG_WARNINGS_ARE_ERRORS, // Treat warnings as errors
-	    L"-Qstrip_reflect",          // Strip reflection data into a separate blob
-	    L"-Qstrip_debug",            // Strip debug info from output
+		m_resolvedPath.c_str(),      // Shader source file path (for error reporting and PIX source view)
+		L"-E",                       // Entry point flag
+		wEntry.c_str(),              // Entry point function name
+		L"-T",                       // Target profile flag
+		wModel.c_str(),              // Target profile (e.g., "vs_6_0", "ps_6_0")
+		DXC_ARG_ALL_RESOURCES_BOUND, // Assume all resources are bound
+		DXC_ARG_WARNINGS_ARE_ERRORS, // Treat warnings as errors
+		L"-Qstrip_reflect",          // Strip reflection data into a separate blob
+		L"-Qstrip_debug",            // Strip debug info from output
 
 #if defined(ENGINE_SHADERS_DEBUG)
-	    DXC_ARG_DEBUG, // Enable debug info (full format)
+		DXC_ARG_DEBUG, // Enable debug info (full format)
 #endif
 
 #if defined(ENGINE_SHADERS_OPTIMIZED)
-	    DXC_ARG_OPTIMIZATION_LEVEL3, // Enable full optimizations for release
+		DXC_ARG_OPTIMIZATION_LEVEL3, // Enable full optimizations for release
 #else
-	    DXC_ARG_SKIP_OPTIMIZATIONS, // Skip optimizations for easier debugging
+		DXC_ARG_SKIP_OPTIMIZATIONS, // Skip optimizations for easier debugging
 #endif
 	};
 
@@ -227,10 +165,10 @@ void DxcShaderCompiler::CompileShader(ShaderStage stage, const std::string& entr
 
 	// Compile shader using DXC
 	HRESULT hr = m_dxcCompiler->Compile(&m_sourceBuffer,                                       // Source buffer
-	                                    pszArgs,                                               // Compile arguments
-	                                    static_cast<UINT>(std::size(pszArgs)),                 // Number of arguments
-	                                    m_includeHandler.Get(),                                // #include handler
-	                                    IID_PPV_ARGS(m_compileResult.ReleaseAndGetAddressOf()) // Compiler output
+										pszArgs,                                               // Compile arguments
+										static_cast<UINT>(std::size(pszArgs)),                 // Number of arguments
+										m_includeHandler.Get(),                                // #include handler
+										IID_PPV_ARGS(m_compileResult.ReleaseAndGetAddressOf()) // Compiler output
 	);
 
 	if (FAILED(hr) || !m_compileResult)
@@ -238,6 +176,93 @@ void DxcShaderCompiler::CompileShader(ShaderStage stage, const std::string& entr
 		LOG_FATAL("DXC failed to compile shader");
 		return;
 	}
+}
+
+// Handles DXC compilation result: logs errors, checks status, saves binary and PDB outputs.
+void DxcShaderCompiler::HandleCompileResult()
+{
+	// Print errors and warnings if present from DXC
+	ComPtr<IDxcBlobUtf8> errorBlob = nullptr;
+	m_compileResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errorBlob.ReleaseAndGetAddressOf()), nullptr);
+	if (errorBlob != nullptr && errorBlob->GetStringLength() != 0)
+	{
+		LOG_FATAL(std::string("DXC Warnings/Errors: ") +
+				  std::string(errorBlob->GetStringPointer(), errorBlob->GetStringLength()));
+	}
+
+	// Check compilation status and abort if failed
+	HRESULT hrStatus;
+	m_compileResult->GetStatus(&hrStatus);
+	if (FAILED(hrStatus))
+	{
+		LOG_FATAL("DXC Compilation Failed");
+		DumpShaderDebugInfo();
+	}
+
+	// Save compiled shader binary to disk and store bytecode for engine use
+	ComPtr<IDxcBlob> shaderBlob = nullptr;
+	ComPtr<IDxcBlobUtf16> shaderNameBlob = nullptr;
+	m_compileResult->GetOutput(
+		DXC_OUT_OBJECT, IID_PPV_ARGS(shaderBlob.ReleaseAndGetAddressOf()), shaderNameBlob.ReleaseAndGetAddressOf());
+	if (shaderBlob != nullptr && shaderNameBlob != nullptr)
+	{
+		FILE* fp = nullptr;
+		_wfopen_s(&fp, shaderNameBlob->GetStringPointer(), L"wb");
+		fwrite(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), 1, fp);
+		fclose(fp);
+		// Convert wide string to UTF-8 for logging
+		std::wstring ws(shaderNameBlob->GetStringPointer());
+		std::string filename(ws.begin(), ws.end());
+		LOG_INFO("Shader binary saved: " + filename);
+	}
+	m_shaderBytecode.BytecodeLength = shaderBlob->GetBufferSize();
+	m_shaderBytecode.pShaderBytecode = shaderBlob->GetBufferPointer();
+
+	// Save PDB (debug info) to disk for debugging and PIX integration.
+	// Place the PDB into a dedicated `ShaderSymbols` folder
+	// using the filename suggested by DXC (preserve the filename).
+	ComPtr<IDxcBlob> pdbBlob = nullptr;
+	ComPtr<IDxcBlobUtf16> pdbNameBlob = nullptr;
+	m_compileResult->GetOutput(
+		DXC_OUT_PDB, IID_PPV_ARGS(pdbBlob.ReleaseAndGetAddressOf()), pdbNameBlob.ReleaseAndGetAddressOf());
+
+	SaveShaderSymbols(pdbBlob.Get(), pdbNameBlob.Get());
+}
+
+// Save Shader PDB's to ShaderSymbols folder
+void DxcShaderCompiler::SaveShaderSymbols(IDxcBlob* pdbBlob, IDxcBlobUtf16* pdbNameBlob)
+{
+	if (pdbBlob == nullptr || pdbNameBlob == nullptr)
+		return;
+
+	// Use the DXC-provided path as the base. Create a ShaderSymbols folder in that directory
+	// and save the PDB there using the same filename DXC suggested.
+	std::wstring wPdbName(pdbNameBlob->GetStringPointer());
+	std::filesystem::path dxcProvidedPath(wPdbName);
+	std::filesystem::path baseDir = dxcProvidedPath.parent_path();
+
+	std::error_code ec;
+	std::filesystem::path symbolsDir = baseDir / L"ShaderSymbols";
+	if (!std::filesystem::exists(symbolsDir))
+	{
+		std::filesystem::create_directories(symbolsDir, ec);
+	}
+	std::filesystem::path pdbOut = symbolsDir / dxcProvidedPath.filename();
+
+	FILE* fp = nullptr;
+	_wfopen_s(&fp, pdbOut.wstring().c_str(), L"wb");
+	if (fp != nullptr)
+	{
+		fwrite(pdbBlob->GetBufferPointer(), pdbBlob->GetBufferSize(), 1, fp);
+		fclose(fp);
+	}
+}
+
+// Log DXC Shader Debug Info
+void DxcShaderCompiler::DumpShaderDebugInfo()
+{
+	LogDXCVersion();
+	LogDXCArguments();
 }
 
 // Logs the DXC compile arguments for debugging purposes.
@@ -270,7 +295,7 @@ void DxcShaderCompiler::LogDXCVersion()
 #if defined(_DEBUG)
 	ComPtr<IDxcVersionInfo> versionInfo = nullptr;
 	if (SUCCEEDED(m_dxcCompiler->QueryInterface(__uuidof(IDxcVersionInfo),
-	                                            reinterpret_cast<void**>(versionInfo.ReleaseAndGetAddressOf()))))
+												reinterpret_cast<void**>(versionInfo.ReleaseAndGetAddressOf()))))
 	{
 		UINT major = 0, minor = 0;
 		versionInfo->GetVersion(&major, &minor);
