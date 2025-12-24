@@ -50,16 +50,13 @@ void DepthStencil::CreateResource()
 	depthStencilResourceDesc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
 
 	// Create the committed resource for depth stencil
-		ThrowIfFailed(
-			GRHI.GetDevice()->CreateCommittedResource(
-				&heapDefaultProperties,
-				D3D12_HEAP_FLAG_NONE,
-				&depthStencilResourceDesc,
-				D3D12_RESOURCE_STATE_DEPTH_READ,
-				&depthOptimizedClearValue,
-				IID_PPV_ARGS(m_resource.ReleaseAndGetAddressOf())),
-			"Failed To Create Resource"
-		);
+	CHECK(GRHI.GetDevice()->CreateCommittedResource(
+		&heapDefaultProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&depthStencilResourceDesc,
+		D3D12_RESOURCE_STATE_DEPTH_READ,
+		&depthOptimizedClearValue,
+		IID_PPV_ARGS(m_resource.ReleaseAndGetAddressOf())));
 
 	// Name the resource for easier debugging (no-op in release via DebugUtils)
 	DebugUtils::SetDebugName(m_resource, L"RHI_DepthStencil");

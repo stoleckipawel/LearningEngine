@@ -36,7 +36,7 @@ void ShaderCompiler::ResolveAndValidatePath(const std::filesystem::path& fileNam
     // Resolve asset path for shader file and validate existence
     m_resolvedPath = ResolveAssetPath(fileName, AssetType::Shader);
     if (!std::filesystem::exists(m_resolvedPath)) {
-        LogMessage("Shader file does not exist: " + m_resolvedPath.string(), ELogType::Fatal);
+        LOG_FATAL("Shader file does not exist: " + m_resolvedPath.string());
     }
 }
 
@@ -46,19 +46,19 @@ void ShaderCompiler::CreateDXCInterfaces()
     // Create DXC compiler interface
     HRESULT hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(m_dxcCompiler.ReleaseAndGetAddressOf()));
     if (FAILED(hr)) {
-        LogMessage("Failed to create DXC compiler", ELogType::Fatal);
+        LOG_FATAL("Failed to create DXC compiler");
         return;
     }
     // Create DXC utility interface
     hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(m_dxcUtils.ReleaseAndGetAddressOf()));
     if (FAILED(hr)) {
-        LogMessage("Failed to create DXC utils", ELogType::Fatal);
+        LOG_FATAL("Failed to create DXC utils");
         return;
     }
     // Create default include handler for #include directives
     hr = m_dxcUtils->CreateDefaultIncludeHandler(m_includeHandler.ReleaseAndGetAddressOf());
     if (FAILED(hr)) {
-        LogMessage("Failed to create DXC include handler", ELogType::Fatal);
+        LOG_FATAL("Failed to create DXC include handler");
         return;
     }
 }
@@ -70,14 +70,14 @@ void ShaderCompiler::HandleCompileResult()
     ComPtr<IDxcBlobUtf8> errorBlob = nullptr;
     m_compileResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errorBlob.ReleaseAndGetAddressOf()), nullptr);
     if (errorBlob != nullptr && errorBlob->GetStringLength() != 0) {
-        LogMessage(std::string("DXC Warnings/Errors: ") + std::string(errorBlob->GetStringPointer(), errorBlob->GetStringLength()), ELogType::Fatal);
+        LOG_FATAL(std::string("DXC Warnings/Errors: ") + std::string(errorBlob->GetStringPointer(), errorBlob->GetStringLength()));
     }
 
     // Check compilation status and abort if failed
     HRESULT hrStatus;
     m_compileResult->GetStatus(&hrStatus);
     if (FAILED(hrStatus)) {
-        LogMessage("DXC Compilation Failed", ELogType::Fatal);
+        LOG_FATAL("DXC Compilation Failed");
         DumpShaderDebugInfo();
     }
 
@@ -93,7 +93,7 @@ void ShaderCompiler::HandleCompileResult()
         // Convert wide string to UTF-8 for logging
         std::wstring ws(shaderNameBlob->GetStringPointer());
         std::string filename(ws.begin(), ws.end());
-        LogMessage("Shader binary saved: " + filename, ELogType::Info);
+        LOG_INFO("Shader binary saved: " + filename);
     }
     m_shaderBytecode.BytecodeLength = shaderBlob->GetBufferSize();
     m_shaderBytecode.pShaderBytecode = shaderBlob->GetBufferPointer();
@@ -123,7 +123,7 @@ void ShaderCompiler::LoadShaderSource()
     // Load shader source file into DXC blob
     HRESULT hr = m_dxcUtils->LoadFile(m_resolvedPath.c_str(), nullptr, m_sourceBlob.ReleaseAndGetAddressOf());
     if (FAILED(hr) || !m_sourceBlob) {
-        LogMessage("Failed to load shader source file: " + m_resolvedPath.string(), ELogType::Fatal);
+        LOG_FATAL("Failed to load shader source file: " + m_resolvedPath.string());
         return;
     }
     // Fill DXC buffer struct with source blob data
@@ -174,7 +174,7 @@ void ShaderCompiler::CompileShader(const std::string& model, const std::string& 
     );
 
     if (FAILED(hr) || !m_compileResult) {
-        LogMessage("DXC failed to compile shader", ELogType::Fatal);
+        LOG_FATAL("DXC failed to compile shader");
         return;
     }
 }
@@ -198,7 +198,7 @@ void ShaderCompiler::LogDXCArguments()
     }
     if (m_compileArgs.size() > kMaxArgsToLog)
         log += "  ... (truncated)\n";
-    LogMessage(log, ELogType::Info);
+    LOG_DEBUG(log);
 #endif
 }
 
@@ -211,11 +211,11 @@ void ShaderCompiler::LogDXCVersion()
     if (SUCCEEDED(m_dxcCompiler->QueryInterface(__uuidof(IDxcVersionInfo), reinterpret_cast<void**>(versionInfo.ReleaseAndGetAddressOf())))) {
         UINT major = 0, minor = 0;
         versionInfo->GetVersion(&major, &minor);
-        LogMessage("DXC Version: " + std::to_string(major) + "." + std::to_string(minor), ELogType::Info);
+        LOG_DEBUG("DXC Version: " + std::to_string(major) + "." + std::to_string(minor));
     } 
 	else 
 	{
-        LogMessage("DXC Version: <unavailable>", ELogType::Info);
+        LOG_DEBUG("DXC Version: <unavailable>");
     }
 #endif
 }

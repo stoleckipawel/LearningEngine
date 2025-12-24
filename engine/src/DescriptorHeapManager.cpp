@@ -73,8 +73,7 @@ void DescriptorHeapManager::FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_CP
 
 	if (!heap || !allocator)
 	{
-		LogMessage("FreeHandle: invalid heap or allocator", ELogType::Warning);
-		return;
+		LOG_FATAL("FreeHandle: invalid heap or allocator");
 	}
 
 	// Compute index from CPU handle pointer arithmetic against the heap's CPU start

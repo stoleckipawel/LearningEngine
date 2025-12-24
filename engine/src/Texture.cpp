@@ -14,13 +14,13 @@ Texture::Texture(const std::filesystem::path& fileName)
 	// Basic validation: ensure SRV descriptor allocated and loader produced data.
 	if (!m_srvHandle.IsValid())
 	{
-		LogMessage("Texture: failed to allocate SRV descriptor.", ELogType::Fatal);
+		LOG_FATAL("Texture: failed to allocate SRV descriptor.");
 		return;
 	}
 
 	if (!m_loader)
 	{
-		LogMessage("Texture: loader failed to initialize.", ELogType::Fatal);
+		LOG_FATAL("Texture: loader failed to initialize.");
 		return;
 	}
 
@@ -48,16 +48,13 @@ void Texture::CreateResource()
 
 	// Create the default heap resource for the texture
 	CD3DX12_HEAP_PROPERTIES heapDefaultProperties(D3D12_HEAP_TYPE_DEFAULT);
-	ThrowIfFailed(
-		GRHI.GetDevice()->CreateCommittedResource(
-			&heapDefaultProperties,
-			D3D12_HEAP_FLAG_NONE,
-			&m_texResourceDesc,
-			D3D12_RESOURCE_STATE_COPY_DEST,
-			nullptr,
-			IID_PPV_ARGS(m_textureResource.ReleaseAndGetAddressOf())),
-		"Failed To Create Texture Resource"
-	);
+	CHECK(GRHI.GetDevice()->CreateCommittedResource(
+		&heapDefaultProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&m_texResourceDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS(m_textureResource.ReleaseAndGetAddressOf())));
 	DebugUtils::SetDebugName(m_textureResource, L"RHI_Texture");
 
 	// Calculate required size for the upload buffer
@@ -66,16 +63,13 @@ void Texture::CreateResource()
 	// Create the upload heap resource for staging texture data
 	CD3DX12_HEAP_PROPERTIES heapUploadProperties(D3D12_HEAP_TYPE_UPLOAD);
 	CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
-	ThrowIfFailed(
-		GRHI.GetDevice()->CreateCommittedResource(
-			&heapUploadProperties,
-			D3D12_HEAP_FLAG_NONE,
-			&resourceDesc,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(m_uploadResource.ReleaseAndGetAddressOf())),
-		"Failed To Create Upload Buffer"
-	);
+	CHECK(GRHI.GetDevice()->CreateCommittedResource(
+		&heapUploadProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(m_uploadResource.ReleaseAndGetAddressOf())));
 }
 
 // Uploads the texture data from CPU to GPU resource

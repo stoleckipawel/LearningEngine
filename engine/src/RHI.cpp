@@ -59,14 +59,13 @@ void RHI::CheckShaderModel6Support() const noexcept
 	shaderModel.HighestShaderModel = D3D_SHADER_MODEL_6_0;
 	if (!m_Device)
 	{
-		LogMessage("CheckShaderModel6Support called before device creation", ELogType::Fatal);
-		return;
+		LOG_FATAL("CheckShaderModel6Support called before device creation");
 	}
 
 	HRESULT hr = m_Device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(shaderModel));
 	if (FAILED(hr) || shaderModel.HighestShaderModel < D3D_SHADER_MODEL_6_0)
 	{
-		LogMessage("Device does not support Shader Model 6.0. Minimum required for engine.", ELogType::Fatal);
+		LOG_FATAL("Device does not support Shader Model 6.0. Minimum required for engine.");
 	}
 }
 
@@ -97,7 +96,7 @@ void RHI::CreateFactory()
 #else
 	UINT dxgiFactoryFlags = 0;
 #endif
-	ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(m_DxgiFactory.ReleaseAndGetAddressOf())), "Failed To Create Factory");
+	CHECK(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(m_DxgiFactory.ReleaseAndGetAddressOf())));
 }
 
 void RHI::CreateDevice(bool /*requireDXRSupport*/)
@@ -105,10 +104,10 @@ void RHI::CreateDevice(bool /*requireDXRSupport*/)
 	SelectAdapter();
 	if (!m_Adapter)
 	{
-		LogMessage("No suitable adapter found when creating device", ELogType::Fatal);
+		LOG_FATAL("No suitable adapter found when creating device");
 	}
 
-	ThrowIfFailed(D3D12CreateDevice(m_Adapter.Get(), m_DesiredD3DFeatureLevel, IID_PPV_ARGS(m_Device.ReleaseAndGetAddressOf())), "Failed To Create Device");
+	CHECK(D3D12CreateDevice(m_Adapter.Get(), m_DesiredD3DFeatureLevel, IID_PPV_ARGS(m_Device.ReleaseAndGetAddressOf())));
 }
 
 void RHI::CreateCommandQueue()
@@ -118,14 +117,14 @@ void RHI::CreateCommandQueue()
 	cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
 	cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	cmdQueueDesc.NodeMask = 0;
-	ThrowIfFailed(m_Device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(m_CmdQueue.ReleaseAndGetAddressOf())), "Failed To Create Command Queue");
+	CHECK(m_Device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(m_CmdQueue.ReleaseAndGetAddressOf())));
 }
 
 void RHI::CreateCommandAllocators()
 {
 	for (size_t i = 0; i < EngineSettings::FramesInFlight; ++i)
 	{
-		ThrowIfFailed(m_Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_CmdAllocatorScene[i].ReleaseAndGetAddressOf())), "Failed To Create Scene Command Allocator");
+		CHECK(m_Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_CmdAllocatorScene[i].ReleaseAndGetAddressOf())));
 	}
 }
 
@@ -133,17 +132,17 @@ void RHI::CreateCommandLists()
 {
 	if (!m_Device)
 	{
-		LogMessage("CreateCommandLists called before device creation", ELogType::Fatal);
+		LOG_FATAL("CreateCommandLists called before device creation");
 		return;
 	}
 
 	if (!m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()])
 	{
-		LogMessage("CreateCommandLists: command allocator missing for current frame", ELogType::Fatal);
+		LOG_FATAL("CreateCommandLists: command allocator missing for current frame");
 		return;
 	}
 
-	ThrowIfFailed(m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()].Get(), nullptr, IID_PPV_ARGS(m_CmdListScene.ReleaseAndGetAddressOf())), "Failed To Create Scene Command List");
+	CHECK(m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()].Get(), nullptr, IID_PPV_ARGS(m_CmdListScene.ReleaseAndGetAddressOf())));
 }
 
 void RHI::CreateFenceAndEvent()
@@ -155,49 +154,49 @@ void RHI::CreateFenceAndEvent()
 
 	if (!m_Device)
 	{
-		LogMessage("CreateFenceAndEvent called before device creation", ELogType::Fatal);
+		LOG_FATAL("CreateFenceAndEvent called before device creation");
 		return;
 	}
 
-	ThrowIfFailed(m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_Fence.ReleaseAndGetAddressOf())), "Failed To Create Fence");
+	CHECK(m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_Fence.ReleaseAndGetAddressOf())));
 
 	m_FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 	if (!m_FenceEvent)
 	{
-		LogMessage("Failed To Create Fence Event", ELogType::Fatal);
+		LOG_FATAL("Failed To Create Fence Event");
 	}
 }
 
 void RHI::CloseCommandListScene() noexcept
 {
-	ThrowIfFailed(m_CmdListScene->Close(), "Failed To Close Scene Command List");
+	CHECK(m_CmdListScene->Close());
 }
 
 void RHI::ResetCommandAllocator() noexcept
 {
 	if (!m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()])
 	{
-		LogMessage("ResetCommandAllocator called with missing allocator", ELogType::Fatal);
+		LOG_FATAL("ResetCommandAllocator called with missing allocator");
 		return;
 	}
 
-	ThrowIfFailed(m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()]->Reset(), "Failed To Reset Scene Command Allocator");
+	CHECK(m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()]->Reset());
 }
 
 void RHI::ResetCommandList() noexcept
 {
 	if (!m_CmdListScene)
 	{
-		LogMessage("ResetCommandList called without a valid command list", ELogType::Fatal);
+		LOG_FATAL("ResetCommandList called without a valid command list");
 		return;
 	}
 	if (!m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()])
 	{
-		LogMessage("ResetCommandList called with missing allocator", ELogType::Fatal);
+		LOG_FATAL("ResetCommandList called with missing allocator");
 		return;
 	}
 
-	ThrowIfFailed(m_CmdListScene->Reset(m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()].Get(), nullptr), "Failed To Reset Scene Command List");
+	CHECK(m_CmdListScene->Reset(m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()].Get(), nullptr));
 }
 
 // Executes the current command list on the command queue
@@ -205,7 +204,7 @@ void RHI::ExecuteCommandList() noexcept
 {
 	if (!m_CmdListScene || !m_CmdQueue)
 	{
-		LogMessage("ExecuteCommandList called without valid command list or queue", ELogType::Fatal);
+		LOG_FATAL("ExecuteCommandList called without valid command list or queue");
 	}
 
 	ID3D12CommandList* ppcommandLists[] = { m_CmdListScene.Get() };
@@ -227,7 +226,7 @@ void RHI::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore
 
 	if (!m_CmdListScene)
 	{
-		LogMessage("SetBarrier: command list is null", ELogType::Fatal);
+		LOG_FATAL("SetBarrier: command list is null");
 	}
 
 	m_CmdListScene->ResourceBarrier(1, &barrier);
@@ -242,13 +241,13 @@ void RHI::WaitForGPU() noexcept
 	const UINT64 fenceCurrentValue = m_FenceValues[GSwapChain.GetFrameInFlightIndex()];
 	if (!m_Fence)
 	{
-		LogMessage("WaitForGPU called without a fence", ELogType::Fatal);
+		LOG_FATAL("WaitForGPU called without a fence");
 	}
 
 	const UINT64 fenceCompletedValue = m_Fence->GetCompletedValue();
 	if (fenceCompletedValue < fenceCurrentValue)
 	{
-		ThrowIfFailed(m_Fence->SetEventOnCompletion(fenceCurrentValue, m_FenceEvent), "Failed To Signal Command Queue");
+		CHECK(m_Fence->SetEventOnCompletion(fenceCurrentValue, m_FenceEvent));
 		WaitForSingleObject(m_FenceEvent, INFINITE);
 	}
 }
@@ -260,10 +259,10 @@ void RHI::Signal() noexcept
 	const UINT64 currentFenceValue = m_NextFenceValue++;
 	if (!m_CmdQueue || !m_Fence)
 	{
-		LogMessage("Signal called without command queue or fence", ELogType::Fatal);
+		LOG_FATAL("Signal called without command queue or fence");
 	}
 
-	ThrowIfFailed(m_CmdQueue->Signal(m_Fence.Get(), currentFenceValue), "Failed To Signal Command Queue");
+	CHECK(m_CmdQueue->Signal(m_Fence.Get(), currentFenceValue));
 
 	// Set the fence value for the next frame.
 	m_FenceValues[GSwapChain.GetFrameInFlightIndex()] = currentFenceValue;

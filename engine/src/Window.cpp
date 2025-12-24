@@ -49,7 +49,7 @@ void Window::Initialize()
 	m_wndClass = RegisterClassExW(&windowClass);
 	if (!m_wndClass)
 	{
-		LogMessage("Failed to register window class", ELogType::Fatal);
+		LOG_FATAL("Failed to register window class");
 	}
 
 	// Convert configured window title to wide string
@@ -70,7 +70,7 @@ void Window::Initialize()
 
 	if (m_windowHWND == nullptr)
 	{
-		LogMessage("Failed to Create a Window", ELogType::Fatal);
+		LOG_FATAL("Failed to Create a Window");
 	}
 
 	// Apply fullscreen if requested by settings

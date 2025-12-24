@@ -50,7 +50,7 @@ void UI::Initialize()
     // Initialize platform backend with the window handle. Guard against missing HWND.
     if (!GWindow.GetHWND())
     {
-        LogMessage("UI::Initialize: invalid window handle", ELogType::Fatal);
+        LOG_FATAL("UI::Initialize: invalid window handle");
         return;
     }
 
@@ -68,7 +68,7 @@ void UI::Initialize()
     // Validate required D3D12 objects before calling ImGui init.
     if (init_info.Device == nullptr || init_info.CommandQueue == nullptr || init_info.SrvDescriptorHeap == nullptr)
     {
-        LogMessage("UI::Initialize: missing DX12 device/queue/descriptor-heap for ImGui initialization", ELogType::Fatal);
+        LOG_FATAL("UI::Initialize: missing DX12 device/queue/descriptor-heap for ImGui initialization");
         return;
     }
 

@@ -87,20 +87,21 @@ private:
         resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
         resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-        ThrowIfFailed(GRHI.GetDevice()->CreateCommittedResource(
+        CHECK(GRHI.GetDevice()->CreateCommittedResource(
             &heapProperties,
             D3D12_HEAP_FLAG_NONE,
             &resourceDesc,
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
-            IID_PPV_ARGS(&Resource)),
-            "Failed to create constant buffer resource.");
+            IID_PPV_ARGS(&Resource)));
+
         DebugUtils::SetDebugName(Resource, L"RHI_ConstantBuffer");
 
         // Map the resource for CPU writes
         D3D12_RANGE readRange = { 0, 0 };
         void* mapped = nullptr;
-        ThrowIfFailed(Resource->Map(0, &readRange, &mapped), "Failed to map constant buffer resource.");
+
+        CHECK(Resource->Map(0, &readRange, &mapped));
         m_MappedData = mapped;
     }
 

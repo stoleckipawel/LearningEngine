@@ -10,9 +10,9 @@ DescriptorHeap::DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_DESCRIPTOR
 	m_desc.NumDescriptors = GetNumDescriptors();
 
 	// Create descriptor heap
-	ThrowIfFailed(GRHI.GetDevice()->CreateDescriptorHeap(
+	CHECK(GRHI.GetDevice()->CreateDescriptorHeap(
 		&m_desc,
-		IID_PPV_ARGS(m_heap.ReleaseAndGetAddressOf())), "Failed To Create Descriptor Heap");
+		IID_PPV_ARGS(m_heap.ReleaseAndGetAddressOf())));
 	DebugUtils::SetDebugName(m_heap, name);
 }
 
@@ -26,9 +26,7 @@ DescriptorHandle DescriptorHeap::GetHandleAt(UINT index) const
 	if (index >= m_desc.NumDescriptors)
 	{
 		// Guard: index must be within heap descriptor count
-		LogMessage("Index out of range", ELogType::Fatal);
-		// Return an invalid handle to avoid undefined pointer math
-		return DescriptorHandle(~0u, m_desc.Type, { 0 }, { 0 });
+		LOG_FATAL("Index out of range");
 	}
 
 	// For shader-visible heaps, provide the GPU start handle; otherwise leave GPU handle zeroed.

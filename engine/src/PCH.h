@@ -48,5 +48,5 @@
 using namespace DirectX;
 using namespace Microsoft::WRL;
 
-#include "Error.h"
+#include "Log.h"
 #include "EngineConfig.h"

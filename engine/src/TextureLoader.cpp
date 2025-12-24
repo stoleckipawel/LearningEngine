@@ -1,7 +1,7 @@
 #include "PCH.h"
 #include "TextureLoader.h"
 #include "AssetPathResolver.h"
-#include "Error.h"
+#include "Log.h"
 #include <cstring>
 #include <limits>
 
@@ -17,43 +17,41 @@ TextureLoader::TextureLoader(const std::filesystem::path& fileName)
     const std::filesystem::path resolvedPath = ResolveAssetPath(fileName, AssetType::Texture);
     if (!std::filesystem::exists(resolvedPath))
     {
-        LogMessage(std::string("Texture file not found: ") + resolvedPath.string(), ELogType::Fatal);
+        LOG_FATAL(std::string("Texture file not found: ") + resolvedPath.string());
     }
 
     // Create WIC Imaging Factory
     ComPtr<IWICImagingFactory> wicFactory;
-    ThrowIfFailed(
-        CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(wicFactory.ReleaseAndGetAddressOf())),
-        "Failed To Create WIC Factory");
+    CHECK(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(wicFactory.ReleaseAndGetAddressOf())));
 
     // Create and initialize WIC stream for file
     ComPtr<IWICStream> wicFileStream;
-    ThrowIfFailed(wicFactory->CreateStream(wicFileStream.ReleaseAndGetAddressOf()), "Failed To Create Stream");
-    ThrowIfFailed(wicFileStream->InitializeFromFilename(resolvedPath.wstring().c_str(), GENERIC_READ), "Failed To Initialize Stream From Filename");
+    CHECK(wicFactory->CreateStream(wicFileStream.ReleaseAndGetAddressOf()));
+    CHECK(wicFileStream->InitializeFromFilename(resolvedPath.wstring().c_str(), GENERIC_READ));
 
     // Create decoder and get the first frame
     ComPtr<IWICBitmapDecoder> wicDecoder;
-    ThrowIfFailed(wicFactory->CreateDecoderFromStream(wicFileStream.Get(), nullptr, WICDecodeMetadataCacheOnDemand, wicDecoder.ReleaseAndGetAddressOf()), "Failed To Create Decoder From Stream");
+    CHECK(wicFactory->CreateDecoderFromStream(wicFileStream.Get(), nullptr, WICDecodeMetadataCacheOnDemand, wicDecoder.ReleaseAndGetAddressOf()));
 
     ComPtr<IWICBitmapFrameDecode> wicFrame;
-    ThrowIfFailed(wicDecoder->GetFrame(0, wicFrame.ReleaseAndGetAddressOf()), "Failed To Get Frame");
+    CHECK(wicDecoder->GetFrame(0, wicFrame.ReleaseAndGetAddressOf()));
 
     // Get image dimensions
-    ThrowIfFailed(wicFrame->GetSize(&m_data.width, &m_data.height), "Failed To Get Size");
+    CHECK(wicFrame->GetSize(&m_data.width, &m_data.height));
 
     // Get WIC pixel format
-    ThrowIfFailed(wicFrame->GetPixelFormat(&m_data.wicPixelFormat), "Failed To Get Pixel Format");
+    CHECK(wicFrame->GetPixelFormat(&m_data.wicPixelFormat));
 
     // Query pixel format metadata
     ComPtr<IWICComponentInfo> wicComponentInfo;
-    ThrowIfFailed(wicFactory->CreateComponentInfo(m_data.wicPixelFormat, wicComponentInfo.ReleaseAndGetAddressOf()), "Failed To Create Component Info");
+    CHECK(wicFactory->CreateComponentInfo(m_data.wicPixelFormat, wicComponentInfo.ReleaseAndGetAddressOf()));
 
     ComPtr<IWICPixelFormatInfo> wicPixelFormatInfo;
-    ThrowIfFailed(wicComponentInfo->QueryInterface(IID_PPV_ARGS(wicPixelFormatInfo.ReleaseAndGetAddressOf())), "Failed To Query PixelFormatInfo");
+    CHECK(wicComponentInfo->QueryInterface(IID_PPV_ARGS(wicPixelFormatInfo.ReleaseAndGetAddressOf())));
 
     // Bits per pixel and channel count
-    ThrowIfFailed(wicPixelFormatInfo->GetBitsPerPixel(&m_data.bitsPerPixel), "Failed To Get Bits Per Pixel");
-    ThrowIfFailed(wicPixelFormatInfo->GetChannelCount(&m_data.channelCount), "Failed To Get Channel Count");
+    CHECK(wicPixelFormatInfo->GetBitsPerPixel(&m_data.bitsPerPixel));
+    CHECK(wicPixelFormatInfo->GetChannelCount(&m_data.channelCount));
 
     // Map WIC pixel format to DXGI format
     auto findIt = std::find_if(TextureLoader::s_lookupTable.begin(), TextureLoader::s_lookupTable.end(),
@@ -63,7 +61,7 @@ TextureLoader::TextureLoader(const std::filesystem::path& fileName)
 
     if (findIt == TextureLoader::s_lookupTable.end())
     {
-        LogMessage(std::string("Unsupported pixel format for file: ") + resolvedPath.string(), ELogType::Fatal);
+        LOG_FATAL(std::string("Unsupported pixel format for file: ") + resolvedPath.string());
     }
     m_data.dxgiPixelFormat = findIt->dxgiFormat;
 
@@ -75,7 +73,7 @@ TextureLoader::TextureLoader(const std::filesystem::path& fileName)
     // Guard against pathological allocations
     if (stride64 > std::numeric_limits<uint32_t>::max() || slicePitch64 > std::numeric_limits<size_t>::max())
     {
-        LogMessage("Texture too large or stride overflow", ELogType::Fatal);
+        LOG_FATAL("Texture too large or stride overflow");
     }
 
     m_data.stride = static_cast<uint32_t>(stride64);
@@ -87,5 +85,5 @@ TextureLoader::TextureLoader(const std::filesystem::path& fileName)
     WICRect copyRect = { 0, 0, static_cast<INT>(m_data.width), static_cast<INT>(m_data.height) };
 
     // Copy pixel data to output buffer
-    ThrowIfFailed(wicFrame->CopyPixels(&copyRect, m_data.stride, m_data.slicePitch, reinterpret_cast<BYTE*>(m_data.data.data())), "Failed To Copy Pixels");
+    CHECK(wicFrame->CopyPixels(&copyRect, m_data.stride, m_data.slicePitch, reinterpret_cast<BYTE*>(m_data.data.data())));
 }

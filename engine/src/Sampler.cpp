@@ -3,7 +3,7 @@
 #include "Sampler.h"
 #include "RHI.h"
 #include "DescriptorHeapManager.h"
-#include "Error.h"
+#include "Log.h"
 
 // Sampler: constructs and creates the D3D12 sampler in the descriptor heap via allocator.
 Sampler::Sampler()
@@ -13,7 +13,7 @@ Sampler::Sampler()
     m_samplerHandle = GDescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
     if (!m_samplerHandle.IsValid())
     {
-        LogMessage("Sampler: failed to allocate sampler descriptor.", ELogType::Fatal);
+        LOG_FATAL("Sampler: failed to allocate sampler descriptor.");
         return;
     }
 

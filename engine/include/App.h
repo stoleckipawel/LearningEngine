@@ -18,12 +18,15 @@ protected:
     // Initialize: create gameplay state, load resources, etc.
     virtual void PreInitialize() {}
     virtual void PostInitialize() {}
+
     // Render: additional scene recording or debug overlays.
     virtual void PreRender() {}
     virtual void PostRender() {}
+
     // Resize: react to window size changes.
     virtual void PreResize() {}
     virtual void PostResize() {}
+    
     // Shutdown: cleanup gameplay resources.
     virtual void PreShutdown() {}
     virtual void PostShutdown() {}

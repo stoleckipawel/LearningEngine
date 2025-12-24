@@ -81,12 +81,8 @@ void RootSignature::Create()
     // Serialize and create the root signature
     ID3DBlob* signature = nullptr;
     ID3DBlob* error = nullptr;
-    ThrowIfFailed(
-        D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error),
-        "Failed To Serialize Root Signature"
-    );
-
-    ThrowIfFailed(GRHI.GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(m_rootSignature.ReleaseAndGetAddressOf())), "Failed To Create Root Signature");
+    CHECK(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
+    CHECK(GRHI.GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(m_rootSignature.ReleaseAndGetAddressOf())));
     DebugUtils::SetDebugName(m_rootSignature, L"RHI_RootSignature");
 }
 

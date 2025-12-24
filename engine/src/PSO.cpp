@@ -1,7 +1,7 @@
 #include "PCH.h"
 #include "PSO.h"
 #include "DebugUtils.h"
-#include "Error.h"
+#include "Log.h"
 
 #include <vector>
 #include <string>
@@ -160,7 +160,7 @@ PSO::PSO(Primitive& vertecies, RootSignature& rootSignature, ShaderCompiler& ver
 				D3D12_MESSAGE* message = reinterpret_cast<D3D12_MESSAGE*>(messageData.data());
 				if (SUCCEEDED(infoQueue->GetMessage(i, message, &messageLength)) && message->pDescription)
 				{
-					LogMessage(std::string("D3D12 InfoQueue: ") + message->pDescription, ELogType::Info);
+					LOG_ERROR(std::string("D3D12 InfoQueue: ") + message->pDescription);
 				}
 			}
 			// After logging, clear to avoid duplicate logs on subsequent failures
@@ -169,7 +169,7 @@ PSO::PSO(Primitive& vertecies, RootSignature& rootSignature, ShaderCompiler& ver
 #endif
 		char buf[256];
 		std::snprintf(buf, sizeof(buf), "Failed To Create PSO. HRESULT: 0x%08X", static_cast<unsigned int>(hr));
-		LogMessage(buf, ELogType::Fatal);
+		LOG_FATAL(buf);
 	}
 
 	DebugUtils::SetDebugName(m_pso, L"RHI_PipelineState");

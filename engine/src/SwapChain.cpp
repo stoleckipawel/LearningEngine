@@ -47,19 +47,16 @@ void SwapChain::Create()
 
 	// Create the swap chain for the window
 	ComPtr<IDXGISwapChain1> swapChain;
-	ThrowIfFailed(
-		GRHI.GetDxgiFactory()->CreateSwapChainForHwnd(
-			GRHI.GetCommandQueue().Get(),
-			GWindow.GetHWND(),
-			&swapChainDesc,
-			&swapChainFullsceenDesc,
-			nullptr,
-			&swapChain),
-		"Failed To Create Swap Chain for HWND"
-	);	
+	CHECK(GRHI.GetDxgiFactory()->CreateSwapChainForHwnd(
+		GRHI.GetCommandQueue().Get(),
+		GWindow.GetHWND(),
+		&swapChainDesc,
+		&swapChainFullsceenDesc,
+		nullptr,
+		&swapChain));
 
 	// Query for IDXGISwapChain3 interface
-	ThrowIfFailed(swapChain.As(&m_swapChain), "Failed to Query Swap Chain Interface");
+	CHECK(swapChain.As(&m_swapChain));
 }
 
 
@@ -104,7 +101,7 @@ void SwapChain::CreateRenderTargetViews()
 	for (UINT i = 0; i < EngineSettings::FramesInFlight; i++)
 	{
 		// Get the buffer resource from the swap chain
-		ThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(m_buffers[i].ReleaseAndGetAddressOf())), "Failed To get Swapchain Buffer!");
+		CHECK(m_swapChain->GetBuffer(i, IID_PPV_ARGS(m_buffers[i].ReleaseAndGetAddressOf())));
 		DebugUtils::SetDebugName(m_buffers[i], L"RHI_BackBuffer");
 
 		// Describe the render target view
@@ -182,7 +179,7 @@ void SwapChain::Present()
 	}
 
 	// Present the frame
-	ThrowIfFailed(m_swapChain->Present(presentInterval, presentFlags), "Failed to Present Swap Chain");
+	CHECK(m_swapChain->Present(presentInterval, presentFlags));
 }
 
 

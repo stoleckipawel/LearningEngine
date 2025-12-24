@@ -1,7 +1,7 @@
 #include "PCH.h"
 #include "UploadBuffer.h"
 #include "DebugUtils.h"
-#include "Error.h"
+#include "Log.h"
 #include <cstring>
 
 // Uploads data to a GPU-accessible buffer using an upload heap.
@@ -26,16 +26,13 @@ ComPtr<ID3D12Resource2> UploadBuffer::Upload(const void* data, size_t dataSize)
 	// Create the committed resource in the upload heap
 	ComPtr<ID3D12Resource2> uploadBuffer;
 	CD3DX12_HEAP_PROPERTIES heapUploadProperties(D3D12_HEAP_TYPE_UPLOAD);
-	ThrowIfFailed(
-		GRHI.GetDevice()->CreateCommittedResource(
-			&heapUploadProperties,
-			D3D12_HEAP_FLAG_NONE,
-			&resourceDesc,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(uploadBuffer.ReleaseAndGetAddressOf())),
-		"Failed to create upload buffer"
-	);
+	CHECK(GRHI.GetDevice()->CreateCommittedResource(
+		&heapUploadProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(uploadBuffer.ReleaseAndGetAddressOf())));
 
 	DebugUtils::SetDebugName(uploadBuffer, L"RHI_UploadBuffer");
 
@@ -43,7 +40,7 @@ ComPtr<ID3D12Resource2> UploadBuffer::Upload(const void* data, size_t dataSize)
 	// upload heap is write-combined so large copies should be minimized.
 	void* mappedData = nullptr;
 	D3D12_RANGE readRange = { 0, 0 }; // We do not intend to read from this resource on CPU
-	ThrowIfFailed(uploadBuffer->Map(0, &readRange, &mappedData), "Failed To Map Upload Buffer");
+	CHECK(uploadBuffer->Map(0, &readRange, &mappedData));
 
 	if (dataSize > 0 && data != nullptr && mappedData != nullptr)
 	{

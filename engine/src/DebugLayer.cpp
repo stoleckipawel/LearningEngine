@@ -31,14 +31,14 @@
 	// Enables the D3D12 debug layer for validation and error reporting.
 	void DebugLayer::InitD3D12Debug()
 	{
-		ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(m_d3d12Debug.ReleaseAndGetAddressOf())), "Failed To Initialize D3D12 Debug Interface.");
+		CHECK(D3D12GetDebugInterface(IID_PPV_ARGS(m_d3d12Debug.ReleaseAndGetAddressOf())));
 		m_d3d12Debug->EnableDebugLayer();
 	}
 
 	// Enables the DXGI debug layer for leak tracking and live object reporting.
 	void DebugLayer::InitDXGIDebug()
 	{
-		ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(m_dxgiDebug.ReleaseAndGetAddressOf())), "Failed To Initialize DXGI Debug Layer.");
+		CHECK(DXGIGetDebugInterface1(0, IID_PPV_ARGS(m_dxgiDebug.ReleaseAndGetAddressOf())));
 		m_dxgiDebug->EnableLeakTrackingForThread();
 	}
 

@@ -26,15 +26,13 @@ DescriptorHandle DescriptorAllocator::Allocate()
     }
     else
     {
-        // Heap exhausted: log and return an explicitly invalid handle.
-        LogMessage("Heap is full and cannot grow (max capacity reached).", ELogType::Fatal);
-        return DescriptorHandle();
+        LOG_FATAL("Heap is full and cannot grow (max capacity reached).");
     }
 
-    // Guard against invalid index (defensive programming).
     if (index_to_use == ~0u)
     {
-        return DescriptorHandle();
+        LOG_FATAL("Allocation is trying to use Invalid Descriptor Index");
+
     }
 
     // Materialize a typed DescriptorHandle using the heap.
