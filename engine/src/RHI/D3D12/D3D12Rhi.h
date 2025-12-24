@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SwapChain.h"
+#include "D3D12SwapChain.h"
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl/client.h>
@@ -11,7 +11,7 @@ using Microsoft::WRL::ComPtr;
 // queues, fences, and synchronization. API is designed to be lightweight and
 // avoid unnecessary COM refcount churn: getters return const references to
 // internal ComPtr members where callers only need temporary access.
-class RHI
+class D3D12Rhi
 {
 public:
 	// Initialize the RHI and all required resources
@@ -88,5 +88,6 @@ private:
 };
 
 
-// Global RHI instance
-extern RHI GRHI;
+// Global D3D12 RHI instance
+extern D3D12Rhi GD3D12Rhi;
+

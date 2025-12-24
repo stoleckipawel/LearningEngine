@@ -1,27 +1,27 @@
 #include "PCH.h"
-#include "DescriptorHeap.h"
+#include "D3D12DescriptorHeap.h"
 #include "DebugUtils.h"
 
 // General descriptor heap (RTV, DSV, Sampler, SRV/CBV/UAV).
-DescriptorHeap::DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name)
+D3D12DescriptorHeap::D3D12DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name)
 {
 	m_desc.Type = type;
 	m_desc.Flags = flags;
 	m_desc.NumDescriptors = GetNumDescriptors();
 
 	// Create descriptor heap
-	CHECK(GRHI.GetDevice()->CreateDescriptorHeap(
+	CHECK(GD3D12Rhi.GetDevice()->CreateDescriptorHeap(
 		&m_desc,
 		IID_PPV_ARGS(m_heap.ReleaseAndGetAddressOf())));
 	DebugUtils::SetDebugName(m_heap, name);
 }
 
-DescriptorHeap::~DescriptorHeap() noexcept
+D3D12DescriptorHeap::~D3D12DescriptorHeap() noexcept
 {
 	m_heap.Reset();
 }
 
-DescriptorHandle DescriptorHeap::GetHandleAt(UINT index) const
+D3D12DescriptorHandle D3D12DescriptorHeap::GetHandleAt(UINT index) const
 {
 	if (index >= m_desc.NumDescriptors)
 	{
@@ -36,14 +36,14 @@ DescriptorHandle DescriptorHeap::GetHandleAt(UINT index) const
 		gpuHandle = m_heap->GetGPUDescriptorHandleForHeapStart();
 	}
 
-	return DescriptorHandle(
+	return D3D12DescriptorHandle(
 		index,
 		m_desc.Type,
 		m_heap->GetCPUDescriptorHandleForHeapStart(),
 		gpuHandle);
 }
 
-UINT DescriptorHeap::GetNumDescriptors() const
+UINT D3D12DescriptorHeap::GetNumDescriptors() const
 {
 	return m_desc.Type == D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
 		? D3D12_MAX_SHADER_VISIBLE_SAMPLER_HEAP_SIZE

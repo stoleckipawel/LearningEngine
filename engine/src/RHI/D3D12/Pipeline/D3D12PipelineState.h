@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ShaderCompiler.h"
+#include "DxcShaderCompiler.h"
 #include "Primitive.h"
-#include "RootSignature.h"
+#include "D3D12RootSignature.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -31,19 +31,19 @@ struct StencilTestDesc
 	D3D12_STENCIL_OP BackFaceStencilPassOp = D3D12_STENCIL_OP_KEEP;
 };
 
-// Pipeline State Object (PSO) class for configuring and managing D3D12 pipeline state.
-class PSO
+// D3D12PipelineState owns a graphics pipeline state object and the configuration needed to build it.
+class D3D12PipelineState
 {
 public:
 	// Constructs and creates the graphics pipeline state object.
-	PSO(Primitive& vertecies, RootSignature& rootSignature, ShaderCompiler& vertexShader, ShaderCompiler& pixelShader);
+	D3D12PipelineState(Primitive& vertecies, D3D12RootSignature& rootSignature, DxcShaderCompiler& vertexShader, DxcShaderCompiler& pixelShader);
 
 	// Destructor releases pipeline state object
-	~PSO() noexcept;
+	~D3D12PipelineState() noexcept;
 
 	// Deleted copy constructor and assignment operator to enforce unique ownership
-	PSO(const PSO&) = delete;
-	PSO& operator=(const PSO&) = delete;
+	D3D12PipelineState(const D3D12PipelineState&) = delete;
+	D3D12PipelineState& operator=(const D3D12PipelineState&) = delete;
 
 	// Sets the pipeline state object for the current command list.
 	void Set() const noexcept;

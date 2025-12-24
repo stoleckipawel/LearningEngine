@@ -7,7 +7,8 @@ LearningEngine is a modular DirectX 12 rendering engine built for learning and e
 **Key Features:**
 - Modern C++20 codebase with zero-allocation logging and efficient resource management
 - Modular architecture separating Core, Platform, RHI, Renderer, Resources, Scene, and UI
-- D3D12-based RHI with descriptor heap management, upload buffers, and PSO abstraction
+- D3D12 backend with explicit, backend-prefixed types/files (e.g. `D3D12Rhi`, `D3D12SwapChain`, `D3D12PipelineState`)
+- DXC-based shader compilation via `DxcShaderCompiler`
 - Compile-time and runtime log level filtering
 - ImGui integration for debug UI
 - Clean public API / private implementation separation
@@ -80,16 +81,16 @@ LearningEngine/
 │   │   │
 │   │   ├── RHI/                      # Render Hardware Interface
 │   │   │   │
-│   │   │   ├── D3D12/                # DirectX 12 Backend ¤¤¤
-│   │   │   │   ├── RHI.*             # Device, command queue, fence
-│   │   │   │   ├── SwapChain.*
-│   │   │   │   ├── DebugLayer.*
-│   │   │   │   ├── Descriptors/      # Descriptor heaps, handles, allocators
-│   │   │   │   ├── Pipeline/         # PSO, root signatures, samplers
-│   │   │   │   ├── Resources/        # Buffers, depth targets, constants
-│   │   │   │   └── Shaders/          # HLSL/DXIL compilation
+│   │   │   ├── D3D12/                # DirectX 12 Backend
+│   │   │   │   ├── D3D12Rhi.*         # Device, queues, allocators, fences
+│   │   │   │   ├── D3D12SwapChain.*   # Present/back buffers + RTVs
+│   │   │   │   ├── D3D12DebugLayer.*  # GPU validation + InfoQueue
+│   │   │   │   ├── Descriptors/       # Descriptor heaps, handles, allocators
+│   │   │   │   ├── Pipeline/          # Root signatures, samplers, pipeline state
+│   │   │   │   ├── Resources/         # Constant buffers, depth, upload buffers, frame resources
+│   │   │   │   └── Shaders/           # DXC compilation (HLSL → DXIL)
 │   │   │   │
-│   │   │   └── Vulkan/               # ¤¤¤ Vulkan Backend (placeholder) ¤¤¤
+│   │   │   └── Vulkan/               # Vulkan backend placeholder (future)
 │   │   │
 │   │   ├── Renderer/                 # High-level rendering (API-agnostic)
 │   │   │   ├── Renderer.*
@@ -138,7 +139,7 @@ LearningEngine/
 |--------|----------------|
 | **Core** | Logging, timing, memory utilities — no graphics dependencies |
 | **Platform** | OS abstraction: window creation, message loop |
-| **RHI** | D3D12 wrappers: device, command queues, descriptors, buffers, PSOs |
+| **RHI** | D3D12 backend wrappers: device/queues, descriptors, pipeline state, swap chain |
 | **Renderer** | High-level rendering: camera, render passes |
 | **Resources** | Asset loading: textures, (future: meshes, materials) |
 | **Scene** | Geometry primitives, (future: scene graph, transforms) |
@@ -162,29 +163,5 @@ LearningEngine/
   cd build && cmake ..
   ```
 
-## Architecture Notes
-
-The engine uses a layered architecture where higher-level modules depend on lower-level ones:
-
-```
-┌─────────────────────────────────────────────────┐
-│                   Samples                       │
-├─────────────────────────────────────────────────┤
-│         Renderer    │    Scene    │     UI      │
-├─────────────────────┴─────────────┴─────────────┤
-│                    Resources                    │
-├─────────────────────────────────────────────────┤
-│                      RHI                        │
-├─────────────────────────────────────────────────┤
-│           Platform          │       Core        │
-└─────────────────────────────┴───────────────────┘
-```
-
-- **Core** has no dependencies — can be used in tools, tests, or headless builds
-- **RHI** abstracts D3D12; future Vulkan backend would be added here
-- **Renderer** uses RHI but doesn't know about D3D12 specifics
-- **Scene/Resources** are independent and can be extended without touching rendering
-
 ## License
-
 MIT License. See `LICENSE.txt` for details.

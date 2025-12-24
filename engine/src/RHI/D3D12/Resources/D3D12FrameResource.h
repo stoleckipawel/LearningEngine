@@ -7,7 +7,7 @@
 #include <cassert>
 #include "LinearAllocator.h"
 #include "EngineConfig.h"
-#include "RHI.h"
+#include "D3D12Rhi.h"
 
 //------------------------------------------------------------------------------
 // FrameResource
@@ -25,7 +25,7 @@
 // data that GPU is still reading.
 //------------------------------------------------------------------------------
 
-struct FrameResource
+struct D3D12FrameResource
 {
     LinearAllocator     CbAllocator;           // Per-frame CB ring buffer
     uint64_t            FenceValue = 0;        // Fence value when this frame was submitted
@@ -73,18 +73,18 @@ struct FrameResource
 //   For very large scenes, increase to 8-16MB or implement dynamic growth.
 //------------------------------------------------------------------------------
 
-class FrameResourceManager
+class D3D12FrameResourceManager
 {
 public:
     // Default capacity: 4MB per frame (16384 draws × 256 bytes)
     static constexpr uint64_t DefaultCapacityPerFrame = 4 * 1024 * 1024;
 
-    FrameResourceManager() = default;
-    ~FrameResourceManager() { Shutdown(); }
+    D3D12FrameResourceManager() = default;
+    ~D3D12FrameResourceManager() { Shutdown(); }
 
     // Non-copyable
-    FrameResourceManager(const FrameResourceManager&) = delete;
-    FrameResourceManager& operator=(const FrameResourceManager&) = delete;
+    D3D12FrameResourceManager(const D3D12FrameResourceManager&) = delete;
+    D3D12FrameResourceManager& operator=(const D3D12FrameResourceManager&) = delete;
 
     //--------------------------------------------------------------------------
     // Initialization
@@ -130,15 +130,15 @@ public:
         assert(m_Initialized);
         
         m_CurrentFrameIndex = frameIndex;
-        FrameResource& frame = m_FrameResources[frameIndex];
+        D3D12FrameResource& frame = m_FrameResources[frameIndex];
 
         // Wait for GPU to finish with this frame's resources before reusing
         // This is the critical synchronization point that prevents races
-        const uint64_t completedFence = GRHI.GetFence()->GetCompletedValue();
+        const uint64_t completedFence = GD3D12Rhi.GetFence()->GetCompletedValue();
         if (completedFence < frame.FenceValue)
         {
             // GPU hasn't finished with this frame yet - must wait
-            HRESULT hr = GRHI.GetFence()->SetEventOnCompletion(frame.FenceValue, fenceEvent);
+            HRESULT hr = GD3D12Rhi.GetFence()->SetEventOnCompletion(frame.FenceValue, fenceEvent);
             if (SUCCEEDED(hr))
             {
                 WaitForSingleObject(fenceEvent, INFINITE);
@@ -207,11 +207,11 @@ public:
     [[nodiscard]] bool IsInitialized() const { return m_Initialized; }
 
 private:
-    std::array<FrameResource, EngineSettings::FramesInFlight> m_FrameResources;
+    std::array<D3D12FrameResource, EngineSettings::FramesInFlight> m_FrameResources;
     uint64_t                m_CapacityPerFrame = DefaultCapacityPerFrame;
     uint32_t                m_CurrentFrameIndex = 0;
     bool                    m_Initialized = false;
 };
 
 // Global frame resource manager
-extern FrameResourceManager GFrameResourceManager;
+extern D3D12FrameResourceManager GD3D12FrameResourceManager;

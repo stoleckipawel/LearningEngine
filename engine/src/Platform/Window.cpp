@@ -1,7 +1,7 @@
 #include "PCH.h"
 #include "Window.h"
 #include "Renderer.h"
-#include "RHI.h"
+#include "D3D12Rhi.h"
 #include "UI.h"
 #include "EngineConfig.h"
 #include <string>
@@ -177,7 +177,7 @@ LRESULT Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam
 			return 0;
 		case WM_SIZE:
 			// Trigger resize when the window is not minimized and device is ready
-			if (wParam != SIZE_MINIMIZED && GRHI.GetDevice() != nullptr)
+			if (wParam != SIZE_MINIMIZED && GD3D12Rhi.GetDevice() != nullptr)
 			{
 				GRenderer.OnResize();
 			}

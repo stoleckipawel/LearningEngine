@@ -10,14 +10,14 @@ using Microsoft::WRL::ComPtr;
 // Purpose: enable/disable SDK validation, configure the ID3D12InfoQueue filters,
 // and report live objects at shutdown to catch leaks. This class is only
 // available when `ENGINE_GPU_VALIDATION` is enabled (typically debug builds).
-class DebugLayer
+class D3D12DebugLayer
 {
 public:
-	DebugLayer() = default;
-	~DebugLayer() = default;
+	D3D12DebugLayer() = default;
+	~D3D12DebugLayer() = default;
 
-	DebugLayer(const DebugLayer&) = delete;
-	DebugLayer& operator=(const DebugLayer&) = delete;
+	D3D12DebugLayer(const D3D12DebugLayer&) = delete;
+	D3D12DebugLayer& operator=(const D3D12DebugLayer&) = delete;
 
 	// Initialize debug layers. Safe to call multiple times (idempotent).
 	void Initialize();
@@ -45,5 +45,5 @@ private:
 };
 
 // Global debug layer instance
-extern DebugLayer GDebugLayer;
+extern D3D12DebugLayer GD3D12DebugLayer;
 #endif

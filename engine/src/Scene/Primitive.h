@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RHI.h"
+#include "D3D12Rhi.h"
 #include <DirectXMath.h>
 
 using Microsoft::WRL::ComPtr;

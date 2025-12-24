@@ -1,15 +1,15 @@
 
 #include "PCH.h"
-#include "RootSignature.h"
-#include "RootBindings.h"
+#include "D3D12RootSignature.h"
+#include "D3D12RootBindings.h"
 #include "DebugUtils.h"
 
-RootSignature::RootSignature()
+D3D12RootSignature::D3D12RootSignature()
 {
     Create();
 }
 
-void RootSignature::Create()
+void D3D12RootSignature::Create()
 {
     // -------------------------------------------------------------------------
     // Root Signature Layout - Defines shader resource binding points
@@ -82,11 +82,11 @@ void RootSignature::Create()
     ID3DBlob* signature = nullptr;
     ID3DBlob* error = nullptr;
     CHECK(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
-    CHECK(GRHI.GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(m_rootSignature.ReleaseAndGetAddressOf())));
+    CHECK(GD3D12Rhi.GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(m_rootSignature.ReleaseAndGetAddressOf())));
     DebugUtils::SetDebugName(m_rootSignature, L"RHI_RootSignature");
 }
 
-RootSignature::~RootSignature()
+D3D12RootSignature::~D3D12RootSignature()
 {
     m_rootSignature.Reset();
 }

@@ -7,7 +7,7 @@
 #include <cassert>
 #include <stdexcept>
 #include "DebugUtils.h"
-#include "RHI.h"
+#include "D3D12Rhi.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -92,7 +92,7 @@ public:
         resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
         resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-        HRESULT hr = GRHI.GetDevice()->CreateCommittedResource(
+        HRESULT hr = GD3D12Rhi.GetDevice()->CreateCommittedResource(
             &heapProps,
             D3D12_HEAP_FLAG_NONE,
             &resourceDesc,

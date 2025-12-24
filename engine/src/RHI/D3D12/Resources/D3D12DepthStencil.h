@@ -1,7 +1,7 @@
 #pragma once
 
-#include "RHI.h"
-#include "DescriptorHandle.h"
+#include "D3D12Rhi.h"
+#include "D3D12DescriptorHandle.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -13,20 +13,20 @@ using Microsoft::WRL::ComPtr;
 // - Copy/move are deleted to enforce unique ownership semantics.
 
 // DepthStencil manages a depth-stencil buffer resource and its view for Direct3D 12 rendering.
-class DepthStencil 
+class D3D12DepthStencil 
 {
 public:
     // Constructs and initializes the depth stencil resource and view
-    DepthStencil();
+    D3D12DepthStencil();
 
     // Destructor releases resources and descriptor handle
-    ~DepthStencil() noexcept;
+    ~D3D12DepthStencil() noexcept;
 
     // Deleted copy/move to enforce unique ownership
-    DepthStencil(const DepthStencil&) = delete;
-    DepthStencil& operator=(const DepthStencil&) = delete;
-    DepthStencil(DepthStencil&&) = delete;
-    DepthStencil& operator=(DepthStencil&&) = delete;
+    D3D12DepthStencil(const D3D12DepthStencil&) = delete;
+    D3D12DepthStencil& operator=(const D3D12DepthStencil&) = delete;
+    D3D12DepthStencil(D3D12DepthStencil&&) = delete;
+    D3D12DepthStencil& operator=(D3D12DepthStencil&&) = delete;
 
     // Returns the GPU descriptor handle for shader access
     // Returns the GPU descriptor handle for shader binding (non-owning)
@@ -51,6 +51,6 @@ private:
 private:
     ComPtr<ID3D12Resource2> m_resource;                     // Depth stencil resource
     D3D12_DEPTH_STENCIL_VIEW_DESC m_depthStencilDesc = {};     // DSV description
-    DescriptorHandle m_dsvHandle;                              // Allocated DSV descriptor handle
+    D3D12DescriptorHandle m_dsvHandle;                              // Allocated DSV descriptor handle
 };
 

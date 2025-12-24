@@ -3,25 +3,25 @@
 // D3D12 descriptor heap wrapper.
 // Encapsulates creation and basic handle materialization for a single heap.
 // Ownership: non-copyable, non-movable RAII around ID3D12DescriptorHeap.
-#include "RHI.h"
-#include "DescriptorHandle.h" 
+#include "D3D12Rhi.h"
+#include "D3D12DescriptorHandle.h" 
 
 using Microsoft::WRL::ComPtr;
 
 // Manages a single D3D12 descriptor heap.
-class DescriptorHeap
+class D3D12DescriptorHeap
 {
 public:
 	// Construct a heap with the given type and flags; name is applied to the COM object.
-	explicit DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name);
+	explicit D3D12DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name);
 
-	DescriptorHeap(const DescriptorHeap&) = delete;
-	DescriptorHeap& operator=(const DescriptorHeap&) = delete;
-	DescriptorHeap(DescriptorHeap&&) = delete;
-	DescriptorHeap& operator=(DescriptorHeap&&) = delete;
+	D3D12DescriptorHeap(const D3D12DescriptorHeap&) = delete;
+	D3D12DescriptorHeap& operator=(const D3D12DescriptorHeap&) = delete;
+	D3D12DescriptorHeap(D3D12DescriptorHeap&&) = delete;
+	D3D12DescriptorHeap& operator=(D3D12DescriptorHeap&&) = delete;
 
 	// Releases underlying heap.
-	~DescriptorHeap() noexcept;
+	~D3D12DescriptorHeap() noexcept;
 
 	// Descriptor count policy.
 	// - Sampler: D3D12_MAX_SHADER_VISIBLE_SAMPLER_HEAP_SIZE.
@@ -34,7 +34,7 @@ public:
 
 	// Materialize a typed descriptor handle at the given index.
 	// Performs bounds check and returns an invalid handle on error.
-	DescriptorHandle GetHandleAt(UINT index) const;
+	D3D12DescriptorHandle GetHandleAt(UINT index) const;
 
 private:
 	D3D12_DESCRIPTOR_HEAP_DESC m_desc = {};

@@ -1,12 +1,12 @@
 #include "PCH.h"
-#include "RHI.h"
-#include "DebugLayer.h"
+#include "D3D12Rhi.h"
+#include "D3D12DebugLayer.h"
 #include "Window.h"
 
-RHI GRHI;
+D3D12Rhi GD3D12Rhi;
 
 // Selects the best available adapter (GPU) that supports Direct3D 12
-void RHI::SelectAdapter() noexcept
+void D3D12Rhi::SelectAdapter() noexcept
 {
 	const DXGI_GPU_PREFERENCE pref = EngineSettings::PreferHighPerformanceAdapter ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE : DXGI_GPU_PREFERENCE_MINIMUM_POWER;
 
@@ -53,7 +53,7 @@ void RHI::SelectAdapter() noexcept
 }
 
 // Checks for Shader Model 6.0 support
-void RHI::CheckShaderModel6Support() const noexcept
+void D3D12Rhi::CheckShaderModel6Support() const noexcept
 {
 	D3D12_FEATURE_DATA_SHADER_MODEL shaderModel = {};
 	shaderModel.HighestShaderModel = D3D_SHADER_MODEL_6_0;
@@ -70,16 +70,16 @@ void RHI::CheckShaderModel6Support() const noexcept
 }
 
 // Initializes the RHI and all required resources
-void RHI::Initialize(bool RequireDXRSupport) noexcept
+void D3D12Rhi::Initialize(bool RequireDXRSupport) noexcept
 {
 #if ENGINE_GPU_VALIDATION
-	GDebugLayer.Initialize();
+	GD3D12DebugLayer.Initialize();
 #endif
 	CreateFactory();
 	CreateDevice(RequireDXRSupport);
 
 #if ENGINE_GPU_VALIDATION
-	GDebugLayer.InitializeInfoQueue();
+		GD3D12DebugLayer.InitializeInfoQueue();
 #endif
 
 	CheckShaderModel6Support();
@@ -89,7 +89,7 @@ void RHI::Initialize(bool RequireDXRSupport) noexcept
 	CreateFenceAndEvent();
 }
 
-void RHI::CreateFactory()
+void D3D12Rhi::CreateFactory()
 {
 #if ENGINE_GPU_VALIDATION
 	UINT dxgiFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
@@ -99,7 +99,7 @@ void RHI::CreateFactory()
 	CHECK(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(m_DxgiFactory.ReleaseAndGetAddressOf())));
 }
 
-void RHI::CreateDevice(bool /*requireDXRSupport*/)
+void D3D12Rhi::CreateDevice(bool /*requireDXRSupport*/)
 {
 	SelectAdapter();
 	if (!m_Adapter)
@@ -110,7 +110,7 @@ void RHI::CreateDevice(bool /*requireDXRSupport*/)
 	CHECK(D3D12CreateDevice(m_Adapter.Get(), m_DesiredD3DFeatureLevel, IID_PPV_ARGS(m_Device.ReleaseAndGetAddressOf())));
 }
 
-void RHI::CreateCommandQueue()
+void D3D12Rhi::CreateCommandQueue()
 {
 	D3D12_COMMAND_QUEUE_DESC cmdQueueDesc = {};
 	cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -120,7 +120,7 @@ void RHI::CreateCommandQueue()
 	CHECK(m_Device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(m_CmdQueue.ReleaseAndGetAddressOf())));
 }
 
-void RHI::CreateCommandAllocators()
+void D3D12Rhi::CreateCommandAllocators()
 {
 	for (size_t i = 0; i < EngineSettings::FramesInFlight; ++i)
 	{
@@ -128,7 +128,7 @@ void RHI::CreateCommandAllocators()
 	}
 }
 
-void RHI::CreateCommandLists()
+void D3D12Rhi::CreateCommandLists()
 {
 	if (!m_Device)
 	{
@@ -136,16 +136,16 @@ void RHI::CreateCommandLists()
 		return;
 	}
 
-	if (!m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()])
+	if (!m_CmdAllocatorScene[GD3D12SwapChain.GetFrameInFlightIndex()])
 	{
 		LOG_FATAL("CreateCommandLists: command allocator missing for current frame");
 		return;
 	}
 
-	CHECK(m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()].Get(), nullptr, IID_PPV_ARGS(m_CmdListScene.ReleaseAndGetAddressOf())));
+		CHECK(m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_CmdAllocatorScene[GD3D12SwapChain.GetFrameInFlightIndex()].Get(), nullptr, IID_PPV_ARGS(m_CmdListScene.ReleaseAndGetAddressOf())));
 }
 
-void RHI::CreateFenceAndEvent()
+void D3D12Rhi::CreateFenceAndEvent()
 {
 	for (UINT i = 0; i < EngineSettings::FramesInFlight; ++i)
 	{
@@ -167,40 +167,40 @@ void RHI::CreateFenceAndEvent()
 	}
 }
 
-void RHI::CloseCommandListScene() noexcept
+void D3D12Rhi::CloseCommandListScene() noexcept
 {
 	CHECK(m_CmdListScene->Close());
 }
 
-void RHI::ResetCommandAllocator() noexcept
+void D3D12Rhi::ResetCommandAllocator() noexcept
 {
-	if (!m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()])
+	if (!m_CmdAllocatorScene[GD3D12SwapChain.GetFrameInFlightIndex()])
 	{
 		LOG_FATAL("ResetCommandAllocator called with missing allocator");
 		return;
 	}
 
-	CHECK(m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()]->Reset());
+	CHECK(m_CmdAllocatorScene[GD3D12SwapChain.GetFrameInFlightIndex()]->Reset());
 }
 
-void RHI::ResetCommandList() noexcept
+void D3D12Rhi::ResetCommandList() noexcept
 {
 	if (!m_CmdListScene)
 	{
 		LOG_FATAL("ResetCommandList called without a valid command list");
 		return;
 	}
-	if (!m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()])
+	if (!m_CmdAllocatorScene[GD3D12SwapChain.GetFrameInFlightIndex()])
 	{
 		LOG_FATAL("ResetCommandList called with missing allocator");
 		return;
 	}
 
-	CHECK(m_CmdListScene->Reset(m_CmdAllocatorScene[GSwapChain.GetFrameInFlightIndex()].Get(), nullptr));
+	CHECK(m_CmdListScene->Reset(m_CmdAllocatorScene[GD3D12SwapChain.GetFrameInFlightIndex()].Get(), nullptr));
 }
 
 // Executes the current command list on the command queue
-void RHI::ExecuteCommandList() noexcept
+void D3D12Rhi::ExecuteCommandList() noexcept
 {
 	if (!m_CmdListScene || !m_CmdQueue)
 	{
@@ -213,7 +213,7 @@ void RHI::ExecuteCommandList() noexcept
 
 
 // Sets a resource barrier for a resource state transition
-void RHI::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter) noexcept
+void D3D12Rhi::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter) noexcept
 {
 	D3D12_RESOURCE_BARRIER barrier{};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -233,12 +233,12 @@ void RHI::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore
 }
 
 // Waits for the GPU to finish executing commands
-void RHI::WaitForGPU() noexcept
+void D3D12Rhi::WaitForGPU() noexcept
 {
 	//ToDO: Implement Wait For Multiple Objects
 	//Essential for correct frame bufering & frame pacing!!!
 
-	const UINT64 fenceCurrentValue = m_FenceValues[GSwapChain.GetFrameInFlightIndex()];
+	const UINT64 fenceCurrentValue = m_FenceValues[GD3D12SwapChain.GetFrameInFlightIndex()];
 	if (!m_Fence)
 	{
 		LOG_FATAL("WaitForGPU called without a fence");
@@ -253,7 +253,7 @@ void RHI::WaitForGPU() noexcept
 }
 
 // Signals the fence for synchronization
-void RHI::Signal() noexcept
+void D3D12Rhi::Signal() noexcept
 {
 	// Schedule a Signal command in the queue. -> Updates Fence Completed Value
 	const UINT64 currentFenceValue = m_NextFenceValue++;
@@ -265,18 +265,18 @@ void RHI::Signal() noexcept
 	CHECK(m_CmdQueue->Signal(m_Fence.Get(), currentFenceValue));
 
 	// Set the fence value for the next frame.
-	m_FenceValues[GSwapChain.GetFrameInFlightIndex()] = currentFenceValue;
+	m_FenceValues[GD3D12SwapChain.GetFrameInFlightIndex()] = currentFenceValue;
 }
 
 // Flushes the command queue (signal and wait)
-void RHI::Flush() noexcept
+void D3D12Rhi::Flush() noexcept
 {
 	Signal();
 	WaitForGPU();
 }
 
 // Releases all resources and shuts down the RHI
-void RHI::Shutdown() noexcept
+void D3D12Rhi::Shutdown() noexcept
 {
 	m_CmdListScene.Reset();
 
@@ -296,7 +296,7 @@ void RHI::Shutdown() noexcept
 	m_CmdQueue.Reset();
 
 	#if ENGINE_REPORT_LIVE_OBJECTS
-		GDebugLayer.ReportLiveDeviceObjects();
+		GD3D12DebugLayer.ReportLiveDeviceObjects();
 	#endif
 	
 	m_Device.Reset();
@@ -304,6 +304,7 @@ void RHI::Shutdown() noexcept
 	m_DxgiFactory.Reset();
 
 	#if ENGINE_GPU_VALIDATION
-		GDebugLayer.Shutdown();
+		GD3D12DebugLayer.Shutdown();
+
 	#endif
 }

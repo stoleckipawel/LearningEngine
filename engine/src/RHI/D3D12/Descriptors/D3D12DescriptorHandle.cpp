@@ -1,10 +1,10 @@
 #include "PCH.h"
-#include "DescriptorHandle.h"
-#include "RHI.h"
+#include "D3D12DescriptorHandle.h"
+#include "D3D12Rhi.h"
 
 // Constructs a descriptor handle for a given heap type and index.
 // Computes CPU/GPU handles using heap start and device increment size.
-DescriptorHandle::DescriptorHandle(UINT idx,
+D3D12DescriptorHandle::D3D12DescriptorHandle(UINT idx,
                                    D3D12_DESCRIPTOR_HEAP_TYPE type,
                                    D3D12_CPU_DESCRIPTOR_HANDLE cpuStartHandle,
                                    D3D12_GPU_DESCRIPTOR_HANDLE gpuStartHandle)
@@ -21,7 +21,7 @@ DescriptorHandle::DescriptorHandle(UINT idx,
 }
 
 // Returns the device's descriptor increment size for this heap type.
-UINT DescriptorHandle::GetIncrementSize() const
+UINT D3D12DescriptorHandle::GetIncrementSize() const
 {
-    return GRHI.GetDevice()->GetDescriptorHandleIncrementSize(m_heapType);
+    return GD3D12Rhi.GetDevice()->GetDescriptorHandleIncrementSize(m_heapType);
 }

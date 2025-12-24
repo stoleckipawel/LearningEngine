@@ -1,15 +1,15 @@
 #include "PCH.h"
-#include "SwapChain.h"
+#include "D3D12SwapChain.h"
 #include "Window.h"
-#include "RHI.h"
-#include "DescriptorHeapManager.h"
+#include "D3D12Rhi.h"
+#include "D3D12DescriptorHeapManager.h"
 #include "DebugUtils.h"
 
-SwapChain GSwapChain;
+D3D12SwapChain GD3D12SwapChain;
 
 
 // Initializes the swap chain and creates render target views
-void SwapChain::Initialize()	
+void D3D12SwapChain::Initialize()	
 {
 	AllocateHandles();
 	Create();
@@ -24,7 +24,7 @@ void SwapChain::Initialize()
 	CreateRenderTargetViews();
 }
 
-void SwapChain::Create()
+void D3D12SwapChain::Create()
 {
 	// Create swap chain description
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
@@ -47,8 +47,8 @@ void SwapChain::Create()
 
 	// Create the swap chain for the window
 	ComPtr<IDXGISwapChain1> swapChain;
-	CHECK(GRHI.GetDxgiFactory()->CreateSwapChainForHwnd(
-		GRHI.GetCommandQueue().Get(),
+	CHECK(GD3D12Rhi.GetDxgiFactory()->CreateSwapChainForHwnd(
+		GD3D12Rhi.GetCommandQueue().Get(),
 		GWindow.GetHWND(),
 		&swapChainDesc,
 		&swapChainFullsceenDesc,
@@ -61,15 +61,15 @@ void SwapChain::Create()
 
 
 // Clears the current render target view with a solid color
-void SwapChain::Clear()
+void D3D12SwapChain::Clear()
 {
 	float clearColor[4] = { 1.0f, 0.05f, 0.05f, 1.0f };
-	GRHI.GetCommandList()->ClearRenderTargetView(GSwapChain.GetCPUHandle(), clearColor, 0, nullptr);
+	GD3D12Rhi.GetCommandList()->ClearRenderTargetView(GD3D12SwapChain.GetCPUHandle(), clearColor, 0, nullptr);
 }
 
 
 // Resizes the swap chain buffers and recreates render target views
-void SwapChain::Resize()
+void D3D12SwapChain::Resize()
 {
 	ReleaseBuffers();
 
@@ -87,16 +87,16 @@ void SwapChain::Resize()
 }
 
 // Returns the CPU descriptor handle for the current back buffer
-void SwapChain::AllocateHandles()
+void D3D12SwapChain::AllocateHandles()
 {
 	for (UINT i = 0; i < EngineSettings::FramesInFlight; i++)
 	{
-		m_rtvHandles[i] = GDescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		m_rtvHandles[i] = GD3D12DescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	}
 }
 
 // Creates render target views for all swap chain buffers
-void SwapChain::CreateRenderTargetViews()
+void D3D12SwapChain::CreateRenderTargetViews()
 {
 	for (UINT i = 0; i < EngineSettings::FramesInFlight; i++)
 	{
@@ -112,15 +112,15 @@ void SwapChain::CreateRenderTargetViews()
 		rtvDesc.Texture2D.PlaneSlice = 0;
 
 		// Create the render target view
-		GRHI.GetDevice()->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, GetCPUHandle(i));
+		GD3D12Rhi.GetDevice()->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, GetCPUHandle(i));
 	}
 }
 
-UINT SwapChain::GetAllowTearingFlag() const
+UINT D3D12SwapChain::GetAllowTearingFlag() const
 {
 	BOOL allowTearing = FALSE;
 
-	GRHI.GetDxgiFactory()->CheckFeatureSupport(
+	GD3D12Rhi.GetDxgiFactory()->CheckFeatureSupport(
 		DXGI_FEATURE_PRESENT_ALLOW_TEARING,
 		&allowTearing,
 		sizeof(allowTearing));
@@ -128,7 +128,7 @@ UINT SwapChain::GetAllowTearingFlag() const
 	return (allowTearing == TRUE) ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u;
 }
 
-UINT SwapChain::ComputeSwapChainFlags() const
+UINT D3D12SwapChain::ComputeSwapChainFlags() const
 {
 	UINT flags = 0u;
 	flags |= GetFrameLatencyWaitableFlag();
@@ -138,7 +138,7 @@ UINT SwapChain::ComputeSwapChainFlags() const
 
 
 // Returns the default viewport for rendering
-D3D12_VIEWPORT SwapChain::GetDefaultViewport()
+D3D12_VIEWPORT D3D12SwapChain::GetDefaultViewport()
 {
 	D3D12_VIEWPORT vp;
 	vp.TopLeftX = 0;
@@ -153,7 +153,7 @@ D3D12_VIEWPORT SwapChain::GetDefaultViewport()
 
 
 // Returns the default scissor rectangle for rendering
-D3D12_RECT SwapChain::GetDefaultScissorRect()
+D3D12_RECT D3D12SwapChain::GetDefaultScissorRect()
 {
 	D3D12_RECT scissorRect;
 	scissorRect.left = 0;
@@ -165,7 +165,7 @@ D3D12_RECT SwapChain::GetDefaultScissorRect()
 
 
 // Presents the current back buffer to the screen
-void SwapChain::Present()
+void D3D12SwapChain::Present()
 {
 	// Present according to runtime setting: vsync on -> interval 1, vsync off -> interval 0
 	UINT presentInterval = EngineSettings::VSync ? 1u : 0u;
@@ -174,7 +174,7 @@ void SwapChain::Present()
 	{
 		// If tearing is supported by the runtime, request it when presenting without vsync.
 		BOOL allowTearing = FALSE;
-		GRHI.GetDxgiFactory()->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+		GD3D12Rhi.GetDxgiFactory()->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
 		presentFlags = (allowTearing == TRUE) ? DXGI_PRESENT_ALLOW_TEARING : 0u;
 	}
 
@@ -184,9 +184,9 @@ void SwapChain::Present()
 
 
 // Sets the current buffer to render target state
-void SwapChain::SetRenderTargetState()
+void D3D12SwapChain::SetRenderTargetState()
 {
-	GRHI.SetBarrier(
+	GD3D12Rhi.SetBarrier(
 		m_buffers[m_frameInFlightIndex].Get(),
 		D3D12_RESOURCE_STATE_PRESENT,
 		D3D12_RESOURCE_STATE_RENDER_TARGET
@@ -195,9 +195,10 @@ void SwapChain::SetRenderTargetState()
 
 
 // Sets the current buffer to present state
-void SwapChain::SetPresentState()
+void D3D12SwapChain::SetPresentState()
 {
-	GRHI.SetBarrier(
+	GD3D12Rhi.SetBarrier(
+
 		m_buffers[m_frameInFlightIndex].Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_PRESENT
@@ -206,20 +207,20 @@ void SwapChain::SetPresentState()
 
 
 // Releases all buffer resources
-void SwapChain::ReleaseBuffers()
+void D3D12SwapChain::ReleaseBuffers()
 {
 	for (UINT i = 0; i < EngineSettings::FramesInFlight; i++)
 	{
 		m_buffers[i].Reset();
 		if (m_rtvHandles[i].IsValid())
 		{
-			GDescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, m_rtvHandles[i]);
+			GD3D12DescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, m_rtvHandles[i]);
 		}
 	}
 }
 
 // Releases all resources associated with the swap chain
-void SwapChain::Shutdown()
+void D3D12SwapChain::Shutdown()
 {
 	ReleaseBuffers();
 	m_swapChain.Reset();

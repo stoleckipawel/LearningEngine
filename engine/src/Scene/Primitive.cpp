@@ -1,7 +1,7 @@
 #include "PCH.h"
 #include "Primitive.h"
-#include "UploadBuffer.h"
-#include "SwapChain.h"
+#include "D3D12UploadBuffer.h"
+#include "D3D12SwapChain.h"
 #include "Camera.h"
 
 Primitive::Primitive(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale)
@@ -86,7 +86,7 @@ void Primitive::UploadVertexBuffer()
     std::vector<Vertex> vertexList;
     GenerateVertices(vertexList);
     const UINT vertsDataSize = static_cast<UINT>(sizeof(Vertex) * vertexList.size());
-    VertexBuffer = UploadBuffer::Upload(vertexList.data(), vertsDataSize);
+    VertexBuffer = D3D12UploadBuffer::Upload(vertexList.data(), vertsDataSize);
     m_vertexBufferView.BufferLocation = VertexBuffer->GetGPUVirtualAddress();
     m_vertexBufferView.SizeInBytes = vertsDataSize;
     m_vertexBufferView.StrideInBytes = sizeof(Vertex);
@@ -98,7 +98,7 @@ void Primitive::UploadIndexBuffer()
     GenerateIndices(indexList);
     m_indexCount = static_cast<UINT>(indexList.size());
     UINT indexDataSize = static_cast<UINT>(sizeof(DWORD) * indexList.size());
-    IndexBuffer = UploadBuffer::Upload(indexList.data(), indexDataSize);
+    IndexBuffer = D3D12UploadBuffer::Upload(indexList.data(), indexDataSize);
     m_indexBufferView.BufferLocation = IndexBuffer->GetGPUVirtualAddress();
     m_indexBufferView.SizeInBytes = indexDataSize;
     m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
@@ -112,9 +112,9 @@ void Primitive::Upload()
 
 void Primitive::Set()
 {
-    GRHI.GetCommandList()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    GRHI.GetCommandList()->IASetIndexBuffer(&m_indexBufferView);
-    GRHI.GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    GD3D12Rhi.GetCommandList()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+    GD3D12Rhi.GetCommandList()->IASetIndexBuffer(&m_indexBufferView);
+    GD3D12Rhi.GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 std::vector<D3D12_INPUT_ELEMENT_DESC> Primitive::GetVertexLayout()

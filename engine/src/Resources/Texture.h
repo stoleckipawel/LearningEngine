@@ -4,8 +4,8 @@
 #include <filesystem>
 #include <memory>
 #include "TextureLoader.h"
-#include "RHI.h"
-#include "DescriptorHandle.h"
+#include "D3D12Rhi.h"
+#include "D3D12DescriptorHandle.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -39,7 +39,7 @@ private:
     ComPtr<ID3D12Resource2> m_textureResource;
     ComPtr<ID3D12Resource2> m_uploadResource;
     std::unique_ptr<TextureLoader> m_loader;
-    DescriptorHandle m_srvHandle;
+    D3D12DescriptorHandle m_srvHandle;
     D3D12_RESOURCE_DESC m_texResourceDesc = {};
 };
 

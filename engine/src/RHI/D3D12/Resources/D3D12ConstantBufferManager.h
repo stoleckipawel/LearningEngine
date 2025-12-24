@@ -3,8 +3,8 @@
 #include <wrl/client.h>
 #include <cstdint>
 #include <array>
-#include "ConstantBufferData.h"
-#include "ConstantBuffer.h"
+#include "D3D12ConstantBufferData.h"
+#include "D3D12ConstantBuffer.h"
 #include "Primitive.h"
 
 //------------------------------------------------------------------------------
@@ -29,7 +29,7 @@
 //   - Per-frame/per-view updates should be called from main thread
 //------------------------------------------------------------------------------
 
-class ConstantBufferManager
+class D3D12ConstantBufferManager
 {
 public:
     /// Initialize all constant buffers.
@@ -65,11 +65,11 @@ public:
     [[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS UpdatePerObjectPS();
 private:
     // Per-Frame constant buffers (persistent, one per frame-in-flight)
-    std::unique_ptr<ConstantBuffer<PerFrameConstantBufferData>> m_PerFrameCB[EngineSettings::FramesInFlight];
+    std::unique_ptr<D3D12ConstantBuffer<PerFrameConstantBufferData>> m_PerFrameCB[EngineSettings::FramesInFlight];
 
     // Per-View constant buffers (persistent, one per frame-in-flight)
-    std::unique_ptr<ConstantBuffer<PerViewConstantBufferData>> m_PerViewCB[EngineSettings::FramesInFlight];
+    std::unique_ptr<D3D12ConstantBuffer<PerViewConstantBufferData>> m_PerViewCB[EngineSettings::FramesInFlight];
 
 };
 
-extern ConstantBufferManager GConstantBufferManager;
+extern D3D12ConstantBufferManager GD3D12ConstantBufferManager;

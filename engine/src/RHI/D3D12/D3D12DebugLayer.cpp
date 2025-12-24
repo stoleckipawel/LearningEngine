@@ -1,15 +1,15 @@
 
 #include "PCH.h"
-#include "DebugLayer.h"
-#include "RHI.h"
+#include "D3D12DebugLayer.h"
+#include "D3D12Rhi.h"
 
 #if ENGINE_GPU_VALIDATION
 	// Global debug layer instance
-	DebugLayer GDebugLayer;
+	D3D12DebugLayer GD3D12DebugLayer;
 
 
 	// Initializes the Direct3D 12 and DXGI debug layers
-	void DebugLayer::Initialize()
+	void D3D12DebugLayer::Initialize()
 	{
 		if (m_initialized)
 			return;
@@ -21,7 +21,7 @@
 	}
 
 	// Initializes InfoQueue debugging after device creation.
-	void DebugLayer::InitializeInfoQueue()
+	void D3D12DebugLayer::InitializeInfoQueue()
 	{   
 		// Configure InfoQueue only when device supports it.
 		ConfigureInfoQueue();      // Set break on error/warning/corruption
@@ -29,24 +29,24 @@
 	}
 
 	// Enables the D3D12 debug layer for validation and error reporting.
-	void DebugLayer::InitD3D12Debug()
+	void D3D12DebugLayer::InitD3D12Debug()
 	{
 		CHECK(D3D12GetDebugInterface(IID_PPV_ARGS(m_d3d12Debug.ReleaseAndGetAddressOf())));
 		m_d3d12Debug->EnableDebugLayer();
 	}
 
 	// Enables the DXGI debug layer for leak tracking and live object reporting.
-	void DebugLayer::InitDXGIDebug()
+	void D3D12DebugLayer::InitDXGIDebug()
 	{
 		CHECK(DXGIGetDebugInterface1(0, IID_PPV_ARGS(m_dxgiDebug.ReleaseAndGetAddressOf())));
 		m_dxgiDebug->EnableLeakTrackingForThread();
 	}
 
 	// Configures D3D12 InfoQueue to break on error, corruption, and warning messages.
-	void DebugLayer::ConfigureInfoQueue()
+	void D3D12DebugLayer::ConfigureInfoQueue()
 	{
 		ComPtr<ID3D12InfoQueue> infoQueue;
-		if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf()))))
+		if (SUCCEEDED(GD3D12Rhi.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf()))))
 		{
 			infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
 			infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
@@ -55,10 +55,10 @@
 	}
 
 	// Applies filters to suppress noisy or known-issue messages in the InfoQueue.
-	void DebugLayer::ApplyInfoQueueFilters()
+	void D3D12DebugLayer::ApplyInfoQueueFilters()
 	{
 		ComPtr<ID3D12InfoQueue> infoQueue;
-		if (SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf()))))
+		if (SUCCEEDED(GD3D12Rhi.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf()))))
 		{
 			// Suppress known noisy message id (if present). Keep list small and explicit.
 			D3D12_MESSAGE_ID disabledMessages[] = {
@@ -73,7 +73,7 @@
 
 	// Shuts down the debug layers and reports live objects.
 	// Call before device destruction to catch leaks and report live objects.
-	void DebugLayer::Shutdown()
+	void D3D12DebugLayer::Shutdown()
 	{
 		if (!m_initialized)
 			return;
@@ -85,11 +85,11 @@
 	}
 
 	// Reports live D3D12 device objects (must be called before device is Reset).
-	void DebugLayer::ReportLiveDeviceObjects()
+	void D3D12DebugLayer::ReportLiveDeviceObjects()
 	{
 	#if ENGINE_REPORT_LIVE_OBJECTS
 		ComPtr<ID3D12DebugDevice> debugDevice;
-		if (GRHI.GetDevice() && SUCCEEDED(GRHI.GetDevice()->QueryInterface(IID_PPV_ARGS(debugDevice.ReleaseAndGetAddressOf()))))
+		if (GD3D12Rhi.GetDevice() && SUCCEEDED(GD3D12Rhi.GetDevice()->QueryInterface(IID_PPV_ARGS(debugDevice.ReleaseAndGetAddressOf()))))
 		{
 			OutputDebugStringW(L"D3D12 Live Device Objects (detail + summary):\n");
 			debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL | D3D12_RLDO_SUMMARY);
@@ -98,7 +98,7 @@
 	}
 
 	// Reports DXGI live objects (factory, adapters, swapchains).
-	void DebugLayer::ReportLiveDXGIObjects()
+	void D3D12DebugLayer::ReportLiveDXGIObjects()
 	{
 	#if ENGINE_REPORT_LIVE_OBJECTS
 		if (m_dxgiDebug)

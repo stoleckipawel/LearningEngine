@@ -2,7 +2,7 @@
 
 // Lightweight, type-aware descriptor identifier with CPU/GPU handles.
 // Constructed from a heap type, a descriptor index, and the heap start handles.
-class DescriptorHandle
+class D3D12DescriptorHandle
 {
 public:
     // Constructs a descriptor handle for a given heap type and index.
@@ -10,14 +10,14 @@ public:
     //   idx: descriptor index within the heap
     //   type: D3D12 heap type (CBV_SRV_UAV, SAMPLER, RTV, DSV)
     //   cpuStartHandle/gpuStartHandle: start handles of the owning heap
-    explicit DescriptorHandle(UINT idx,
+    explicit D3D12DescriptorHandle(UINT idx,
                               D3D12_DESCRIPTOR_HEAP_TYPE type,
                               D3D12_CPU_DESCRIPTOR_HANDLE cpuStartHandle,
                               D3D12_GPU_DESCRIPTOR_HANDLE gpuStartHandle);
 
     // Default constructor creates an invalid handle (index ~0u, handles 0).
     // Useful for containers and default-constructible classes; must be assigned before use.
-    DescriptorHandle() = default;
+    D3D12DescriptorHandle() = default;
 
     // Returns the descriptor index within the heap.
     UINT GetIndex() const noexcept { return m_index; }

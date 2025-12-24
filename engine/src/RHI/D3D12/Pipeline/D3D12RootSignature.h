@@ -1,17 +1,17 @@
 #pragma once
 
-#include "RHI.h"
+#include "D3D12Rhi.h"
 
 using Microsoft::WRL::ComPtr;
 
 // RootSignature manages the creation and access to the D3D12 root signature
-class RootSignature
+class D3D12RootSignature
 {
 public:
-    RootSignature();
-    ~RootSignature();
-    RootSignature(const RootSignature&) = delete;
-    RootSignature& operator=(const RootSignature&) = delete;
+    D3D12RootSignature();
+    ~D3D12RootSignature();
+    D3D12RootSignature(const D3D12RootSignature&) = delete;
+    D3D12RootSignature& operator=(const D3D12RootSignature&) = delete;
 
     ComPtr<ID3D12RootSignature> Get() { return m_rootSignature; }
     ID3D12RootSignature* GetRaw() const { return m_rootSignature.Get(); }

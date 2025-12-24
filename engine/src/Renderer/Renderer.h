@@ -2,13 +2,13 @@
 #pragma once
 
 // Forward declarations
-class ShaderCompiler;
+class DxcShaderCompiler;
 class Texture;
 class PrimitiveFactory;
-class PSO;
-class RootSignature;
-class Sampler;
-class DepthStencil;
+class D3D12PipelineState;
+class D3D12RootSignature;
+class D3D12Sampler;
+class D3D12DepthStencil;
 class Primitive;
 
 // -----------------------------------------------------------------------------
@@ -102,13 +102,13 @@ private:
     // Owned resources (unique_ptr for RAII and clear ownership)
     // -------------------------------------------------------------------------
     std::unique_ptr<Texture> m_texture;
-    std::unique_ptr<DepthStencil> m_depthStencil;
-    std::unique_ptr<Sampler> m_sampler;
+    std::unique_ptr<D3D12DepthStencil> m_depthStencil;
+    std::unique_ptr<D3D12Sampler> m_sampler;
     std::unique_ptr<PrimitiveFactory> m_primitiveFactory;
-    std::unique_ptr<PSO> m_pso;
-    std::unique_ptr<RootSignature> m_rootSignature;
-    std::unique_ptr<ShaderCompiler> m_vertexShader;
-    std::unique_ptr<ShaderCompiler> m_pixelShader;
+    std::unique_ptr<D3D12PipelineState> m_pso;
+    std::unique_ptr<D3D12RootSignature> m_rootSignature;
+    std::unique_ptr<DxcShaderCompiler> m_vertexShader;
+    std::unique_ptr<DxcShaderCompiler> m_pixelShader;
 };
 
 // Global renderer instance

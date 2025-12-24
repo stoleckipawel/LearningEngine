@@ -1,14 +1,14 @@
 #pragma once
 
-// ShaderCompiler compiles HLSL shaders and provides access to compiled bytecode for Direct3D 12.
-class ShaderCompiler
+// DxcShaderCompiler compiles HLSL via DXC and exposes the resulting bytecode.
+class DxcShaderCompiler
 {
 public:
-	ShaderCompiler(const std::filesystem::path& fileName, const std::string& model, const std::string& entryPoint);
-	~ShaderCompiler();
+	DxcShaderCompiler(const std::filesystem::path& fileName, const std::string& model, const std::string& entryPoint);
+	~DxcShaderCompiler();
 
-	ShaderCompiler(const ShaderCompiler&) = delete;
-	ShaderCompiler& operator=(const ShaderCompiler&) = delete;
+	DxcShaderCompiler(const DxcShaderCompiler&) = delete;
+	DxcShaderCompiler& operator=(const DxcShaderCompiler&) = delete;
 
 	inline const void* GetBuffer() const { return m_shaderBytecode.pShaderBytecode; }
 	inline size_t GetSize() const { return m_shaderBytecode.BytecodeLength; }

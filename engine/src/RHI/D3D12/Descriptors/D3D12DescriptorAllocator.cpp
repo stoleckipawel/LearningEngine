@@ -1,13 +1,13 @@
 #include "PCH.h"
-#include "DescriptorAllocator.h"
+#include "D3D12DescriptorAllocator.h"
 
 // Allocate a descriptor slot using a free-list with linear fallback.
 // Strategy:
 //  - Prefer reusing freed indices (LIFO) to improve locality and reduce fragmentation.
 //  - Otherwise, grow linearly while within the heap's current size.
 //  - If the heap is full and cannot grow, report a fatal error and return an invalid handle.
-// Returns: DescriptorHandle containing CPU/GPU pointers (GPU only if shader-visible), or invalid on failure.
-DescriptorHandle DescriptorAllocator::Allocate()
+// Returns: D3D12DescriptorHandle containing CPU/GPU pointers (GPU only if shader-visible), or invalid on failure.
+D3D12DescriptorHandle D3D12DescriptorAllocator::Allocate()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -41,7 +41,7 @@ DescriptorHandle DescriptorAllocator::Allocate()
 
 // Free a previously allocated descriptor slot by pushing its index onto the free-list.
 // The handle must be valid and originate from this allocator's heap.
-void DescriptorAllocator::Free(const DescriptorHandle& handle) noexcept
+void D3D12DescriptorAllocator::Free(const D3D12DescriptorHandle& handle) noexcept
 {
     if (handle.IsValid())
     {

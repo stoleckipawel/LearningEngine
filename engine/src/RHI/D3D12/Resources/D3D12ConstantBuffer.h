@@ -1,8 +1,8 @@
 #pragma once
 
-#include "DescriptorHeap.h"
-#include "UploadBuffer.h"
-#include "DescriptorHeapManager.h"
+#include "D3D12DescriptorHeap.h"
+#include "D3D12UploadBuffer.h"
+#include "D3D12DescriptorHeapManager.h"
 #include "DebugUtils.h"
 #include <cstring>
 
@@ -10,12 +10,12 @@ using Microsoft::WRL::ComPtr;
 
 // ConstantBuffer manages a GPU constant buffer for type T, including creation, mapping, updating, and descriptor views.
 template <typename T>
-class ConstantBuffer
+class D3D12ConstantBuffer
 {
 public:
     // Create and map constant buffer, create a CBV view. Allocates a descriptor via the manager.
-    explicit ConstantBuffer()
-        : m_cbvHandle(GDescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)),
+    explicit D3D12ConstantBuffer()
+        : m_cbvHandle(GD3D12DescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)),
           m_ConstantBufferSize((sizeof(T) + 255) & ~255)
     {
         std::memset(&m_ConstantBufferData, 0, sizeof(T));
@@ -51,12 +51,12 @@ public:
     bool IsValid() const noexcept { return Resource != nullptr && m_MappedData != nullptr; }
 public:
     // No copy or move allowed, strict ownership
-    ConstantBuffer(const ConstantBuffer&) = delete;
-    ConstantBuffer& operator=(const ConstantBuffer&) = delete;
-    ConstantBuffer(ConstantBuffer&&) = delete;
-    ConstantBuffer& operator=(ConstantBuffer&&) = delete;
+    D3D12ConstantBuffer(const D3D12ConstantBuffer&) = delete;
+    D3D12ConstantBuffer& operator=(const D3D12ConstantBuffer&) = delete;
+    D3D12ConstantBuffer(D3D12ConstantBuffer&&) = delete;
+    D3D12ConstantBuffer& operator=(D3D12ConstantBuffer&&) = delete;
 
-    ~ConstantBuffer() noexcept
+    ~D3D12ConstantBuffer() noexcept
     {
         if (Resource)
         {
@@ -67,7 +67,7 @@ public:
 
         if (m_cbvHandle.IsValid())
         {
-            GDescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, m_cbvHandle);
+            GD3D12DescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, m_cbvHandle);
         }
     }
 private:
@@ -87,7 +87,7 @@ private:
         resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
         resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-        CHECK(GRHI.GetDevice()->CreateCommittedResource(
+        CHECK(GD3D12Rhi.GetDevice()->CreateCommittedResource(
             &heapProperties,
             D3D12_HEAP_FLAG_NONE,
             &resourceDesc,
@@ -110,11 +110,11 @@ private:
     {
         m_ConstantBufferViewDesc.BufferLocation = Resource->GetGPUVirtualAddress();
         m_ConstantBufferViewDesc.SizeInBytes = m_ConstantBufferSize;
-        GRHI.GetDevice()->CreateConstantBufferView(&m_ConstantBufferViewDesc, GetCPUHandle());
+        GD3D12Rhi.GetDevice()->CreateConstantBufferView(&m_ConstantBufferViewDesc, GetCPUHandle());
     }
 private:
     ComPtr<ID3D12Resource2> Resource = nullptr;
-    DescriptorHandle m_cbvHandle; // CBV descriptor handle
+    D3D12DescriptorHandle m_cbvHandle; // CBV descriptor handle
     T m_ConstantBufferData; // Cached buffer data
     D3D12_CONSTANT_BUFFER_VIEW_DESC m_ConstantBufferViewDesc = {}; 
     void* m_MappedData = nullptr; // Pointer to mapped memory

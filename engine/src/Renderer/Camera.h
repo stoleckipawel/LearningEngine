@@ -3,7 +3,7 @@
 
 #include <DirectXMath.h>
 #include <cstdint>
-#include "ConstantBufferData.h"
+#include "D3D12ConstantBufferData.h"
 
 class Camera
 {

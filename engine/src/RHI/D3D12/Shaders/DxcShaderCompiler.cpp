@@ -1,12 +1,12 @@
 #include "PCH.h"
-#include "ShaderCompiler.h"
+#include "DxcShaderCompiler.h"
 #include "AssetPathResolver.h"
 
 // Compiles a shader from file and stores the bytecode using DXC
 // fileName: name of HLSL file
 // model: shader model string (e.g., "vs_6_0", "ps_6_0")
 // entryPoint: entry function name (usually "main")
-ShaderCompiler::ShaderCompiler(const std::filesystem::path& fileName, const std::string& model, const std::string& entryPoint)
+DxcShaderCompiler::DxcShaderCompiler(const std::filesystem::path& fileName, const std::string& model, const std::string& entryPoint)
 {
     // Orchestrates shader compilation steps
     // 1. Resolve and validate shader file path
@@ -24,14 +24,14 @@ ShaderCompiler::ShaderCompiler(const std::filesystem::path& fileName, const std:
 }
 
 // Releases shader compiler resources
-ShaderCompiler::~ShaderCompiler()
+DxcShaderCompiler::~DxcShaderCompiler()
 {
     m_shaderBytecode.BytecodeLength = 0;
     m_shaderBytecode.pShaderBytecode = nullptr;
 }
 
 // Resolves the asset path for the shader file and checks if it exists.
-void ShaderCompiler::ResolveAndValidatePath(const std::filesystem::path& fileName)
+void DxcShaderCompiler::ResolveAndValidatePath(const std::filesystem::path& fileName)
 {
     // Resolve asset path for shader file and validate existence
     m_resolvedPath = ResolveAssetPath(fileName, AssetType::Shader);
@@ -41,7 +41,7 @@ void ShaderCompiler::ResolveAndValidatePath(const std::filesystem::path& fileNam
 }
 
 // Creates DXC compiler, utility, and include handler interfaces.
-void ShaderCompiler::CreateDXCInterfaces()
+void DxcShaderCompiler::CreateDXCInterfaces()
 {
     // Create DXC compiler interface
     HRESULT hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(m_dxcCompiler.ReleaseAndGetAddressOf()));
@@ -64,7 +64,7 @@ void ShaderCompiler::CreateDXCInterfaces()
 }
 
 // Handles DXC compilation result: logs errors, checks status, saves binary and PDB outputs.
-void ShaderCompiler::HandleCompileResult()
+void DxcShaderCompiler::HandleCompileResult()
 {
     // Print errors and warnings if present from DXC
     ComPtr<IDxcBlobUtf8> errorBlob = nullptr;
@@ -111,14 +111,14 @@ void ShaderCompiler::HandleCompileResult()
 }
 
 // Log DXC Shader Debug Info
-void ShaderCompiler::DumpShaderDebugInfo()
+void DxcShaderCompiler::DumpShaderDebugInfo()
 {
     LogDXCVersion();
     LogDXCArguments();
 }
 
 // Loads the shader source file into a DXC blob for compilation.
-void ShaderCompiler::LoadShaderSource()
+void DxcShaderCompiler::LoadShaderSource()
 {
     // Load shader source file into DXC blob
     HRESULT hr = m_dxcUtils->LoadFile(m_resolvedPath.c_str(), nullptr, m_sourceBlob.ReleaseAndGetAddressOf());
@@ -133,7 +133,7 @@ void ShaderCompiler::LoadShaderSource()
 }
 
 // Prepares DXC compile arguments and invokes DXC to compile the shader.
-void ShaderCompiler::CompileShader(const std::string& model, const std::string& entryPoint)
+void DxcShaderCompiler::CompileShader(const std::string& model, const std::string& entryPoint)
 {
     // Prepare DXC compile arguments for entry point, target profile, resource binding, warnings, reflection, debug info, and optimization
     std::wstring wEntry(entryPoint.begin(), entryPoint.end());
@@ -180,7 +180,7 @@ void ShaderCompiler::CompileShader(const std::string& model, const std::string& 
 }
 
 // Logs the DXC compile arguments for debugging purposes.
-void ShaderCompiler::LogDXCArguments()
+void DxcShaderCompiler::LogDXCArguments()
 {
     // Only log in debug builds
 #if defined(_DEBUG)
@@ -204,7 +204,7 @@ void ShaderCompiler::LogDXCArguments()
 
 
 // Logs DXC version for debugging
-void ShaderCompiler::LogDXCVersion()
+void DxcShaderCompiler::LogDXCVersion()
 {
 #if defined(_DEBUG)
     ComPtr<IDxcVersionInfo> versionInfo = nullptr;

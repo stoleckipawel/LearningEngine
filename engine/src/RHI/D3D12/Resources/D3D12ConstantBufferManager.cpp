@@ -1,32 +1,32 @@
 #include "PCH.h"
-#include "ConstantBufferManager.h"
-#include "FrameResource.h"
+#include "D3D12ConstantBufferManager.h"
+#include "D3D12FrameResource.h"
 #include "Camera.h"
 #include "Timer.h"
 #include "Window.h"
-#include "SwapChain.h"
+#include "D3D12SwapChain.h"
 
-ConstantBufferManager GConstantBufferManager;
+D3D12ConstantBufferManager GD3D12ConstantBufferManager;
 
 //------------------------------------------------------------------------------
 // Initialization
 //------------------------------------------------------------------------------
 
-void ConstantBufferManager::Initialize()
+void D3D12ConstantBufferManager::Initialize()
 {
     // Create persistent per-frame and per-view constant buffers
     // These are updated once per frame and don't need ring buffer allocation
     for (uint32_t i = 0; i < EngineSettings::FramesInFlight; ++i)
     {
-        m_PerFrameCB[i] = std::make_unique<ConstantBuffer<PerFrameConstantBufferData>>();
-        m_PerViewCB[i] = std::make_unique<ConstantBuffer<PerViewConstantBufferData>>();
+        m_PerFrameCB[i] = std::make_unique<D3D12ConstantBuffer<PerFrameConstantBufferData>>();
+        m_PerViewCB[i] = std::make_unique<D3D12ConstantBuffer<PerViewConstantBufferData>>();
     }
 
     // Per-object CBs are allocated dynamically from GFrameResourceManager
     // which is initialized by the Renderer before constant buffer updates
 }
 
-void ConstantBufferManager::Shutdown()
+void D3D12ConstantBufferManager::Shutdown()
 {
     for (uint32_t i = 0; i < EngineSettings::FramesInFlight; ++i)
     {
@@ -39,21 +39,21 @@ void ConstantBufferManager::Shutdown()
 // GPU Address Accessors
 //------------------------------------------------------------------------------
 
-D3D12_GPU_VIRTUAL_ADDRESS ConstantBufferManager::GetPerFrameGpuAddress() const
+D3D12_GPU_VIRTUAL_ADDRESS D3D12ConstantBufferManager::GetPerFrameGpuAddress() const
 {
-    return m_PerFrameCB[GSwapChain.GetFrameInFlightIndex()]->GetGPUVirtualAddress();
+    return m_PerFrameCB[GD3D12SwapChain.GetFrameInFlightIndex()]->GetGPUVirtualAddress();
 }
 
-D3D12_GPU_VIRTUAL_ADDRESS ConstantBufferManager::GetPerViewGpuAddress() const
+D3D12_GPU_VIRTUAL_ADDRESS D3D12ConstantBufferManager::GetPerViewGpuAddress() const
 {
-    return m_PerViewCB[GSwapChain.GetFrameInFlightIndex()]->GetGPUVirtualAddress();
+    return m_PerViewCB[GD3D12SwapChain.GetFrameInFlightIndex()]->GetGPUVirtualAddress();
 }
 
 //------------------------------------------------------------------------------
 // Per-Frame Update (once per CPU frame)
 //------------------------------------------------------------------------------
 
-void ConstantBufferManager::UpdatePerFrame()
+void D3D12ConstantBufferManager::UpdatePerFrame()
 {
     PerFrameConstantBufferData data = {};
     data.FrameIndex = GTimer.GetFrameCount();
@@ -63,7 +63,7 @@ void ConstantBufferManager::UpdatePerFrame()
     data.ViewportSize = GWindow.GetViewportSize();
     data.ViewportSizeInv = GWindow.GetViewportSizeInv();
 
-    const uint32_t frameIdx = GSwapChain.GetFrameInFlightIndex();
+    const uint32_t frameIdx = GD3D12SwapChain.GetFrameInFlightIndex();
     m_PerFrameCB[frameIdx]->Update(data);
 }
 
@@ -71,7 +71,7 @@ void ConstantBufferManager::UpdatePerFrame()
 // Per-View Update (once per camera/view)
 //------------------------------------------------------------------------------
 
-void ConstantBufferManager::UpdatePerView()
+void D3D12ConstantBufferManager::UpdatePerView()
 {
     PerViewConstantBufferData data = {};
     data.CameraPosition = GCamera.GetPosition();
@@ -87,7 +87,7 @@ void ConstantBufferManager::UpdatePerView()
     XMStoreFloat4x4(&data.ProjectionMTX, proj);
     XMStoreFloat4x4(&data.ViewProjMTX, viewProj);
 
-    const uint32_t frameIdx = GSwapChain.GetFrameInFlightIndex();
+    const uint32_t frameIdx = GD3D12SwapChain.GetFrameInFlightIndex();
     m_PerViewCB[frameIdx]->Update(data);
 }
 
@@ -100,7 +100,7 @@ void ConstantBufferManager::UpdatePerView()
 //   - Thread-safe allocation allows future multithreaded recording
 //------------------------------------------------------------------------------
 
-D3D12_GPU_VIRTUAL_ADDRESS ConstantBufferManager::UpdatePerObjectVS(const Primitive& primitive)
+D3D12_GPU_VIRTUAL_ADDRESS D3D12ConstantBufferManager::UpdatePerObjectVS(const Primitive& primitive)
 {
     PerObjectVSConstantBufferData data = {};
 
@@ -113,14 +113,14 @@ D3D12_GPU_VIRTUAL_ADDRESS ConstantBufferManager::UpdatePerObjectVS(const Primiti
     XMStoreFloat4x4(&data.WorldInvTransposeMTX, worldInvTranspose);
 
     // Allocate from ring buffer and copy data - returns unique GPU VA
-    return GFrameResourceManager.AllocateConstantBuffer(data);
+    return GD3D12FrameResourceManager.AllocateConstantBuffer(data);
 }
 
 //------------------------------------------------------------------------------
 // Per-Object PS Update (per draw call - uses ring buffer)
 //------------------------------------------------------------------------------
 
-D3D12_GPU_VIRTUAL_ADDRESS ConstantBufferManager::UpdatePerObjectPS()
+D3D12_GPU_VIRTUAL_ADDRESS D3D12ConstantBufferManager::UpdatePerObjectPS()
 {
     PerObjectPSConstantBufferData data = {};
     data.BaseColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -130,6 +130,6 @@ D3D12_GPU_VIRTUAL_ADDRESS ConstantBufferManager::UpdatePerObjectPS()
     data._padPerObjectPS0 = 0.0f;
 
     // Allocate from ring buffer and copy data - returns unique GPU VA
-    return GFrameResourceManager.AllocateConstantBuffer(data);
+    return GD3D12FrameResourceManager.AllocateConstantBuffer(data);
 }
 

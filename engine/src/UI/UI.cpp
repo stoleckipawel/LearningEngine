@@ -2,8 +2,8 @@
 #include "PCH.h"
 #include "UI.h"
 #include "Window.h"
-#include "RHI.h"
-#include "DescriptorHeapManager.h"
+#include "D3D12Rhi.h"
+#include "D3D12DescriptorHeapManager.h"
 #include "Timer.h"
 
 
@@ -20,12 +20,12 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARA
 
 static void AllocSRV(ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle)
 {
-    GDescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, *out_cpu_handle, *out_gpu_handle);
+    GD3D12DescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, *out_cpu_handle, *out_gpu_handle);
 }
 
 static void FreeSRV(ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle)
 {
-    GDescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, cpu_handle, gpu_handle);
+    GD3D12DescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, cpu_handle, gpu_handle);
 }
 
 // Forwards Win32 messages to ImGui; returns true if handled.
@@ -57,12 +57,12 @@ void UI::Initialize()
     ImGui_ImplWin32_Init(GWindow.GetHWND());
 
     ImGui_ImplDX12_InitInfo init_info = {};
-    init_info.Device = GRHI.GetDevice().Get();
-    init_info.CommandQueue = GRHI.GetCommandQueue().Get();
+    init_info.Device = GD3D12Rhi.GetDevice().Get();
+    init_info.CommandQueue = GD3D12Rhi.GetCommandQueue().Get();
     init_info.NumFramesInFlight = static_cast<int>(EngineSettings::FramesInFlight);
-    init_info.RTVFormat = GSwapChain.GetBackBufferFormat();
+    init_info.RTVFormat = GD3D12SwapChain.GetBackBufferFormat();
     init_info.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    init_info.SrvDescriptorHeap = GDescriptorHeapManager.GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)->GetRaw();
+    init_info.SrvDescriptorHeap = GD3D12DescriptorHeapManager.GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)->GetRaw();
     init_info.SrvDescriptorAllocFn = &AllocSRV;
     init_info.SrvDescriptorFreeFn = &FreeSRV;
     // Validate required D3D12 objects before calling ImGui init.
@@ -128,7 +128,7 @@ void UI::Update()
 // Submits ImGui draw data using the current DX12 command list.
 void UI::Render() noexcept
 {
-    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), GRHI.GetCommandList().Get());
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), GD3D12Rhi.GetCommandList().Get());
 }
 
 // Shuts down ImGui backends and destroys the context.

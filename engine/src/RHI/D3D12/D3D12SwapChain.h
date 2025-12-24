@@ -10,13 +10,13 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl/client.h>
-#include "DescriptorHandle.h"
+#include "D3D12DescriptorHandle.h"
 #include "EngineConfig.h"
 
 using Microsoft::WRL::ComPtr;
 
 // SwapChain manages the Direct3D 12 swap chain and its associated render targets.
-class SwapChain
+class D3D12SwapChain
 {
 public:
 	// Initializes the swap chain and creates render target views
@@ -64,7 +64,7 @@ private:
 	// Array of render target resources (one per frame)
 	Microsoft::WRL::ComPtr<ID3D12Resource2> m_buffers[EngineSettings::FramesInFlight];
 	// Array of RTV descriptor handles (allocated via manager)
-	DescriptorHandle m_rtvHandles[EngineSettings::FramesInFlight];
+	D3D12DescriptorHandle m_rtvHandles[EngineSettings::FramesInFlight];
 	HANDLE m_WaitableObject = nullptr;	
 private:
 	// Creates render target views for all swap chain buffers
@@ -77,6 +77,7 @@ private:
 };
 
 
-// Global swap chain instance
-extern SwapChain GSwapChain;
+// Global D3D12 swap chain instance
+extern D3D12SwapChain GD3D12SwapChain;
+
 
