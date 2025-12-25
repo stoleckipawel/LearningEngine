@@ -1,120 +1,129 @@
 Checks: >
   -*,
-  modernize-*,
-  performance-*,
-  cppcoreguidelines-*,
-  bugprone-*,
-  readability-*,
-  security-*,
+
+  # ------------------------------------------------------------------
+  # Core diagnostics & static analysis
+  # ------------------------------------------------------------------
+  clang-diagnostic-*,
   clang-analyzer-*,
-  portability-*,
+
+  # ------------------------------------------------------------------
+  # Modern C++ usage & refactoring safety
+  # ------------------------------------------------------------------
+  modernize-*,
+
+  # ------------------------------------------------------------------
+  # Performance & code generation
+  # ------------------------------------------------------------------
+  performance-*,
+
+  # ------------------------------------------------------------------
+  # Bug detection
+  # ------------------------------------------------------------------
+  bugprone-*,
+
+  # ------------------------------------------------------------------
+  # Readability & consistency
+  # ------------------------------------------------------------------
+  readability-*,
+
+  # ------------------------------------------------------------------
+  # Safety, correctness & ownership
+  # ------------------------------------------------------------------
+  cppcoreguidelines-*,
   hicpp-*,
+  cert-*,
+  security-*,
+
+  # ------------------------------------------------------------------
+  # Portability & ABI hygiene
+  # ------------------------------------------------------------------
+  portability-*,
+
+  # ------------------------------------------------------------------
+  # Header, ODR & include discipline
+  # ------------------------------------------------------------------
   misc-definitions-in-headers,
-  cert-*
+  misc-header-include-cycle,
+  misc-include-cleaner,
+  misc-non-private-member-variables-in-classes,
+  misc-redundant-expression,
+  misc-throw-by-value-catch-by-reference,
+
+  # ------------------------------------------------------------------
+  # Stronger type & language discipline
+  # ------------------------------------------------------------------
+  google-explicit-constructor,
+  google-runtime-int,
+  readability-implicit-bool-conversion,
+  readability-qualified-auto,
+
+  # ------------------------------------------------------------------
+  # Engine-level correctness & lifetime pain detectors
+  # ------------------------------------------------------------------
+  cppcoreguidelines-owning-memory,
+  cppcoreguidelines-no-malloc,
+  cppcoreguidelines-pro-type-reinterpret-cast,
+  cppcoreguidelines-pro-type-static-cast-downcast,
+  cppcoreguidelines-avoid-do-while
 
 WarningsAsErrors: '*'
+
 HeaderFilterRegex: '.*'
+
 AnalyzeTemporaryDtors: false
+
 FormatStyle: none
 
 CheckOptions:
+  # ------------------------------------------------------------------
+  # modernize
+  # ------------------------------------------------------------------
   - { key: modernize-use-auto.MinTypeNameLength, value: '0' }
   - { key: modernize-use-nullptr.NullMacros, value: 'NULL' }
   - { key: modernize-use-trailing-return-type.ShortThreshold, value: '0' }
-  - { key: cppcoreguidelines-avoid-magic-numbers.IgnoredValues, value: '0,1,-1' }
+  - { key: modernize-avoid-bind.PlaceholderCount, value: '0' }
 
+  # ------------------------------------------------------------------
+  # cppcoreguidelines
+  # ------------------------------------------------------------------
+  - { key: cppcoreguidelines-avoid-magic-numbers.IgnoredValues, value: '0,1,-1' }
+  - { key: cppcoreguidelines-pro-bounds-pointer-arithmetic.AllowedPointers, value: '' }
+  - { key: cppcoreguidelines-owning-memory.AllowedIdentifiers, value: '' }
+
+  # ------------------------------------------------------------------
+  # performance
+  # ------------------------------------------------------------------
+  - { key: performance-move-const-arg.CheckTriviallyCopyable, value: 'true' }
+  - { key: performance-unnecessary-value-param.AllowedTypes, value: '' }
+
+  # ------------------------------------------------------------------
+  # readability (implicit conversions)
+  # ------------------------------------------------------------------
+  - { key: readability-implicit-bool-conversion.AllowIntegerConditions, value: 'false' }
+  - { key: readability-implicit-bool-conversion.AllowPointerConditions, value: 'false' }
+
+  # ------------------------------------------------------------------
+  # readability: identifier naming
+  # ------------------------------------------------------------------
   - { key: readability-identifier-naming.FunctionCase, value: 'CamelCase' }
   - { key: readability-identifier-naming.MethodCase, value: 'CamelCase' }
   - { key: readability-identifier-naming.ClassCase, value: 'CamelCase' }
   - { key: readability-identifier-naming.StructCase, value: 'CamelCase' }
   - { key: readability-identifier-naming.EnumCase, value: 'CamelCase' }
   - { key: readability-identifier-naming.TypeCase, value: 'CamelCase' }
+
   - { key: readability-identifier-naming.VariableCase, value: 'camelCase' }
   - { key: readability-identifier-naming.LocalVariableCase, value: 'camelCase' }
   - { key: readability-identifier-naming.ParameterCase, value: 'camelCase' }
+
   - { key: readability-identifier-naming.MemberCase, value: 'camelCase' }
   - { key: readability-identifier-naming.MemberPrefix, value: 'm_' }
-  - { key: readability-identifier-naming.ParameterPrefix, value: '' }
+
   - { key: readability-identifier-naming.BooleanParameterPrefix, value: 'b' }
   - { key: readability-identifier-naming.BooleanMemberPrefix, value: 'm_b' }
+
+  # ------------------------------------------------------------------
+  # hicpp
+  # ------------------------------------------------------------------
   - { key: hicpp-no-assembler.Allowed, value: 'false' }
-
-
-# Explanatory notes (kept here to avoid cluttering the YAML above):
-# ---------------------------------------------------------
-# Checks: >
-#   The glob list of clang-tidy checks to enable. We start from `-*` (disable
-#   everything) then opt-in to whole groups like `modernize-*` or single checks.
-#   Groups used here:
-#     - modernize-*             : Recommend modern C++ idioms (use auto, nullptr).
-#     - performance-*           : Detect costly copies and suboptimal code.
-#     - cppcoreguidelines-*     : C++ Core Guidelines checks (ownership, lifetime).
-#     - bugprone-*              : Patterns likely to be bugs (e.g. suspicious ops).
-#     - readability-*           : Naming/clarity improvements.
-#     - security-*              : Security-oriented static checks (buffer/crypto/etc).
-#     - clang-analyzer-*        : Deep path-sensitive analysis from clang analyzer.
-#     - portability-*           : Platform portability issues.
-#     - hicpp-*                 : High Integrity C++ rules (safety-oriented).
-#     - misc-definitions-in-headers : Disallow non-trivial definitions inside headers.
-#     - cert-*                  : CERT C/C++ secure coding checks.
-#
-# WarningsAsErrors: '*'
-#   Treat all enabled clang-tidy warnings as errors. This makes the runner/CI
-#   exit non-zero on any enabled finding. Consider running clang-tidy locally
-#   first (without `--export-fixes`/without failing CI) and create a baseline
-#   if the repo has legacy issues.
-#
-# HeaderFilterRegex: '.*'
-#   Regex that limits which headers are analyzed (file path). '.*' means run
-#   checks for the whole project. Narrow this to `engine/|samples/` to reduce noise.
-#
-# AnalyzeTemporaryDtors: false
-#   Controls whether clang-tidy analyzes destructors of temporaries. Setting
-#   true increases analysis depth at higher cost.
-#
-# FormatStyle: none
-#   Where clang-tidy can auto-format fixes, this controls style. We keep
-#   formatting enforcement in `.clang-format` and set `none` here.
-#
-# CheckOptions:
-#   A list of key/value tunables for specific checks. Notable entries here:
-#     - modernize-use-auto.MinTypeNameLength = '0'
-#         Controls when `modernize-use-auto` suggests `auto`. '0' makes it
-#         aggressive and suggest `auto` for most declarations.
-#     - modernize-use-nullptr.NullMacros = 'NULL'
-#         Treat the macro `NULL` as a candidate for replacement by `nullptr`.
-#     - modernize-use-trailing-return-type.ShortThreshold = '0'
-#         Controls thresholds for suggesting trailing return types.
-#     - cppcoreguidelines-avoid-magic-numbers.IgnoredValues = '0,1,-1'
-#         Numbers to ignore when checking for magic numbers.
-#
-# Identifier naming rules (readability-identifier-naming.*):
-#   These keys enforce identifier casing and prefixes. They are applied by
-#   the `readability-identifier-naming` check group. Current policy:
-#     - FunctionCase / MethodCase / ClassCase / StructCase / EnumCase / TypeCase
-#         = 'CamelCase' : require Pascal/CamelCase for named types and functions.
-#     - VariableCase / LocalVariableCase / ParameterCase = 'camelCase'
-#         : require camelCase for locals and parameters.
-#     - MemberCase = 'camelCase' with MemberPrefix = 'm_'
-#         : require member variables to be `m_myValue`.
-#     - BooleanParameterPrefix = 'b' and BooleanMemberPrefix = 'm_b'
-#         : require booleans to be prefixed accordingly (e.g. `bEnabled`, `m_bReady`).
-#   If these rules are too strict, adjust the values here or add file-scoped
-#   `NOLINT` comments where exceptions are necessary.
-#
-# Practical notes / workflow
-# - Run the runner first without `--fix` and review results. Use `--fix` on a
-#   small set of files or after creating a suppression baseline.
-# - To disable a noisy check globally, remove it from `Checks` or add a `-`
-#   prefixed disable (e.g. `-readability-identifier-naming`). To disable per-file
-#   add `// NOLINT(readability-identifier-naming)` on the offending declaration.
-# - For CI: keep `WarningsAsErrors: '*'` to block merges, but consider an
-#   incremental baseline approach for legacy code.
-#
-# How to tune or relax:
-# - If `security-*` or `cert-*` produce false positives for platform APIs,
-#   add targeted CheckOptions or disable the specific check name rather than
-#   disabling full groups.
-# - If `readability-identifier-naming` is too noisy, consider limiting it to
-#   header-only libraries or converting to a subset of identifier rules first.
-
