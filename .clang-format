@@ -1,40 +1,136 @@
+# ============================================================================
 # ClangFormat configuration for LearningEngine
-# - Allman braces
-# - Tabs for indentation (4-wide)
-# - Preserved include ordering (PCH remains first in .cpp by convention)
+# Target:
+#   - Game engines & real-time rendering code
+#   - High readability, diff-friendly formatting
+#   - Conservative, explicit, reviewer-friendly style
+# ============================================================================
 
 BasedOnStyle: LLVM
 Language: Cpp
+
+# ---------------------------------------------------------------------------
+# Indentation & whitespace
+# ---------------------------------------------------------------------------
 
 IndentWidth: 4
 TabWidth: 4
 UseTab: ForIndentation
 
-BreakBeforeBraces: Allman
+ContinuationIndentWidth: 4
 
 ColumnLimit: 180
 
-# Keep includes in the order they appear; the engine relies on stable ordering
-# (e.g. PCH first in translation units).
-SortIncludes: false
-IncludeBlocks: Preserve
+# ---------------------------------------------------------------------------
+# Braces & control flow
+# ---------------------------------------------------------------------------
 
-PointerAlignment: Left
-ReferenceAlignment: Left
-DerivePointerAlignment: false
+BreakBeforeBraces: Allman
 
-SpaceBeforeParens: ControlStatements
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
 
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+
+# Enforce explicit blocks – no ambiguity
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortBlocksOnASingleLine: Never
 AllowShortFunctionsOnASingleLine: Empty
 
+# ---------------------------------------------------------------------------
+# Includes & headers
+# ---------------------------------------------------------------------------
+
+# Engine relies on stable include ordering (PCH first, platform headers, etc.)
+SortIncludes: false
+IncludeBlocks: Preserve
+
+# ---------------------------------------------------------------------------
+# Pointers, references, and alignment
+# ---------------------------------------------------------------------------
+
+PointerAlignment: Left
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+
+AlignAfterOpenBracket: Align
+AlignOperands: true
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlines: Left
+
+# ---------------------------------------------------------------------------
+# Function calls, parameters, and lists
+# ---------------------------------------------------------------------------
+
 BinPackParameters: false
 BinPackArguments: false
 
-AlignAfterOpenBracket: Align
-ContinuationIndentWidth: 4
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+# Keep initializer lists readable (important for math-heavy code)
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+BreakConstructorInitializers: AfterColon
+ConstructorInitializerIndentWidth: 4
 
 Cpp11BracedListStyle: true
+
+# ---------------------------------------------------------------------------
+# Spacing rules
+# ---------------------------------------------------------------------------
+
+SpaceBeforeParens: ControlStatements
+SpaceBeforeAssignmentOperators: true
+SpaceAfterCStyleCast: true
+
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpacesInContainerLiterals: false
+
+# ---------------------------------------------------------------------------
+# Switch / case formatting
+# ---------------------------------------------------------------------------
+
+IndentCaseLabels: true
+IndentCaseBlocks: false
+AllowShortCaseLabelsOnASingleLine: false
+
+# ---------------------------------------------------------------------------
+# Lambdas & modern C++
+# ---------------------------------------------------------------------------
+
+LambdaBodyIndentation: Signature
+AllowShortLambdasOnASingleLine: None
+
+# ---------------------------------------------------------------------------
+# Comments
+# ---------------------------------------------------------------------------
+
+ReflowComments: false
+AlignTrailingComments: true
+SpacesBeforeTrailingComments: 2
+
+# ---------------------------------------------------------------------------
+# Misc engine-friendly behavior
+# ---------------------------------------------------------------------------
+
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 2
+
+PenaltyBreakComment: 1000
+PenaltyBreakString: 1000
+PenaltyBreakBeforeFirstCallParameter: 1
+PenaltyReturnTypeOnItsOwnLine: 0
