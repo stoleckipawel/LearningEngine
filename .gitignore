@@ -83,5 +83,12 @@ Makefile
 .ilk
 .pdb
 .log
+.LOG
 .tmp
 .cache
+
+# Generated logs from tools/bootstrap logging
+Logs/.*
+Logs/*
+Logs/Tools/.*
+Logs/Tools/*

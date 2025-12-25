@@ -11,10 +11,20 @@ REM ---------------------------------------------------
 
 setlocal
 
+REM Bootstrap logging via tools\internal\BootstrapLog.bat
+if not defined LOG_CAPTURED (
+    call "%~dp0tools\internal\BootstrapLog.bat" "%~f0" %*
+    exit /B %ERRORLEVEL%
+)
+
 REM --- Set key directory variables ---
 set "SCRIPT_DIR=%~dp0"
-REM Use its parent directory as the project root.
-for %%I in ("%SCRIPT_DIR%..") do set "SRC_DIR=%%~fI\"
+REM Determine project root: prefer the script directory if it looks like the repo root,
+REM otherwise fall back to the parent directory (scripts may live in a subfolder).
+set "SRC_DIR=%SCRIPT_DIR%"
+if not exist "%SRC_DIR%LICENSE.txt" if not exist "%SRC_DIR%CMakeLists.txt" (
+    for %%I in ("%SCRIPT_DIR%..") do set "SRC_DIR=%%~fI\"
+)
 set "BUILD_DIR=%SRC_DIR%build"
 set "BIN_DIR=%SRC_DIR%bin"
 set "OBJ_DIR=%SRC_DIR%obj"
@@ -45,50 +55,41 @@ if exist "%VS_DIR%" (
 )
 
 REM --- Remove Visual Studio solution and project files ---
-for %%f in ("%SRC_DIR%*.sln" "%SRC_DIR%*.vcxproj" "%SRC_DIR%*.vcxproj.filters" "%SRC_DIR%*.vcxproj.user") do (
-    if exist %%f (
-        echo [CLEAN] Deleting Visual Studio file: %%f
-        del /F /Q %%f
-    )
-)
+echo [CLEAN] Deleting Visual Studio solution and project files
+del /F /Q "%SRC_DIR%*.sln" "%SRC_DIR%*.vcxproj" "%SRC_DIR%*.vcxproj.filters" "%SRC_DIR%*.vcxproj.user" >nul 2>&1
 
 REM --- Remove CMake cache, files, and folders ---
-for %%f in ("%SRC_DIR%CMakeCache.txt" "%SRC_DIR%CMakeFiles" "%SRC_DIR%cmake_install.cmake" "%SRC_DIR%Makefile") do (
-    if exist %%f (
-        echo [CLEAN] Deleting CMake file: %%f
-        del /F /Q %%f
-    )
-    if exist %%f\ (
-        echo [CLEAN] Deleting CMake directory: %%f
-        rmdir /S /Q %%f
-    )
+echo [CLEAN] Deleting CMake files and directories
+del /F /Q "%SRC_DIR%CMakeCache.txt" "%SRC_DIR%cmake_install.cmake" "%SRC_DIR%Makefile" >nul 2>&1
+if exist "%SRC_DIR%CMakeFiles" (
+    echo [CLEAN] Deleting CMake directory: "%SRC_DIR%CMakeFiles"
+    rmdir /S /Q "%SRC_DIR%CMakeFiles"
 )
 
 REM --- Remove Ninja intermediate files from root ---
-for %%f in ("%SRC_DIR%build.ninja" "%SRC_DIR%.ninja_log" "%SRC_DIR%.ninja_deps") do (
-    if exist %%f (
-        echo [CLEAN] Deleting Ninja file: %%f
-        del /F /Q %%f
-    )
-)
+echo [CLEAN] Deleting Ninja intermediate files in repo root
+del /F /Q "%SRC_DIR%build.ninja" "%SRC_DIR%.ninja_log" "%SRC_DIR%.ninja_deps" >nul 2>&1
 
 REM --- Remove Ninja intermediate files from build folder ---
-for %%f in ("%BUILD_DIR%build.ninja" "%BUILD_DIR%.ninja_log" "%BUILD_DIR%.ninja_deps") do (
-    if exist %%f (
-        echo [CLEAN] Deleting Ninja file: %%f
-        del /F /Q %%f
-    )
-)
+echo [CLEAN] Deleting Ninja intermediate files in build folder
+del /F /Q "%BUILD_DIR%build.ninja" "%BUILD_DIR%.ninja_log" "%BUILD_DIR%.ninja_deps" >nul 2>&1
 
 REM --- Final status ---
 echo.
 echo [CLEAN] === Clean complete. All build, solution, and temporary files have been removed. ===
 echo.
-REM Only pause if no CONTINUE argument is provided
-if /I "%1"=="CONTINUE" (
-    REM Do not pause, exit immediately
+
+REM Preserve LOGFILE across endlocal
+set "_TMP_LOGFILE=%LOGFILE%"
+endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "_TMP_LOGFILE="
+
+REM If called by parent, exit immediately; otherwise show status and pause so user can read logs
+if defined PARENT_BATCH (
+    exit /B 0
 ) else (
+    echo.
+    echo [SUCCESS] CleanIntermediateFiles completed.
+    echo [INFO] Logs: %LOGFILE%
     pause
+    exit /B 0
 )
-endlocal
-REM Do not exit, leave command prompt open for user input

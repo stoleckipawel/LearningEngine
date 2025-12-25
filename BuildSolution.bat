@@ -13,21 +13,30 @@ REM ---------------------------------------------------
 
 setlocal enabledelayedexpansion
 
+REM Bootstrap logging via tools\internal\BootstrapLog.bat
+if not defined LOG_CAPTURED (
+    call "%~dp0tools\internal\BootstrapLog.bat" "%~f0" %*
+    exit /B %ERRORLEVEL%
+)
+
 REM Step 0: Check dependencies before proceeding
 echo [LOG] Checking build dependencies...
-call Tools\CheckDependencies.bat CONTINUE
+set "PARENT_BATCH=1"
+call "%~dp0CheckDependencies.bat" CONTINUE
 if errorlevel 1 (
+    set "PARENT_BATCH="
     echo [ERROR] Dependency check failed. Please review missing dependencies above.
-    pause
+    if defined LOGFILE echo Logs: %LOGFILE%
     exit /B 1
 )
 
 REM Step 1: Clean all intermediate files
 echo [LOG] Cleaning intermediate files...
 call "%~dp0CleanIntermediateFiles.bat" CONTINUE
+set "PARENT_BATCH="
 if errorlevel 1 (
     echo [ERROR] CleanIntermediateFiles.bat failed.
-    pause
+    if defined LOGFILE echo Logs: %LOGFILE%
     exit /B 1
 )
 
@@ -96,14 +105,19 @@ if not exist "!SOLUTION_FILE!" (
 
 echo [LOG] BuildSolution.bat completed.
 
-echo.
-REM Only pause if no CONTINUE argument is provided
-if /I "%1"=="CONTINUE" (
-    REM Do not pause, exit immediately
+REM Preserve LOGFILE across endlocal
+set "_TMP_LOGFILE=%LOGFILE%"
+endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "_TMP_LOGFILE="
+
+REM If invoked by parent, exit immediately; otherwise show status and pause
+if defined PARENT_BATCH (
+    exit /B 0
 ) else (
+    echo.
+    echo [SUCCESS] BuildSolution completed.
+    echo [INFO] Logs: %LOGFILE%
     pause
+    exit /B 0
 )
-endlocal
-REM Do not exit, leave command prompt open for user input
 
 
