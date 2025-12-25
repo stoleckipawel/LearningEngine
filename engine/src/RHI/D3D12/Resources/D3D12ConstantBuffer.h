@@ -117,8 +117,8 @@ template <typename T> class D3D12ConstantBuffer
   private:
 	ComPtr<ID3D12Resource2> Resource = nullptr;
 	D3D12DescriptorHandle m_cbvHandle;  // CBV descriptor handle
-	T m_ConstantBufferData;  // Cached buffer data
+	T m_ConstantBufferData;             // Cached buffer data
 	D3D12_CONSTANT_BUFFER_VIEW_DESC m_ConstantBufferViewDesc = {};
 	void* m_MappedData = nullptr;  // Pointer to mapped memory
-	UINT m_ConstantBufferSize;  // Aligned buffer size (256 bytes)
+	UINT m_ConstantBufferSize;     // Aligned buffer size (256 bytes)
 };

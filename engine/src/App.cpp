@@ -23,7 +23,7 @@ void App::RenderLoop()
 		// Engine input & message pump
 		GWindow.PollEvents();
 
-		//Renders the scene
+		// Renders the scene
 		Render();
 	}
 }

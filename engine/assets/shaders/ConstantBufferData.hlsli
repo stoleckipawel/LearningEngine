@@ -3,12 +3,12 @@
 //------------------------------------------------------------------------------
 cbuffer PerFrameConstantBufferData : register(b0)
 {
-	uint FrameIndex;  // Current frame number
-	float TotalTime;  // Seconds since engine start
-	float DeltaTime;  // Seconds since last frame
+	uint FrameIndex;          // Current frame number
+	float TotalTime;          // Seconds since engine start
+	float DeltaTime;          // Seconds since last frame
 	float _padPerFrameTime0;  // padding to complete 16-byte slot
 
-	float2 ViewportSize;  // Render target width, height
+	float2 ViewportSize;     // Render target width, height
 	float2 ViewportSizeInv;  // 1.0 / width, 1.0 / height
 
 	// rest of 256-byte slot is intentionally unused/pad
@@ -19,14 +19,14 @@ cbuffer PerFrameConstantBufferData : register(b0)
 //------------------------------------------------------------------------------
 cbuffer PerViewConstantBufferData : register(b1)
 {
-	row_major float4x4 ViewMTX;  // World -> View
+	row_major float4x4 ViewMTX;        // World -> View
 	row_major float4x4 ProjectionMTX;  // View -> Clip
-	row_major float4x4 ViewProjMTX;  // World -> Clip (precomputed to save GPU work)
+	row_major float4x4 ViewProjMTX;    // World -> Clip (precomputed to save GPU work)
 
 	float3 CameraPosition;  // World-space camera position
-	float NearZ;  // Near clip plane
+	float NearZ;            // Near clip plane
 
-	float FarZ;  // Far clip plane
+	float FarZ;              // Far clip plane
 	float3 CameraDirection;  // World-space camera forward
 };
 
@@ -35,7 +35,7 @@ cbuffer PerViewConstantBufferData : register(b1)
 //------------------------------------------------------------------------------
 cbuffer PerObjectVSConstantBufferData : register(b2)
 {
-	row_major float4x4 WorldMTX;  // Local -> World
+	row_major float4x4 WorldMTX;              // Local -> World
 	row_major float4x4 WorldInvTransposeMTX;  // For correct normal transformation under non-uniform scale
 
 	// remaining space in the 256-byte slot is reserved for future use
@@ -48,9 +48,9 @@ cbuffer PerObjectPSConstantBufferData : register(b3)
 {
 	float4 BaseColor;  // RGBA base/albedo color or tint
 
-	float Metallic;  // PBR metallic [0,1]
-	float Roughness;  // PBR roughness [0,1]
-	float F0;  // PBR reflectance at normal incidence
+	float Metallic;          // PBR metallic [0,1]
+	float Roughness;         // PBR roughness [0,1]
+	float F0;                // PBR reflectance at normal incidence
 	float _padPerObjectPS0;  // pad to 16 bytes
 
 	// remaining space reserved

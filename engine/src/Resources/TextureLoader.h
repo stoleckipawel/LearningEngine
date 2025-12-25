@@ -11,12 +11,12 @@ class TextureLoader
 	struct Data
 	{
 		std::vector<uint8_t> data;  // Raw image pixel data (bytes)
-		uint32_t width = 1;  // Image width in pixels
-		uint32_t height = 1;  // Image height in pixels
+		uint32_t width = 1;         // Image width in pixels
+		uint32_t height = 1;        // Image height in pixels
 		uint32_t bitsPerPixel = 1;  // Bits per pixel
 		uint32_t channelCount = 1;  // Number of color channels
-		uint32_t stride = 1;  // Row pitch in bytes
-		uint32_t slicePitch = 1;  // Total image size in bytes
+		uint32_t stride = 1;        // Row pitch in bytes
+		uint32_t slicePitch = 1;    // Total image size in bytes
 
 		GUID wicPixelFormat = {};
 		DXGI_FORMAT dxgiPixelFormat = DXGI_FORMAT_UNKNOWN;

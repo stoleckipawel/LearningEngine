@@ -450,7 +450,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context* c, int widt
 					if (y < best_y || waste < best_waste || (waste == best_waste && xpos < best_x))
 					{
 						best_x = xpos;
-						//STBRP_ASSERT(y <= best_y); [DEAR IMGUI]
+						// STBRP_ASSERT(y <= best_y); [DEAR IMGUI]
 						best_y = y;
 						best_waste = waste;
 						best = prev;

@@ -34,14 +34,14 @@ namespace RootBindings
 namespace RootParam
 {
 // Constant Buffer Views (root CBVs - direct GPU virtual address binding)
-constexpr uint32_t PerFrame = 0;  // b0 - Per-frame data (time, viewport)
-constexpr uint32_t PerView = 1;  // b1 - Per-view/camera data (matrices)
+constexpr uint32_t PerFrame = 0;     // b0 - Per-frame data (time, viewport)
+constexpr uint32_t PerView = 1;      // b1 - Per-view/camera data (matrices)
 constexpr uint32_t PerObjectVS = 2;  // b2 - Per-object vertex shader data (world matrix)
 constexpr uint32_t PerObjectPS = 3;  // b3 - Per-object pixel shader data (material)
 
 // Descriptor Tables (heap-based binding)
 constexpr uint32_t TextureSRV = 4;  // t0+ - Texture SRVs
-constexpr uint32_t Sampler = 5;  // s0+ - Samplers
+constexpr uint32_t Sampler = 5;     // s0+ - Samplers
 
 // Total root parameter count (for validation)
 constexpr uint32_t Count = 6;
@@ -57,8 +57,8 @@ constexpr uint32_t Count = 6;
 
 namespace CBRegister
 {
-constexpr uint32_t PerFrame = 0;  // register(b0)
-constexpr uint32_t PerView = 1;  // register(b1)
+constexpr uint32_t PerFrame = 0;     // register(b0)
+constexpr uint32_t PerView = 1;      // register(b1)
 constexpr uint32_t PerObjectVS = 2;  // register(b2)
 constexpr uint32_t PerObjectPS = 3;  // register(b3)
 }  // namespace CBRegister

@@ -137,15 +137,15 @@ void DxcShaderCompiler::CompileShader(ShaderStage stage, const std::string& entr
 	std::wstring wModel(model.begin(), model.end());
 	// Build LPCWSTR argument array as in Microsoft DXC samples
 	LPCWSTR pszArgs[] = {
-	    m_resolvedPath.c_str(),  // Shader source file path (for error reporting and PIX source view)
-	    L"-E",  // Entry point flag
-	    wEntry.c_str(),  // Entry point function name
-	    L"-T",  // Target profile flag
-	    wModel.c_str(),  // Target profile (e.g., "vs_6_0", "ps_6_0")
+	    m_resolvedPath.c_str(),       // Shader source file path (for error reporting and PIX source view)
+	    L"-E",                        // Entry point flag
+	    wEntry.c_str(),               // Entry point function name
+	    L"-T",                        // Target profile flag
+	    wModel.c_str(),               // Target profile (e.g., "vs_6_0", "ps_6_0")
 	    DXC_ARG_ALL_RESOURCES_BOUND,  // Assume all resources are bound
 	    DXC_ARG_WARNINGS_ARE_ERRORS,  // Treat warnings as errors
-	    L"-Qstrip_reflect",  // Strip reflection data into a separate blob
-	    L"-Qstrip_debug",  // Strip debug info from output
+	    L"-Qstrip_reflect",           // Strip reflection data into a separate blob
+	    L"-Qstrip_debug",             // Strip debug info from output
 
 #if defined(ENGINE_SHADERS_DEBUG)
 	    DXC_ARG_DEBUG,  // Enable debug info (full format)
@@ -163,10 +163,10 @@ void DxcShaderCompiler::CompileShader(ShaderStage stage, const std::string& entr
 
 	// Compile shader using DXC
 	HRESULT hr = m_dxcCompiler->Compile(
-	    &m_sourceBuffer,  // Source buffer
-	    pszArgs,  // Compile arguments
-	    static_cast<UINT>(std::size(pszArgs)),  // Number of arguments
-	    m_includeHandler.Get(),  // #include handler
+	    &m_sourceBuffer,                                        // Source buffer
+	    pszArgs,                                                // Compile arguments
+	    static_cast<UINT>(std::size(pszArgs)),                  // Number of arguments
+	    m_includeHandler.Get(),                                 // #include handler
 	    IID_PPV_ARGS(m_compileResult.ReleaseAndGetAddressOf())  // Compiler output
 	);
 

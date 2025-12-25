@@ -2,17 +2,18 @@
 // This needs to be used along with a Platform Backend (e.g. Win32)
 
 // Implemented features:
-//  [X] Renderer: User texture binding. Use 'D3D12_GPU_DESCRIPTOR_HANDLE' as texture identifier. Read the FAQ about ImTextureID/ImTextureRef!
-//  [X] Renderer: Large meshes support (64k+ vertices) even with 16-bit indices (ImGuiBackendFlags_RendererHasVtxOffset).
-//  [X] Renderer: Texture updates support for dynamic font atlas (ImGuiBackendFlags_RendererHasTextures).
-//  [X] Renderer: Expose selected render state for draw callbacks to use. Access in '(ImGui_ImplXXXX_RenderState*)GetPlatformIO().Renderer_RenderState'.
+//  [X] Renderer: User texture binding. Use 'D3D12_GPU_DESCRIPTOR_HANDLE' as texture identifier. Read the FAQ about
+//  ImTextureID/ImTextureRef! [X] Renderer: Large meshes support (64k+ vertices) even with 16-bit indices
+//  (ImGuiBackendFlags_RendererHasVtxOffset). [X] Renderer: Texture updates support for dynamic font atlas
+//  (ImGuiBackendFlags_RendererHasTextures). [X] Renderer: Expose selected render state for draw callbacks to use. Access in
+//  '(ImGui_ImplXXXX_RenderState*)GetPlatformIO().Renderer_RenderState'.
 
 // The aim of imgui_impl_dx12.h/.cpp is to be usable in your engine without any modification.
 // IF YOU FEEL YOU NEED TO MAKE ANY CHANGE TO THIS CODE, please share them and your feedback at https://github.com/ocornut/imgui/
 
 // You can use unmodified imgui_impl_* files in your project. See examples/ folder for examples of using this.
-// Prefer including the entire imgui/ repository into your project (either as a copy or as a submodule), and only build the backends you need.
-// Learn about Dear ImGui:
+// Prefer including the entire imgui/ repository into your project (either as a copy or as a submodule), and only build the backends you
+// need. Learn about Dear ImGui:
 // - FAQ                  https://dearimgui.com/faq
 // - Getting Started      https://dearimgui.com/getting-started
 // - Documentation        https://dearimgui.com/docs (same as your local docs/ folder).
@@ -22,7 +23,7 @@
 #include "imgui.h"  // IMGUI_IMPL_API
 #ifndef IMGUI_DISABLE
 #include <dxgiformat.h>  // DXGI_FORMAT
-#include <d3d12.h>  // D3D12_CPU_DESCRIPTOR_HANDLE
+#include <d3d12.h>       // D3D12_CPU_DESCRIPTOR_HANDLE
 
 // Initialization data, for ImGui_ImplDX12_Init()
 struct ImGui_ImplDX12_InitInfo
@@ -47,7 +48,7 @@ struct ImGui_ImplDX12_InitInfo
 	    D3D12_GPU_DESCRIPTOR_HANDLE gpu_desc_handle);
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 	D3D12_CPU_DESCRIPTOR_HANDLE
-	    LegacySingleSrvCpuDescriptor;  // To facilitate transition from single descriptor to allocator callback, you may use those.
+	LegacySingleSrvCpuDescriptor;  // To facilitate transition from single descriptor to allocator callback, you may use those.
 	D3D12_GPU_DESCRIPTOR_HANDLE LegacySingleSrvGpuDescriptor;
 #endif
 
@@ -62,7 +63,8 @@ IMGUI_IMPL_API void ImGui_ImplDX12_RenderDrawData(ImDrawData* draw_data, ID3D12G
 
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 // Legacy initialization API Obsoleted in 1.91.5
-// - font_srv_cpu_desc_handle and font_srv_gpu_desc_handle are handles to a single SRV descriptor to use for the internal font texture, they must be in 'srv_descriptor_heap'
+// - font_srv_cpu_desc_handle and font_srv_gpu_desc_handle are handles to a single SRV descriptor to use for the internal font texture, they
+// must be in 'srv_descriptor_heap'
 // - When we introduced the ImGui_ImplDX12_InitInfo struct we also added a 'ID3D12CommandQueue* CommandQueue' field.
 IMGUI_IMPL_API bool ImGui_ImplDX12_Init(
     ID3D12Device* device,
@@ -77,7 +79,8 @@ IMGUI_IMPL_API bool ImGui_ImplDX12_Init(
 IMGUI_IMPL_API bool ImGui_ImplDX12_CreateDeviceObjects();
 IMGUI_IMPL_API void ImGui_ImplDX12_InvalidateDeviceObjects();
 
-// (Advanced) Use e.g. if you need to precisely control the timing of texture updates (e.g. for staged rendering), by setting ImDrawData::Textures = NULL to handle this manually.
+// (Advanced) Use e.g. if you need to precisely control the timing of texture updates (e.g. for staged rendering), by setting
+// ImDrawData::Textures = NULL to handle this manually.
 IMGUI_IMPL_API void ImGui_ImplDX12_UpdateTexture(ImTextureData* tex);
 
 // [BETA] Selected render state data shared with callbacks.

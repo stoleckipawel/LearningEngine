@@ -24,12 +24,12 @@
 
 enum class LogLevel : std::uint8_t
 {
-	Trace = 0,  // Extremely verbose diagnostics: frame-by-frame, hot-path traces. High volume; usually disabled in release builds.
-	Debug = 1,  // Developer-focused information for diagnosing control flow and intermediate state.
-	Info = 2,  // High-level runtime events (startup, shutdown, subsystem init). Non-noisy normal operation logs.
+	Trace = 0,    // Extremely verbose diagnostics: frame-by-frame, hot-path traces. High volume; usually disabled in release builds.
+	Debug = 1,    // Developer-focused information for diagnosing control flow and intermediate state.
+	Info = 2,     // High-level runtime events (startup, shutdown, subsystem init). Non-noisy normal operation logs.
 	Warning = 3,  // Unexpected but recoverable conditions that may require attention (fallbacks, missing optional resources).
-	Error = 4,  // Failures that prevent an operation from completing correctly but where the process may continue in degraded mode.
-	Fatal = 5  // Unrecoverable errors: log synchronously, flush, break to debugger when attached, then terminate.
+	Error = 4,    // Failures that prevent an operation from completing correctly but where the process may continue in degraded mode.
+	Fatal = 5     // Unrecoverable errors: log synchronously, flush, break to debugger when attached, then terminate.
 };
 
 // =============================================================================

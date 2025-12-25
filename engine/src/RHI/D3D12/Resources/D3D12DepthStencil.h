@@ -51,7 +51,7 @@ class D3D12DepthStencil
 	void CreateDepthStencilView();
 
   private:
-	ComPtr<ID3D12Resource2> m_resource;  // Depth stencil resource
+	ComPtr<ID3D12Resource2> m_resource;                     // Depth stencil resource
 	D3D12_DEPTH_STENCIL_VIEW_DESC m_depthStencilDesc = {};  // DSV description
-	D3D12DescriptorHandle m_dsvHandle;  // Allocated DSV descriptor handle
+	D3D12DescriptorHandle m_dsvHandle;                      // Allocated DSV descriptor handle
 };

@@ -41,7 +41,7 @@ void UI::Initialize()
 	ImGuiIO& io = ImGui::GetIO();
 	(void) io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable keyboard controls.
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable gamepad controls.
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable gamepad controls.
 
 	ImGui::StyleColorsDark();
 

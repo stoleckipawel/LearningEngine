@@ -40,8 +40,8 @@ class D3D12DebugLayer
 
   private:
 	ComPtr<ID3D12Debug> m_d3d12Debug;  // D3D12 debug interface
-	ComPtr<IDXGIDebug1> m_dxgiDebug;  // DXGI debug interface
-	bool m_bInitialized = false;  // guard to make Initialize/Shutdown idempotent
+	ComPtr<IDXGIDebug1> m_dxgiDebug;   // DXGI debug interface
+	bool m_bInitialized = false;       // guard to make Initialize/Shutdown idempotent
 };
 
 // Global debug layer instance

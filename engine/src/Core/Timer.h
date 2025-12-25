@@ -26,12 +26,12 @@ enum class TimeUnit : uint8_t
 // -------------------------------------------------------------------------
 struct TimeInfo
 {
-	uint64_t frameIndex = 0;  // 1-based frame counter
-	Duration unscaledTime = Duration::zero();  // total wall time since init
+	uint64_t frameIndex = 0;                    // 1-based frame counter
+	Duration unscaledTime = Duration::zero();   // total wall time since init
 	Duration unscaledDelta = Duration::zero();  // raw delta this frame (seconds)
-	double timeScale = 1.0;  // game-time multiplier
-	Duration scaledDelta = Duration::zero();  // delta * timeScale (0 if paused)
-	bool bPaused = false;  // true when scaled time is paused
+	double timeScale = 1.0;                     // game-time multiplier
+	Duration scaledDelta = Duration::zero();    // delta * timeScale (0 if paused)
+	bool bPaused = false;                       // true when scaled time is paused
 };
 
 // -------------------------------------------------------------------------

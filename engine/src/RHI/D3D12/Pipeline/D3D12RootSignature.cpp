@@ -24,7 +24,7 @@ void D3D12RootSignature::Create()
 
 	// Descriptor ranges for tables
 	CD3DX12_DESCRIPTOR_RANGE ranges[2] = {};
-	ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, RootBindings::SRVRegister::BaseTexture);  // t0: texture
+	ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, RootBindings::SRVRegister::BaseTexture);         // t0: texture
 	ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, RootBindings::SamplerRegister::LinearWrap);  // s0: sampler
 
 	// -------------------------------------------------------------------------

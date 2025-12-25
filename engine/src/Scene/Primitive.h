@@ -11,8 +11,8 @@ using Microsoft::WRL::ComPtr;
 struct Vertex
 {
 	DirectX::XMFLOAT3 position;  // Vertex position (x, y, z)
-	DirectX::XMFLOAT2 uv;  // Texture coordinates (u, v)
-	DirectX::XMFLOAT4 color;  // Vertex color (r, g, b, a)
+	DirectX::XMFLOAT2 uv;        // Texture coordinates (u, v)
+	DirectX::XMFLOAT4 color;     // Vertex color (r, g, b, a)
 };
 
 // Base class for renderable primitives. Handles upload/binding and per-frame resources.
@@ -95,9 +95,9 @@ class Primitive
 
   protected:
 	// GPU resources and views
-	ComPtr<ID3D12Resource2> VertexBuffer = nullptr;  //< Vertex buffer resource
-	ComPtr<ID3D12Resource2> IndexBuffer = nullptr;  //< Index buffer resource
+	ComPtr<ID3D12Resource2> VertexBuffer = nullptr;    //< Vertex buffer resource
+	ComPtr<ID3D12Resource2> IndexBuffer = nullptr;     //< Index buffer resource
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};  //< Vertex buffer view
-	D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};  //< Index buffer view
-	UINT m_indexCount = 0;  //< Number of indices in the index buffer
+	D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};    //< Index buffer view
+	UINT m_indexCount = 0;                             //< Number of indices in the index buffer
 };

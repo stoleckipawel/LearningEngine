@@ -10,10 +10,10 @@
 // AssetType: Used to categorize assets for directory resolution.
 enum class AssetType
 {
-	Shader,  // Shader source or binary
+	Shader,   // Shader source or binary
 	Texture,  // Texture image
-	Mesh,  // Mesh geometry
-	Other  // Any other asset type
+	Mesh,     // Mesh geometry
+	Other     // Any other asset type
 };
 
 // Returns the subdirectory name for a given asset type (e.g. "shaders", "textures").

@@ -388,12 +388,12 @@ typedef struct STB_TexteditState
 // result of layout query
 typedef struct
 {
-	float x0, x1;  // starting x location, end x location (allows for align=right, etc)
+	float x0, x1;            // starting x location, end x location (allows for align=right, etc)
 	float baseline_y_delta;  // position of baseline relative to previous row's baseline
-	float ymin, ymax;  // height of row above and below baseline
+	float ymin, ymax;        // height of row above and below baseline
 	int num_chars;
 } StbTexteditRow;
-#endif  //INCLUDE_IMSTB_TEXTEDIT_H
+#endif  // INCLUDE_IMSTB_TEXTEDIT_H
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -556,10 +556,10 @@ static void stb_text_makeundo_replace(IMSTB_TEXTEDIT_STRING* str, STB_TexteditSt
 
 typedef struct
 {
-	float x, y;  // position of n'th character
-	float height;  // height of line
+	float x, y;              // position of n'th character
+	float height;            // height of line
 	int first_char, length;  // first char of row, and length
-	int prev_first;  // first char of previous row
+	int prev_first;          // first char of previous row
 } StbFindState;
 
 // find the x/y location of a character, and remember info about the previous row in
@@ -596,14 +596,14 @@ static void stb_textedit_find_charpos(StbFindState* find, IMSTB_TEXTEDIT_STRING*
 			break;
 		if (i + r.num_chars == z && z > 0 &&
 		    STB_TEXTEDIT_GETCHAR(str, z - 1) != STB_TEXTEDIT_NEWLINE)  // [DEAR IMGUI] special handling for last line
-			break;  // [DEAR IMGUI]
+			break;                                                     // [DEAR IMGUI]
 		prev_start = i;
 		i += r.num_chars;
 		find->y += r.baseline_y_delta;
 		if (i == z)  // [DEAR IMGUI]
 		{
 			r.num_chars = 0;  // [DEAR IMGUI]
-			break;  // [DEAR IMGUI]
+			break;            // [DEAR IMGUI]
 		}
 	}
 
@@ -808,7 +808,8 @@ static int stb_textedit_paste_internal(IMSTB_TEXTEDIT_STRING* str, STB_TexteditS
 		state->has_preferred_x = 0;
 		return 1;
 	}
-	// note: paste failure will leave deleted selection, may be restored with an undo (see https://github.com/nothings/stb/issues/734 for details)
+	// note: paste failure will leave deleted selection, may be restored with an undo (see https://github.com/nothings/stb/issues/734 for
+	// details)
 	return 0;
 }
 
@@ -1003,7 +1004,7 @@ retry:
 
 				// [DEAR IMGUI]
 				// going down while being on the last line shouldn't bring us to that line end
-				//if (STB_TEXTEDIT_GETCHAR(str, find.first_char + find.length - 1) != STB_TEXTEDIT_NEWLINE)
+				// if (STB_TEXTEDIT_GETCHAR(str, find.first_char + find.length - 1) != STB_TEXTEDIT_NEWLINE)
 				//   break;
 
 				// now find character position down a row
@@ -1556,7 +1557,7 @@ static int stb_textedit_paste(IMSTB_TEXTEDIT_STRING* str, STB_TexteditState* sta
 #pragma GCC diagnostic pop
 #endif
 
-#endif  //IMSTB_TEXTEDIT_IMPLEMENTATION
+#endif  // IMSTB_TEXTEDIT_IMPLEMENTATION
 
 /*
 ------------------------------------------------------------------------------

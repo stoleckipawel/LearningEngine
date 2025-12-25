@@ -40,7 +40,7 @@ void D3D12DescriptorHeapManager::Initialize()
 void D3D12DescriptorHeapManager::SetShaderVisibleHeaps() const
 {
 	ID3D12DescriptorHeap* heaps[] = {
-	    m_HeapSRV->GetRaw(),  // CBV/SRV/UAV heap
+	    m_HeapSRV->GetRaw(),     // CBV/SRV/UAV heap
 	    m_HeapSampler->GetRaw()  // Sampler heap (optional for UI; harmless)
 	};
 

@@ -111,8 +111,8 @@ class Buffer
 	// (file:line + level tag + message). Keeping this on the stack makes
 	// logging cheap and avoids heap churn during bursts.
 	static constexpr std::size_t kCapacity = 2048;  // tuned for typical messages
-	char m_data[kCapacity]{};  // zero-initialized for clarity when printed
-	std::size_t m_pos = 0;  // current write position
+	char m_data[kCapacity]{};                       // zero-initialized for clarity when printed
+	std::size_t m_pos = 0;                          // current write position
 };
 }  // namespace
 

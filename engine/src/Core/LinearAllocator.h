@@ -41,10 +41,10 @@ using Microsoft::WRL::ComPtr;
 
 struct LinearAllocation
 {
-	void* CpuPtr = nullptr;  // Write destination
+	void* CpuPtr = nullptr;                    // Write destination
 	D3D12_GPU_VIRTUAL_ADDRESS GpuAddress = 0;  // Bind address for CBV
-	uint64_t Size = 0;  // Allocated size (aligned)
-	uint64_t Offset = 0;  // Offset from buffer start
+	uint64_t Size = 0;                         // Allocated size (aligned)
+	uint64_t Offset = 0;                       // Offset from buffer start
 };
 
 class LinearAllocator

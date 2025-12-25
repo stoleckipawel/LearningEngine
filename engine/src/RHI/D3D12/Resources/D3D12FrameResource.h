@@ -28,8 +28,8 @@
 struct D3D12FrameResource
 {
 	LinearAllocator CbAllocator;  // Per-frame CB ring buffer
-	uint64_t FenceValue = 0;  // Fence value when this frame was submitted
-	uint32_t FrameIndex = 0;  // Debug: which frame index this represents
+	uint64_t FenceValue = 0;      // Fence value when this frame was submitted
+	uint32_t FrameIndex = 0;      // Debug: which frame index this represents
 
 	void Initialize(uint64_t allocatorCapacity, uint32_t frameIdx)
 	{

@@ -69,7 +69,7 @@ void Window::Initialize()
 	m_windowHWND = CreateWindowExW(
 	    WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW,
 	    L"Default Window Name",  // class name string
-	    wtitle.c_str(),  // window name string
+	    wtitle.c_str(),          // window name string
 	    WS_OVERLAPPEDWINDOW | WS_VISIBLE,
 	    CW_USEDEFAULT,
 	    CW_USEDEFAULT,

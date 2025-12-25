@@ -63,7 +63,7 @@ class DxcShaderCompiler
 	// Inspect and store compilation outputs (object, pdb, errors).
 	void HandleCompileResult();
 
-	//Save Shader PDB's to ShaderSymbols folder
+	// Save Shader PDB's to ShaderSymbols folder
 	void SaveShaderSymbols(IDxcBlob* pdbBlob, IDxcBlobUtf16* pdbNameBlob);
 
 	// Compiled bytecode ready for creating pipeline state objects.
