@@ -87,7 +87,7 @@ if defined PARENT_BATCH (
 ) else (
     echo.
     echo [SUCCESS] Samples build completed.
-    echo [INFO] Logs: %LOGFILE%
+    echo [LOG] Logs: %LOGFILE%
     pause
     exit /B 0
 )

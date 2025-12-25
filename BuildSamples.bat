@@ -43,17 +43,20 @@ set "PARENT_BATCH=1"
     set RC=%ERRORLEVEL%
     set "PARENT_BATCH="
 
+echo [LOG] BuildSamples.bat completed.
+
 REM Preserve LOGFILE across endlocal
 set "_TMP_LOGFILE=%LOGFILE%"
 endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "_TMP_LOGFILE="
 
-REM Final top-level status: show result and where log is located
-if %RC%==0 (
-    echo [SUCCESS] BuildSamples completed.
-    echo [INFO] Logs: %LOGFILE%
+REM If called by parent, exit immediately; otherwise show status and pause so user can read logs
+if defined PARENT_BATCH (
+    exit /B 0
 ) else (
-    echo [ERROR] BuildSamples failed (exit %RC%).
-    echo [INFO] Logs: %LOGFILE%
+    echo.
+    echo [SUCCESS] BuildSamples completed.
+    echo [LOG] Logs: %LOGFILE%
+    pause
+    exit /B 0
 )
-pause
-exit /B %RC%
+

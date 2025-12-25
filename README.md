@@ -1,4 +1,61 @@
-## Batch Script Reference
+# LearningEngine
+
+## Overview
+
+LearningEngine is a modular DirectX 12 rendering engine built for learning and experimentation. 
+
+**Key Features:**
+- D3D12 backend.
+- DXC-based shader compilation via `DxcShaderCompiler`
+- ImGui integration
+
+## Prerequisites
+
+- **CMake** (≥ 3.20)
+- **Visual Studio 2022** (or compatible)
+- **DirectX 12 SDK / Windows 10 SDK**
+- **Windows platform**
+- **Clang** (optional; if not available, build will automatically fall back to MSVC)
+
+### Required vs Optional
+- **Required:**
+	- `CMake` — used to generate build systems and projects.
+	- `Visual Studio 2022` / `msbuild` — required for the default Visual Studio solution workflow on Windows.
+	- `Windows 10 SDK` / DirectX 12 libraries — runtime and headers for D3D12 development.
+
+- **Optional (recommended for sanitizer or Ninja workflows):**
+	- `clang` / `clang++` — required when using sanitizer builds or building with the LLVM toolchain; otherwise the build falls back to MSVC.
+	- `Ninja` — recommended generator for fast incremental builds and the sanitizer scripts (scripts configure Ninja + clang automatically).
+
+Why optional tools matter:
+- `clang/clang++`: many sanitizers (ASan, UBSan, TSan, MSan) are best supported with LLVM toolchains. Use `clang` when running the `Tools/*Sanitizer*.bat` scripts or when you pass `-DENABLE_SANITIZERS=ON` to CMake.
+- `Ninja`: the sanitizer wrapper scripts and CI-friendly flows use Ninja for reliable instrumentation and faster builds; Visual Studio generator + MSVC may not support all sanitizers.
+
+## Quick Start
+
+1. **Check Dependencies**
+	```
+	CheckDependencies.bat
+	```
+	Verifies CMake, Clang, and MSBuild are available. Logs missing tools.
+
+2. **Generate Solution**
+	```
+	BuildSolution.bat
+	```
+	Cleans, checks dependencies, and generates Visual Studio solution files using CMake.
+
+3. **Build Sample Projects**
+	```
+	BuildSamplesDebug.bat
+	BuildSamplesRelease.bat
+	```
+	Builds all sample projects for Debug or Release. Output executables are in `bin/Debug` or `bin/Release`.
+
+4. **Manual Build (Visual Studio)**
+	Open `build/Playground.sln` in Visual Studio. Build using Debug/Release. Default startup project: `ExampleD3D12`.
+
+# Batch Script Reference
 
 The table below lists key batch scripts, their purpose, and copy-pastable usage examples (run from the repository root).
 
@@ -33,24 +90,6 @@ Notes:
 - `RelWithDebInfo` builds with optimizations enabled but retains full debug symbols — useful for sanitizers, profiling, and closer-to-release testing.
 - Use `CONTINUE` to run cleaning scripts non-interactively (no pause on completion).
 The root `BuildSamples.bat` delegates to the internal implementation at `tools\internal\BuildSamplesImpl.bat`. Output executables are placed under `bin\<Config>` (e.g. `bin\Debug`).
-
-
-4. **Manual Build (Visual Studio)**
-	Open `build/Playground.sln` in Visual Studio. Build using Debug/Release. Default startup project: `ExampleD3D12`.
-
-## Batch Script Reference
-
-| Script                     | Purpose                                                        |
-|----------------------------|----------------------------------------------------------------|
-| CheckDependencies.bat      | Check for CMake, Clang, MSBuild                                |
-| CleanIntermediateFiles.bat | Clean build, bin, obj, .vs, and temp files (root)             |
-| BuildSolution.bat          | Clean, check dependencies, generate solution                   |
-| BuildSamples.bat           | Root interactive builder; delegates to `tools\internal\BuildSamplesImpl.bat` |
-| tools\BuildSamplesDebug.bat | Convenience wrapper calling `tools\internal\BuildSamplesImpl.bat Debug` |
-| tools\BuildSamplesRelease.bat | Convenience wrapper calling `tools\internal\BuildSamplesImpl.bat Release` |
-| tools/BuildSamplesRelWithDebugInfo.bat | Convienience wrapper calling 
-| tools\internal\BuildSamplesImpl.bat | Internal implementation that performs project discovery and MSBuild calls |
-| tools\StartLogged.bat     | Optional logging wrapper that captures stdout/stderr to `Saved\LogBuild.txt` with rotation |
 
 ## Directory Structure
 

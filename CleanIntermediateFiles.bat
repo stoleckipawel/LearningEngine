@@ -79,6 +79,8 @@ echo.
 echo [CLEAN] === Clean complete. All build, solution, and temporary files have been removed. ===
 echo.
 
+echo [LOG] CleanIntermediateFiles.bat completed.
+
 REM Preserve LOGFILE across endlocal
 set "_TMP_LOGFILE=%LOGFILE%"
 endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "_TMP_LOGFILE="
@@ -88,8 +90,7 @@ if defined PARENT_BATCH (
     exit /B 0
 ) else (
     echo.
-    echo [SUCCESS] CleanIntermediateFiles completed.
-    echo [INFO] Logs: %LOGFILE%
+    echo [LOG] Logs: %LOGFILE%
     pause
     exit /B 0
 )

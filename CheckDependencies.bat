@@ -7,7 +7,7 @@ REM ---------------------------------------------------
 
 setlocal
 
-REM Bootstrap logging via centralized helper (if not already capturing)
+REM Bootstrap logging via tools\internal\BootstrapLog.bat
 if not defined LOG_CAPTURED (
     call "%~dp0tools\internal\BootstrapLog.bat" "%~f0" %*
     exit /B %ERRORLEVEL%
@@ -45,21 +45,18 @@ if errorlevel 1 (
     echo [SUCCESS] MSBuild found.
 )
 
+echo [LOG] CheckDependencies completed.
+
 REM Preserve LOGFILE across endlocal
 set "_TMP_LOGFILE=%LOGFILE%"
 endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "_TMP_LOGFILE="
 
-REM If invoked as a child of another batch, return immediately with the RC.
+REM If called by parent, exit immediately; otherwise show status and pause so user can read logs
 if defined PARENT_BATCH (
-    exit /B %RC%
-)
-
-echo.
-if %RC%==0 (
-    echo [SUCCESS] CheckDependencies Succeeded.
+    exit /B 0
 ) else (
-    echo [ERROR] CheckDependencies Failed (exit %RC%).
+    echo.
+    echo [LOG] Logs: %LOGFILE%
+    pause
+    exit /B 0
 )
-echo [INFO] Logs: %LOGFILE%
-pause
-exit /B %RC%

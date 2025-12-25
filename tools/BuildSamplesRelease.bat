@@ -13,5 +13,19 @@ if not defined LOG_CAPTURED (
 set "PARENT_BATCH=1"
 call "%~dp0internal\BuildSamplesImpl.bat" Release %1
 set RC=%ERRORLEVEL%
-endlocal
-exit /B %RC%
+
+echo [LOG] BuildSamplesRelease.bat completed.
+
+REM Preserve LOGFILE across endlocal
+set "_TMP_LOGFILE=%LOGFILE%"
+endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "_TMP_LOGFILE="
+
+REM If called by parent, exit immediately; otherwise show status and pause so user can read logs
+if defined PARENT_BATCH (
+    exit /B 0
+) else (
+    echo.
+    echo [LOG] Logs: %LOGFILE%
+    pause
+    exit /B 0
+)

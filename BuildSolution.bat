@@ -109,13 +109,12 @@ REM Preserve LOGFILE across endlocal
 set "_TMP_LOGFILE=%LOGFILE%"
 endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "_TMP_LOGFILE="
 
-REM If invoked by parent, exit immediately; otherwise show status and pause
+REM If called by parent, exit immediately; otherwise show status and pause so user can read logs
 if defined PARENT_BATCH (
     exit /B 0
 ) else (
     echo.
-    echo [SUCCESS] BuildSolution completed.
-    echo [INFO] Logs: %LOGFILE%
+    echo [LOG] Logs: %LOGFILE%
     pause
     exit /B 0
 )
