@@ -15,13 +15,15 @@ echo Select configuration to build:
 echo  1^) Debug
 echo  2^) Release
 echo  3^) RelWithDebInfo
-set /P "SEL=Enter choice [1-3]: "
+echo  4^) All
+set /P "SEL=Enter choice [1-4]: "
 if "!SEL!"=="" set "SEL=1"
 if "!SEL!"=="1" set "CHOICE=Debug"
 if "!SEL!"=="2" set "CHOICE=Release"
 if "!SEL!"=="3" set "CHOICE=RelWithDebInfo"
+if "!SEL!"=="4" set "CHOICE=All"
 if "!CHOICE!"=="" (
-    echo Invalid selection '!SEL!'. Please choose 1, 2 or 3.
+    echo Invalid selection '!SEL!'. Please choose 1, 2, 3 or 4.
     goto PROMPT_LOOP
 )
 
@@ -39,9 +41,22 @@ if not exist "%~dp0tools\internal\BuildSamplesImpl.bat" (
 
 REM Mark that we're the parent so children don't pause at the end
 set "PARENT_BATCH=1"
+if /I "%CHOICE%"=="All" (
+    set "BUILD_RC=0"
+    for %%C in (Debug Release RelWithDebInfo) do (
+        echo [LOG] Building configuration: %%C
+        call "%~dp0tools\internal\BuildSamplesImpl.bat" %%C %2
+        set "LAST_BUILD_RC=!ERRORLEVEL!"
+        if not "!LAST_BUILD_RC!"=="0" (
+            echo [ERROR] Build for %%C failed with exit code !LAST_BUILD_RC!.
+            set "BUILD_RC=!LAST_BUILD_RC!"
+        )
+    )
+) else (
     call "%~dp0tools\internal\BuildSamplesImpl.bat" !CHOICE! %2
-    set RC=%ERRORLEVEL%
-    set "PARENT_BATCH="
+    set "BUILD_RC=%ERRORLEVEL%"
+)
+set "PARENT_BATCH="
 
 echo [LOG] BuildSamples.bat completed.
 
