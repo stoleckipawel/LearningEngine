@@ -19,7 +19,7 @@ UseTab: ForIndentation
 
 ContinuationIndentWidth: 4
 
-ColumnLimit: 160
+ColumnLimit: 220
 
 # ---------------------------------------------------------------------------
 # Braces & control flow
@@ -81,7 +81,7 @@ AllowAllArgumentsOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
 
 # Keep initializer lists readable (important for math-heavy code)
-ConstructorInitializerAllOnOneLineOrOnePerLine: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: OnePerLine
 BreakConstructorInitializers: AfterColon
 ConstructorInitializerIndentWidth: 4
 
@@ -119,7 +119,7 @@ AllowShortLambdasOnASingleLine: None
 # ---------------------------------------------------------------------------
 
 ReflowComments: false
-AlignTrailingComments: true
+AlignTrailingComments: false
 SpacesBeforeTrailingComments: 2
 
 # ---------------------------------------------------------------------------
