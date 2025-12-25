@@ -30,15 +30,9 @@ class D3D12DepthStencil
 
 	// Returns the GPU descriptor handle for shader access
 	// Returns the GPU descriptor handle for shader binding (non-owning)
-	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept
-	{
-		return m_dsvHandle.GetGPU();
-	}
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept { return m_dsvHandle.GetGPU(); }
 	// Returns the CPU descriptor handle for descriptor heap management (non-owning)
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const noexcept
-	{
-		return m_dsvHandle.GetCPU();
-	}
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const noexcept { return m_dsvHandle.GetCPU(); }
 
 	// Clears the depth stencil view
 	void Clear() noexcept;
@@ -48,10 +42,7 @@ class D3D12DepthStencil
 	void SetReadState() noexcept;
 
 	// Internal helper: returns underlying resource. Returns const reference to avoid copies.
-	const ComPtr<ID3D12Resource2>& GetResource() const noexcept
-	{
-		return m_resource;
-	}
+	const ComPtr<ID3D12Resource2>& GetResource() const noexcept { return m_resource; }
 
   private:
 	// Creates the depth stencil resource on the GPU
@@ -60,7 +51,7 @@ class D3D12DepthStencil
 	void CreateDepthStencilView();
 
   private:
-	ComPtr<ID3D12Resource2> m_resource;                    // Depth stencil resource
-	D3D12_DEPTH_STENCIL_VIEW_DESC m_depthStencilDesc = {}; // DSV description
-	D3D12DescriptorHandle m_dsvHandle;                     // Allocated DSV descriptor handle
+	ComPtr<ID3D12Resource2> m_resource;  // Depth stencil resource
+	D3D12_DEPTH_STENCIL_VIEW_DESC m_depthStencilDesc = {};  // DSV description
+	D3D12DescriptorHandle m_dsvHandle;  // Allocated DSV descriptor handle
 };

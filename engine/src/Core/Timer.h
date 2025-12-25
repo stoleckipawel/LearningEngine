@@ -10,7 +10,7 @@ namespace Engine
 // -------------------------------------------------------------------------
 using Clock = std::chrono::steady_clock;
 using TimePoint = Clock::time_point;
-using Duration = std::chrono::duration<double>; // seconds, double-precision
+using Duration = std::chrono::duration<double>;  // seconds, double-precision
 
 // Supported time display units. Default is Milliseconds (convenient for UI).
 enum class TimeUnit : uint8_t
@@ -26,12 +26,12 @@ enum class TimeUnit : uint8_t
 // -------------------------------------------------------------------------
 struct TimeInfo
 {
-	uint64_t frameIndex = 0;                   // 1-based frame counter
+	uint64_t frameIndex = 0;  // 1-based frame counter
 	Duration unscaledTime = Duration::zero();  // total wall time since init
-	Duration unscaledDelta = Duration::zero(); // raw delta this frame (seconds)
-	double timeScale = 1.0;                    // game-time multiplier
-	Duration scaledDelta = Duration::zero();   // delta * timeScale (0 if paused)
-	bool bPaused = false;                       // true when scaled time is paused
+	Duration unscaledDelta = Duration::zero();  // raw delta this frame (seconds)
+	double timeScale = 1.0;  // game-time multiplier
+	Duration scaledDelta = Duration::zero();  // delta * timeScale (0 if paused)
+	bool bPaused = false;  // true when scaled time is paused
 };
 
 // -------------------------------------------------------------------------
@@ -73,30 +73,15 @@ class Timer final
 	// -------------------------------------------------------------------------
 
 	// Immutable snapshot of current frame timing.
-	[[nodiscard]] TimeInfo GetTimeInfo() const noexcept
-	{
-		return m_timeInfo;
-	}
+	[[nodiscard]] TimeInfo GetTimeInfo() const noexcept { return m_timeInfo; }
 
 	// Raw duration accessors for advanced/internal use.
-	[[nodiscard]] Duration GetDeltaRaw() const noexcept
-	{
-		return m_timeInfo.scaledDelta;
-	}
-	[[nodiscard]] Duration GetUnscaledDeltaRaw() const noexcept
-	{
-		return m_unscaledDelta;
-	}
-	[[nodiscard]] Duration GetTotalTimeRaw() const noexcept
-	{
-		return m_unscaledTotal;
-	}
+	[[nodiscard]] Duration GetDeltaRaw() const noexcept { return m_timeInfo.scaledDelta; }
+	[[nodiscard]] Duration GetUnscaledDeltaRaw() const noexcept { return m_unscaledDelta; }
+	[[nodiscard]] Duration GetTotalTimeRaw() const noexcept { return m_unscaledTotal; }
 
 	// Frame counter (1-based, incremented each Tick).
-	[[nodiscard]] uint64_t GetFrameCount() const noexcept
-	{
-		return m_frameCount;
-	}
+	[[nodiscard]] uint64_t GetFrameCount() const noexcept { return m_frameCount; }
 
 	// -------------------------------------------------------------------------
 	// Unit-aware accessors (default: Milliseconds)
@@ -110,27 +95,12 @@ class Timer final
 	// Time-scale controls
 	// -------------------------------------------------------------------------
 
-	void SetTimeScale(double scale) noexcept
-	{
-		m_timeScale = scale;
-	}
-	[[nodiscard]] double GetTimeScale() const noexcept
-	{
-		return m_timeScale;
-	}
+	void SetTimeScale(double scale) noexcept { m_timeScale = scale; }
+	[[nodiscard]] double GetTimeScale() const noexcept { return m_timeScale; }
 
-	void Pause() noexcept
-	{
-		m_bPaused.store(true, std::memory_order_relaxed);
-	}
-	void Resume() noexcept
-	{
-		m_bPaused.store(false, std::memory_order_relaxed);
-	}
-	[[nodiscard]] bool IsPaused() const noexcept
-	{
-		return m_bPaused.load(std::memory_order_relaxed);
-	}
+	void Pause() noexcept { m_bPaused.store(true, std::memory_order_relaxed); }
+	void Resume() noexcept { m_bPaused.store(false, std::memory_order_relaxed); }
+	[[nodiscard]] bool IsPaused() const noexcept { return m_bPaused.load(std::memory_order_relaxed); }
 
 	// -------------------------------------------------------------------------
 	// Stopwatch: lightweight RAII timer for profiling code sections.
@@ -141,23 +111,11 @@ class Timer final
 		TimePoint start;
 
 		Stopwatch() noexcept : start(Clock::now()) {}
-		void Reset() noexcept
-		{
-			start = Clock::now();
-		}
+		void Reset() noexcept { start = Clock::now(); }
 
-		[[nodiscard]] Duration Elapsed() const noexcept
-		{
-			return std::chrono::duration_cast<Duration>(Clock::now() - start);
-		}
-		[[nodiscard]] double ElapsedSeconds() const noexcept
-		{
-			return Elapsed().count();
-		}
-		[[nodiscard]] double ElapsedMillis() const noexcept
-		{
-			return Elapsed().count() * 1e3;
-		}
+		[[nodiscard]] Duration Elapsed() const noexcept { return std::chrono::duration_cast<Duration>(Clock::now() - start); }
+		[[nodiscard]] double ElapsedSeconds() const noexcept { return Elapsed().count(); }
+		[[nodiscard]] double ElapsedMillis() const noexcept { return Elapsed().count() * 1e3; }
 	};
 
   private:
@@ -167,7 +125,7 @@ class Timer final
   private:
 	TimePoint m_start{};
 	TimePoint m_last{};
-	Duration m_unscaledDelta{1.0 / 60.0}; // sensible default until first Tick
+	Duration m_unscaledDelta{1.0 / 60.0};  // sensible default until first Tick
 	Duration m_unscaledTotal{Duration::zero()};
 	Duration m_scaledTotal{Duration::zero()};
 	double m_timeScale{1.0};
@@ -177,7 +135,7 @@ class Timer final
 	bool m_bInitialized{false};
 };
 
-} // namespace Engine
+}  // namespace Engine
 
 // Global singleton instance. Prefer accessing via `GTimer`.
 extern Engine::Timer GTimer;

@@ -41,20 +41,17 @@ using Microsoft::WRL::ComPtr;
 
 struct LinearAllocation
 {
-	void* CpuPtr = nullptr;                   // Write destination
-	D3D12_GPU_VIRTUAL_ADDRESS GpuAddress = 0; // Bind address for CBV
-	uint64_t Size = 0;                        // Allocated size (aligned)
-	uint64_t Offset = 0;                      // Offset from buffer start
+	void* CpuPtr = nullptr;  // Write destination
+	D3D12_GPU_VIRTUAL_ADDRESS GpuAddress = 0;  // Bind address for CBV
+	uint64_t Size = 0;  // Allocated size (aligned)
+	uint64_t Offset = 0;  // Offset from buffer start
 };
 
 class LinearAllocator
 {
   public:
 	LinearAllocator() = default;
-	~LinearAllocator()
-	{
-		Shutdown();
-	}
+	~LinearAllocator() { Shutdown(); }
 
 	// Non-copyable, non-movable (owns GPU resource)
 	LinearAllocator(const LinearAllocator&) = delete;
@@ -103,22 +100,13 @@ class LinearAllocator
 	//--------------------------------------------------------------------------
 
 	// Returns current allocation offset (bytes used this frame).
-	[[nodiscard]] uint64_t GetCurrentOffset() const noexcept
-	{
-		return m_Offset.load(std::memory_order_relaxed);
-	}
+	[[nodiscard]] uint64_t GetCurrentOffset() const noexcept { return m_Offset.load(std::memory_order_relaxed); }
 
 	// Returns total capacity in bytes.
-	[[nodiscard]] uint64_t GetCapacity() const noexcept
-	{
-		return m_Capacity;
-	}
+	[[nodiscard]] uint64_t GetCapacity() const noexcept { return m_Capacity; }
 
 	// Returns peak usage across all frames (for capacity tuning).
-	[[nodiscard]] uint64_t GetHighWaterMark() const noexcept
-	{
-		return m_HighWaterMark.load(std::memory_order_relaxed);
-	}
+	[[nodiscard]] uint64_t GetHighWaterMark() const noexcept { return m_HighWaterMark.load(std::memory_order_relaxed); }
 
 	// Returns percentage of capacity used this frame.
 	[[nodiscard]] float GetUsagePercent() const noexcept
@@ -129,10 +117,7 @@ class LinearAllocator
 	}
 
 	// Returns true if allocator is initialized and ready.
-	[[nodiscard]] bool IsInitialized() const noexcept
-	{
-		return m_bInitialized;
-	}
+	[[nodiscard]] bool IsInitialized() const noexcept { return m_bInitialized; }
 
   private:
 	// Aligns a value up to the specified alignment.

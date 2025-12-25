@@ -51,19 +51,23 @@ class D3D12Rhi
 	void CreateFenceAndEvent();
 
   public:
-	const ComPtr<IDXGIFactory7>& GetDxgiFactory() const noexcept{ return m_DxgiFactory;}
-	const ComPtr<IDXGIAdapter1>& GetAdapter() const noexcept{ return m_Adapter;}
-	const ComPtr<ID3D12Device10>& GetDevice() const noexcept{ return m_Device;}
-	const ComPtr<ID3D12CommandQueue>& GetCommandQueue() const noexcept{ return m_CmdQueue;}
-	const ComPtr<ID3D12CommandAllocator>& GetCommandAllocatorScene(UINT FrameInFlightIndex) const noexcept{return m_CmdAllocatorScene[FrameInFlightIndex];}
-	const ComPtr<ID3D12GraphicsCommandList7>& GetCommandList() const noexcept{return m_CmdListScene;}
-	const ComPtr<ID3D12Fence1>& GetFence() const noexcept{return m_Fence;}
+	const ComPtr<IDXGIFactory7>& GetDxgiFactory() const noexcept { return m_DxgiFactory; }
+	const ComPtr<IDXGIAdapter1>& GetAdapter() const noexcept { return m_Adapter; }
+	const ComPtr<ID3D12Device10>& GetDevice() const noexcept { return m_Device; }
+	const ComPtr<ID3D12CommandQueue>& GetCommandQueue() const noexcept { return m_CmdQueue; }
+	const ComPtr<ID3D12CommandAllocator>& GetCommandAllocatorScene(UINT FrameInFlightIndex) const noexcept
+	{
+		return m_CmdAllocatorScene[FrameInFlightIndex];
+	}
+	const ComPtr<ID3D12GraphicsCommandList7>& GetCommandList() const noexcept { return m_CmdListScene; }
+	const ComPtr<ID3D12Fence1>& GetFence() const noexcept { return m_Fence; }
 
-	UINT64 GetFenceValueForFrame(UINT FrameInFlightIndex) const noexcept{return m_FenceValues[FrameInFlightIndex];}
-	void SetFenceValueForFrame(UINT FrameInFlightIndex, UINT64 value) noexcept{m_FenceValues[FrameInFlightIndex] = value;}
-	HANDLE GetFenceEvent() const noexcept{return m_FenceEvent;}
-	UINT64 GetNextFenceValue() const noexcept{return m_NextFenceValue;}
-	void SetNextFenceValue(UINT64 value) noexcept{m_NextFenceValue = value;}
+	UINT64 GetFenceValueForFrame(UINT FrameInFlightIndex) const noexcept { return m_FenceValues[FrameInFlightIndex]; }
+	void SetFenceValueForFrame(UINT FrameInFlightIndex, UINT64 value) noexcept { m_FenceValues[FrameInFlightIndex] = value; }
+	HANDLE GetFenceEvent() const noexcept { return m_FenceEvent; }
+	UINT64 GetNextFenceValue() const noexcept { return m_NextFenceValue; }
+	void SetNextFenceValue(UINT64 value) noexcept { m_NextFenceValue = value; }
+
   private:
 	ComPtr<IDXGIFactory7> m_DxgiFactory = nullptr;
 	ComPtr<IDXGIAdapter1> m_Adapter = nullptr;

@@ -11,9 +11,10 @@ class App
 
 	// Entry point to run the application (only public API needed by users)
 	void Run();
+
   protected:
 	// User extension points (override as needed). All are optional.
-	
+
 	// Initialize: create gameplay state, load resources, etc.
 	virtual void PreInitialize() {}
 	virtual void PostInitialize() {}
@@ -34,7 +35,7 @@ class App
 	void RenderLoop();
 
   private:
-	// Engine-controlled lifecycle 
+	// Engine-controlled lifecycle
 	void Initialize();
 	void Render();
 	void Resize();

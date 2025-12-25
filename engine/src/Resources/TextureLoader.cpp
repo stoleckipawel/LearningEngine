@@ -20,8 +20,7 @@ TextureLoader::TextureLoader(const std::filesystem::path& fileName)
 
 	// Create WIC Imaging Factory
 	ComPtr<IWICImagingFactory> wicFactory;
-	CHECK(CoCreateInstance(
-	    CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(wicFactory.ReleaseAndGetAddressOf())));
+	CHECK(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(wicFactory.ReleaseAndGetAddressOf())));
 
 	// Create and initialize WIC stream for file
 	ComPtr<IWICStream> wicFileStream;
@@ -30,8 +29,8 @@ TextureLoader::TextureLoader(const std::filesystem::path& fileName)
 
 	// Create decoder and get the first frame
 	ComPtr<IWICBitmapDecoder> wicDecoder;
-	CHECK(wicFactory->CreateDecoderFromStream(
-	    wicFileStream.Get(), nullptr, WICDecodeMetadataCacheOnDemand, wicDecoder.ReleaseAndGetAddressOf()));
+	CHECK(wicFactory
+	          ->CreateDecoderFromStream(wicFileStream.Get(), nullptr, WICDecodeMetadataCacheOnDemand, wicDecoder.ReleaseAndGetAddressOf()));
 
 	ComPtr<IWICBitmapFrameDecode> wicFrame;
 	CHECK(wicDecoder->GetFrame(0, wicFrame.ReleaseAndGetAddressOf()));
@@ -54,10 +53,13 @@ TextureLoader::TextureLoader(const std::filesystem::path& fileName)
 	CHECK(wicPixelFormatInfo->GetChannelCount(&m_data.channelCount));
 
 	// Map WIC pixel format to DXGI format
-	auto findIt = std::find_if(TextureLoader::s_lookupTable.begin(),
-	                           TextureLoader::s_lookupTable.end(),
-	                           [&](const TextureLoader::GUID_to_DXGI& entry)
-	                           { return std::memcmp(&entry.wic, &m_data.wicPixelFormat, sizeof(GUID)) == 0; });
+	auto findIt = std::find_if(
+	    TextureLoader::s_lookupTable.begin(),
+	    TextureLoader::s_lookupTable.end(),
+	    [&](const TextureLoader::GUID_to_DXGI& entry)
+	    {
+		    return std::memcmp(&entry.wic, &m_data.wicPixelFormat, sizeof(GUID)) == 0;
+	    });
 
 	if (findIt == TextureLoader::s_lookupTable.end())
 	{
@@ -85,6 +87,5 @@ TextureLoader::TextureLoader(const std::filesystem::path& fileName)
 	WICRect copyRect = {0, 0, static_cast<INT>(m_data.width), static_cast<INT>(m_data.height)};
 
 	// Copy pixel data to output buffer
-	CHECK(
-	    wicFrame->CopyPixels(&copyRect, m_data.stride, m_data.slicePitch, reinterpret_cast<BYTE*>(m_data.data.data())));
+	CHECK(wicFrame->CopyPixels(&copyRect, m_data.stride, m_data.slicePitch, reinterpret_cast<BYTE*>(m_data.data.data())));
 }

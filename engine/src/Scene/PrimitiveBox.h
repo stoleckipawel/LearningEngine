@@ -8,9 +8,10 @@ class PrimitiveBox : public Primitive
 {
   public:
 	// Construct a new PrimitiveBox object. Parameters default to identity (no transform).
-	PrimitiveBox(const XMFLOAT3& translation = {0.0f, 0.0f, 0.0f},
-	             const XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
-	             const XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});
+	PrimitiveBox(
+	    const XMFLOAT3& translation = {0.0f, 0.0f, 0.0f},
+	    const XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
+	    const XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});
 
   protected:
 	// Generate the vertex data for the box into outVertices. Override to change layout.

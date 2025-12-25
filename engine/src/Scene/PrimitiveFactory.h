@@ -16,14 +16,16 @@ class PrimitiveFactory
 	~PrimitiveFactory() = default;
 
 	// Append a new box primitive to the factory.
-	void AppendBox(const XMFLOAT3& translation = {0.0f, 0.0f, 0.0f},
-	               const XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
-	               const XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});
+	void AppendBox(
+	    const XMFLOAT3& translation = {0.0f, 0.0f, 0.0f},
+	    const XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
+	    const XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});
 
 	// Append a new plane primitive to the factory.
-	void AppendPlane(const XMFLOAT3& translation = {0.0f, 0.0f, 0.0f},
-	                 const XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
-	                 const XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});
+	void AppendPlane(
+	    const XMFLOAT3& translation = {0.0f, 0.0f, 0.0f},
+	    const XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
+	    const XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});
 
 	// Upload all primitives geometry to the GPU.
 	void Upload();

@@ -32,10 +32,8 @@ void Renderer::Initialize() noexcept
 	// Create root signature first - defines shader resource binding layout
 	m_rootSignature = std::make_unique<D3D12RootSignature>();
 
-	m_vertexShader = std::make_unique<DxcShaderCompiler>(
-		"SimpleVS.hlsl", DxcShaderCompiler::ShaderStage::Vertex, "main");
-	m_pixelShader = std::make_unique<DxcShaderCompiler>(
-		"SimplePS.hlsl", DxcShaderCompiler::ShaderStage::Pixel, "main");
+	m_vertexShader = std::make_unique<DxcShaderCompiler>("SimpleVS.hlsl", DxcShaderCompiler::ShaderStage::Vertex, "main");
+	m_pixelShader = std::make_unique<DxcShaderCompiler>("SimplePS.hlsl", DxcShaderCompiler::ShaderStage::Pixel, "main");
 
 	// Initialize descriptor heap manager and swap chain
 	GD3D12DescriptorHeapManager.Initialize();
@@ -55,8 +53,8 @@ void Renderer::Initialize() noexcept
 	GatherPrimitives();
 
 	// Create pipeline state object
-	m_pso = std::make_unique<D3D12PipelineState>(
-	    m_primitiveFactory->GetFirstPrimitive(), *m_rootSignature, *m_vertexShader, *m_pixelShader);
+	m_pso =
+	    std::make_unique<D3D12PipelineState>(m_primitiveFactory->GetFirstPrimitive(), *m_rootSignature, *m_vertexShader, *m_pixelShader);
 
 	// Create depth stencil and other frame buffers
 	CreateFrameBuffers();
@@ -75,26 +73,16 @@ void Renderer::GatherPrimitives()
 	// Hard-coded 20 cubes with varied translation, rotation, and smaller scale or further from camera
 	std::vector<std::tuple<XMFLOAT3, XMFLOAT3, XMFLOAT3>> boxParams = {
 	    // translation                rotation (radians)           scale
-	    {{-10.0f, 0.0f, -5.0f}, {0.0f, 0.0f, 0.0f}, {1.2f, 1.2f, 1.2f}},
-	    {{-8.0f, 2.0f, 6.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.5f, 1.0f}},
-	    {{-6.0f, -2.0f, -8.0f}, {0.5f, 0.5f, 0.0f}, {1.5f, 1.0f, 1.2f}},
-	    {{-4.0f, 0.0f, 8.0f}, {0.0f, 0.7f, 0.0f}, {1.3f, 1.3f, 1.3f}},
-	    {{-2.0f, 2.0f, -6.0f}, {1.0f, 0.0f, 0.5f}, {1.0f, 0.8f, 1.2f}},
-	    {{0.0f, -2.0f, 6.0f}, {0.0f, 0.0f, 1.0f}, {0.9f, 1.1f, 1.3f}},
-	    {{2.0f, 0.0f, -8.0f}, {0.3f, 0.8f, 0.2f}, {1.2f, 1.2f, 0.8f}},
-	    {{4.0f, 4.0f, 8.0f}, {0.0f, 1.2f, 0.0f}, {1.0f, 0.7f, 1.5f}},
-	    {{6.0f, -4.0f, -6.0f}, {1.0f, 0.5f, 0.0f}, {0.7f, 1.5f, 1.0f}},
-	    {{8.0f, 0.0f, 6.0f}, {0.7f, 0.0f, 1.0f}, {1.3f, 1.0f, 1.0f}},
-	    {{-9.0f, -3.0f, 10.0f}, {0.2f, 0.3f, 0.4f}, {0.8f, 1.0f, 1.2f}},
-	    {{-7.0f, 3.0f, -10.0f}, {0.6f, 0.1f, 0.2f}, {1.1f, 0.9f, 1.0f}},
-	    {{-5.0f, -1.0f, 9.0f}, {0.4f, 0.6f, 0.8f}, {1.0f, 1.0f, 0.7f}},
-	    {{-3.0f, 1.0f, -9.0f}, {0.9f, 0.2f, 0.3f}, {0.9f, 1.2f, 1.1f}},
-	    {{-1.0f, -3.0f, 8.0f}, {0.1f, 0.4f, 0.7f}, {1.2f, 0.8f, 1.0f}},
-	    {{1.0f, 3.0f, -8.0f}, {0.5f, 0.9f, 0.1f}, {1.0f, 1.0f, 1.0f}},
-	    {{3.0f, -1.0f, 7.0f}, {0.8f, 0.3f, 0.6f}, {0.7f, 1.1f, 1.2f}},
-	    {{5.0f, 1.0f, -7.0f}, {0.2f, 0.7f, 0.5f}, {1.1f, 0.9f, 0.8f}},
-	    {{7.0f, -3.0f, 6.0f}, {0.3f, 0.6f, 0.9f}, {0.8f, 1.0f, 1.0f}},
-	    {{9.0f, 3.0f, -5.0f}, {0.7f, 0.2f, 0.4f}, {1.0f, 0.8f, 1.2f}}};
+	    {{-10.0f, 0.0f, -5.0f}, {0.0f, 0.0f, 0.0f}, {1.2f, 1.2f, 1.2f}}, {{-8.0f, 2.0f, 6.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.5f, 1.0f}},
+	    {{-6.0f, -2.0f, -8.0f}, {0.5f, 0.5f, 0.0f}, {1.5f, 1.0f, 1.2f}}, {{-4.0f, 0.0f, 8.0f}, {0.0f, 0.7f, 0.0f}, {1.3f, 1.3f, 1.3f}},
+	    {{-2.0f, 2.0f, -6.0f}, {1.0f, 0.0f, 0.5f}, {1.0f, 0.8f, 1.2f}},  {{0.0f, -2.0f, 6.0f}, {0.0f, 0.0f, 1.0f}, {0.9f, 1.1f, 1.3f}},
+	    {{2.0f, 0.0f, -8.0f}, {0.3f, 0.8f, 0.2f}, {1.2f, 1.2f, 0.8f}},   {{4.0f, 4.0f, 8.0f}, {0.0f, 1.2f, 0.0f}, {1.0f, 0.7f, 1.5f}},
+	    {{6.0f, -4.0f, -6.0f}, {1.0f, 0.5f, 0.0f}, {0.7f, 1.5f, 1.0f}},  {{8.0f, 0.0f, 6.0f}, {0.7f, 0.0f, 1.0f}, {1.3f, 1.0f, 1.0f}},
+	    {{-9.0f, -3.0f, 10.0f}, {0.2f, 0.3f, 0.4f}, {0.8f, 1.0f, 1.2f}}, {{-7.0f, 3.0f, -10.0f}, {0.6f, 0.1f, 0.2f}, {1.1f, 0.9f, 1.0f}},
+	    {{-5.0f, -1.0f, 9.0f}, {0.4f, 0.6f, 0.8f}, {1.0f, 1.0f, 0.7f}},  {{-3.0f, 1.0f, -9.0f}, {0.9f, 0.2f, 0.3f}, {0.9f, 1.2f, 1.1f}},
+	    {{-1.0f, -3.0f, 8.0f}, {0.1f, 0.4f, 0.7f}, {1.2f, 0.8f, 1.0f}},  {{1.0f, 3.0f, -8.0f}, {0.5f, 0.9f, 0.1f}, {1.0f, 1.0f, 1.0f}},
+	    {{3.0f, -1.0f, 7.0f}, {0.8f, 0.3f, 0.6f}, {0.7f, 1.1f, 1.2f}},   {{5.0f, 1.0f, -7.0f}, {0.2f, 0.7f, 0.5f}, {1.1f, 0.9f, 0.8f}},
+	    {{7.0f, -3.0f, 6.0f}, {0.3f, 0.6f, 0.9f}, {0.8f, 1.0f, 1.0f}},   {{9.0f, 3.0f, -5.0f}, {0.7f, 0.2f, 0.4f}, {1.0f, 0.8f, 1.2f}}};
 
 	for (const auto& [translation, rotation, scale] : boxParams)
 	{
@@ -146,23 +134,24 @@ void Renderer::BindPerFrameResources() noexcept
 	// Bind Per-Frame Constant Buffer - updated once per CPU frame
 	// Contains: FrameIndex, TotalTime, DeltaTime, ViewportSize..........
 	// -------------------------------------------------------------------------
-	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(RootBindings::RootParam::PerFrame,
-	                                                              GD3D12ConstantBufferManager.GetPerFrameGpuAddress());
+	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(
+	    RootBindings::RootParam::PerFrame,
+	    GD3D12ConstantBufferManager.GetPerFrameGpuAddress());
 
 	// -------------------------------------------------------------------------
 	// Bind Per-View Constant Buffer - updated once per view/camera
 	// Contains: View/Proj matrices, CameraPosition, Near/Far planes.............
 	// -------------------------------------------------------------------------
-	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(RootBindings::RootParam::PerView,
-	                                                              GD3D12ConstantBufferManager.GetPerViewGpuAddress());
+	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(
+	    RootBindings::RootParam::PerView,
+	    GD3D12ConstantBufferManager.GetPerViewGpuAddress());
 
 	// -------------------------------------------------------------------------
 	// Bind Textures SRV - descriptor table
 	// -------------------------------------------------------------------------
 	if (m_texture)
 	{
-		GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(RootBindings::RootParam::TextureSRV,
-		                                                           m_texture->GetGPUHandle());
+		GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(RootBindings::RootParam::TextureSRV, m_texture->GetGPUHandle());
 	}
 
 	// -------------------------------------------------------------------------
@@ -170,8 +159,7 @@ void Renderer::BindPerFrameResources() noexcept
 	// -------------------------------------------------------------------------
 	if (m_sampler)
 	{
-		GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(RootBindings::RootParam::Sampler,
-		                                                           m_sampler->GetGPUHandle());
+		GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(RootBindings::RootParam::Sampler, m_sampler->GetGPUHandle());
 	}
 }
 
@@ -187,7 +175,8 @@ void Renderer::BindPerObjectResources(const Primitive& primitive) noexcept
 	// Uses ring buffer allocation - each call returns a unique GPU VA
 	// -------------------------------------------------------------------------
 	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(
-	    RootBindings::RootParam::PerObjectVS, GD3D12ConstantBufferManager.UpdatePerObjectVS(primitive));
+	    RootBindings::RootParam::PerObjectVS,
+	    GD3D12ConstantBufferManager.UpdatePerObjectVS(primitive));
 
 	// -------------------------------------------------------------------------
 	// Update and Bind Per-Object PS Constant Buffer (b3)
@@ -195,8 +184,9 @@ void Renderer::BindPerObjectResources(const Primitive& primitive) noexcept
 	// Uses ring buffer allocation - each call returns a unique GPU VA
 	// TODO: Pass material data from primitive when material system is implemented
 	// -------------------------------------------------------------------------
-	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(RootBindings::RootParam::PerObjectPS,
-	                                                              GD3D12ConstantBufferManager.UpdatePerObjectPS());
+	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(
+	    RootBindings::RootParam::PerObjectPS,
+	    GD3D12ConstantBufferManager.UpdatePerObjectPS());
 }
 
 // -----------------------------------------------------------------------------

@@ -23,7 +23,7 @@ void D3D12DebugLayer::Initialize()
 void D3D12DebugLayer::InitializeInfoQueue()
 {
 	// Configure InfoQueue only when device supports it.
-	ConfigureInfoQueue(); // Set break on error/warning/corruption
+	ConfigureInfoQueue();  // Set break on error/warning/corruption
 	ApplyInfoQueueFilters();
 }
 
@@ -61,7 +61,7 @@ void D3D12DebugLayer::ApplyInfoQueueFilters()
 	{
 		// Suppress known noisy message id (if present). Keep list small and explicit.
 		D3D12_MESSAGE_ID disabledMessages[] = {
-		    static_cast<D3D12_MESSAGE_ID>(1424) // FENCE_ZERO_WAIT (SDK noise)
+		    static_cast<D3D12_MESSAGE_ID>(1424)  // FENCE_ZERO_WAIT (SDK noise)
 		};
 		D3D12_INFO_QUEUE_FILTER filter = {};
 		filter.DenyList.NumIDs = static_cast<UINT>(std::size(disabledMessages));
@@ -88,8 +88,7 @@ void D3D12DebugLayer::ReportLiveDeviceObjects()
 {
 #if ENGINE_REPORT_LIVE_OBJECTS
 	ComPtr<ID3D12DebugDevice> debugDevice;
-	if (GD3D12Rhi.GetDevice() &&
-	    SUCCEEDED(GD3D12Rhi.GetDevice()->QueryInterface(IID_PPV_ARGS(debugDevice.ReleaseAndGetAddressOf()))))
+	if (GD3D12Rhi.GetDevice() && SUCCEEDED(GD3D12Rhi.GetDevice()->QueryInterface(IID_PPV_ARGS(debugDevice.ReleaseAndGetAddressOf()))))
 	{
 		OutputDebugStringW(L"D3D12 Live Device Objects (detail + summary):\n");
 		debugDevice->ReportLiveDeviceObjects(D3D12_RLDO_DETAIL | D3D12_RLDO_SUMMARY);

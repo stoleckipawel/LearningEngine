@@ -21,21 +21,12 @@ class D3D12Sampler
 
 	// Accessors are noexcept and const-correct. Return by-value is cheap
 	// (handles are small PODs).
-	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept
-	{
-		return m_samplerHandle.GetGPU();
-	}
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const noexcept
-	{
-		return m_samplerHandle.GetCPU();
-	}
-	bool IsValid() const noexcept
-	{
-		return m_samplerHandle.IsValid();
-	}
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept { return m_samplerHandle.GetGPU(); }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const noexcept { return m_samplerHandle.GetCPU(); }
+	bool IsValid() const noexcept { return m_samplerHandle.IsValid(); }
 
 	~D3D12Sampler() noexcept;
 
   private:
-	D3D12DescriptorHandle m_samplerHandle; // Allocated sampler descriptor handle
+	D3D12DescriptorHandle m_samplerHandle;  // Allocated sampler descriptor handle
 };

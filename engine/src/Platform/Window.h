@@ -15,10 +15,7 @@ class Window
 
 	void PollEvents() noexcept;
 
-	HWND GetHWND() const noexcept
-	{
-		return m_windowHWND;
-	}
+	HWND GetHWND() const noexcept { return m_windowHWND; }
 
 	RECT GetRect() const noexcept;
 	UINT GetWidth() const noexcept;
@@ -28,8 +25,8 @@ class Window
 	DirectX::XMFLOAT2 GetViewportSizeInv() const noexcept;
 
 	void SetFullScreen(bool bSetFullScreen);
-	bool ShouldClose() const noexcept{return m_bShouldClose;}
-	bool IsFullScreen() const noexcept{return m_bIsFullScreen;}
+	bool ShouldClose() const noexcept { return m_bShouldClose; }
+	bool IsFullScreen() const noexcept { return m_bIsFullScreen; }
 
   private:
 	static LRESULT CALLBACK OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam);

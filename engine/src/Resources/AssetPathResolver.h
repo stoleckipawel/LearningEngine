@@ -11,9 +11,9 @@
 enum class AssetType
 {
 	Shader,  // Shader source or binary
-	Texture, // Texture image
-	Mesh,    // Mesh geometry
-	Other    // Any other asset type
+	Texture,  // Texture image
+	Mesh,  // Mesh geometry
+	Other  // Any other asset type
 };
 
 // Returns the subdirectory name for a given asset type (e.g. "shaders", "textures").
@@ -21,14 +21,14 @@ inline std::filesystem::path GetAssetSubdir(AssetType type)
 {
 	switch (type)
 	{
-	case AssetType::Shader:
-		return std::filesystem::path("shaders");
-	case AssetType::Texture:
-		return std::filesystem::path("textures");
-	case AssetType::Mesh:
-		return std::filesystem::path("meshes");
-	default:
-		return std::filesystem::path(); // No subdir for 'Other'
+		case AssetType::Shader:
+			return std::filesystem::path("shaders");
+		case AssetType::Texture:
+			return std::filesystem::path("textures");
+		case AssetType::Mesh:
+			return std::filesystem::path("meshes");
+		default:
+			return std::filesystem::path();  // No subdir for 'Other'
 	}
 }
 
@@ -74,11 +74,11 @@ inline std::filesystem::path ResolveAssetPath(const std::filesystem::path& input
 			for (const auto& entry : std::filesystem::directory_iterator(samplesDir))
 			{
 				if (!entry.is_directory())
-					continue; // Only look in directories
+					continue;  // Only look in directories
 				std::filesystem::path sampleAsset = entry.path();
 				if (!assetSubdir.empty())
 					sampleAsset /= assetSubdir;
-				sampleAsset /= inputPath.filename(); // Use filename only
+				sampleAsset /= inputPath.filename();  // Use filename only
 				if (std::filesystem::exists(sampleAsset))
 					return std::filesystem::absolute(sampleAsset);
 			}

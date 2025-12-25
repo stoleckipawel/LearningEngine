@@ -34,18 +34,18 @@ namespace RootBindings
 namespace RootParam
 {
 // Constant Buffer Views (root CBVs - direct GPU virtual address binding)
-constexpr uint32_t PerFrame = 0;    // b0 - Per-frame data (time, viewport)
-constexpr uint32_t PerView = 1;     // b1 - Per-view/camera data (matrices)
-constexpr uint32_t PerObjectVS = 2; // b2 - Per-object vertex shader data (world matrix)
-constexpr uint32_t PerObjectPS = 3; // b3 - Per-object pixel shader data (material)
+constexpr uint32_t PerFrame = 0;  // b0 - Per-frame data (time, viewport)
+constexpr uint32_t PerView = 1;  // b1 - Per-view/camera data (matrices)
+constexpr uint32_t PerObjectVS = 2;  // b2 - Per-object vertex shader data (world matrix)
+constexpr uint32_t PerObjectPS = 3;  // b3 - Per-object pixel shader data (material)
 
 // Descriptor Tables (heap-based binding)
-constexpr uint32_t TextureSRV = 4; // t0+ - Texture SRVs
-constexpr uint32_t Sampler = 5;    // s0+ - Samplers
+constexpr uint32_t TextureSRV = 4;  // t0+ - Texture SRVs
+constexpr uint32_t Sampler = 5;  // s0+ - Samplers
 
 // Total root parameter count (for validation)
 constexpr uint32_t Count = 6;
-} // namespace RootParam
+}  // namespace RootParam
 
 //--------------------------------------------------------------------------
 // HLSL Register Slots (constant buffer register assignments)
@@ -57,23 +57,23 @@ constexpr uint32_t Count = 6;
 
 namespace CBRegister
 {
-constexpr uint32_t PerFrame = 0;    // register(b0)
-constexpr uint32_t PerView = 1;     // register(b1)
-constexpr uint32_t PerObjectVS = 2; // register(b2)
-constexpr uint32_t PerObjectPS = 3; // register(b3)
-} // namespace CBRegister
+constexpr uint32_t PerFrame = 0;  // register(b0)
+constexpr uint32_t PerView = 1;  // register(b1)
+constexpr uint32_t PerObjectVS = 2;  // register(b2)
+constexpr uint32_t PerObjectPS = 3;  // register(b3)
+}  // namespace CBRegister
 
 namespace SRVRegister
 {
-constexpr uint32_t BaseTexture = 0; // register(t0) - Albedo/diffuse
+constexpr uint32_t BaseTexture = 0;  // register(t0) - Albedo/diffuse
 // Future: Normal, Roughness, Metallic, etc.
-} // namespace SRVRegister
+}  // namespace SRVRegister
 
 namespace SamplerRegister
 {
-constexpr uint32_t LinearWrap = 0; // register(s0)
+constexpr uint32_t LinearWrap = 0;  // register(s0)
 // Future: Point, Aniso, Shadow comparison, etc.
-} // namespace SamplerRegister
+}  // namespace SamplerRegister
 
 //--------------------------------------------------------------------------
 // Shader Visibility Helpers (for documentation and validation)
@@ -90,6 +90,6 @@ constexpr D3D12_SHADER_VISIBILITY PerObjectVS = D3D12_SHADER_VISIBILITY_VERTEX;
 constexpr D3D12_SHADER_VISIBILITY PerObjectPS = D3D12_SHADER_VISIBILITY_PIXEL;
 constexpr D3D12_SHADER_VISIBILITY TextureSRV = D3D12_SHADER_VISIBILITY_PIXEL;
 constexpr D3D12_SHADER_VISIBILITY Sampler = D3D12_SHADER_VISIBILITY_PIXEL;
-} // namespace Visibility
+}  // namespace Visibility
 
-} // namespace RootBindings
+}  // namespace RootBindings

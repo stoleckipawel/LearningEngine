@@ -4,8 +4,8 @@
 #include "D3D12SwapChain.h"
 #include "Camera.h"
 
-Primitive::Primitive(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale)
-    : m_translation(translation), m_rotationEuler(rotation), m_scale(scale)
+Primitive::Primitive(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale) :
+    m_translation(translation), m_rotationEuler(rotation), m_scale(scale)
 {
 	m_bWorldDirty = true;
 }
@@ -120,27 +120,10 @@ void Primitive::Set()
 std::vector<D3D12_INPUT_ELEMENT_DESC> Primitive::GetVertexLayout() const
 {
 	// Return a single static layout instance to avoid allocating on every call.
-	static const std::vector<D3D12_INPUT_ELEMENT_DESC> s_layout = {{"POSITION",
-	                                                                0,
-	                                                                DXGI_FORMAT_R32G32B32_FLOAT,
-	                                                                0,
-	                                                                D3D12_APPEND_ALIGNED_ELEMENT,
-	                                                                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-	                                                                0},
-	                                                               {"TEXCOORD",
-	                                                                0,
-	                                                                DXGI_FORMAT_R32G32_FLOAT,
-	                                                                0,
-	                                                                D3D12_APPEND_ALIGNED_ELEMENT,
-	                                                                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-	                                                                0},
-	                                                               {"COLOR",
-	                                                                0,
-	                                                                DXGI_FORMAT_R32G32B32A32_FLOAT,
-	                                                                0,
-	                                                                D3D12_APPEND_ALIGNED_ELEMENT,
-	                                                                D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-	                                                                0}};
+	static const std::vector<D3D12_INPUT_ELEMENT_DESC> s_layout = {
+	    {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+	    {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+	    {"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}};
 
 	return s_layout;
 }

@@ -8,30 +8,29 @@ D3D12Rhi GD3D12Rhi;
 // Selects the best available adapter (GPU) that supports Direct3D 12
 void D3D12Rhi::SelectAdapter() noexcept
 {
-	const DXGI_GPU_PREFERENCE pref = EngineSettings::PreferHighPerformanceAdapter ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE
-	                                                                              : DXGI_GPU_PREFERENCE_MINIMUM_POWER;
+	const DXGI_GPU_PREFERENCE pref =
+	    EngineSettings::PreferHighPerformanceAdapter ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE : DXGI_GPU_PREFERENCE_MINIMUM_POWER;
 
 	// Try adapter-by-preference first. Use a local temporary adapter to avoid
 	// repeatedly replacing the member until a suitable one is found.
 	for (UINT i = 0;; ++i)
 	{
 		ComPtr<IDXGIAdapter1> candidate;
-		HRESULT hr =
-		    m_DxgiFactory->EnumAdapterByGpuPreference(i, pref, IID_PPV_ARGS(candidate.ReleaseAndGetAddressOf()));
+		HRESULT hr = m_DxgiFactory->EnumAdapterByGpuPreference(i, pref, IID_PPV_ARGS(candidate.ReleaseAndGetAddressOf()));
 		if (hr != S_OK)
-			break; // no more adapters or error
+			break;  // no more adapters or error
 
 		DXGI_ADAPTER_DESC1 desc{};
 		if (FAILED(candidate->GetDesc1(&desc)))
 			continue;
 		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
-			continue; // skip WARP
+			continue;  // skip WARP
 
 		// Lightweight feature probe: does this adapter support D3D12 at the
 		// desired feature level? We don't create a device here, just test.
 		if (SUCCEEDED(D3D12CreateDevice(candidate.Get(), m_DesiredD3DFeatureLevel, _uuidof(ID3D12Device), nullptr)))
 		{
-			m_Adapter = candidate; // accept
+			m_Adapter = candidate;  // accept
 			return;
 		}
 	}
@@ -115,8 +114,7 @@ void D3D12Rhi::CreateDevice(bool /*requireDXRSupport*/)
 		LOG_FATAL("No suitable adapter found when creating device");
 	}
 
-	CHECK(
-	    D3D12CreateDevice(m_Adapter.Get(), m_DesiredD3DFeatureLevel, IID_PPV_ARGS(m_Device.ReleaseAndGetAddressOf())));
+	CHECK(D3D12CreateDevice(m_Adapter.Get(), m_DesiredD3DFeatureLevel, IID_PPV_ARGS(m_Device.ReleaseAndGetAddressOf())));
 }
 
 void D3D12Rhi::CreateCommandQueue()
@@ -133,8 +131,9 @@ void D3D12Rhi::CreateCommandAllocators()
 {
 	for (size_t i = 0; i < EngineSettings::FramesInFlight; ++i)
 	{
-		CHECK(m_Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
-		                                       IID_PPV_ARGS(m_CmdAllocatorScene[i].ReleaseAndGetAddressOf())));
+		CHECK(m_Device->CreateCommandAllocator(
+		    D3D12_COMMAND_LIST_TYPE_DIRECT,
+		    IID_PPV_ARGS(m_CmdAllocatorScene[i].ReleaseAndGetAddressOf())));
 	}
 }
 
@@ -152,11 +151,12 @@ void D3D12Rhi::CreateCommandLists()
 		return;
 	}
 
-	CHECK(m_Device->CreateCommandList(0,
-	                                  D3D12_COMMAND_LIST_TYPE_DIRECT,
-	                                  m_CmdAllocatorScene[GD3D12SwapChain.GetFrameInFlightIndex()].Get(),
-	                                  nullptr,
-	                                  IID_PPV_ARGS(m_CmdListScene.ReleaseAndGetAddressOf())));
+	CHECK(m_Device->CreateCommandList(
+	    0,
+	    D3D12_COMMAND_LIST_TYPE_DIRECT,
+	    m_CmdAllocatorScene[GD3D12SwapChain.GetFrameInFlightIndex()].Get(),
+	    nullptr,
+	    IID_PPV_ARGS(m_CmdListScene.ReleaseAndGetAddressOf())));
 }
 
 void D3D12Rhi::CreateFenceAndEvent()
@@ -226,9 +226,7 @@ void D3D12Rhi::ExecuteCommandList() noexcept
 }
 
 // Sets a resource barrier for a resource state transition
-void D3D12Rhi::SetBarrier(ID3D12Resource* Resource,
-                          D3D12_RESOURCE_STATES StateBefore,
-                          D3D12_RESOURCE_STATES StateAfter) noexcept
+void D3D12Rhi::SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter) noexcept
 {
 	D3D12_RESOURCE_BARRIER barrier{};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;

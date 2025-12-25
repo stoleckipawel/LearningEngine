@@ -35,4 +35,4 @@ inline void SetDebugName(ID3D12Object* object, const std::wstring_view name) noe
 #endif
 }
 
-} 
+}  // namespace DebugUtils

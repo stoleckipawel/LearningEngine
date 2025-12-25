@@ -10,13 +10,13 @@ class TextureLoader
 	// Structure holding loaded image data and metadata.
 	struct Data
 	{
-		std::vector<uint8_t> data; // Raw image pixel data (bytes)
-		uint32_t width = 1;        // Image width in pixels
-		uint32_t height = 1;       // Image height in pixels
-		uint32_t bitsPerPixel = 1; // Bits per pixel
-		uint32_t channelCount = 1; // Number of color channels
-		uint32_t stride = 1;       // Row pitch in bytes
-		uint32_t slicePitch = 1;   // Total image size in bytes
+		std::vector<uint8_t> data;  // Raw image pixel data (bytes)
+		uint32_t width = 1;  // Image width in pixels
+		uint32_t height = 1;  // Image height in pixels
+		uint32_t bitsPerPixel = 1;  // Bits per pixel
+		uint32_t channelCount = 1;  // Number of color channels
+		uint32_t stride = 1;  // Row pitch in bytes
+		uint32_t slicePitch = 1;  // Total image size in bytes
 
 		GUID wicPixelFormat = {};
 		DXGI_FORMAT dxgiPixelFormat = DXGI_FORMAT_UNKNOWN;
@@ -25,10 +25,7 @@ class TextureLoader
 	explicit TextureLoader(const std::filesystem::path& fileName);
 
 	// Return loaded data. noexcept: accessor only.
-	const Data& GetData() const noexcept
-	{
-		return m_data;
-	}
+	const Data& GetData() const noexcept { return m_data; }
 
   private:
 	Data m_data;

@@ -46,12 +46,13 @@ void D3D12SwapChain::Create()
 
 	// Create the swap chain for the window
 	ComPtr<IDXGISwapChain1> swapChain;
-	CHECK(GD3D12Rhi.GetDxgiFactory()->CreateSwapChainForHwnd(GD3D12Rhi.GetCommandQueue().Get(),
-	                                                         GWindow.GetHWND(),
-	                                                         &swapChainDesc,
-	                                                         &swapChainFullsceenDesc,
-	                                                         nullptr,
-	                                                         &swapChain));
+	CHECK(GD3D12Rhi.GetDxgiFactory()->CreateSwapChainForHwnd(
+	    GD3D12Rhi.GetCommandQueue().Get(),
+	    GWindow.GetHWND(),
+	    &swapChainDesc,
+	    &swapChainFullsceenDesc,
+	    nullptr,
+	    &swapChain));
 
 	// Query for IDXGISwapChain3 interface
 	CHECK(swapChain.As(&m_swapChain));
@@ -69,11 +70,12 @@ void D3D12SwapChain::Resize()
 {
 	ReleaseBuffers();
 
-	m_swapChain->ResizeBuffers(EngineSettings::FramesInFlight,
-	                           GWindow.GetWidth(),
-	                           GWindow.GetHeight(),
-	                           EngineSettings::BackBufferFormat,
-	                           ComputeSwapChainFlags());
+	m_swapChain->ResizeBuffers(
+	    EngineSettings::FramesInFlight,
+	    GWindow.GetWidth(),
+	    GWindow.GetHeight(),
+	    EngineSettings::BackBufferFormat,
+	    ComputeSwapChainFlags());
 
 	CreateRenderTargetViews();
 
@@ -114,8 +116,7 @@ UINT D3D12SwapChain::GetAllowTearingFlag() const
 {
 	BOOL allowTearing = FALSE;
 
-	GD3D12Rhi.GetDxgiFactory()->CheckFeatureSupport(
-	    DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+	GD3D12Rhi.GetDxgiFactory()->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
 
 	return (allowTearing == TRUE) ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u;
 }
@@ -163,8 +164,7 @@ void D3D12SwapChain::Present()
 	{
 		// If tearing is supported by the runtime, request it when presenting without vsync.
 		BOOL allowTearing = FALSE;
-		GD3D12Rhi.GetDxgiFactory()->CheckFeatureSupport(
-		    DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+		GD3D12Rhi.GetDxgiFactory()->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
 		presentFlags = (allowTearing == TRUE) ? DXGI_PRESENT_ALLOW_TEARING : 0u;
 	}
 
@@ -175,8 +175,7 @@ void D3D12SwapChain::Present()
 // Sets the current buffer to render target state
 void D3D12SwapChain::SetRenderTargetState()
 {
-	GD3D12Rhi.SetBarrier(
-	    m_buffers[m_frameInFlightIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	GD3D12Rhi.SetBarrier(m_buffers[m_frameInFlightIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
 
 // Sets the current buffer to present state
@@ -184,7 +183,9 @@ void D3D12SwapChain::SetPresentState()
 {
 	GD3D12Rhi.SetBarrier(
 
-	    m_buffers[m_frameInFlightIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	    m_buffers[m_frameInFlightIndex].Get(),
+	    D3D12_RESOURCE_STATE_RENDER_TARGET,
+	    D3D12_RESOURCE_STATE_PRESENT);
 }
 
 // Releases all buffer resources

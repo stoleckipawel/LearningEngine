@@ -3,9 +3,7 @@
 #include "DebugUtils.h"
 
 // General descriptor heap (RTV, DSV, Sampler, SRV/CBV/UAV).
-D3D12DescriptorHeap::D3D12DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type,
-                                         D3D12_DESCRIPTOR_HEAP_FLAGS flags,
-                                         LPCWSTR name)
+D3D12DescriptorHeap::D3D12DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name)
 {
 	m_desc.Type = type;
 	m_desc.Flags = flags;

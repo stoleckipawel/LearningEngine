@@ -16,9 +16,10 @@ void D3D12PipelineState::SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& pso
 }
 
 // Configures rasterizer state for the pipeline.
-void D3D12PipelineState::SetRasterizerState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc,
-                                            bool bRenderWireframe,
-                                            D3D12_CULL_MODE cullMode) noexcept
+void D3D12PipelineState::SetRasterizerState(
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc,
+    bool bRenderWireframe,
+    D3D12_CULL_MODE cullMode) noexcept
 {
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	auto& rs = psoDesc.RasterizerState;
@@ -37,16 +38,16 @@ void D3D12PipelineState::SetRasterizerState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& 
 }
 
 // Configures blend state for the render target.
-void D3D12PipelineState::SetRenderTargetBlendState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc,
-                                                   D3D12_RENDER_TARGET_BLEND_DESC blendDesc) noexcept
+void D3D12PipelineState::SetRenderTargetBlendState(
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc,
+    D3D12_RENDER_TARGET_BLEND_DESC blendDesc) noexcept
 {
 	psoDesc.BlendState = {};
 	psoDesc.BlendState.RenderTarget[0] = blendDesc;
 }
 
 // Configures depth test state for the pipeline.
-void D3D12PipelineState::SetDepthTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc,
-                                           DepthTestDesc depthDesc) noexcept
+void D3D12PipelineState::SetDepthTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, DepthTestDesc depthDesc) noexcept
 {
 	auto& ds = psoDesc.DepthStencilState;
 	ds = {};
@@ -56,8 +57,7 @@ void D3D12PipelineState::SetDepthTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& p
 }
 
 // Configures stencil test state for the pipeline.
-void D3D12PipelineState::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc,
-                                             StencilTestDesc stencilDesc) noexcept
+void D3D12PipelineState::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, StencilTestDesc stencilDesc) noexcept
 {
 	auto& ds = psoDesc.DepthStencilState;
 	ds.StencilEnable = stencilDesc.StencilEnable ? TRUE : FALSE;
@@ -76,10 +76,11 @@ void D3D12PipelineState::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC&
 }
 
 // Constructs and creates the graphics pipeline state object.
-D3D12PipelineState::D3D12PipelineState(Primitive& vertecies,
-                                       D3D12RootSignature& rootSignature,
-                                       DxcShaderCompiler& vertexShader,
-                                       DxcShaderCompiler& pixelShader)
+D3D12PipelineState::D3D12PipelineState(
+    Primitive& vertecies,
+    D3D12RootSignature& rootSignature,
+    DxcShaderCompiler& vertexShader,
+    DxcShaderCompiler& pixelShader)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
@@ -145,8 +146,7 @@ D3D12PipelineState::D3D12PipelineState(Primitive& vertecies,
 	psoDesc.SampleDesc.Quality = 0;
 
 	// -- Create PSO and report detailed debug information on failure
-	HRESULT hr =
-	    GD3D12Rhi.GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(m_pso.ReleaseAndGetAddressOf()));
+	HRESULT hr = GD3D12Rhi.GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(m_pso.ReleaseAndGetAddressOf()));
 	if (FAILED(hr))
 	{
 #if defined(_DEBUG)

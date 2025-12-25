@@ -10,9 +10,9 @@ using Microsoft::WRL::ComPtr;
 
 struct Vertex
 {
-	DirectX::XMFLOAT3 position; // Vertex position (x, y, z)
-	DirectX::XMFLOAT2 uv;       // Texture coordinates (u, v)
-	DirectX::XMFLOAT4 color;    // Vertex color (r, g, b, a)
+	DirectX::XMFLOAT3 position;  // Vertex position (x, y, z)
+	DirectX::XMFLOAT2 uv;  // Texture coordinates (u, v)
+	DirectX::XMFLOAT4 color;  // Vertex color (r, g, b, a)
 };
 
 // Base class for renderable primitives. Handles upload/binding and per-frame resources.
@@ -20,9 +20,10 @@ class Primitive
 {
   public:
 	// Construct a new Primitive. translation/rotation/scale default to identity (no transform).
-	Primitive(const DirectX::XMFLOAT3& translation = {0.0f, 0.0f, 0.0f},
-			  const DirectX::XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
-			  const DirectX::XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});
+	Primitive(
+	    const DirectX::XMFLOAT3& translation = {0.0f, 0.0f, 0.0f},
+	    const DirectX::XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
+	    const DirectX::XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});
 
 	// Virtual destructor for polymorphic base
 	virtual ~Primitive() = default;
@@ -31,7 +32,7 @@ class Primitive
 	void SetTranslation(const DirectX::XMFLOAT3& t) noexcept;
 	DirectX::XMFLOAT3 GetTranslation() const noexcept;
 
-	void SetRotationEuler(const DirectX::XMFLOAT3& r) noexcept; // Euler angles (radians)
+	void SetRotationEuler(const DirectX::XMFLOAT3& r) noexcept;  // Euler angles (radians)
 	DirectX::XMFLOAT3 GetRotationEuler() const noexcept;
 
 	void SetScale(const DirectX::XMFLOAT3& s) noexcept;
@@ -48,7 +49,7 @@ class Primitive
 	DirectX::XMMATRIX GetWorldInverseTransposeMatrix() const noexcept;
 
 	// Return the number of indices in the index buffer.
-	UINT GetIndexCount() const noexcept{ return m_indexCount;}
+	UINT GetIndexCount() const noexcept { return m_indexCount; }
 
 	// Set geometry buffers and topology for rendering. Override to bind more resources.
 	virtual void Set();
@@ -76,7 +77,7 @@ class Primitive
 	void UploadIndexBuffer();
 
 	// Internal: mark cached world invalid (called from setters)
-	void InvalidateWorldCache() noexcept{ m_bWorldDirty = true;}
+	void InvalidateWorldCache() noexcept { m_bWorldDirty = true; }
 
   private:
 	// Transform state (encapsulated)
@@ -94,9 +95,9 @@ class Primitive
 
   protected:
 	// GPU resources and views
-	ComPtr<ID3D12Resource2> VertexBuffer = nullptr;   //< Vertex buffer resource
-	ComPtr<ID3D12Resource2> IndexBuffer = nullptr;    //< Index buffer resource
-	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {}; //< Vertex buffer view
-	D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};   //< Index buffer view
-	UINT m_indexCount = 0;                            //< Number of indices in the index buffer
+	ComPtr<ID3D12Resource2> VertexBuffer = nullptr;  //< Vertex buffer resource
+	ComPtr<ID3D12Resource2> IndexBuffer = nullptr;  //< Index buffer resource
+	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};  //< Vertex buffer view
+	D3D12_INDEX_BUFFER_VIEW m_indexBufferView = {};  //< Index buffer view
+	UINT m_indexCount = 0;  //< Number of indices in the index buffer
 };

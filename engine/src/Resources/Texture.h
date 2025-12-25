@@ -28,14 +28,8 @@ class Texture
 	Texture& operator=(Texture&&) = delete;
 
 	// Descriptor handle accessors
-	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept
-	{
-		return m_srvHandle.GetGPU();
-	}
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const noexcept
-	{
-		return m_srvHandle.GetCPU();
-	}
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept { return m_srvHandle.GetGPU(); }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const noexcept { return m_srvHandle.GetCPU(); }
 
   private:
 	void CreateResource();

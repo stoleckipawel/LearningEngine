@@ -13,14 +13,8 @@ class D3D12RootSignature
 	D3D12RootSignature(const D3D12RootSignature&) = delete;
 	D3D12RootSignature& operator=(const D3D12RootSignature&) = delete;
 
-	ComPtr<ID3D12RootSignature> Get()
-	{
-		return m_rootSignature;
-	}
-	ID3D12RootSignature* GetRaw() const
-	{
-		return m_rootSignature.Get();
-	}
+	ComPtr<ID3D12RootSignature> Get() { return m_rootSignature; }
+	ID3D12RootSignature* GetRaw() const { return m_rootSignature.Get(); }
 
   private:
 	void Create();

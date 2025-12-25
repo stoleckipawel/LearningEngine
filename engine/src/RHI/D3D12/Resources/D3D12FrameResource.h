@@ -27,9 +27,9 @@
 
 struct D3D12FrameResource
 {
-	LinearAllocator CbAllocator; // Per-frame CB ring buffer
-	uint64_t FenceValue = 0;     // Fence value when this frame was submitted
-	uint32_t FrameIndex = 0;     // Debug: which frame index this represents
+	LinearAllocator CbAllocator;  // Per-frame CB ring buffer
+	uint64_t FenceValue = 0;  // Fence value when this frame was submitted
+	uint32_t FrameIndex = 0;  // Debug: which frame index this represents
 
 	void Initialize(uint64_t allocatorCapacity, uint32_t frameIdx)
 	{
@@ -41,16 +41,10 @@ struct D3D12FrameResource
 		CbAllocator.Initialize(allocatorCapacity, name);
 	}
 
-	void Shutdown()
-	{
-		CbAllocator.Shutdown();
-	}
+	void Shutdown() { CbAllocator.Shutdown(); }
 
 	// Reset allocator for new frame. Only call after fence confirms GPU completion.
-	void Reset()
-	{
-		CbAllocator.Reset();
-	}
+	void Reset() { CbAllocator.Reset(); }
 };
 
 //------------------------------------------------------------------------------
@@ -80,10 +74,7 @@ class D3D12FrameResourceManager
 	static constexpr uint64_t DefaultCapacityPerFrame = 4 * 1024 * 1024;
 
 	D3D12FrameResourceManager() = default;
-	~D3D12FrameResourceManager()
-	{
-		Shutdown();
-	}
+	~D3D12FrameResourceManager() { Shutdown(); }
 
 	// Non-copyable
 	D3D12FrameResourceManager(const D3D12FrameResourceManager&) = delete;
@@ -153,20 +144,14 @@ class D3D12FrameResourceManager
 
 	// Record fence value for current frame. Call after ExecuteCommandLists.
 	// fenceValue The fence value that was signaled for this frame.
-	void EndFrame(uint64_t fenceValue)
-	{
-		m_FrameResources[m_CurrentFrameIndex].FenceValue = fenceValue;
-	}
+	void EndFrame(uint64_t fenceValue) { m_FrameResources[m_CurrentFrameIndex].FenceValue = fenceValue; }
 
 	//--------------------------------------------------------------------------
 	// Allocation
 	//--------------------------------------------------------------------------
 
 	// Get the current frame's linear allocator.
-	[[nodiscard]] LinearAllocator& GetCurrentAllocator()
-	{
-		return m_FrameResources[m_CurrentFrameIndex].CbAllocator;
-	}
+	[[nodiscard]] LinearAllocator& GetCurrentAllocator() { return m_FrameResources[m_CurrentFrameIndex].CbAllocator; }
 
 	// Allocate from current frame's allocator.
 	[[nodiscard]] LinearAllocation Allocate(uint64_t size, uint64_t alignment = 256)
@@ -185,10 +170,7 @@ class D3D12FrameResourceManager
 	//--------------------------------------------------------------------------
 
 	// Get current frame's allocator usage percentage.
-	[[nodiscard]] float GetCurrentUsagePercent() const
-	{
-		return m_FrameResources[m_CurrentFrameIndex].CbAllocator.GetUsagePercent();
-	}
+	[[nodiscard]] float GetCurrentUsagePercent() const { return m_FrameResources[m_CurrentFrameIndex].CbAllocator.GetUsagePercent(); }
 
 	// Get high water mark across all frames (for capacity tuning).
 	[[nodiscard]] uint64_t GetMaxHighWaterMark() const
@@ -196,22 +178,16 @@ class D3D12FrameResourceManager
 		uint64_t maxHwm = 0;
 		for (const auto& frame : m_FrameResources)
 		{
-			maxHwm = (std::max)(maxHwm, frame.CbAllocator.GetHighWaterMark());
+			maxHwm = (std::max) (maxHwm, frame.CbAllocator.GetHighWaterMark());
 		}
 		return maxHwm;
 	}
 
 	// Get capacity per frame.
-	[[nodiscard]] uint64_t GetCapacityPerFrame() const
-	{
-		return m_CapacityPerFrame;
-	}
+	[[nodiscard]] uint64_t GetCapacityPerFrame() const { return m_CapacityPerFrame; }
 
 	// Check if initialized.
-	[[nodiscard]] bool IsInitialized() const
-	{
-		return m_bInitialized;
-	}
+	[[nodiscard]] bool IsInitialized() const { return m_bInitialized; }
 
   private:
 	std::array<D3D12FrameResource, EngineSettings::FramesInFlight> m_FrameResources;

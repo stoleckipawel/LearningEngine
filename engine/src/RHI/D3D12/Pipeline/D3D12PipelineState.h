@@ -36,10 +36,11 @@ class D3D12PipelineState
 {
   public:
 	// Constructs and creates the graphics pipeline state object.
-	D3D12PipelineState(Primitive& vertecies,
-	                   D3D12RootSignature& rootSignature,
-	                   DxcShaderCompiler& vertexShader,
-	                   DxcShaderCompiler& pixelShader);
+	D3D12PipelineState(
+	    Primitive& vertecies,
+	    D3D12RootSignature& rootSignature,
+	    DxcShaderCompiler& vertexShader,
+	    DxcShaderCompiler& pixelShader);
 
 	// Destructor releases pipeline state object
 	~D3D12PipelineState() noexcept;
@@ -52,21 +53,15 @@ class D3D12PipelineState
 	void Set() const noexcept;
 
 	// Returns a const reference to the underlying pipeline state COM pointer.
-	const ComPtr<ID3D12PipelineState>& Get() const noexcept
-	{
-		return m_pso;
-	}
+	const ComPtr<ID3D12PipelineState>& Get() const noexcept { return m_pso; }
 
   private:
 	void SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc) noexcept;
-	void SetRasterizerState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc,
-	                        bool bRenderWireframe,
-	                        D3D12_CULL_MODE cullMode) noexcept;
-	void SetRenderTargetBlendState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc,
-	                               D3D12_RENDER_TARGET_BLEND_DESC blendDesc) noexcept;
+	void SetRasterizerState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, bool bRenderWireframe, D3D12_CULL_MODE cullMode) noexcept;
+	void SetRenderTargetBlendState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_RENDER_TARGET_BLEND_DESC blendDesc) noexcept;
 	void SetDepthTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, DepthTestDesc depthDesc) noexcept;
 	void SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, StencilTestDesc stencilDesc) noexcept;
 
   private:
-	ComPtr<ID3D12PipelineState> m_pso = nullptr; // Pipeline state COM pointer
+	ComPtr<ID3D12PipelineState> m_pso = nullptr;  // Pipeline state COM pointer
 };

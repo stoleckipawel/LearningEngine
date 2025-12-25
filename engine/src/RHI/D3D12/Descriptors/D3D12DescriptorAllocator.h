@@ -27,11 +27,11 @@ class D3D12DescriptorAllocator
 	void Free(const D3D12DescriptorHandle& handle) noexcept;
 
   private:
-	D3D12DescriptorHeap* m_Heap; // Heap being managed (not owned)
+	D3D12DescriptorHeap* m_Heap;  // Heap being managed (not owned)
 	// Vector-backed LIFO free-list.
 	std::vector<UINT> m_freeIndices;
 
 	// Next unallocated index for linear growth when free-list is empty.
 	UINT m_currentOffset = 0;
-	std::mutex m_mutex; // Guards all Allocate/Free operations for thread safety
+	std::mutex m_mutex;  // Guards all Allocate/Free operations for thread safety
 };

@@ -21,12 +21,12 @@ class Camera
 
 	// Transform setters
 	void SetPosition(const DirectX::XMFLOAT3& position) noexcept;
-	void SetRotationDegrees(const DirectX::XMFLOAT3& eulerDegrees) noexcept; // pitch, yaw, roll
+	void SetRotationDegrees(const DirectX::XMFLOAT3& eulerDegrees) noexcept;  // pitch, yaw, roll
 	void SetRotationQuaternion(const DirectX::XMFLOAT4& quat) noexcept;
 	void LookAt(const DirectX::XMFLOAT3& target, const DirectX::XMFLOAT3& up = {0.0f, 1.0f, 0.0f}) noexcept;
 
 	// Transform modifiers
-	void TranslateLocal(const DirectX::XMFLOAT3& delta) noexcept; // in local space
+	void TranslateLocal(const DirectX::XMFLOAT3& delta) noexcept;  // in local space
 	void MoveForward(float distance) noexcept;
 	void MoveRight(float distance) noexcept;
 	void MoveUp(float distance) noexcept;
@@ -34,17 +34,11 @@ class Camera
 	// Queries
 	DirectX::XMFLOAT3 GetPosition() const noexcept;
 	DirectX::XMFLOAT4 GetRotationQuaternion() const noexcept;
-	DirectX::XMFLOAT3 GetDirection() const noexcept; // normalized forward (local +Z)
+	DirectX::XMFLOAT3 GetDirection() const noexcept;  // normalized forward (local +Z)
 	DirectX::XMFLOAT3 GetRight() const noexcept;
 	DirectX::XMFLOAT3 GetUp() const noexcept;
-	float GetNearZ() const noexcept
-	{
-		return m_nearZ;
-	}
-	float GetFarZ() const noexcept
-	{
-		return m_farZ;
-	}
+	float GetNearZ() const noexcept { return m_nearZ; }
+	float GetFarZ() const noexcept { return m_farZ; }
 
 	// Matrix accessors (cached)
 	DirectX::XMMATRIX GetViewMatrix() const noexcept;
@@ -63,14 +57,14 @@ class Camera
 	void RebuildProjectionIfNeeded() const noexcept;
 
 	// mutable cache for lazy updates
-	mutable DirectX::XMFLOAT4X4 m_viewMat; // cached view
-	mutable DirectX::XMFLOAT4X4 m_projMat; // cached proj
+	mutable DirectX::XMFLOAT4X4 m_viewMat;  // cached view
+	mutable DirectX::XMFLOAT4X4 m_projMat;  // cached proj
 	mutable bool m_bViewDirty = true;
 	mutable bool m_bProjDirty = true;
 
 	// transform state
 	DirectX::XMFLOAT3 m_position{0.0f, 0.0f, -4.0f};
-	DirectX::XMFLOAT4 m_orientation{0.0f, 0.0f, 0.0f, 1.0f}; // quaternion (x,y,z,w)
+	DirectX::XMFLOAT4 m_orientation{0.0f, 0.0f, 0.0f, 1.0f};  // quaternion (x,y,z,w)
 
 	// projection parameters
 	float m_fovYDegrees = 60.0f;

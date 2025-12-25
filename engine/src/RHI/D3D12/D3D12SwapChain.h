@@ -38,22 +38,25 @@ class D3D12SwapChain
 
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(UINT index) const { return m_rtvHandles[index].GetCPU(); }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const { return GetCPUHandle(m_frameInFlightIndex);}
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const { return GetCPUHandle(m_frameInFlightIndex); }
 
-	UINT GetFrameInFlightIndex() const { return m_frameInFlightIndex;}
-	void UpdateFrameInFlightIndex(){ m_frameInFlightIndex = m_swapChain->GetCurrentBackBufferIndex(); }
-	
+	UINT GetFrameInFlightIndex() const { return m_frameInFlightIndex; }
+	void UpdateFrameInFlightIndex() { m_frameInFlightIndex = m_swapChain->GetCurrentBackBufferIndex(); }
+
 	HANDLE GetWaitableObject() const { return m_WaitableObject; }
 
 
 	D3D12_VIEWPORT GetDefaultViewport() const;
 	D3D12_RECT GetDefaultScissorRect() const;
-	DXGI_FORMAT GetBackBufferFormat() const { return EngineSettings::BackBufferFormat;}
+	DXGI_FORMAT GetBackBufferFormat() const { return EngineSettings::BackBufferFormat; }
 
 
-	UINT GetAllowTearingFlag() const; // queries DXGI and returns DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING if supported
-	UINT GetFrameLatencyWaitableFlag() const { return (EngineSettings::FramesInFlight > 1) ? DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT : 0u; }
-	UINT ComputeSwapChainFlags() const; // aggregates all feature flags
+	UINT GetAllowTearingFlag() const;  // queries DXGI and returns DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING if supported
+	UINT GetFrameLatencyWaitableFlag() const
+	{
+		return (EngineSettings::FramesInFlight > 1) ? DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT : 0u;
+	}
+	UINT ComputeSwapChainFlags() const;  // aggregates all feature flags
   private:
 	UINT m_frameInFlightIndex = 0;
 	ComPtr<IDXGISwapChain3> m_swapChain = nullptr;

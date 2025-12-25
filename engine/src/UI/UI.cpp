@@ -16,16 +16,12 @@ UI GUI;
 // Forward declaration to ensure the Win32 backend handler is visible to this unit.
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-static void AllocSRV(ImGui_ImplDX12_InitInfo*,
-                     D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle,
-                     D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle)
+static void AllocSRV(ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle)
 {
-	GD3D12DescriptorHeapManager.AllocateHandle(
-	    D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, *out_cpu_handle, *out_gpu_handle);
+	GD3D12DescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, *out_cpu_handle, *out_gpu_handle);
 }
 
-static void
-FreeSRV(ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle)
+static void FreeSRV(ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle)
 {
 	GD3D12DescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, cpu_handle, gpu_handle);
 }
@@ -43,8 +39,8 @@ void UI::Initialize()
 	ImGui::CreateContext();
 
 	ImGuiIO& io = ImGui::GetIO();
-	(void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable keyboard controls.
+	(void) io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable keyboard controls.
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable gamepad controls.
 
 	ImGui::StyleColorsDark();

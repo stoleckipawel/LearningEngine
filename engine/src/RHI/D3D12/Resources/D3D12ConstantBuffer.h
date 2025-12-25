@@ -13,9 +13,9 @@ template <typename T> class D3D12ConstantBuffer
 {
   public:
 	// Create and map constant buffer, create a CBV view. Allocates a descriptor via the manager.
-	explicit D3D12ConstantBuffer()
-	    : m_cbvHandle(GD3D12DescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)),
-	      m_ConstantBufferSize((sizeof(T) + 255) & ~255)
+	explicit D3D12ConstantBuffer() :
+	    m_cbvHandle(GD3D12DescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)),
+	    m_ConstantBufferSize((sizeof(T) + 255) & ~255)
 	{
 		std::memset(&m_ConstantBufferData, 0, sizeof(T));
 		CreateResource();
@@ -34,35 +34,20 @@ template <typename T> class D3D12ConstantBuffer
 
 	// Returns the GPU virtual address for root CBV binding (SetGraphicsRootConstantBufferView)
 	// This is the preferred binding method for frequently-updated constant buffers.
-	D3D12_GPU_VIRTUAL_ADDRESS GetGPUVirtualAddress() const noexcept
-	{
-		return Resource ? Resource->GetGPUVirtualAddress() : 0;
-	}
+	D3D12_GPU_VIRTUAL_ADDRESS GetGPUVirtualAddress() const noexcept { return Resource ? Resource->GetGPUVirtualAddress() : 0; }
 
 	// Returns the GPU descriptor handle for descriptor table binding
 	// Use this only when binding via descriptor tables, not for root CBVs.
-	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept
-	{
-		return m_cbvHandle.GetGPU();
-	}
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept { return m_cbvHandle.GetGPU(); }
 
 	// Returns the CPU descriptor handle for descriptor heap management
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const noexcept
-	{
-		return m_cbvHandle.GetCPU();
-	}
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const noexcept { return m_cbvHandle.GetCPU(); }
 
 	// Returns the aligned size of the backing constant buffer in bytes (256-byte aligned)
-	UINT GetSizeInBytes() const noexcept
-	{
-		return m_ConstantBufferSize;
-	}
+	UINT GetSizeInBytes() const noexcept { return m_ConstantBufferSize; }
 
 	// Returns true if the buffer resource is valid and mapped
-	bool IsValid() const noexcept
-	{
-		return Resource != nullptr && m_MappedData != nullptr;
-	}
+	bool IsValid() const noexcept { return Resource != nullptr && m_MappedData != nullptr; }
 
   public:
 	// No copy or move allowed, strict ownership
@@ -103,12 +88,13 @@ template <typename T> class D3D12ConstantBuffer
 		resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 		resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-		CHECK(GD3D12Rhi.GetDevice()->CreateCommittedResource(&heapProperties,
-		                                                     D3D12_HEAP_FLAG_NONE,
-		                                                     &resourceDesc,
-		                                                     D3D12_RESOURCE_STATE_GENERIC_READ,
-		                                                     nullptr,
-		                                                     IID_PPV_ARGS(&Resource)));
+		CHECK(GD3D12Rhi.GetDevice()->CreateCommittedResource(
+		    &heapProperties,
+		    D3D12_HEAP_FLAG_NONE,
+		    &resourceDesc,
+		    D3D12_RESOURCE_STATE_GENERIC_READ,
+		    nullptr,
+		    IID_PPV_ARGS(&Resource)));
 
 		DebugUtils::SetDebugName(Resource, L"RHI_ConstantBuffer");
 
@@ -130,9 +116,9 @@ template <typename T> class D3D12ConstantBuffer
 
   private:
 	ComPtr<ID3D12Resource2> Resource = nullptr;
-	D3D12DescriptorHandle m_cbvHandle; // CBV descriptor handle
-	T m_ConstantBufferData;            // Cached buffer data
+	D3D12DescriptorHandle m_cbvHandle;  // CBV descriptor handle
+	T m_ConstantBufferData;  // Cached buffer data
 	D3D12_CONSTANT_BUFFER_VIEW_DESC m_ConstantBufferViewDesc = {};
-	void* m_MappedData = nullptr; // Pointer to mapped memory
-	UINT m_ConstantBufferSize;    // Aligned buffer size (256 bytes)
+	void* m_MappedData = nullptr;  // Pointer to mapped memory
+	UINT m_ConstantBufferSize;  // Aligned buffer size (256 bytes)
 };

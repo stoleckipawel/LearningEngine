@@ -26,19 +26,20 @@ ComPtr<ID3D12Resource2> D3D12UploadBuffer::Upload(const void* data, size_t dataS
 	// Create the committed resource in the upload heap
 	ComPtr<ID3D12Resource2> uploadBuffer;
 	CD3DX12_HEAP_PROPERTIES heapUploadProperties(D3D12_HEAP_TYPE_UPLOAD);
-	CHECK(GD3D12Rhi.GetDevice()->CreateCommittedResource(&heapUploadProperties,
-	                                                     D3D12_HEAP_FLAG_NONE,
-	                                                     &resourceDesc,
-	                                                     D3D12_RESOURCE_STATE_GENERIC_READ,
-	                                                     nullptr,
-	                                                     IID_PPV_ARGS(uploadBuffer.ReleaseAndGetAddressOf())));
+	CHECK(GD3D12Rhi.GetDevice()->CreateCommittedResource(
+	    &heapUploadProperties,
+	    D3D12_HEAP_FLAG_NONE,
+	    &resourceDesc,
+	    D3D12_RESOURCE_STATE_GENERIC_READ,
+	    nullptr,
+	    IID_PPV_ARGS(uploadBuffer.ReleaseAndGetAddressOf())));
 
 	DebugUtils::SetDebugName(uploadBuffer, L"RHI_UploadBuffer");
 
 	// Map the buffer and copy the data. Use std::memcpy for portability; the
 	// upload heap is write-combined so large copies should be minimized.
 	void* mappedData = nullptr;
-	D3D12_RANGE readRange = {0, 0}; // We do not intend to read from this resource on CPU
+	D3D12_RANGE readRange = {0, 0};  // We do not intend to read from this resource on CPU
 	CHECK(uploadBuffer->Map(0, &readRange, &mappedData));
 
 	if (dataSize > 0 && data != nullptr && mappedData != nullptr)

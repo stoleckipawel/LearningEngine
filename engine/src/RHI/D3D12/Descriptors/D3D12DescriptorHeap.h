@@ -30,7 +30,7 @@ class D3D12DescriptorHeap
 	UINT GetNumDescriptors() const;
 
 	// Raw pointer access for D3D12 binding.
-	ID3D12DescriptorHeap* GetRaw() const noexcept{return m_heap.Get();}
+	ID3D12DescriptorHeap* GetRaw() const noexcept { return m_heap.Get(); }
 
 	// Materialize a typed descriptor handle at the given index.
 	// Performs bounds check and returns an invalid handle on error.

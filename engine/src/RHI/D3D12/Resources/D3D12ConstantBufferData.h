@@ -4,7 +4,6 @@
 #include <type_traits>
 
 
-
 //------------------------------------------------------------------------------
 // Constant Buffer Data (C++ ↔ HLSL)
 //
@@ -25,11 +24,11 @@
 // Helper macro to validate CBV layout/size for all constant-buffer structs.
 // Usage: CBV_CHECK(MyCbStruct);
 // Validate that CB types are safe to memcpy to GPU memory and match HLSL layout
-#define CBV_CHECK(Type)                                                                                                \
-	static_assert(std::is_standard_layout_v<Type>, #Type " must be standard-layout");                                  \
-	static_assert(std::is_trivially_copyable_v<Type>, #Type " must be trivially-copyable");                            \
-	static_assert(alignof(Type) >= 256, #Type " must be 256-byte aligned");                                            \
-	static_assert(sizeof(Type) % 256 == 0, #Type " must occupy whole 256-byte CBV slot(s)");                           \
+#define CBV_CHECK(Type)                                                                      \
+	static_assert(std::is_standard_layout_v<Type>, #Type " must be standard-layout");        \
+	static_assert(std::is_trivially_copyable_v<Type>, #Type " must be trivially-copyable");  \
+	static_assert(alignof(Type) >= 256, #Type " must be 256-byte aligned");                  \
+	static_assert(sizeof(Type) % 256 == 0, #Type " must occupy whole 256-byte CBV slot(s)"); \
 	static_assert(sizeof(Type) <= 64 * 1024, #Type " must be <= 64KB")
 
 //------------------------------------------------------------------------------
@@ -37,14 +36,14 @@
 //------------------------------------------------------------------------------
 struct alignas(256) PerFrameConstantBufferData
 {
-	uint32_t FrameIndex; // Current frame number
-	float TotalTime;     // Seconds since engine start
-	float DeltaTime;     // Seconds since last frame
-	float _padPerFrameTime0; // padding to complete 16-byte slot
+	uint32_t FrameIndex;  // Current frame number
+	float TotalTime;  // Seconds since engine start
+	float DeltaTime;  // Seconds since last frame
+	float _padPerFrameTime0;  // padding to complete 16-byte slot
 
-	XMFLOAT2 ViewportSize;    // Render target width, height
-	XMFLOAT2 ViewportSizeInv; // 1.0 / width, 1.0 / height
-	
+	XMFLOAT2 ViewportSize;  // Render target width, height
+	XMFLOAT2 ViewportSizeInv;  // 1.0 / width, 1.0 / height
+
 	// rest of 256-byte slot is intentionally unused/pad
 };
 CBV_CHECK(PerFrameConstantBufferData);
@@ -54,15 +53,15 @@ CBV_CHECK(PerFrameConstantBufferData);
 //------------------------------------------------------------------------------
 struct alignas(256) PerViewConstantBufferData
 {
-	XMFLOAT4X4 ViewMTX;       // World -> View
-	XMFLOAT4X4 ProjectionMTX; // View -> Clip
-	XMFLOAT4X4 ViewProjMTX;   // World -> Clip (precomputed to save GPU work)
+	XMFLOAT4X4 ViewMTX;  // World -> View
+	XMFLOAT4X4 ProjectionMTX;  // View -> Clip
+	XMFLOAT4X4 ViewProjMTX;  // World -> Clip (precomputed to save GPU work)
 
-	XMFLOAT3 CameraPosition; // World-space camera position
-	float NearZ;             // Near clip plane
+	XMFLOAT3 CameraPosition;  // World-space camera position
+	float NearZ;  // Near clip plane
 
-	float FarZ;               // Far clip plane
-	XMFLOAT3 CameraDirection; // World-space camera forward
+	float FarZ;  // Far clip plane
+	XMFLOAT3 CameraDirection;  // World-space camera forward
 };
 CBV_CHECK(PerViewConstantBufferData);
 
@@ -71,8 +70,8 @@ CBV_CHECK(PerViewConstantBufferData);
 //------------------------------------------------------------------------------
 struct alignas(256) PerObjectVSConstantBufferData
 {
-	XMFLOAT4X4 WorldMTX;             // Local -> World
-	XMFLOAT4X4 WorldInvTransposeMTX; // For correct normal transformation under non-uniform scale
+	XMFLOAT4X4 WorldMTX;  // Local -> World
+	XMFLOAT4X4 WorldInvTransposeMTX;  // For correct normal transformation under non-uniform scale
 	// remaining space in the 256-byte slot is reserved for future use
 };
 CBV_CHECK(PerObjectVSConstantBufferData);
@@ -82,12 +81,12 @@ CBV_CHECK(PerObjectVSConstantBufferData);
 //------------------------------------------------------------------------------
 struct alignas(256) PerObjectPSConstantBufferData
 {
-	XMFLOAT4 BaseColor; // RGBA base/albedo color or tint
+	XMFLOAT4 BaseColor;  // RGBA base/albedo color or tint
 
-	float Metallic;         // PBR metallic [0,1]
-	float Roughness;        // PBR roughness [0,1]
-	float F0;               // PBR reflectance at normal incidence
-	float _padPerObjectPS0; // pad to 16 bytes
+	float Metallic;  // PBR metallic [0,1]
+	float Roughness;  // PBR roughness [0,1]
+	float F0;  // PBR reflectance at normal incidence
+	float _padPerObjectPS0;  // pad to 16 bytes
 
 	// remaining space reserved
 };
