@@ -24,7 +24,7 @@ if errorlevel 1 (
 
 REM Step 1: Clean all intermediate files
 echo [LOG] Cleaning intermediate files...
-call Tools\CleanIntermediateFiles.bat CONTINUE
+call "%~dp0CleanIntermediateFiles.bat" CONTINUE
 if errorlevel 1 (
     echo [ERROR] CleanIntermediateFiles.bat failed.
     pause

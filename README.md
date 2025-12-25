@@ -39,6 +39,7 @@ Why optional tools matter:
 	```
 	Verifies CMake, Clang, and MSBuild are available. Logs missing tools.
 
+
 2. **Generate Solution**
 	```
 	BuildSolution.bat
@@ -46,11 +47,18 @@ Why optional tools matter:
 	Cleans, checks dependencies, and generates Visual Studio solution files using CMake.
 
 3. **Build Sample Projects**
-	```
-	BuildSamplesDebug.bat
-	BuildSamplesRelease.bat
-	```
-	Builds all sample projects for Debug or Release. Output executables are in `bin/Debug` or `bin/Release`.
+Run the interactive root builder which prompts for configuration, or call the tools wrappers directly:
+```
+# interactive (prompts for Debug/Release/RelWithDebInfo)
+BuildSamples.bat
+
+# non-interactive
+tools\BuildSamplesDebug.bat
+tools\BuildSamplesRelease.bat
+tools\BuildSamplesRelWithDebInfo.bat
+```
+The root `BuildSamples.bat` delegates to the internal implementation at `tools\internal\BuildSamplesImpl.bat`. Output executables are placed under `bin\<Config>` (e.g. `bin\Debug`).
+
 
 4. **Manual Build (Visual Studio)**
 	Open `build/Playground.sln` in Visual Studio. Build using Debug/Release. Default startup project: `ExampleD3D12`.
@@ -60,11 +68,14 @@ Why optional tools matter:
 | Script                     | Purpose                                                        |
 |----------------------------|----------------------------------------------------------------|
 | CheckDependencies.bat      | Check for CMake, Clang, MSBuild                                |
-| CleanIntermediateFiles.bat | Clean build, bin, obj, .vs, and temp files                     |
+| CleanIntermediateFiles.bat | Clean build, bin, obj, .vs, and temp files (root)             |
 | BuildSolution.bat          | Clean, check dependencies, generate solution                   |
-| BuildSamples.bat           | Build all sample projects for given config (Debug/Release)      |
-| BuildSamplesDebug.bat      | Build all sample projects in Debug (calls BuildSamples.bat)     |
-| BuildSamplesRelease.bat    | Build all sample projects in Release (calls BuildSamples.bat)   |
+| BuildSamples.bat           | Root interactive builder; delegates to `tools\internal\BuildSamplesImpl.bat` |
+| tools\BuildSamplesDebug.bat | Convenience wrapper calling `tools\internal\BuildSamplesImpl.bat Debug` |
+| tools\BuildSamplesRelease.bat | Convenience wrapper calling `tools\internal\BuildSamplesImpl.bat Release` |
+| tools/BuildSamplesRelWithDebugInfo.bat | Convienience wrapper calling 
+| tools\internal\BuildSamplesImpl.bat | Internal implementation that performs project discovery and MSBuild calls |
+| tools\StartLogged.bat     | Optional logging wrapper that captures stdout/stderr to `Saved\LogBuild.txt` with rotation |
 
 ## Directory Structure
 

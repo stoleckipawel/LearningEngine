@@ -1,19 +1,16 @@
 @echo off
 REM ---------------------------------------------------
-REM BuildSamples.bat
+REM BuildSamplesImpl.bat (internal implementation)
 REM ---------------------------------------------------
-REM This script builds all sample projects in the samples folder for a given configuration (Debug/Release):
-REM   1. Checks if solution file exists, generates if missing
-REM   2. Finds and builds all sample projects (*.vcxproj) in samples for the given configuration
-REM   3. Logs each build step and result
-REM   4. At the end, pauses for user review unless called with CONTINUE argument
+REM This is the implementation previously named BuildSamples.bat
+REM It is intended to be invoked by user-facing wrappers.
 REM ---------------------------------------------------
 
 setlocal enabledelayedexpansion
 set "ARCH=x64"
 set "SCRIPT_DIR=%~dp0"
-REM If the script lives under the Tools folder, use the parent directory as the project root.
-for %%I in ("%SCRIPT_DIR%..") do set "SRC_DIR=%%~fI\"
+REM Script is under tools\internal; repo root is two levels up.
+for %%I in ("%SCRIPT_DIR%..\..") do set "SRC_DIR=%%~fI\"
 set "BUILD_DIR=!SRC_DIR!build"
 set "SAMPLES_DIR=!SRC_DIR!samples"
 
@@ -38,7 +35,7 @@ set "PROJECT_NAME=%PROJECT_NAME: =%"
 set "SOLUTION_FILE=!BUILD_DIR!\%PROJECT_NAME%.sln"
 if not exist "!SOLUTION_FILE!" (
     echo [LOG] Solution file not found. Generating with BuildSolution.bat...
-    call BuildSolution.bat CONTINUE
+    call "!SRC_DIR!BuildSolution.bat" CONTINUE
     if errorlevel 1 (
         echo [ERROR] BuildSolution.bat failed to generate solution.
         pause

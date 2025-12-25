@@ -6,4 +6,4 @@ REM Builds all sample projects in the samples folder for RelWithDebInfo configur
 REM Delegates logic to Tools\BuildSamples.bat.
 REM ---------------------------------------------------
 
-call Tools\BuildSamples.bat RelWithDebInfo %1
+call "%~dp0internal\BuildSamplesImpl.bat" RelWithDebInfo %1
