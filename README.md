@@ -17,6 +17,20 @@ LearningEngine is a modular DirectX 12 rendering engine built for learning and e
 - **Windows platform**
 - **Clang** (optional; if not available, build will automatically fall back to MSVC)
 
+### Required vs Optional
+- **Required:**
+	- `CMake` — used to generate build systems and projects.
+	- `Visual Studio 2022` / `msbuild` — required for the default Visual Studio solution workflow on Windows.
+	- `Windows 10 SDK` / DirectX 12 libraries — runtime and headers for D3D12 development.
+
+- **Optional (recommended for sanitizer or Ninja workflows):**
+	- `clang` / `clang++` — required when using sanitizer builds or building with the LLVM toolchain; otherwise the build falls back to MSVC.
+	- `Ninja` — recommended generator for fast incremental builds and the sanitizer scripts (scripts configure Ninja + clang automatically).
+
+Why optional tools matter:
+- `clang/clang++`: many sanitizers (ASan, UBSan, TSan, MSan) are best supported with LLVM toolchains. Use `clang` when running the `Tools/*Sanitizer*.bat` scripts or when you pass `-DENABLE_SANITIZERS=ON` to CMake.
+- `Ninja`: the sanitizer wrapper scripts and CI-friendly flows use Ninja for reliable instrumentation and faster builds; Visual Studio generator + MSVC may not support all sanitizers.
+
 ## Quick Start
 
 1. **Check Dependencies**
@@ -35,8 +49,6 @@ LearningEngine is a modular DirectX 12 rendering engine built for learning and e
 	```
 	BuildSamplesDebug.bat
 	BuildSamplesRelease.bat
-	BuildSamples.bat Debug
-	BuildSamples.bat Release
 	```
 	Builds all sample projects for Debug or Release. Output executables are in `bin/Debug` or `bin/Release`.
 
@@ -153,11 +165,6 @@ LearningEngine/
   CleanIntermediateFiles.bat
   ```
   Removes all intermediate, build, and temporary files. After cleaning, run `BuildSolution.bat` to regenerate.
-
-- **Include errors after folder changes:** Re-run CMake to update include paths:
-  ```
-  cd build && cmake ..
-  ```
 
 ## License
 MIT License. See `LICENSE.txt` for details.
