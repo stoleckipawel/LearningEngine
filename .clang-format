@@ -19,7 +19,7 @@ UseTab: ForIndentation
 
 ContinuationIndentWidth: 4
 
-ColumnLimit: 180
+ColumnLimit: 160
 
 # ---------------------------------------------------------------------------
 # Braces & control flow
@@ -45,7 +45,6 @@ BraceWrapping:
 # Enforce explicit blocks – no ambiguity
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
-AllowShortCaseLabelsOnASingleLine: false
 AllowShortBlocksOnASingleLine: Never
 AllowShortFunctionsOnASingleLine: Empty
 

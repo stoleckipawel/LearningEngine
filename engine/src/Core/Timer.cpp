@@ -30,8 +30,8 @@ void Timer::Tick() noexcept
 	// Accumulate totals.
 	m_unscaledTotal += m_unscaledDelta;
 
-	const bool paused = m_bPaused.load(std::memory_order_relaxed);
-	if (!paused)
+	const bool bPaused = m_bPaused.load(std::memory_order_relaxed);
+	if (!bPaused)
 	{
 		const Duration scaled{m_unscaledDelta.count() * m_timeScale};
 		m_scaledTotal += scaled;
@@ -45,8 +45,8 @@ void Timer::Tick() noexcept
 	m_timeInfo.unscaledTime = m_unscaledTotal;
 	m_timeInfo.unscaledDelta = m_unscaledDelta;
 	m_timeInfo.timeScale = m_timeScale;
-	m_timeInfo.scaledDelta = paused ? Duration::zero() : Duration{m_unscaledDelta.count() * m_timeScale};
-	m_timeInfo.paused = paused;
+	m_timeInfo.scaledDelta = bPaused ? Duration::zero() : Duration{m_unscaledDelta.count() * m_timeScale};
+	m_timeInfo.bPaused = bPaused;
 }
 
 // -----------------------------------------------------------------------------
@@ -56,16 +56,16 @@ double Timer::ToUnit(Duration d, TimeUnit u) noexcept
 {
 	switch (u)
 	{
-	case TimeUnit::Seconds:
-		return d.count();
-	case TimeUnit::Milliseconds:
-		return d.count() * 1e3;
-	case TimeUnit::Microseconds:
-		return d.count() * 1e6;
-	case TimeUnit::Nanoseconds:
-		return d.count() * 1e9;
+		case TimeUnit::Seconds:
+			return d.count();
+		case TimeUnit::Milliseconds:
+			return d.count() * 1e3;
+		case TimeUnit::Microseconds:
+			return d.count() * 1e6;
+		case TimeUnit::Nanoseconds:
+			return d.count() * 1e9;
 	}
-	return d.count(); // fallback (should never reach)
+	return d.count();  // fallback (should never reach)
 }
 
 // -----------------------------------------------------------------------------

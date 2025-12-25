@@ -17,7 +17,6 @@ REM Overall return code (0 == OK)
 set "RC=0"
 
 REM --- Check for CMake ---
-echo [LOG] Checking for CMake in PATH...
 where cmake >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] CMake not found. Please install CMake and ensure it's in your PATH.
@@ -27,7 +26,6 @@ if errorlevel 1 (
 )
 
 REM --- Check for Clang (optional) ---
-echo [LOG] Checking for Clang in PATH...
 where clang >nul 2>&1
 if errorlevel 1 (
     echo [WARN] Clang not found. Will use MSVC toolset for generation and build.
@@ -36,7 +34,6 @@ if errorlevel 1 (
 )
 
 REM --- Check for MSBuild ---Zz
-echo [LOG] Checking for MSBuild in PATH...
 where msbuild >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] MSBuild not found. Please install Visual Studio with the C++ workload and ensure MSBuild is in your PATH.
@@ -45,7 +42,27 @@ if errorlevel 1 (
     echo [SUCCESS] MSBuild found.
 )
 
-echo [LOG] CheckDependencies completed.
+REM --- Check for clang-format (optional) ---
+where clang-format >nul 2>&1
+if errorlevel 1 (
+    echo [WARN] clang-format not found. Install clang-format or add it to PATH if you want automatic formatting checks.
+) else (
+    echo [SUCCESS] clang-format found.
+)
+
+REM --- Check for clang-tidy (optional) ---
+where clang-tidy >nul 2>&1
+if errorlevel 1 (
+    echo [WARN] clang-tidy not found. Install clang-tidy or add it to PATH to enable static analysis/format checks.
+) else (
+    echo [SUCCESS] clang-tidy found.
+)
+
+if %RC%==0 (
+    echo [SUCCESS] All dependency checks passed.
+) else (
+    echo [ERROR] One or more dependency checks failed.
+)
 
 REM Preserve LOGFILE across endlocal
 set "_TMP_LOGFILE=%LOGFILE%"

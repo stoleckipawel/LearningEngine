@@ -1,12 +1,14 @@
-
 cmake_minimum_required(VERSION 3.20)
 project(Playground LANGUAGES CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# ---------------------------
 # Optional: sanitizer support
+# ---------------------------
 option(ENABLE_SANITIZERS "Enable sanitizer instrumentation (requires clang/clang++)" OFF)
 set(SANITIZER_TYPE "ASAN" CACHE STRING "Sanitizer to enable: ASAN, UBSAN, TSAN, MSAN, LSAN")
 
-# If enabled, configure global compile/link flags for supported toolchains
 if(ENABLE_SANITIZERS)
     message(STATUS "Sanitizers enabled: ${SANITIZER_TYPE}")
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
@@ -30,7 +32,6 @@ if(ENABLE_SANITIZERS)
         endif()
 
         add_compile_options(${SAN_COMPILE_FLAGS})
-        # Append to linker flags
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SAN_LINK_FLAGS}")
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${SAN_LINK_FLAGS}")
     else()
@@ -38,11 +39,15 @@ if(ENABLE_SANITIZERS)
     endif()
 endif()
 
+# ---------------------------
 # Require C++20
+# ---------------------------
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Option to enable strict compiler warnings (opt-in to avoid breaking local builds)
+# ---------------------------
+# Optional: strict warnings
+# ---------------------------
 option(ENABLE_STRICT_WARNINGS "Enable strict compiler warnings and treat warnings as errors" OFF)
 if(ENABLE_STRICT_WARNINGS)
     message(STATUS "Strict warnings enabled: adding compiler warning flags and Werror")
@@ -55,19 +60,84 @@ if(ENABLE_STRICT_WARNINGS)
     endif()
 endif()
 
-# Set output directories for all build types
+# ---------------------------
+# Output directories
+# ---------------------------
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}")
 
-# Default to Debug build type if not specified
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose build type" FORCE)
 endif()
 
-# Add engine and sample subdirectories
+# ---------------------------
+# Clang-Tidy integration
+# ---------------------------
+find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+if(CLANG_TIDY_EXE)
+    message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
+endif()
+
+# ---------------------------
+# Clang-Format integration
+# ---------------------------
+find_program(CLANG_FORMAT_EXE NAMES clang-format)
+if(CLANG_FORMAT_EXE)
+    message(STATUS "clang-format found: ${CLANG_FORMAT_EXE}")
+
+    # Collect all C++ files excluding third_party
+    file(GLOB_RECURSE ALL_CPP
+        "${CMAKE_SOURCE_DIR}/engine/*.cpp"
+        "${CMAKE_SOURCE_DIR}/engine/*.h"
+        "${CMAKE_SOURCE_DIR}/samples/*.cpp"
+        "${CMAKE_SOURCE_DIR}/samples/*.h"
+    )
+
+    foreach(f ${ALL_CPP})
+        string(FIND "${f}" "/third_party/" isThirdParty)
+        if(NOT isThirdParty EQUAL -1)
+            list(REMOVE_ITEM ALL_CPP "${f}")
+        endif()
+    endforeach()
+
+    add_custom_target(
+        clang_format_check
+        COMMAND ${CLANG_FORMAT_EXE} --dry-run --Werror ${ALL_CPP}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Checking code formatting with clang-format..."
+    )
+endif()
+
+# ---------------------------
+# Add subdirectories
+# ---------------------------
 add_subdirectory(engine)
 add_subdirectory(samples/ExampleD3D12)
 
-# Set ExampleD3D12 as the default startup project in Visual Studio
+# ---------------------------
+# Apply clang-tidy & clang-format to targets
+# ---------------------------
+if(CLANG_TIDY_EXE)
+    # Apply clang-tidy to all targets
+    get_property(all_targets DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY BUILDSYSTEM_TARGETS)
+    foreach(t ${all_targets})
+        get_target_property(type ${t} TYPE)
+        if(type STREQUAL "EXECUTABLE" OR type STREQUAL "STATIC_LIBRARY" OR type STREQUAL "SHARED_LIBRARY")
+            set_target_properties(${t} PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_EXE} -p=${CMAKE_BINARY_DIR}")
+        endif()
+    endforeach()
+endif()
+
+if(CLANG_FORMAT_EXE)
+    # Make all targets depend on clang_format_check
+    get_property(all_targets DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY BUILDSYSTEM_TARGETS)
+    foreach(t ${all_targets})
+        add_dependencies(${t} clang_format_check)
+    endforeach()
+endif()
+
+# ---------------------------
+# Default startup project for VS
+# ---------------------------
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ExampleD3D12)

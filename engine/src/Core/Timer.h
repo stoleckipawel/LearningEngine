@@ -31,7 +31,7 @@ struct TimeInfo
 	Duration unscaledDelta = Duration::zero(); // raw delta this frame (seconds)
 	double timeScale = 1.0;                    // game-time multiplier
 	Duration scaledDelta = Duration::zero();   // delta * timeScale (0 if paused)
-	bool paused = false;                       // true when scaled time is paused
+	bool bPaused = false;                       // true when scaled time is paused
 };
 
 // -------------------------------------------------------------------------
