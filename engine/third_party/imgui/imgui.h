@@ -2986,7 +2986,7 @@ enum ImGuiTableFlags_
 	ImGuiTableFlags_NoPadOuterX = 1 << 22,  // Default if BordersOuterV is off. Disable outermost padding.
 	ImGuiTableFlags_NoPadInnerX = 1 << 23,  // Disable inner padding between columns (double inner padding if BordersOuterV is on, single
 	                                        // inner padding if BordersOuterV is off). Scrolling
-	ImGuiTableFlags_ScrollX = 1 << 24,  // Enable horizontal scrolling. Require 'outer_size' parameter of BeginTable() to specify the
+	ImGuiTableFlags_ScrollX = 1 << 24,      // Enable horizontal scrolling. Require 'outer_size' parameter of BeginTable() to specify the
 	                                    // container size. Changes default sizing policy. Because this creates a child window, ScrollY is
 	                                    // currently generally recommended when using ScrollX.
 	ImGuiTableFlags_ScrollY = 1 << 25,  // Enable vertical scrolling. Require 'outer_size' parameter of BeginTable() to specify the
@@ -6103,7 +6103,7 @@ IMGUI_API bool ListBox(
 // static inline void  OpenPopupContextItem(const char* str_id = NULL, ImGuiMouseButton mb = 1)    { OpenPopupOnItemClick(str_id, mb); } //
 // Bool return value removed. Use IsWindowAppearing() in BeginPopup() instead. Renamed in 1.77, renamed back in 1.79. Sorry!
 //-- OBSOLETED in 1.78 (from June 2020): Old drag/sliders functions that took a 'float power > 1.0f' argument instead of
-//ImGuiSliderFlags_Logarithmic. See github.com/ocornut/imgui/issues/3361 for details. IMGUI_API bool      DragScalar(const char* label,
+// ImGuiSliderFlags_Logarithmic. See github.com/ocornut/imgui/issues/3361 for details. IMGUI_API bool      DragScalar(const char* label,
 // ImGuiDataType data_type, void* p_data, float v_speed, const void* p_min, const void* p_max, const char* format, float power = 1.0f) //
 // OBSOLETED in 1.78 (from June 2020) IMGUI_API bool      DragScalarN(const char* label, ImGuiDataType data_type, void* p_data, int
 // components, float v_speed, const void* p_min, const void* p_max, const char* format, float power = 1.0f); // OBSOLETED in 1.78 (from June

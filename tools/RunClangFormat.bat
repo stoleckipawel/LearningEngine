@@ -1,11 +1,15 @@
 @echo off
-REM RunClangFormat.bat
+REM tools\RunClangFormat.bat
 REM Runs clang-format on all .cpp .h .hlsl .hlsli files under the repo root,
 REM shows progress, counts scanned and modified files, and writes a log to Logs/LogClangFormat.txt
 
 setlocal enabledelayedexpansion
 
-set "ROOT_DIR=%~dp0"
+REM Determine repository root (parent of this tools folder)
+pushd "%~dp0.." >nul
+set "ROOT_DIR=%CD%\"
+popd >nul
+
 set "LOG_DIR=%ROOT_DIR%Logs"
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 set "LOGFILE=%LOG_DIR%\LogClangFormat.txt"
@@ -15,7 +19,7 @@ echo [LOG] ClangFormat run started: %DATE% %TIME%>"%LOGFILE%"
 set /A total=0
 for %%e in (cpp h hlsl hlsli) do (
     for /R "%ROOT_DIR%" %%F in (*.%%e) do (
-        echo %%~fF | findstr /I /C:"\\Logs\\" >nul
+        echo %%~fF | findstr /I /C:"\Logs\" >nul
         if errorlevel 1 (
             set /A total+=1
         )
@@ -25,6 +29,7 @@ for %%e in (cpp h hlsl hlsli) do (
 if %total%==0 (
     echo No files found to format.
     echo [LOG] No files found.>>"%LOGFILE%"
+    endlocal
     exit /B 0
 )
 
@@ -33,7 +38,7 @@ set /A modified=0
 
 for %%e in (cpp h hlsl hlsli) do (
     for /R "%ROOT_DIR%" %%F in (*.%%e) do (
-        echo %%~fF | findstr /I /C:"\\Logs\\" >nul
+        echo %%~fF | findstr /I /C:"\Logs\" >nul
         if errorlevel 1 (
             set /A idx+=1
             set "file=%%~fF"

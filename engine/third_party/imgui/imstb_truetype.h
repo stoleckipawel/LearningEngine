@@ -876,7 +876,7 @@ extern "C"
 #endif
 
 #ifndef stbtt_vertex             // you can predefine this to use different values
-	                             // (we share this with other code at RAD)
+                                 // (we share this with other code at RAD)
 #define stbtt_vertex_type short  // can't use stbtt_int16 because that's not visible in the header file
 	typedef struct
 	{
