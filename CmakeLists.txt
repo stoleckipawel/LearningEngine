@@ -72,12 +72,10 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # ---------------------------
-# Clang-Tidy integration
+# Add subdirectories
 # ---------------------------
-find_program(CLANG_TIDY_EXE NAMES clang-tidy)
-if(CLANG_TIDY_EXE)
-    message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
-endif()
+add_subdirectory(engine)
+add_subdirectory(samples/ExampleD3D12)
 
 # ---------------------------
 # Clang-Format integration
@@ -110,24 +108,8 @@ if(CLANG_FORMAT_EXE)
 endif()
 
 # ---------------------------
-# Add subdirectories
+# Apply clang-format to targets
 # ---------------------------
-add_subdirectory(engine)
-add_subdirectory(samples/ExampleD3D12)
-
-# ---------------------------
-# Apply clang-tidy & clang-format to targets
-# ---------------------------
-if(CLANG_TIDY_EXE)
-    # Apply clang-tidy to all targets
-    get_property(all_targets DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY BUILDSYSTEM_TARGETS)
-    foreach(t ${all_targets})
-        get_target_property(type ${t} TYPE)
-        if(type STREQUAL "EXECUTABLE" OR type STREQUAL "STATIC_LIBRARY" OR type STREQUAL "SHARED_LIBRARY")
-            set_target_properties(${t} PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_EXE} -p=${CMAKE_BINARY_DIR}")
-        endif()
-    endforeach()
-endif()
 
 if(CLANG_FORMAT_EXE)
     # Make all targets depend on clang_format_check
