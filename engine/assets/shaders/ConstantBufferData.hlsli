@@ -3,14 +3,15 @@
 //------------------------------------------------------------------------------
 cbuffer PerFrameConstantBufferData : register(b0)
 {
-    uint     FrameIndex;      // Current frame number 
-    float    TotalTime;       // Seconds since engine start
-    float    DeltaTime;       // Seconds since last frame
-    float    _padPerFrame0;           // pad to 16 bytes
+	uint FrameIndex; // Current frame number
+	float TotalTime;     // Seconds since engine start
+	float DeltaTime;     // Seconds since last frame
+	float _padPerFrameTime0; // padding to complete 16-byte slot
 
-    float2 ViewportSize;    // Render target width, height
-    float2 ViewportSizeInv; // 1.0 / width, 1.0 / height
-    // rest of 256-byte slot is intentionally unused/pad
+	float2 ViewportSize;    // Render target width, height
+	float2 ViewportSizeInv; // 1.0 / width, 1.0 / height
+	
+	// rest of 256-byte slot is intentionally unused/pad
 };
 
 //------------------------------------------------------------------------------

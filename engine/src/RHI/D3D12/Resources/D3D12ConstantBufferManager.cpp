@@ -5,6 +5,7 @@
 #include "Timer.h"
 #include "Window.h"
 #include "D3D12SwapChain.h"
+#include <cmath>
 
 D3D12ConstantBufferManager GD3D12ConstantBufferManager;
 
@@ -59,12 +60,11 @@ void D3D12ConstantBufferManager::UpdatePerFrame()
 	data.FrameIndex = GTimer.GetFrameCount();
 	data.TotalTime = GTimer.GetTotalTime();
 	data.DeltaTime = GTimer.GetDelta();
-	data._padPerFrame0 = 0.0f;
 	data.ViewportSize = GWindow.GetViewportSize();
 	data.ViewportSizeInv = GWindow.GetViewportSizeInv();
 
-	const uint32_t frameIdx = GD3D12SwapChain.GetFrameInFlightIndex();
-	m_PerFrameCB[frameIdx]->Update(data);
+	const uint32_t frameInFlightIndex = GD3D12SwapChain.GetFrameInFlightIndex();
+	m_PerFrameCB[frameInFlightIndex]->Update(data);
 }
 
 //------------------------------------------------------------------------------
@@ -87,8 +87,8 @@ void D3D12ConstantBufferManager::UpdatePerView()
 	XMStoreFloat4x4(&data.ProjectionMTX, proj);
 	XMStoreFloat4x4(&data.ViewProjMTX, viewProj);
 
-	const uint32_t frameIdx = GD3D12SwapChain.GetFrameInFlightIndex();
-	m_PerViewCB[frameIdx]->Update(data);
+	const uint32_t frameInFlightIndex = GD3D12SwapChain.GetFrameInFlightIndex();
+	m_PerViewCB[frameInFlightIndex]->Update(data);
 }
 
 //------------------------------------------------------------------------------

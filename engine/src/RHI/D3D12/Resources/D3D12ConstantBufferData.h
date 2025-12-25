@@ -40,10 +40,11 @@ struct alignas(256) PerFrameConstantBufferData
 	uint32_t FrameIndex; // Current frame number
 	float TotalTime;     // Seconds since engine start
 	float DeltaTime;     // Seconds since last frame
-	float _padPerFrame0; // pad to 16 bytes
+	float _padPerFrameTime0; // padding to complete 16-byte slot
 
 	XMFLOAT2 ViewportSize;    // Render target width, height
 	XMFLOAT2 ViewportSizeInv; // 1.0 / width, 1.0 / height
+	
 	// rest of 256-byte slot is intentionally unused/pad
 };
 CBV_CHECK(PerFrameConstantBufferData);
