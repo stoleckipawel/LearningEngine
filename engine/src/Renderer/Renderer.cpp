@@ -16,7 +16,6 @@
 #include "D3D12DepthStencil.h"
 #include "UI.h"
 #include "Timer.h"
-#include "Camera.h"
 
 // Global renderer instance
 Renderer GRenderer;
@@ -46,7 +45,8 @@ void Renderer::Initialize() noexcept
 	GD3D12ConstantBufferManager.Initialize();
 
 	// Load textures and create sampler
-	m_texture = std::make_unique<Texture>(std::filesystem::path("ColorCheckerBoard.png"));
+	m_checkerTexture = std::make_unique<Texture>(std::filesystem::path("ColorCheckerBoard.png"));
+	m_skyCubemapTexture = std::make_unique<Texture>(std::filesystem::path("SkyCubemap.png"));
 	m_sampler = std::make_unique<D3D12Sampler>();
 
 	// Create geometry
@@ -70,23 +70,23 @@ void Renderer::GatherPrimitives()
 {
 	m_primitiveFactory = std::make_unique<PrimitiveFactory>();
 
-	// Hard-coded 20 cubes with varied translation, rotation, and smaller scale or further from camera
-	std::vector<std::tuple<XMFLOAT3, XMFLOAT3, XMFLOAT3>> boxParams = {
+	// Hard-coded 20 primitive with varied translation, rotation, and smaller scale or further from camera
+	std::vector<std::tuple<XMFLOAT3, XMFLOAT3, XMFLOAT3>> shapeParams = {
 	    // translation                rotation (radians)           scale
-	    {{-10.0f, 0.0f, -5.0f}, {0.0f, 0.0f, 0.0f}, {1.2f, 1.2f, 1.2f}}, {{-8.0f, 2.0f, 6.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.5f, 1.0f}},
-	    {{-6.0f, -2.0f, -8.0f}, {0.5f, 0.5f, 0.0f}, {1.5f, 1.0f, 1.2f}}, {{-4.0f, 0.0f, 8.0f}, {0.0f, 0.7f, 0.0f}, {1.3f, 1.3f, 1.3f}},
-	    {{-2.0f, 2.0f, -6.0f}, {1.0f, 0.0f, 0.5f}, {1.0f, 0.8f, 1.2f}},  {{0.0f, -2.0f, 6.0f}, {0.0f, 0.0f, 1.0f}, {0.9f, 1.1f, 1.3f}},
-	    {{2.0f, 0.0f, -8.0f}, {0.3f, 0.8f, 0.2f}, {1.2f, 1.2f, 0.8f}},   {{4.0f, 4.0f, 8.0f}, {0.0f, 1.2f, 0.0f}, {1.0f, 0.7f, 1.5f}},
-	    {{6.0f, -4.0f, -6.0f}, {1.0f, 0.5f, 0.0f}, {0.7f, 1.5f, 1.0f}},  {{8.0f, 0.0f, 6.0f}, {0.7f, 0.0f, 1.0f}, {1.3f, 1.0f, 1.0f}},
-	    {{-9.0f, -3.0f, 10.0f}, {0.2f, 0.3f, 0.4f}, {0.8f, 1.0f, 1.2f}}, {{-7.0f, 3.0f, -10.0f}, {0.6f, 0.1f, 0.2f}, {1.1f, 0.9f, 1.0f}},
-	    {{-5.0f, -1.0f, 9.0f}, {0.4f, 0.6f, 0.8f}, {1.0f, 1.0f, 0.7f}},  {{-3.0f, 1.0f, -9.0f}, {0.9f, 0.2f, 0.3f}, {0.9f, 1.2f, 1.1f}},
-	    {{-1.0f, -3.0f, 8.0f}, {0.1f, 0.4f, 0.7f}, {1.2f, 0.8f, 1.0f}},  {{1.0f, 3.0f, -8.0f}, {0.5f, 0.9f, 0.1f}, {1.0f, 1.0f, 1.0f}},
-	    {{3.0f, -1.0f, 7.0f}, {0.8f, 0.3f, 0.6f}, {0.7f, 1.1f, 1.2f}},   {{5.0f, 1.0f, -7.0f}, {0.2f, 0.7f, 0.5f}, {1.1f, 0.9f, 0.8f}},
-	    {{7.0f, -3.0f, 6.0f}, {0.3f, 0.6f, 0.9f}, {0.8f, 1.0f, 1.0f}},   {{9.0f, 3.0f, -5.0f}, {0.7f, 0.2f, 0.4f}, {1.0f, 0.8f, 1.2f}}};
+		{{-10.0f, 0.0f, -5.0f}, {0.0f, 0.0f, 0.0f}, {1.2f, 1.2f, 1.2f}}, {{-8.0f, 2.0f, 6.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+		{{-6.0f, -2.0f, -8.0f}, {0.5f, 0.5f, 0.0f}, {1.5f, 1.5f, 1.5f}}, {{-4.0f, 0.0f, 8.0f}, {0.0f, 0.7f, 0.0f}, {1.3f, 1.3f, 1.3f}},
+		{{-2.0f, 2.0f, -6.0f}, {1.0f, 0.0f, 0.5f}, {1.0f, 1.0f, 1.0f}},  {{0.0f, -2.0f, 6.0f}, {0.0f, 0.0f, 1.0f}, {0.9f, 0.9f, 0.9f}},
+		{{2.0f, 0.0f, -8.0f}, {0.3f, 0.8f, 0.2f}, {1.2f, 1.2f, 1.2f}},   {{4.0f, 4.0f, 8.0f}, {0.0f, 1.2f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+		{{6.0f, -4.0f, -6.0f}, {1.0f, 0.5f, 0.0f}, {0.7f, 0.7f, 0.7f}},  {{8.0f, 0.0f, 6.0f}, {0.7f, 0.0f, 1.0f}, {1.3f, 1.3f, 1.3f}},
+		{{-9.0f, -3.0f, 10.0f}, {0.2f, 0.3f, 0.4f}, {0.8f, 0.8f, 0.8f}}, {{-7.0f, 3.0f, -10.0f}, {0.6f, 0.1f, 0.2f}, {1.1f, 1.1f, 1.1f}},
+		{{-5.0f, -1.0f, 9.0f}, {0.4f, 0.6f, 0.8f}, {1.0f, 1.0f, 1.0f}},  {{-3.0f, 1.0f, -9.0f}, {0.9f, 0.2f, 0.3f}, {0.9f, 0.9f, 0.9f}},
+		{{-1.0f, -3.0f, 8.0f}, {0.1f, 0.4f, 0.7f}, {1.2f, 1.2f, 1.2f}},  {{1.0f, 3.0f, -8.0f}, {0.5f, 0.9f, 0.1f}, {1.0f, 1.0f, 1.0f}},
+		{{3.0f, -1.0f, 7.0f}, {0.8f, 0.3f, 0.6f}, {0.7f, 0.7f, 0.7f}},   {{5.0f, 1.0f, -7.0f}, {0.2f, 0.7f, 0.5f}, {1.1f, 1.1f, 1.1f}},
+		{{7.0f, -3.0f, 6.0f}, {0.3f, 0.6f, 0.9f}, {0.8f, 0.8f, 0.8f}},   {{9.0f, 3.0f, -5.0f}, {0.7f, 0.2f, 0.4f}, {1.0f, 1.0f, 1.0f}}};
 
-	for (const auto& [translation, rotation, scale] : boxParams)
+	for (const auto& [translation, rotation, scale] : shapeParams)
 	{
-		m_primitiveFactory->AppendBox(translation, rotation, scale);
+		m_primitiveFactory->AppendShape(PrimitiveFactory::Shape::Octahedron, translation, rotation, scale);
 	}
 
 	m_primitiveFactory->Upload();
@@ -149,9 +149,9 @@ void Renderer::BindPerFrameResources() noexcept
 	// -------------------------------------------------------------------------
 	// Bind Textures SRV - descriptor table
 	// -------------------------------------------------------------------------
-	if (m_texture)
+	if (m_checkerTexture)
 	{
-		GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(RootBindings::RootParam::TextureSRV, m_texture->GetGPUHandle());
+		GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(RootBindings::RootParam::TextureSRV, m_checkerTexture->GetGPUHandle());
 	}
 
 	// -------------------------------------------------------------------------

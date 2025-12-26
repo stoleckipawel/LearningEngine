@@ -94,7 +94,8 @@ class Renderer
 	// -------------------------------------------------------------------------
 	// Owned resources (unique_ptr for RAII and clear ownership)
 	// -------------------------------------------------------------------------
-	std::unique_ptr<Texture> m_texture;
+	std::unique_ptr<Texture> m_checkerTexture;
+	std::unique_ptr<Texture> m_skyCubemapTexture;
 	std::unique_ptr<D3D12DepthStencil> m_depthStencil;
 	std::unique_ptr<D3D12Sampler> m_sampler;
 	std::unique_ptr<PrimitiveFactory> m_primitiveFactory;
