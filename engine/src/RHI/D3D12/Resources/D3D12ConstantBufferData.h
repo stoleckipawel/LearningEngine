@@ -71,11 +71,11 @@ CBV_CHECK(PerViewConstantBufferData);
 struct alignas(256) PerObjectVSConstantBufferData
 {
 	XMFLOAT4X4 WorldMTX;              // Local -> World
-	XMFLOAT4X4 WorldInvTransposeMTX;  // For correct normal transformation under non-uniform scale
-	                                  // remaining space in the 256-byte slot is reserved for future use
+	XMFLOAT3X3 WorldInvTransposeMTX;  // For correct normal transformation under non-uniform scale (3x3)
+
+	// remaining space in the 256-byte slot is reserved for future use
 };
 CBV_CHECK(PerObjectVSConstantBufferData);
-
 //------------------------------------------------------------------------------
 // Per-Object PS CB (b3) — updated per draw call (material scalars)
 //------------------------------------------------------------------------------

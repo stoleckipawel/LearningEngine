@@ -110,7 +110,7 @@ D3D12_GPU_VIRTUAL_ADDRESS D3D12ConstantBufferManager::UpdatePerObjectVS(const Pr
 
 	// Inverse-transpose: for correct normal transformation under non-uniform scale
 	const XMMATRIX worldInvTranspose = primitive.GetWorldInverseTransposeMatrix();
-	XMStoreFloat4x4(&data.WorldInvTransposeMTX, worldInvTranspose);
+	XMStoreFloat3x3(&data.WorldInvTransposeMTX, worldInvTranspose);
 
 	// Allocate from ring buffer and copy data - returns unique GPU VA
 	return GD3D12FrameResourceManager.AllocateConstantBuffer(data);

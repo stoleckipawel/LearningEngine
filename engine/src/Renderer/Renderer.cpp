@@ -53,8 +53,7 @@ void Renderer::Initialize() noexcept
 	GatherPrimitives();
 
 	// Create pipeline state object
-	m_pso =
-	    std::make_unique<D3D12PipelineState>(m_primitiveFactory->GetFirstPrimitive(), *m_rootSignature, *m_vertexShader, *m_pixelShader);
+	m_pso = std::make_unique<D3D12PipelineState>(m_primitiveFactory->GetFirstPrimitive(), *m_rootSignature, *m_vertexShader, *m_pixelShader);
 
 	// Create depth stencil and other frame buffers
 	CreateFrameBuffers();
@@ -86,7 +85,7 @@ void Renderer::GatherPrimitives()
 
 	for (const auto& [translation, rotation, scale] : shapeParams)
 	{
-		m_primitiveFactory->AppendShape(PrimitiveFactory::Shape::Octahedron, translation, rotation, scale);
+		m_primitiveFactory->AppendShape(PrimitiveFactory::Shape::Sphere, translation, rotation, scale);
 	}
 
 	m_primitiveFactory->Upload();

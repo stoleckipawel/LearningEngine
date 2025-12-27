@@ -61,7 +61,7 @@ void D3D12SwapChain::Create()
 // Clears the current render target view with a solid color
 void D3D12SwapChain::Clear()
 {
-	float clearColor[4] = {1.0f, 0.05f, 0.05f, 1.0f};
+	float clearColor[4] = {0.0f, 0.00f, 0.00f, 1.0f};
 	GD3D12Rhi.GetCommandList()->ClearRenderTargetView(GD3D12SwapChain.GetCPUHandle(), clearColor, 0, nullptr);
 }
 

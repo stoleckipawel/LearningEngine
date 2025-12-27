@@ -1,25 +1,13 @@
+
 #include "Common.hlsli"
-
-struct PsInput
-{
-	float2 TexCoord : TEXCOORD;
-	float4 Color : COLOR;
-};
-
-struct PsOutput
-{
-	float4 Color0 : SV_Target;
-};
-
-Texture2D myTexture : register(t0);
-sampler textureSampler : register(s0);
 
 void main(in PsInput Input, out PsOutput Output)
 {
-	float3 color = myTexture.SampleLevel(textureSampler, Input.TexCoord, 0.0f).xyz;
+	UnpackPsInput(Input);
 
-	// color *= BaseColor.rgb;
-	color *= Input.Color.rgb;
+	const float3 DiffuseAlbedo = Material::CalculateDiffuseAlbedo(Input);
+	const float DirectLighting = Lighting::CalculateDirect(Input.NormalWorld);
 
-	Output.Color0 = float4(color, 1.0f);
+	Output.Color0.xyz = DiffuseAlbedo * DirectLighting;
+	Output.Color0.w = 1.0f;
 }

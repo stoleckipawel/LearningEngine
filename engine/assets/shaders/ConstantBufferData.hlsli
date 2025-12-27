@@ -1,3 +1,5 @@
+#pragma once
+
 //------------------------------------------------------------------------------
 // Per-Frame CB (b0) — updated once per CPU frame, shared by all draws
 //------------------------------------------------------------------------------
@@ -36,7 +38,7 @@ cbuffer PerViewConstantBufferData : register(b1)
 cbuffer PerObjectVSConstantBufferData : register(b2)
 {
 	row_major float4x4 WorldMTX;              // Local -> World
-	row_major float4x4 WorldInvTransposeMTX;  // For correct normal transformation under non-uniform scale
+	row_major float3x3 WorldInvTransposeMTX;  // Normal transform (3x3) -> correct under non-uniform scale
 
 	// remaining space in the 256-byte slot is reserved for future use
 };

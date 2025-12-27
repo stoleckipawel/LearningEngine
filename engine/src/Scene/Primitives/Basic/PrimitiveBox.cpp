@@ -8,63 +8,59 @@ PrimitiveBox::PrimitiveBox(const XMFLOAT3& translation, const XMFLOAT3& rotation
 
 void PrimitiveBox::GenerateVertices(std::vector<Vertex>& outVertices) const
 {
-    outVertices = {
-        // Front face
-        {{-1.0f, -1.0f, 1.0f}, {0.0f, 1.0f}, {1.0, 0.0, 0.0, 1.0}},  // 0
-        {{-1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}, {0.0, 1.0, 0.0, 1.0}},   // 1
-        {{1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}, {0.0, 0.0, 1.0, 1.0}},    // 2
-        {{1.0f, -1.0f, 1.0f}, {1.0f, 1.0f}, {1.0, 1.0, 0.0, 1.0}},   // 3
-        // Back face
-        {{-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f}, {1.0, 0.0, 1.0, 1.0}},  // 4
-        {{-1.0f, 1.0f, -1.0f}, {1.0f, 0.0f}, {0.0, 1.0, 1.0, 1.0}},   // 5
-        {{1.0f, 1.0f, -1.0f}, {0.0f, 0.0f}, {1.0, 1.0, 1.0, 1.0}},    // 6
-        {{1.0f, -1.0f, -1.0f}, {0.0f, 1.0f}, {0.5, 0.5, 0.5, 1.0}},   // 7
-    };
+    outVertices.clear();
+    outVertices.reserve(24);
+    const XMFLOAT4 whiteColor{1.0f, 1.0f, 1.0f, 1.0f};
+
+    // Front face (z = +1)
+    outVertices.push_back({{-1.0f, -1.0f,  1.0f}, {0.0f, 1.0f}, whiteColor, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
+    outVertices.push_back({{-1.0f,  1.0f,  1.0f}, {0.0f, 0.0f}, whiteColor, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
+    outVertices.push_back({{ 1.0f,  1.0f,  1.0f}, {1.0f, 0.0f}, whiteColor, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
+    outVertices.push_back({{ 1.0f, -1.0f,  1.0f}, {1.0f, 1.0f}, whiteColor, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
+
+    // Back face (z = -1)
+    outVertices.push_back({{ 1.0f, -1.0f, -1.0f}, {0.0f, 1.0f}, whiteColor, {0.0f, 0.0f, -1.0f}, {-1.0f, 0.0f, 0.0f, 1.0f}});
+    outVertices.push_back({{ 1.0f,  1.0f, -1.0f}, {0.0f, 0.0f}, whiteColor, {0.0f, 0.0f, -1.0f}, {-1.0f, 0.0f, 0.0f, 1.0f}});
+    outVertices.push_back({{-1.0f,  1.0f, -1.0f}, {1.0f, 0.0f}, whiteColor, {0.0f, 0.0f, -1.0f}, {-1.0f, 0.0f, 0.0f, 1.0f}});
+    outVertices.push_back({{-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f}, whiteColor, {0.0f, 0.0f, -1.0f}, {-1.0f, 0.0f, 0.0f, 1.0f}});
+
+    // Left face (x = -1)
+    outVertices.push_back({{-1.0f, -1.0f, -1.0f}, {0.0f, 1.0f}, whiteColor, {-1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}});
+    outVertices.push_back({{-1.0f,  1.0f, -1.0f}, {0.0f, 0.0f}, whiteColor, {-1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}});
+    outVertices.push_back({{-1.0f,  1.0f,  1.0f}, {1.0f, 0.0f}, whiteColor, {-1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}});
+    outVertices.push_back({{-1.0f, -1.0f,  1.0f}, {1.0f, 1.0f}, whiteColor, {-1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}});
+
+    // Right face (x = +1)
+    outVertices.push_back({{ 1.0f, -1.0f,  1.0f}, {0.0f, 1.0f}, whiteColor, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f, 1.0f}});
+    outVertices.push_back({{ 1.0f,  1.0f,  1.0f}, {0.0f, 0.0f}, whiteColor, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f, 1.0f}});
+    outVertices.push_back({{ 1.0f,  1.0f, -1.0f}, {1.0f, 0.0f}, whiteColor, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f, 1.0f}});
+    outVertices.push_back({{ 1.0f, -1.0f, -1.0f}, {1.0f, 1.0f}, whiteColor, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f, 1.0f}});
+
+    // Top face (y = +1)
+    outVertices.push_back({{-1.0f,  1.0f,  1.0f}, {0.0f, 1.0f}, whiteColor, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
+    outVertices.push_back({{-1.0f,  1.0f, -1.0f}, {0.0f, 0.0f}, whiteColor, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
+    outVertices.push_back({{ 1.0f,  1.0f, -1.0f}, {1.0f, 0.0f}, whiteColor, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
+    outVertices.push_back({{ 1.0f,  1.0f,  1.0f}, {1.0f, 1.0f}, whiteColor, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
+
+    // Bottom face (y = -1)
+    outVertices.push_back({{-1.0f, -1.0f, -1.0f}, {0.0f, 1.0f}, whiteColor, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
+    outVertices.push_back({{-1.0f, -1.0f,  1.0f}, {0.0f, 0.0f}, whiteColor, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
+    outVertices.push_back({{ 1.0f, -1.0f,  1.0f}, {1.0f, 0.0f}, whiteColor, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
+    outVertices.push_back({{ 1.0f, -1.0f, -1.0f}, {1.0f, 1.0f}, whiteColor, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
 }
 
 void PrimitiveBox::GenerateIndices(std::vector<DWORD>& outIndices) const
 {
-    outIndices = {
-        // Front face (reversed winding)
-        0,
-        2,
-        1,
-        0,
-        3,
-        2,
-        // Back face (reversed winding)
-        4,
-        5,
-        6,
-        4,
-        6,
-        7,
-        // Left face (reversed winding)
-        4,
-        1,
-        5,
-        4,
-        0,
-        1,
-        // Right face (reversed winding)
-        3,
-        6,
-        2,
-        3,
-        7,
-        6,
-        // Top face (reversed winding)
-        1,
-        6,
-        5,
-        1,
-        2,
-        6,
-        // Bottom face (reversed winding)
-        4,
-        3,
-        0,
-        4,
-        7,
-        3};
+    outIndices.clear();
+    outIndices.reserve(36);
+    for (uint32_t face = 0; face < 6; ++face)
+    {
+        uint32_t base = face * 4;
+        outIndices.push_back(base + 0);
+        outIndices.push_back(base + 1);
+        outIndices.push_back(base + 2);
+        outIndices.push_back(base + 0);
+        outIndices.push_back(base + 2);
+        outIndices.push_back(base + 3);
+    }
 }

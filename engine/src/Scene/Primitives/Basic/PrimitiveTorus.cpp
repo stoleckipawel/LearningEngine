@@ -36,7 +36,21 @@ void PrimitiveTorus::GenerateVertices(std::vector<Vertex>& outVertices) const
             DirectX::XMFLOAT2 uv{(float)i / major, (float)j / minor};
             DirectX::XMFLOAT4 color{std::fabs(cu), std::fabs(sv), std::fabs(cv), 1.0f};
 
-            outVertices.push_back({pos, uv, color});
+            // Compute normal: direction from tube center to surface point
+            float cx = R * cu;
+            float cz = R * su;
+            DirectX::XMFLOAT3 center{cx, 0.0f, cz};
+            DirectX::XMFLOAT3 normal{pos.x - center.x, pos.y - center.y, pos.z - center.z};
+            // normalize normal
+            float nl = std::sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+            if (nl > 1e-6f) { normal.x /= nl; normal.y /= nl; normal.z /= nl; }
+
+            // Tangent along major direction (u) approximate
+            DirectX::XMFLOAT3 tangent{-su * (R + r * cv), 0.0f, cu * (R + r * cv)};
+            float tl = std::sqrt(tangent.x * tangent.x + tangent.y * tangent.y + tangent.z * tangent.z);
+            if (tl > 1e-6f) { tangent.x /= tl; tangent.y /= tl; tangent.z /= tl; }
+
+            outVertices.push_back({pos, uv, color, normal, DirectX::XMFLOAT4{tangent.x, tangent.y, tangent.z, 1.0f}});
         }
     }
 }

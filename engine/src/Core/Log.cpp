@@ -104,7 +104,17 @@ class Buffer
 		if (m_pos < kCapacity)
 			m_data[m_pos++] = '\n';
 	}
-	void Flush() noexcept { std::fwrite(m_data, 1, m_pos, stderr); }
+	void Flush() noexcept
+	{
+		// Write to stderr (console) first
+		std::fwrite(m_data, 1, m_pos, stderr);
+
+		// Also emit to the debugger output on Windows so messages are visible
+		// in Visual Studio's Output window when running under the debugger.
+#if defined(_WIN32)
+		::OutputDebugStringA(m_data);
+#endif
+	}
 
   private:
 	// Fixed stack capacity chosen to comfortably hold typical log lines

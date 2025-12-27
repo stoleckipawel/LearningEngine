@@ -14,7 +14,8 @@ void PrimitiveCone::GenerateVertices(std::vector<Vertex>& outVertices) const
 
     // Apex at y=1
     DirectX::XMFLOAT3 apex{0.0f, 1.0f, 0.0f};
-    outVertices.push_back({apex, {0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}});
+    // Apex normal points up; tangent choose X axis
+    outVertices.push_back({apex, {0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, {0.0f,1.0f,0.0f}, {1.0f,0.0f,0.0f, 1.0f}});
 
     // Base ring at y=-1
     for (int i = 0; i < slices; ++i)
@@ -25,12 +26,17 @@ void PrimitiveCone::GenerateVertices(std::vector<Vertex>& outVertices) const
         DirectX::XMFLOAT3 pos{x, -1.0f, z};
         DirectX::XMFLOAT2 uv{(float)i / (float)slices, 1.0f};
         DirectX::XMFLOAT4 color{std::fabs(x), 0.5f, std::fabs(z), 1.0f};
-        outVertices.push_back({pos, uv, color});
+        // approximate side normal: (x, radius/height, z) with radius=1, height=2 -> y=0.5
+        DirectX::XMFLOAT3 normal{ x, 0.5f, z };
+        // tangent around circumference
+        DirectX::XMFLOAT3 tangent{ -z, 0.0f, x };
+        outVertices.push_back({pos, uv, color, normal, DirectX::XMFLOAT4{tangent.x, tangent.y, tangent.z, 1.0f}});
     }
 
     // Base center
     DirectX::XMFLOAT3 baseCenter{0.0f, -1.0f, 0.0f};
-    outVertices.push_back({baseCenter, {0.5f, 0.5f}, {0.8f, 0.8f, 0.8f, 1.0f}});
+    // base center normal points down
+    outVertices.push_back({baseCenter, {0.5f, 0.5f}, {0.8f, 0.8f, 0.8f, 1.0f}, {0.0f,-1.0f,0.0f}, {1.0f,0.0f,0.0f, 1.0f}});
 }
 
 void PrimitiveCone::GenerateIndices(std::vector<DWORD>& outIndices) const

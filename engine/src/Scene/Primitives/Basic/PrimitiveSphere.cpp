@@ -14,7 +14,7 @@ void PrimitiveSphere::GenerateVertices(std::vector<Vertex>& outVertices) const
     outVertices.clear();
     outVertices.reserve((latSegments + 1) * (lonSegments + 1));
 
-    for (int lat = 0; lat <= latSegments; ++lat)
+        for (int lat = 0; lat <= latSegments; ++lat)
     {
         float theta = (float)lat / (float)latSegments * DirectX::XM_PI; // 0..PI
         float sinTheta = std::sinf(theta);
@@ -34,7 +34,26 @@ void PrimitiveSphere::GenerateVertices(std::vector<Vertex>& outVertices) const
             DirectX::XMFLOAT2 uv{(float)lon / (float)lonSegments, (float)lat / (float)latSegments};
             DirectX::XMFLOAT4 color{std::fabs(x), std::fabs(y), std::fabs(z), 1.0f};
 
-            outVertices.push_back({pos, uv, color});
+            // normal is position on unit sphere
+            DirectX::XMFLOAT3 normal = pos;
+            // tangent: prefer longitude direction; compute as cross(up, normal)
+            DirectX::XMFLOAT3 tangent;
+            const DirectX::XMFLOAT3 up{0.0f, 1.0f, 0.0f};
+            // cross(up, normal)
+            tangent.x = up.y * normal.z - up.z * normal.y;
+            tangent.y = up.z * normal.x - up.x * normal.z;
+            tangent.z = up.x * normal.y - up.y * normal.x;
+            // if near poles, fallback tangent
+            float len2 = tangent.x * tangent.x + tangent.y * tangent.y + tangent.z * tangent.z;
+            if (len2 < 1e-6f)
+                tangent = DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f};
+            else
+            {
+                float invLen = 1.0f / std::sqrt(len2);
+                tangent.x *= invLen; tangent.y *= invLen; tangent.z *= invLen;
+            }
+
+                outVertices.push_back({pos, uv, color, normal, { tangent.x, tangent.y, tangent.z, 1.0f }});
         }
     }
 }

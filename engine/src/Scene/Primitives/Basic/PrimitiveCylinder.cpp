@@ -18,7 +18,10 @@ void PrimitiveCylinder::GenerateVertices(std::vector<Vertex>& outVertices) const
         float phi = (float)i / (float)slices * DirectX::XM_2PI;
         float x = std::cosf(phi);
         float z = std::sinf(phi);
-        outVertices.push_back({{x, -1.0f, z}, {(float)i / slices, 1.0f}, {std::fabs(x), 0.3f, std::fabs(z), 1.0f}});
+        // side vertex bottom ring: normal points outward, tangent along circumference
+        DirectX::XMFLOAT3 normal{x, 0.0f, z};
+        DirectX::XMFLOAT3 tangent{-z, 0.0f, x};
+        outVertices.push_back({{x, -1.0f, z}, {(float)i / slices, 1.0f}, {std::fabs(x), 0.3f, std::fabs(z), 1.0f}, normal, DirectX::XMFLOAT4{tangent.x, tangent.y, tangent.z, 1.0f}});
     }
 
     // Top ring y = 1
@@ -27,13 +30,15 @@ void PrimitiveCylinder::GenerateVertices(std::vector<Vertex>& outVertices) const
         float phi = (float)i / (float)slices * DirectX::XM_2PI;
         float x = std::cosf(phi);
         float z = std::sinf(phi);
-        outVertices.push_back({{x, 1.0f, z}, {(float)i / slices, 0.0f}, {0.3f, std::fabs(x), std::fabs(z), 1.0f}});
+        DirectX::XMFLOAT3 normal{x, 0.0f, z};
+        DirectX::XMFLOAT3 tangent{-z, 0.0f, x};
+        outVertices.push_back({{x, 1.0f, z}, {(float)i / slices, 0.0f}, {0.3f, std::fabs(x), std::fabs(z), 1.0f}, normal, DirectX::XMFLOAT4{tangent.x, tangent.y, tangent.z, 1.0f}});
     }
 
     // Bottom center
-    outVertices.push_back({{0.0f, -1.0f, 0.0f}, {0.5f, 1.0f}, {0.6f, 0.6f, 0.6f, 1.0f}});
+    outVertices.push_back({{0.0f, -1.0f, 0.0f}, {0.5f, 1.0f}, {0.6f, 0.6f, 0.6f, 1.0f}, {0.0f,-1.0f,0.0f}, {1.0f,0.0f,0.0f, 1.0f}});
     // Top center
-    outVertices.push_back({{0.0f, 1.0f, 0.0f}, {0.5f, 0.0f}, {0.9f, 0.9f, 0.9f, 1.0f}});
+    outVertices.push_back({{0.0f, 1.0f, 0.0f}, {0.5f, 0.0f}, {0.9f, 0.9f, 0.9f, 1.0f}, {0.0f,1.0f,0.0f}, {1.0f,0.0f,0.0f, 1.0f}});
 }
 
 void PrimitiveCylinder::GenerateIndices(std::vector<DWORD>& outIndices) const

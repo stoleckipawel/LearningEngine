@@ -13,6 +13,8 @@ struct Vertex
 	DirectX::XMFLOAT3 position;  // Vertex position (x, y, z)
 	DirectX::XMFLOAT2 uv;        // Texture coordinates (u, v)
 	DirectX::XMFLOAT4 color;     // Vertex color (r, g, b, a)
+	DirectX::XMFLOAT3 normal;   // Vertex normal (x, y, z)
+	DirectX::XMFLOAT4 tangent;// Vertex tangent (x, y, z, w) — xyz is the tangent direction, w is the handedness sign (+1 or -1).
 };
 
 // Base class for renderable primitives. Handles upload/binding and per-frame resources.
