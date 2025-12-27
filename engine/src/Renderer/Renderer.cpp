@@ -227,16 +227,17 @@ void Renderer::PopulateCommandList()
 	// -----------------------------------------------------------------------------
 	// DRAW LOOP - Per-object bindings and draw calls
 	// -----------------------------------------------------------------------------
+
+	// Set the pipeline state object (PSO)
+	// ToDo: sort by PSO to minimize state changes
+	m_pso->Set();	
+	
 	const auto& primitives = m_primitiveFactory->GetPrimitives();
 
 	for (const auto& primitive : primitives)
 	{
 		// Set geometry buffers (VB, IB) and topology for this primitive
 		primitive->Set();
-
-		// Set the pipeline state object (PSO)
-		// ToDo: sort by PSO to minimize state changes
-		m_pso->Set();
 
 		// Bind per-object constant buffers (world matrix, material)
 		BindPerObjectResources(*primitive);

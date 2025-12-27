@@ -3,9 +3,9 @@
 #include "DebugUtils.h"
 #include "Log.h"
 
+#include <cstdio>
 #include <vector>
 #include <string>
-#include <memory>
 
 // Implements graphics pipeline state setup and configuration for D3D12.
 
@@ -148,35 +148,40 @@ D3D12PipelineState::D3D12PipelineState(
 	HRESULT hr = GD3D12Rhi.GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(m_pso.ReleaseAndGetAddressOf()));
 	if (FAILED(hr))
 	{
-#if defined(_DEBUG)
-		// If debug layer is enabled, query InfoQueue for messages (safe retrieval loop)
-		ComPtr<ID3D12InfoQueue> infoQueue;
-		if (SUCCEEDED(GD3D12Rhi.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf()))))
-		{
-			const UINT64 numMessages = infoQueue->GetNumStoredMessagesAllowedByRetrievalFilter();
-			for (UINT64 i = 0; i < numMessages; ++i)
-			{
-				SIZE_T messageLength = 0;
-				if (FAILED(infoQueue->GetMessage(i, nullptr, &messageLength)) || messageLength == 0)
-					continue;
-
-				std::vector<char> messageData(messageLength);
-				D3D12_MESSAGE* message = reinterpret_cast<D3D12_MESSAGE*>(messageData.data());
-				if (SUCCEEDED(infoQueue->GetMessage(i, message, &messageLength)) && message->pDescription)
-				{
-					LOG_ERROR(std::string("D3D12 InfoQueue: ") + message->pDescription);
-				}
-			}
-			// After logging, clear to avoid duplicate logs on subsequent failures
-			infoQueue->ClearStoredMessages();
-		}
-#endif
-		char buf[256];
-		std::snprintf(buf, sizeof(buf), "Failed To Create PSO. HRESULT: 0x%08X", static_cast<unsigned int>(hr));
-		LOG_FATAL(buf);
+		HandlePsoCreateFailure(hr);
 	}
 
 	DebugUtils::SetDebugName(m_pso, L"RHI_PipelineState");
+}
+
+void D3D12PipelineState::HandlePsoCreateFailure(HRESULT hr) const noexcept
+{
+#if defined(_DEBUG)
+	ComPtr<ID3D12InfoQueue> infoQueue;
+	if (SUCCEEDED(GD3D12Rhi.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf()))))
+	{
+		const UINT64 numMessages = infoQueue->GetNumStoredMessagesAllowedByRetrievalFilter();
+		for (UINT64 i = 0; i < numMessages; ++i)
+		{
+			SIZE_T messageLength = 0;
+			if (FAILED(infoQueue->GetMessage(i, nullptr, &messageLength)) || messageLength == 0)
+				continue;
+
+			std::vector<char> messageData(messageLength);
+			D3D12_MESSAGE* message = reinterpret_cast<D3D12_MESSAGE*>(messageData.data());
+			if (SUCCEEDED(infoQueue->GetMessage(i, message, &messageLength)) && message->pDescription)
+			{
+				LOG_ERROR(std::string("D3D12 InfoQueue: ") + message->pDescription);
+			}
+		}
+
+		infoQueue->ClearStoredMessages();
+	}
+#endif
+
+	char buf[256];
+	std::snprintf(buf, sizeof(buf), "Failed To Create PSO. HRESULT: 0x%08X", static_cast<unsigned int>(hr));
+	LOG_FATAL(buf);
 }
 
 D3D12PipelineState::~D3D12PipelineState() noexcept

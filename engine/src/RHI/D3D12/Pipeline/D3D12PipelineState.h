@@ -57,6 +57,8 @@ class D3D12PipelineState
 	const ComPtr<ID3D12PipelineState>& Get() const noexcept { return m_pso; }
 
   private:
+	void HandlePsoCreateFailure(HRESULT hr) const noexcept;
+
 	void SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc) noexcept;
 	void SetRasterizerState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, bool bRenderWireframe, D3D12_CULL_MODE cullMode) noexcept;
 	void SetRenderTargetBlendState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, D3D12_RENDER_TARGET_BLEND_DESC blendDesc) noexcept;
