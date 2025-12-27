@@ -53,7 +53,7 @@ void Renderer::Initialize() noexcept
 	GatherPrimitives();
 
 	// Create pipeline state object
-	m_pso = std::make_unique<D3D12PipelineState>(m_primitiveFactory->GetFirstPrimitive(), *m_rootSignature, *m_vertexShader, *m_pixelShader);
+	m_pso = std::make_unique<D3D12PipelineState>(Primitive::GetStaticVertexLayout(), *m_rootSignature, *m_vertexShader, *m_pixelShader);
 
 	// Create depth stencil and other frame buffers
 	CreateFrameBuffers();

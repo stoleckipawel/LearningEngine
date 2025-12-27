@@ -3,6 +3,9 @@
 #include "D3D12Rhi.h"
 #include <DirectXMath.h>
 
+#include <span>
+#include <vector>
+
 
 using Microsoft::WRL::ComPtr;
 
@@ -21,6 +24,10 @@ struct Vertex
 class Primitive
 {
   public:
+	// Default input layout for the engine's standard Vertex format.
+	// This is allocation-free and suitable for PSO creation.
+	static std::span<const D3D12_INPUT_ELEMENT_DESC> GetStaticVertexLayout() noexcept;
+
 	// Construct a new Primitive. translation/rotation/scale default to identity (no transform).
 	Primitive(
 	    const DirectX::XMFLOAT3& translation = {0.0f, 0.0f, 0.0f},

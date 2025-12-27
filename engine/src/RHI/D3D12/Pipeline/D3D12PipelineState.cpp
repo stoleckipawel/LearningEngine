@@ -77,7 +77,7 @@ void D3D12PipelineState::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC&
 
 // Constructs and creates the graphics pipeline state object.
 D3D12PipelineState::D3D12PipelineState(
-    Primitive& vertecies,
+    std::span<const D3D12_INPUT_ELEMENT_DESC> vertexLayout,
     D3D12RootSignature& rootSignature,
     DxcShaderCompiler& vertexShader,
     DxcShaderCompiler& pixelShader)
@@ -85,9 +85,8 @@ D3D12PipelineState::D3D12PipelineState(
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
 	// -- Vertex Data
-	std::vector<D3D12_INPUT_ELEMENT_DESC> vertexLayout = vertecies.GetVertexLayout();
 	psoDesc.InputLayout.NumElements = static_cast<UINT>(vertexLayout.size());
-	psoDesc.InputLayout.pInputElementDescs = vertexLayout.empty() ? nullptr : vertexLayout.data();
+	psoDesc.InputLayout.pInputElementDescs = vertexLayout.data();
 	psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
 
 	// -- Root Signature

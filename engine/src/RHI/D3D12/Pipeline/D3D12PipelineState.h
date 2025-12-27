@@ -1,8 +1,9 @@
 #pragma once
 
 #include "DxcShaderCompiler.h"
-#include "Primitive.h"
 #include "D3D12RootSignature.h"
+
+#include <span>
 
 using Microsoft::WRL::ComPtr;
 
@@ -37,7 +38,7 @@ class D3D12PipelineState
   public:
 	// Constructs and creates the graphics pipeline state object.
 	D3D12PipelineState(
-	    Primitive& vertecies,
+	    std::span<const D3D12_INPUT_ELEMENT_DESC> vertexLayout,
 	    D3D12RootSignature& rootSignature,
 	    DxcShaderCompiler& vertexShader,
 	    DxcShaderCompiler& pixelShader);
