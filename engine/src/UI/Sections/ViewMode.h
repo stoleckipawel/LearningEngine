@@ -8,7 +8,7 @@
 class ViewMode final : public UIRendererSection
 {
   public:
-	enum class Type : std::uint8_t //Keep in sync with Viewmode.hlsli
+	enum class Type : std::uint8_t  // Keep in sync with Viewmode.hlsli
 	{
 		Lit = 0,
 		GBufferDiffuse,
@@ -37,7 +37,7 @@ class ViewMode final : public UIRendererSection
 
 
 	UIRendererSectionId GetId() const noexcept override { return UIRendererSectionId::ViewMode; }
-	const char* GetTitle() const noexcept override { return "View Mode"; }
+	const char* GetTitle() const noexcept override { return "View Modes"; }
 
 	// Builds the view mode controls. Renders only contents; window/layout is owned by the caller.
 	void BuildUI() override;

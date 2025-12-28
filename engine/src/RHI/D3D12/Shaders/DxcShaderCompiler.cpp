@@ -81,6 +81,10 @@ void DxcShaderCompiler::ResolveAndValidatePath(const std::filesystem::path& file
 	{
 		LOG_FATAL("Shader file does not exist: " + m_resolvedPath.string());
 	}
+	else
+	{
+		LOG_INFO("Compiling shader: " + m_resolvedPath.string());
+	}
 }
 
 // Creates DXC compiler, utility, and include handler interfaces.

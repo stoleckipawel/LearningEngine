@@ -68,7 +68,7 @@ namespace Material
 
 		MatProps.BaseColor = SampleBaseColor(UV);
 		MatProps.NormalTangent = SampleNormalTangent(UV);
-		MatProps.NormalWorld = MatProps.NormalTangent; // TODO: Transform to world space
+		MatProps.NormalWorld = MatProps.NormalTangent;  // TODO: Transform to world space
 		MatProps.Roughness = SampleRoughness(UV);
 		MatProps.Emissive = SampleEmissive(UV);
 		MatProps.Metallic = SampleMetalic(UV);

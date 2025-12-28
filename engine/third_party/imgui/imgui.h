@@ -301,7 +301,7 @@ typedef int ImGuiWindowFlags;       // -> enum ImGuiWindowFlags_     // Flags: f
 typedef unsigned int ImWchar32;    // A single decoded U32 character/code point. We encode them as multi bytes UTF-8 when used in strings.
 typedef unsigned short ImWchar16;  // A single decoded U16 character/code point. We encode them as multi bytes UTF-8 when used in strings.
 	#ifdef IMGUI_USE_WCHAR32       // ImWchar [configurable type: override in imconfig.h with '#define IMGUI_USE_WCHAR32' to support Unicode
-                                   // planes 1-16]
+	                               // planes 1-16]
 typedef ImWchar32 ImWchar;
 	#else
 typedef ImWchar16 ImWchar;
@@ -3609,7 +3609,7 @@ struct ImGuiStyle
 
 	// Obsolete names
 	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-		// TabMinWidthForCloseButton = TabCloseButtonMinWidthUnselected // Renamed in 1.91.9.
+	                                                   // TabMinWidthForCloseButton = TabCloseButtonMinWidthUnselected // Renamed in 1.91.9.
 	#endif
 };
 

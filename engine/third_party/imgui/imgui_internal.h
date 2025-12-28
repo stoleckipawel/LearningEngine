@@ -96,7 +96,7 @@ Index of this file:
 		#endif
 		#pragma clang diagnostic ignored "-Wunknown-pragmas"  // warning: unknown warning group 'xxx'
 		#pragma clang diagnostic ignored "-Wfloat-equal"      // warning: comparing floating point with == or != is unsafe // storing and
-	                                                          // comparing against same constants ok, for ImFloor()
+		                                                      // comparing against same constants ok, for ImFloor()
 		#pragma clang diagnostic ignored "-Wold-style-cast"   // warning: use of old-style cast
 		#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"  // warning: zero as null pointer constant
 		#pragma clang diagnostic ignored \
