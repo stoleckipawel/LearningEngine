@@ -26,6 +26,12 @@ UseTab: ForIndentation
 # }
 NamespaceIndentation: All
 
+# Indent preprocessor directives with surrounding code.
+# - AfterHash keeps '#' at column 0 and indents the directive text.
+# - PPIndentWidth controls how much indentation is applied.
+IndentPPDirectives: AfterHash
+PPIndentWidth: 4
+
 ContinuationIndentWidth: 4
 
 # Prefer wrapping long calls/decls (prevents huge one-liners)

@@ -4926,265 +4926,265 @@ static ImVec2 InputTextCalcTextSize(
 // - ...but we don't use that feature.
 namespace ImStb
 {
-static int STB_TEXTEDIT_STRINGLEN(const ImGuiInputTextState* obj)
-{
-	return obj->TextLen;
-}
-static char STB_TEXTEDIT_GETCHAR(const ImGuiInputTextState* obj, int idx)
-{
-	IM_ASSERT(idx >= 0 && idx <= obj->TextLen);
-	return obj->TextSrc[idx];
-}
-static float STB_TEXTEDIT_GETWIDTH(ImGuiInputTextState* obj, int line_start_idx, int char_idx)
-{
-	unsigned int c;
-	ImTextCharFromUtf8(&c, obj->TextSrc + line_start_idx + char_idx, obj->TextSrc + obj->TextLen);
-	if ((ImWchar) c == '\n')
-		return IMSTB_TEXTEDIT_GETWIDTH_NEWLINE;
-	ImGuiContext& g = *obj->Ctx;
-	return g.FontBaked->GetCharAdvance((ImWchar) c) * g.FontBakedScale;
-}
-static char STB_TEXTEDIT_NEWLINE = '\n';
-static void STB_TEXTEDIT_LAYOUTROW(StbTexteditRow* r, ImGuiInputTextState* obj, int line_start_idx)
-{
-	const char* text = obj->TextSrc;
-	const char* text_remaining = NULL;
-	const ImVec2 size = InputTextCalcTextSize(
-	    obj->Ctx,
-	    text + line_start_idx,
-	    text + obj->TextLen,
-	    text + obj->TextLen,
-	    &text_remaining,
-	    NULL,
-	    ImDrawTextFlags_StopOnNewLine | ImDrawTextFlags_WrapKeepBlanks);
-	r->x0 = 0.0f;
-	r->x1 = size.x;
-	r->baseline_y_delta = size.y;
-	r->ymin = 0.0f;
-	r->ymax = size.y;
-	r->num_chars = (int) (text_remaining - (text + line_start_idx));
-}
+	static int STB_TEXTEDIT_STRINGLEN(const ImGuiInputTextState* obj)
+	{
+		return obj->TextLen;
+	}
+	static char STB_TEXTEDIT_GETCHAR(const ImGuiInputTextState* obj, int idx)
+	{
+		IM_ASSERT(idx >= 0 && idx <= obj->TextLen);
+		return obj->TextSrc[idx];
+	}
+	static float STB_TEXTEDIT_GETWIDTH(ImGuiInputTextState* obj, int line_start_idx, int char_idx)
+	{
+		unsigned int c;
+		ImTextCharFromUtf8(&c, obj->TextSrc + line_start_idx + char_idx, obj->TextSrc + obj->TextLen);
+		if ((ImWchar) c == '\n')
+			return IMSTB_TEXTEDIT_GETWIDTH_NEWLINE;
+		ImGuiContext& g = *obj->Ctx;
+		return g.FontBaked->GetCharAdvance((ImWchar) c) * g.FontBakedScale;
+	}
+	static char STB_TEXTEDIT_NEWLINE = '\n';
+	static void STB_TEXTEDIT_LAYOUTROW(StbTexteditRow* r, ImGuiInputTextState* obj, int line_start_idx)
+	{
+		const char* text = obj->TextSrc;
+		const char* text_remaining = NULL;
+		const ImVec2 size = InputTextCalcTextSize(
+		    obj->Ctx,
+		    text + line_start_idx,
+		    text + obj->TextLen,
+		    text + obj->TextLen,
+		    &text_remaining,
+		    NULL,
+		    ImDrawTextFlags_StopOnNewLine | ImDrawTextFlags_WrapKeepBlanks);
+		r->x0 = 0.0f;
+		r->x1 = size.x;
+		r->baseline_y_delta = size.y;
+		r->ymin = 0.0f;
+		r->ymax = size.y;
+		r->num_chars = (int) (text_remaining - (text + line_start_idx));
+	}
 
 #define IMSTB_TEXTEDIT_GETNEXTCHARINDEX IMSTB_TEXTEDIT_GETNEXTCHARINDEX_IMPL
 #define IMSTB_TEXTEDIT_GETPREVCHARINDEX IMSTB_TEXTEDIT_GETPREVCHARINDEX_IMPL
 
-static int IMSTB_TEXTEDIT_GETNEXTCHARINDEX_IMPL(ImGuiInputTextState* obj, int idx)
-{
-	if (idx >= obj->TextLen)
-		return obj->TextLen + 1;
-	unsigned int c;
-	return idx + ImTextCharFromUtf8(&c, obj->TextSrc + idx, obj->TextSrc + obj->TextLen);
-}
+	static int IMSTB_TEXTEDIT_GETNEXTCHARINDEX_IMPL(ImGuiInputTextState* obj, int idx)
+	{
+		if (idx >= obj->TextLen)
+			return obj->TextLen + 1;
+		unsigned int c;
+		return idx + ImTextCharFromUtf8(&c, obj->TextSrc + idx, obj->TextSrc + obj->TextLen);
+	}
 
-static int IMSTB_TEXTEDIT_GETPREVCHARINDEX_IMPL(ImGuiInputTextState* obj, int idx)
-{
-	if (idx <= 0)
-		return -1;
-	const char* p = ImTextFindPreviousUtf8Codepoint(obj->TextSrc, obj->TextSrc + idx);
-	return (int) (p - obj->TextSrc);
-}
+	static int IMSTB_TEXTEDIT_GETPREVCHARINDEX_IMPL(ImGuiInputTextState* obj, int idx)
+	{
+		if (idx <= 0)
+			return -1;
+		const char* p = ImTextFindPreviousUtf8Codepoint(obj->TextSrc, obj->TextSrc + idx);
+		return (int) (p - obj->TextSrc);
+	}
 
-static bool ImCharIsSeparatorW(unsigned int c)
-{
-	static const unsigned int separator_list[] = {
-	    ',',    0x3001, '.',    0x3002, ';',    0xFF1B, '(',    0xFF08, ')',    0xFF09, '{',    0xFF5B, '}',  0xFF5D, '[',
-	    0x300C, ']',    0x300D, '|',    0xFF5C, '!',    0xFF01, '\\',   0xFFE5, '/',    0x30FB, 0xFF0F, '\n', '\r',
-	};
-	for (unsigned int separator : separator_list)
-		if (c == separator)
-			return true;
-	return false;
-}
+	static bool ImCharIsSeparatorW(unsigned int c)
+	{
+		static const unsigned int separator_list[] = {
+		    ',',    0x3001, '.',    0x3002, ';',    0xFF1B, '(',    0xFF08, ')',    0xFF09, '{',    0xFF5B, '}',  0xFF5D, '[',
+		    0x300C, ']',    0x300D, '|',    0xFF5C, '!',    0xFF01, '\\',   0xFFE5, '/',    0x30FB, 0xFF0F, '\n', '\r',
+		};
+		for (unsigned int separator : separator_list)
+			if (c == separator)
+				return true;
+		return false;
+	}
 
-static int is_word_boundary_from_right(ImGuiInputTextState* obj, int idx)
-{
-	// When ImGuiInputTextFlags_Password is set, we don't want actions such as Ctrl+Arrow to leak the fact that underlying data are blanks
-	// or separators.
-	if ((obj->Flags & ImGuiInputTextFlags_Password) || idx <= 0)
-		return 0;
+	static int is_word_boundary_from_right(ImGuiInputTextState* obj, int idx)
+	{
+		// When ImGuiInputTextFlags_Password is set, we don't want actions such as Ctrl+Arrow to leak the fact that underlying data are
+		// blanks or separators.
+		if ((obj->Flags & ImGuiInputTextFlags_Password) || idx <= 0)
+			return 0;
 
-	const char* curr_p = obj->TextSrc + idx;
-	const char* prev_p = ImTextFindPreviousUtf8Codepoint(obj->TextSrc, curr_p);
-	unsigned int curr_c;
-	ImTextCharFromUtf8(&curr_c, curr_p, obj->TextSrc + obj->TextLen);
-	unsigned int prev_c;
-	ImTextCharFromUtf8(&prev_c, prev_p, obj->TextSrc + obj->TextLen);
+		const char* curr_p = obj->TextSrc + idx;
+		const char* prev_p = ImTextFindPreviousUtf8Codepoint(obj->TextSrc, curr_p);
+		unsigned int curr_c;
+		ImTextCharFromUtf8(&curr_c, curr_p, obj->TextSrc + obj->TextLen);
+		unsigned int prev_c;
+		ImTextCharFromUtf8(&prev_c, prev_p, obj->TextSrc + obj->TextLen);
 
-	bool prev_white = ImCharIsBlankW(prev_c);
-	bool prev_separ = ImCharIsSeparatorW(prev_c);
-	bool curr_white = ImCharIsBlankW(curr_c);
-	bool curr_separ = ImCharIsSeparatorW(curr_c);
-	return ((prev_white || prev_separ) && !(curr_separ || curr_white)) || (curr_separ && !prev_separ);
-}
-static int is_word_boundary_from_left(ImGuiInputTextState* obj, int idx)
-{
-	if ((obj->Flags & ImGuiInputTextFlags_Password) || idx <= 0)
-		return 0;
+		bool prev_white = ImCharIsBlankW(prev_c);
+		bool prev_separ = ImCharIsSeparatorW(prev_c);
+		bool curr_white = ImCharIsBlankW(curr_c);
+		bool curr_separ = ImCharIsSeparatorW(curr_c);
+		return ((prev_white || prev_separ) && !(curr_separ || curr_white)) || (curr_separ && !prev_separ);
+	}
+	static int is_word_boundary_from_left(ImGuiInputTextState* obj, int idx)
+	{
+		if ((obj->Flags & ImGuiInputTextFlags_Password) || idx <= 0)
+			return 0;
 
-	const char* curr_p = obj->TextSrc + idx;
-	const char* prev_p = ImTextFindPreviousUtf8Codepoint(obj->TextSrc, curr_p);
-	unsigned int prev_c;
-	ImTextCharFromUtf8(&prev_c, curr_p, obj->TextSrc + obj->TextLen);
-	unsigned int curr_c;
-	ImTextCharFromUtf8(&curr_c, prev_p, obj->TextSrc + obj->TextLen);
+		const char* curr_p = obj->TextSrc + idx;
+		const char* prev_p = ImTextFindPreviousUtf8Codepoint(obj->TextSrc, curr_p);
+		unsigned int prev_c;
+		ImTextCharFromUtf8(&prev_c, curr_p, obj->TextSrc + obj->TextLen);
+		unsigned int curr_c;
+		ImTextCharFromUtf8(&curr_c, prev_p, obj->TextSrc + obj->TextLen);
 
-	bool prev_white = ImCharIsBlankW(prev_c);
-	bool prev_separ = ImCharIsSeparatorW(prev_c);
-	bool curr_white = ImCharIsBlankW(curr_c);
-	bool curr_separ = ImCharIsSeparatorW(curr_c);
-	return ((prev_white) && !(curr_separ || curr_white)) || (curr_separ && !prev_separ);
-}
-static int STB_TEXTEDIT_MOVEWORDLEFT_IMPL(ImGuiInputTextState* obj, int idx)
-{
-	idx = IMSTB_TEXTEDIT_GETPREVCHARINDEX(obj, idx);
-	while (idx >= 0 && !is_word_boundary_from_right(obj, idx))
+		bool prev_white = ImCharIsBlankW(prev_c);
+		bool prev_separ = ImCharIsSeparatorW(prev_c);
+		bool curr_white = ImCharIsBlankW(curr_c);
+		bool curr_separ = ImCharIsSeparatorW(curr_c);
+		return ((prev_white) && !(curr_separ || curr_white)) || (curr_separ && !prev_separ);
+	}
+	static int STB_TEXTEDIT_MOVEWORDLEFT_IMPL(ImGuiInputTextState* obj, int idx)
+	{
 		idx = IMSTB_TEXTEDIT_GETPREVCHARINDEX(obj, idx);
-	return idx < 0 ? 0 : idx;
-}
-static int STB_TEXTEDIT_MOVEWORDRIGHT_MAC(ImGuiInputTextState* obj, int idx)
-{
-	int len = obj->TextLen;
-	idx = IMSTB_TEXTEDIT_GETNEXTCHARINDEX(obj, idx);
-	while (idx < len && !is_word_boundary_from_left(obj, idx))
+		while (idx >= 0 && !is_word_boundary_from_right(obj, idx))
+			idx = IMSTB_TEXTEDIT_GETPREVCHARINDEX(obj, idx);
+		return idx < 0 ? 0 : idx;
+	}
+	static int STB_TEXTEDIT_MOVEWORDRIGHT_MAC(ImGuiInputTextState* obj, int idx)
+	{
+		int len = obj->TextLen;
 		idx = IMSTB_TEXTEDIT_GETNEXTCHARINDEX(obj, idx);
-	return idx > len ? len : idx;
-}
-static int STB_TEXTEDIT_MOVEWORDRIGHT_WIN(ImGuiInputTextState* obj, int idx)
-{
-	idx = IMSTB_TEXTEDIT_GETNEXTCHARINDEX(obj, idx);
-	int len = obj->TextLen;
-	while (idx < len && !is_word_boundary_from_right(obj, idx))
+		while (idx < len && !is_word_boundary_from_left(obj, idx))
+			idx = IMSTB_TEXTEDIT_GETNEXTCHARINDEX(obj, idx);
+		return idx > len ? len : idx;
+	}
+	static int STB_TEXTEDIT_MOVEWORDRIGHT_WIN(ImGuiInputTextState* obj, int idx)
+	{
 		idx = IMSTB_TEXTEDIT_GETNEXTCHARINDEX(obj, idx);
-	return idx > len ? len : idx;
-}
-static int STB_TEXTEDIT_MOVEWORDRIGHT_IMPL(ImGuiInputTextState* obj, int idx)
-{
-	ImGuiContext& g = *obj->Ctx;
-	if (g.IO.ConfigMacOSXBehaviors)
-		return STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj, idx);
-	else
-		return STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj, idx);
-}
+		int len = obj->TextLen;
+		while (idx < len && !is_word_boundary_from_right(obj, idx))
+			idx = IMSTB_TEXTEDIT_GETNEXTCHARINDEX(obj, idx);
+		return idx > len ? len : idx;
+	}
+	static int STB_TEXTEDIT_MOVEWORDRIGHT_IMPL(ImGuiInputTextState* obj, int idx)
+	{
+		ImGuiContext& g = *obj->Ctx;
+		if (g.IO.ConfigMacOSXBehaviors)
+			return STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj, idx);
+		else
+			return STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj, idx);
+	}
 #define STB_TEXTEDIT_MOVEWORDLEFT STB_TEXTEDIT_MOVEWORDLEFT_IMPL  // They need to be #define for stb_textedit.h
 #define STB_TEXTEDIT_MOVEWORDRIGHT STB_TEXTEDIT_MOVEWORDRIGHT_IMPL
 
-// Reimplementation of stb_textedit_move_line_start()/stb_textedit_move_line_end() which supports word-wrapping.
-static int STB_TEXTEDIT_MOVELINESTART_IMPL(ImGuiInputTextState* obj, ImStb::STB_TexteditState* state, int cursor)
-{
-	if (state->single_line)
-		return 0;
-
-	if (obj->WrapWidth > 0.0f)
+	// Reimplementation of stb_textedit_move_line_start()/stb_textedit_move_line_end() which supports word-wrapping.
+	static int STB_TEXTEDIT_MOVELINESTART_IMPL(ImGuiInputTextState* obj, ImStb::STB_TexteditState* state, int cursor)
 	{
-		ImGuiContext& g = *obj->Ctx;
-		const char* p_cursor = obj->TextSrc + cursor;
-		const char* p_bol = ImStrbol(p_cursor, obj->TextSrc);
-		const char* p = p_bol;
-		const char* text_end = obj->TextSrc + obj->TextLen;  // End of line would be enough
-		while (p >= p_bol)
+		if (state->single_line)
+			return 0;
+
+		if (obj->WrapWidth > 0.0f)
 		{
-			const char* p_eol =
-			    ImFontCalcWordWrapPositionEx(g.Font, g.FontSize, p, text_end, obj->WrapWidth, ImDrawTextFlags_WrapKeepBlanks);
-			if (p == p_cursor)  // If we are already on a visible beginning-of-line, return real beginning-of-line (would be same as regular
-			                    // handler below)
-				return (int) (p_bol - obj->TextSrc);
-			if (p_eol == p_cursor && obj->TextA[cursor] != '\n' && obj->LastMoveDirectionLR == ImGuiDir_Left)
-				return (int) (p_bol - obj->TextSrc);
-			if (p_eol >= p_cursor)
-				return (int) (p - obj->TextSrc);
-			p = (*p_eol == '\n') ? p_eol + 1 : p_eol;
+			ImGuiContext& g = *obj->Ctx;
+			const char* p_cursor = obj->TextSrc + cursor;
+			const char* p_bol = ImStrbol(p_cursor, obj->TextSrc);
+			const char* p = p_bol;
+			const char* text_end = obj->TextSrc + obj->TextLen;  // End of line would be enough
+			while (p >= p_bol)
+			{
+				const char* p_eol =
+				    ImFontCalcWordWrapPositionEx(g.Font, g.FontSize, p, text_end, obj->WrapWidth, ImDrawTextFlags_WrapKeepBlanks);
+				if (p == p_cursor)  // If we are already on a visible beginning-of-line, return real beginning-of-line (would be same as
+				                    // regular handler below)
+					return (int) (p_bol - obj->TextSrc);
+				if (p_eol == p_cursor && obj->TextA[cursor] != '\n' && obj->LastMoveDirectionLR == ImGuiDir_Left)
+					return (int) (p_bol - obj->TextSrc);
+				if (p_eol >= p_cursor)
+					return (int) (p - obj->TextSrc);
+				p = (*p_eol == '\n') ? p_eol + 1 : p_eol;
+			}
 		}
-	}
 
-	// Regular handler, same as stb_textedit_move_line_start()
-	while (cursor > 0)
-	{
-		int prev_cursor = IMSTB_TEXTEDIT_GETPREVCHARINDEX(obj, cursor);
-		if (STB_TEXTEDIT_GETCHAR(obj, prev_cursor) == STB_TEXTEDIT_NEWLINE)
-			break;
-		cursor = prev_cursor;
-	}
-	return cursor;
-}
-
-static int STB_TEXTEDIT_MOVELINEEND_IMPL(ImGuiInputTextState* obj, ImStb::STB_TexteditState* state, int cursor)
-{
-	int n = STB_TEXTEDIT_STRINGLEN(obj);
-	if (state->single_line)
-		return n;
-
-	if (obj->WrapWidth > 0.0f)
-	{
-		ImGuiContext& g = *obj->Ctx;
-		const char* p_cursor = obj->TextSrc + cursor;
-		const char* p = ImStrbol(p_cursor, obj->TextSrc);
-		const char* text_end = obj->TextSrc + obj->TextLen;  // End of line would be enough
-		while (p < text_end)
+		// Regular handler, same as stb_textedit_move_line_start()
+		while (cursor > 0)
 		{
-			const char* p_eol =
-			    ImFontCalcWordWrapPositionEx(g.Font, g.FontSize, p, text_end, obj->WrapWidth, ImDrawTextFlags_WrapKeepBlanks);
-			cursor = (int) (p_eol - obj->TextSrc);
-			if (p_eol == p_cursor &&
-			    obj->LastMoveDirectionLR != ImGuiDir_Left)  // If we are already on a visible end-of-line, switch to regular handle
+			int prev_cursor = IMSTB_TEXTEDIT_GETPREVCHARINDEX(obj, cursor);
+			if (STB_TEXTEDIT_GETCHAR(obj, prev_cursor) == STB_TEXTEDIT_NEWLINE)
 				break;
-			if (p_eol > p_cursor)
-				return cursor;
-			p = (*p_eol == '\n') ? p_eol + 1 : p_eol;
+			cursor = prev_cursor;
 		}
+		return cursor;
 	}
-	// Regular handler, same as stb_textedit_move_line_end()
-	while (cursor < n && STB_TEXTEDIT_GETCHAR(obj, cursor) != STB_TEXTEDIT_NEWLINE)
-		cursor = IMSTB_TEXTEDIT_GETNEXTCHARINDEX(obj, cursor);
-	return cursor;
-}
+
+	static int STB_TEXTEDIT_MOVELINEEND_IMPL(ImGuiInputTextState* obj, ImStb::STB_TexteditState* state, int cursor)
+	{
+		int n = STB_TEXTEDIT_STRINGLEN(obj);
+		if (state->single_line)
+			return n;
+
+		if (obj->WrapWidth > 0.0f)
+		{
+			ImGuiContext& g = *obj->Ctx;
+			const char* p_cursor = obj->TextSrc + cursor;
+			const char* p = ImStrbol(p_cursor, obj->TextSrc);
+			const char* text_end = obj->TextSrc + obj->TextLen;  // End of line would be enough
+			while (p < text_end)
+			{
+				const char* p_eol =
+				    ImFontCalcWordWrapPositionEx(g.Font, g.FontSize, p, text_end, obj->WrapWidth, ImDrawTextFlags_WrapKeepBlanks);
+				cursor = (int) (p_eol - obj->TextSrc);
+				if (p_eol == p_cursor &&
+				    obj->LastMoveDirectionLR != ImGuiDir_Left)  // If we are already on a visible end-of-line, switch to regular handle
+					break;
+				if (p_eol > p_cursor)
+					return cursor;
+				p = (*p_eol == '\n') ? p_eol + 1 : p_eol;
+			}
+		}
+		// Regular handler, same as stb_textedit_move_line_end()
+		while (cursor < n && STB_TEXTEDIT_GETCHAR(obj, cursor) != STB_TEXTEDIT_NEWLINE)
+			cursor = IMSTB_TEXTEDIT_GETNEXTCHARINDEX(obj, cursor);
+		return cursor;
+	}
 
 #define STB_TEXTEDIT_MOVELINESTART STB_TEXTEDIT_MOVELINESTART_IMPL
 #define STB_TEXTEDIT_MOVELINEEND STB_TEXTEDIT_MOVELINEEND_IMPL
 
-static void STB_TEXTEDIT_DELETECHARS(ImGuiInputTextState* obj, int pos, int n)
-{
-	// Offset remaining text (+ copy zero terminator)
-	IM_ASSERT(obj->TextSrc == obj->TextA.Data);
-	char* dst = obj->TextA.Data + pos;
-	char* src = obj->TextA.Data + pos + n;
-	memmove(dst, src, obj->TextLen - n - pos + 1);
-	obj->Edited = true;
-	obj->TextLen -= n;
-}
-
-static int STB_TEXTEDIT_INSERTCHARS(ImGuiInputTextState* obj, int pos, const char* new_text, int new_text_len)
-{
-	const bool is_resizable = (obj->Flags & ImGuiInputTextFlags_CallbackResize) != 0;
-	const int text_len = obj->TextLen;
-	IM_ASSERT(pos <= text_len);
-
-	// We support partial insertion (with a mod in stb_textedit.h)
-	const int avail = obj->BufCapacity - 1 - obj->TextLen;
-	if (!is_resizable && new_text_len > avail)
-		new_text_len = (int) (ImTextFindValidUtf8CodepointEnd(new_text, new_text + new_text_len, new_text + avail) -
-		                      new_text);  // Truncate to closest UTF-8 codepoint. Alternative: return 0 to cancel insertion.
-	if (new_text_len == 0)
-		return 0;
-
-	// Grow internal buffer if needed
-	IM_ASSERT(obj->TextSrc == obj->TextA.Data);
-	if (text_len + new_text_len + 1 > obj->TextA.Size && is_resizable)
+	static void STB_TEXTEDIT_DELETECHARS(ImGuiInputTextState* obj, int pos, int n)
 	{
-		obj->TextA.resize(text_len + ImClamp(new_text_len, 32, ImMax(256, new_text_len)) + 1);
-		obj->TextSrc = obj->TextA.Data;
+		// Offset remaining text (+ copy zero terminator)
+		IM_ASSERT(obj->TextSrc == obj->TextA.Data);
+		char* dst = obj->TextA.Data + pos;
+		char* src = obj->TextA.Data + pos + n;
+		memmove(dst, src, obj->TextLen - n - pos + 1);
+		obj->Edited = true;
+		obj->TextLen -= n;
 	}
 
-	char* text = obj->TextA.Data;
-	if (pos != text_len)
-		memmove(text + pos + new_text_len, text + pos, (size_t) (text_len - pos));
-	memcpy(text + pos, new_text, (size_t) new_text_len);
+	static int STB_TEXTEDIT_INSERTCHARS(ImGuiInputTextState* obj, int pos, const char* new_text, int new_text_len)
+	{
+		const bool is_resizable = (obj->Flags & ImGuiInputTextFlags_CallbackResize) != 0;
+		const int text_len = obj->TextLen;
+		IM_ASSERT(pos <= text_len);
 
-	obj->Edited = true;
-	obj->TextLen += new_text_len;
-	obj->TextA[obj->TextLen] = '\0';
+		// We support partial insertion (with a mod in stb_textedit.h)
+		const int avail = obj->BufCapacity - 1 - obj->TextLen;
+		if (!is_resizable && new_text_len > avail)
+			new_text_len = (int) (ImTextFindValidUtf8CodepointEnd(new_text, new_text + new_text_len, new_text + avail) -
+			                      new_text);  // Truncate to closest UTF-8 codepoint. Alternative: return 0 to cancel insertion.
+		if (new_text_len == 0)
+			return 0;
 
-	return new_text_len;
-}
+		// Grow internal buffer if needed
+		IM_ASSERT(obj->TextSrc == obj->TextA.Data);
+		if (text_len + new_text_len + 1 > obj->TextA.Size && is_resizable)
+		{
+			obj->TextA.resize(text_len + ImClamp(new_text_len, 32, ImMax(256, new_text_len)) + 1);
+			obj->TextSrc = obj->TextA.Data;
+		}
+
+		char* text = obj->TextA.Data;
+		if (pos != text_len)
+			memmove(text + pos + new_text_len, text + pos, (size_t) (text_len - pos));
+		memcpy(text + pos, new_text, (size_t) new_text_len);
+
+		obj->Edited = true;
+		obj->TextLen += new_text_len;
+		obj->TextA[obj->TextLen] = '\0';
+
+		return new_text_len;
+	}
 
 // We don't use an enum so we can build even with conflicting symbols (if another user of stb_textedit.h leak their STB_TEXTEDIT_K_*
 // symbols)
@@ -5210,24 +5210,24 @@ static int STB_TEXTEDIT_INSERTCHARS(ImGuiInputTextState* obj, int pos, const cha
 #define IMSTB_TEXTEDIT_memmove memmove
 #include "imstb_textedit.h"
 
-// stb_textedit internally allows for a single undo record to do addition and deletion, but somehow, calling
-// the stb_textedit_paste() function creates two separate records, so we perform it manually. (FIXME: Report to nothings/stb?)
-static void stb_textedit_replace(ImGuiInputTextState* str, STB_TexteditState* state, const IMSTB_TEXTEDIT_CHARTYPE* text, int text_len)
-{
-	stb_text_makeundo_replace(str, state, 0, str->TextLen, text_len);
-	ImStb::STB_TEXTEDIT_DELETECHARS(str, 0, str->TextLen);
-	state->cursor = state->select_start = state->select_end = 0;
-	if (text_len <= 0)
-		return;
-	int text_len_inserted = ImStb::STB_TEXTEDIT_INSERTCHARS(str, 0, text, text_len);
-	if (text_len_inserted > 0)
+	// stb_textedit internally allows for a single undo record to do addition and deletion, but somehow, calling
+	// the stb_textedit_paste() function creates two separate records, so we perform it manually. (FIXME: Report to nothings/stb?)
+	static void stb_textedit_replace(ImGuiInputTextState* str, STB_TexteditState* state, const IMSTB_TEXTEDIT_CHARTYPE* text, int text_len)
 	{
-		state->cursor = state->select_start = state->select_end = text_len;
-		state->has_preferred_x = 0;
-		return;
+		stb_text_makeundo_replace(str, state, 0, str->TextLen, text_len);
+		ImStb::STB_TEXTEDIT_DELETECHARS(str, 0, str->TextLen);
+		state->cursor = state->select_start = state->select_end = 0;
+		if (text_len <= 0)
+			return;
+		int text_len_inserted = ImStb::STB_TEXTEDIT_INSERTCHARS(str, 0, text, text_len);
+		if (text_len_inserted > 0)
+		{
+			state->cursor = state->select_start = state->select_end = text_len;
+			state->has_preferred_x = 0;
+			return;
+		}
+		IM_ASSERT(0);  // Failed to insert character, normally shouldn't happen because of how we currently use stb_textedit_replace()
 	}
-	IM_ASSERT(0);  // Failed to insert character, normally shouldn't happen because of how we currently use stb_textedit_replace()
-}
 
 }  // namespace ImStb
 
@@ -11332,13 +11332,13 @@ struct ImGuiTabBarSection
 
 namespace ImGui
 {
-static void TabBarLayout(ImGuiTabBar* tab_bar);
-static ImU32 TabBarCalcTabID(ImGuiTabBar* tab_bar, const char* label, ImGuiWindow* docked_window);
-static float TabBarCalcMaxTabWidth();
-static float TabBarScrollClamp(ImGuiTabBar* tab_bar, float scrolling);
-static void TabBarScrollToTab(ImGuiTabBar* tab_bar, ImGuiID tab_id, ImGuiTabBarSection* sections);
-static ImGuiTabItem* TabBarScrollingButtons(ImGuiTabBar* tab_bar);
-static ImGuiTabItem* TabBarTabListPopupButton(ImGuiTabBar* tab_bar);
+	static void TabBarLayout(ImGuiTabBar* tab_bar);
+	static ImU32 TabBarCalcTabID(ImGuiTabBar* tab_bar, const char* label, ImGuiWindow* docked_window);
+	static float TabBarCalcMaxTabWidth();
+	static float TabBarScrollClamp(ImGuiTabBar* tab_bar, float scrolling);
+	static void TabBarScrollToTab(ImGuiTabBar* tab_bar, ImGuiID tab_id, ImGuiTabBarSection* sections);
+	static ImGuiTabItem* TabBarScrollingButtons(ImGuiTabBar* tab_bar);
+	static ImGuiTabItem* TabBarTabListPopupButton(ImGuiTabBar* tab_bar);
 }  // namespace ImGui
 
 ImGuiTabBar::ImGuiTabBar()

@@ -38,9 +38,9 @@ enum class LogLevel : std::uint8_t
 
 namespace Logger
 {
-inline void SetLevel(LogLevel level) noexcept;
-inline LogLevel GetLevel() noexcept;
-inline bool IsEnabled(LogLevel level) noexcept;
+	inline void SetLevel(LogLevel level) noexcept;
+	inline LogLevel GetLevel() noexcept;
+	inline bool IsEnabled(LogLevel level) noexcept;
 }  // namespace Logger
 
 // =============================================================================

@@ -7,33 +7,33 @@
 
 namespace
 {
-// Shared base icosahedron definition (same indexing as PrimitiveIcosahedron)
-static void BuildIcosahedron(std::array<DirectX::XMFLOAT3, 12>& outVerts, std::array<DWORD, 60>& outIdx)
-{
-	const float phi = (1.0f + std::sqrt(5.0f)) * 0.5f;
-	outVerts = {
-	    DirectX::XMFLOAT3{-1.0f, phi, 0.0f},
-	    DirectX::XMFLOAT3{1.0f, phi, 0.0f},
-	    DirectX::XMFLOAT3{-1.0f, -phi, 0.0f},
-	    DirectX::XMFLOAT3{1.0f, -phi, 0.0f},
-	    DirectX::XMFLOAT3{0.0f, -1.0f, phi},
-	    DirectX::XMFLOAT3{0.0f, 1.0f, phi},
-	    DirectX::XMFLOAT3{0.0f, -1.0f, -phi},
-	    DirectX::XMFLOAT3{0.0f, 1.0f, -phi},
-	    DirectX::XMFLOAT3{phi, 0.0f, -1.0f},
-	    DirectX::XMFLOAT3{phi, 0.0f, 1.0f},
-	    DirectX::XMFLOAT3{-phi, 0.0f, -1.0f},
-	    DirectX::XMFLOAT3{-phi, 0.0f, 1.0f},
-	};
+	// Shared base icosahedron definition (same indexing as PrimitiveIcosahedron)
+	static void BuildIcosahedron(std::array<DirectX::XMFLOAT3, 12>& outVerts, std::array<DWORD, 60>& outIdx)
+	{
+		const float phi = (1.0f + std::sqrt(5.0f)) * 0.5f;
+		outVerts = {
+		    DirectX::XMFLOAT3{-1.0f, phi, 0.0f},
+		    DirectX::XMFLOAT3{1.0f, phi, 0.0f},
+		    DirectX::XMFLOAT3{-1.0f, -phi, 0.0f},
+		    DirectX::XMFLOAT3{1.0f, -phi, 0.0f},
+		    DirectX::XMFLOAT3{0.0f, -1.0f, phi},
+		    DirectX::XMFLOAT3{0.0f, 1.0f, phi},
+		    DirectX::XMFLOAT3{0.0f, -1.0f, -phi},
+		    DirectX::XMFLOAT3{0.0f, 1.0f, -phi},
+		    DirectX::XMFLOAT3{phi, 0.0f, -1.0f},
+		    DirectX::XMFLOAT3{phi, 0.0f, 1.0f},
+		    DirectX::XMFLOAT3{-phi, 0.0f, -1.0f},
+		    DirectX::XMFLOAT3{-phi, 0.0f, 1.0f},
+		};
 
-	for (auto& v : outVerts)
-		v = MathUtils::Normalize3(v);
+		for (auto& v : outVerts)
+			v = MathUtils::Normalize3(v);
 
-	outIdx = {
-	    0, 11, 5, 0, 5, 1, 0, 1, 7, 0, 7, 10, 0, 10, 11, 1, 5, 9, 5, 11, 4,  11, 10, 2,  10, 7, 6, 7, 1, 8,
-	    3, 9,  4, 3, 4, 2, 3, 2, 6, 3, 6, 8,  3, 8,  9,  4, 9, 5, 2, 4,  11, 6,  2,  10, 8,  6, 7, 9, 8, 1,
-	};
-}
+		outIdx = {
+		    0, 11, 5, 0, 5, 1, 0, 1, 7, 0, 7, 10, 0, 10, 11, 1, 5, 9, 5, 11, 4,  11, 10, 2,  10, 7, 6, 7, 1, 8,
+		    3, 9,  4, 3, 4, 2, 3, 2, 6, 3, 6, 8,  3, 8,  9,  4, 9, 5, 2, 4,  11, 6,  2,  10, 8,  6, 7, 9, 8, 1,
+		};
+	}
 }  // namespace
 
 PrimitiveDodecahedron::PrimitiveDodecahedron(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale) :

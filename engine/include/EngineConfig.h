@@ -29,30 +29,30 @@
 
 namespace EngineSettings
 {
-// Number of frames that can be processed simultaneously (frames in flight).
-// Increasing this reduces CPU-GPU synchronization but increases latency and
-// memory usage because more per-frame resources are required.
-inline constexpr unsigned FramesInFlight = 2u;
+	// Number of frames that can be processed simultaneously (frames in flight).
+	// Increasing this reduces CPU-GPU synchronization but increases latency and
+	// memory usage because more per-frame resources are required.
+	inline constexpr unsigned FramesInFlight = 2u;
 
-// Back buffer format
-inline constexpr DXGI_FORMAT BackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+	// Back buffer format
+	inline constexpr DXGI_FORMAT BackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-// Presentation: when true, `SwapChain::Present` uses
-// vertical-sync. Setting to false allows uncapped presents (or tearing
-// if supported) and can reduce latency for benchmarking.
-inline bool VSync = true;
+	// Presentation: when true, `SwapChain::Present` uses
+	// vertical-sync. Setting to false allows uncapped presents (or tearing
+	// if supported) and can reduce latency for benchmarking.
+	inline bool VSync = true;
 
-// Start the application fullscreen when true.
-inline bool StartFullscreen = false;
-// Initial window title; application code may modify at runtime.
-inline std::string WindowTitle = "PlaygroundEngine";
+	// Start the application fullscreen when true.
+	inline bool StartFullscreen = false;
+	// Initial window title; application code may modify at runtime.
+	inline std::string WindowTitle = "PlaygroundEngine";
 
-// Prefer high-performance adapter when enumerating GPUs. When true, queries
-// adapters by GPU preference; otherwise falls back to power-saving preference.
-inline bool PreferHighPerformanceAdapter = true;
+	// Prefer high-performance adapter when enumerating GPUs. When true, queries
+	// adapters by GPU preference; otherwise falls back to power-saving preference.
+	inline bool PreferHighPerformanceAdapter = true;
 
-// Global shader model level (major/minor) used by shader compiler.
-// Change these to target a different shader model for the whole engine.
-inline constexpr int ShaderModelMajor = 6;
-inline constexpr int ShaderModelMinor = 0;
+	// Global shader model level (major/minor) used by shader compiler.
+	// Change these to target a different shader model for the whole engine.
+	inline constexpr int ShaderModelMajor = 6;
+	inline constexpr int ShaderModelMinor = 0;
 }  // namespace EngineSettings

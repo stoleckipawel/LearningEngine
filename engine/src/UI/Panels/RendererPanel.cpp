@@ -7,8 +7,7 @@
 
 static constexpr std::size_t kInvalidSectionIndex = static_cast<std::size_t>(-1);
 
-RendererPanel::RendererPanel(float widthPixels) noexcept
-	: m_widthPixels(widthPixels)
+RendererPanel::RendererPanel(float widthPixels) noexcept : m_widthPixels(widthPixels)
 {
 	m_sections.reserve(static_cast<std::size_t>(UIRendererSectionId::Count));
 }

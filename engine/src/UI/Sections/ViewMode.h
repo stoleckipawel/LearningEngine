@@ -41,6 +41,7 @@ class ViewMode final : public UIRendererSection
 
 	// Builds the view mode controls. Renders only contents; window/layout is owned by the caller.
 	void BuildUI() override;
+
   private:
 	Type m_mode = Type::Lit;
 };

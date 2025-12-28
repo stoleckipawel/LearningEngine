@@ -26,9 +26,9 @@
 
 void PrimitiveFactory::AppendShape(
     PrimitiveFactory::Shape shape,
-	const DirectX::XMFLOAT3& translation,
-	const DirectX::XMFLOAT3& rotation,
-	const DirectX::XMFLOAT3& scale)
+    const DirectX::XMFLOAT3& translation,
+    const DirectX::XMFLOAT3& rotation,
+    const DirectX::XMFLOAT3& scale)
 {
 	switch (shape)
 	{
@@ -83,10 +83,10 @@ void PrimitiveFactory::AppendShape(
 }
 
 void PrimitiveFactory::AppendRandomShapes(
-	std::uint32_t count,
-	const DirectX::XMFLOAT3& center,
-	const DirectX::XMFLOAT3& extents,
-	std::uint32_t seed)
+    std::uint32_t count,
+    const DirectX::XMFLOAT3& center,
+    const DirectX::XMFLOAT3& extents,
+    std::uint32_t seed)
 {
 	if (count == 0)
 		return;
@@ -139,8 +139,8 @@ void PrimitiveFactory::AppendRandomShapes(
 	for (std::uint32_t i = 0; i < count; ++i)
 	{
 		const DirectX::XMFLOAT3 t{distTx(rng), distTy(rng), distTz(rng)};
-		const DirectX::XMFLOAT3 r{0.0f, 0.0f, 0.0f	};
-		const DirectX::XMFLOAT3 s{1.0f, 1.0f, 1.0f	};
+		const DirectX::XMFLOAT3 r{0.0f, 0.0f, 0.0f};
+		const DirectX::XMFLOAT3 s{1.0f, 1.0f, 1.0f};
 		AppendShape(kSpawnableShapes[distShape(rng)], t, r, s);
 	}
 }

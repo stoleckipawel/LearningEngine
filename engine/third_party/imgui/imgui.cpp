@@ -1661,82 +1661,82 @@ static bool Platform_OpenInShellFn_DefaultImpl(ImGuiContext* ctx, const char* pa
 
 namespace ImGui
 {
-// Item
-static void ItemHandleShortcut(ImGuiID id);
+	// Item
+	static void ItemHandleShortcut(ImGuiID id);
 
-// Window Focus
-static int FindWindowFocusIndex(ImGuiWindow* window);
-static void UpdateWindowInFocusOrderList(ImGuiWindow* window, bool just_created, ImGuiWindowFlags new_flags);
+	// Window Focus
+	static int FindWindowFocusIndex(ImGuiWindow* window);
+	static void UpdateWindowInFocusOrderList(ImGuiWindow* window, bool just_created, ImGuiWindowFlags new_flags);
 
-// Navigation
-static void NavUpdate();
-static void NavUpdateWindowing();
-static void NavUpdateWindowingApplyFocus(ImGuiWindow* window);
-static void NavUpdateWindowingOverlay();
-static void NavUpdateCancelRequest();
-static void NavUpdateCreateMoveRequest();
-static void NavUpdateCreateTabbingRequest();
-static float NavUpdatePageUpPageDown();
-static inline void NavUpdateAnyRequestFlag();
-static void NavUpdateCreateWrappingRequest();
-static void NavEndFrame();
-static bool NavScoreItem(ImGuiNavItemData* result, const ImRect& nav_bb);
-static void NavApplyItemToResult(ImGuiNavItemData* result);
-static void NavProcessItem();
-static void NavProcessItemForTabbingRequest(ImGuiID id, ImGuiItemFlags item_flags, ImGuiNavMoveFlags move_flags);
-static ImGuiInputSource NavCalcPreferredRefPosSource();
-static ImVec2 NavCalcPreferredRefPos();
-static void NavSaveLastChildNavWindowIntoParent(ImGuiWindow* nav_window);
-static ImGuiWindow* NavRestoreLastChildNavWindow(ImGuiWindow* window);
-static void NavRestoreLayer(ImGuiNavLayer layer);
+	// Navigation
+	static void NavUpdate();
+	static void NavUpdateWindowing();
+	static void NavUpdateWindowingApplyFocus(ImGuiWindow* window);
+	static void NavUpdateWindowingOverlay();
+	static void NavUpdateCancelRequest();
+	static void NavUpdateCreateMoveRequest();
+	static void NavUpdateCreateTabbingRequest();
+	static float NavUpdatePageUpPageDown();
+	static inline void NavUpdateAnyRequestFlag();
+	static void NavUpdateCreateWrappingRequest();
+	static void NavEndFrame();
+	static bool NavScoreItem(ImGuiNavItemData* result, const ImRect& nav_bb);
+	static void NavApplyItemToResult(ImGuiNavItemData* result);
+	static void NavProcessItem();
+	static void NavProcessItemForTabbingRequest(ImGuiID id, ImGuiItemFlags item_flags, ImGuiNavMoveFlags move_flags);
+	static ImGuiInputSource NavCalcPreferredRefPosSource();
+	static ImVec2 NavCalcPreferredRefPos();
+	static void NavSaveLastChildNavWindowIntoParent(ImGuiWindow* nav_window);
+	static ImGuiWindow* NavRestoreLastChildNavWindow(ImGuiWindow* window);
+	static void NavRestoreLayer(ImGuiNavLayer layer);
 
-// Error Checking and Debug Tools
-static void ErrorCheckNewFrameSanityChecks();
-static void ErrorCheckEndFrameSanityChecks();
+	// Error Checking and Debug Tools
+	static void ErrorCheckNewFrameSanityChecks();
+	static void ErrorCheckEndFrameSanityChecks();
 #ifndef IMGUI_DISABLE_DEBUG_TOOLS
-static void UpdateDebugToolItemPicker();
-static void UpdateDebugToolItemPathQuery();
-static void UpdateDebugToolFlashStyleColor();
+	static void UpdateDebugToolItemPicker();
+	static void UpdateDebugToolItemPathQuery();
+	static void UpdateDebugToolFlashStyleColor();
 #endif
 
-// Inputs
-static void UpdateKeyboardInputs();
-static void UpdateMouseInputs();
-static void UpdateMouseWheel();
-static void UpdateKeyRoutingTable(ImGuiKeyRoutingTable* rt);
+	// Inputs
+	static void UpdateKeyboardInputs();
+	static void UpdateMouseInputs();
+	static void UpdateMouseWheel();
+	static void UpdateKeyRoutingTable(ImGuiKeyRoutingTable* rt);
 
-// Misc
-static void UpdateFontsNewFrame();
-static void UpdateFontsEndFrame();
-static void UpdateTexturesNewFrame();
-static void UpdateTexturesEndFrame();
-static void UpdateSettings();
-static int UpdateWindowManualResize(
-    ImGuiWindow* window,
-    int* border_hovered,
-    int* border_held,
-    int resize_grip_count,
-    ImU32 resize_grip_col[4],
-    const ImRect& visibility_rect);
-static void RenderWindowOuterBorders(ImGuiWindow* window);
-static void RenderWindowDecorations(
-    ImGuiWindow* window,
-    const ImRect& title_bar_rect,
-    bool title_bar_is_highlight,
-    bool handle_borders_and_resize_grips,
-    int resize_grip_count,
-    const ImU32 resize_grip_col[4],
-    float resize_grip_draw_size);
-static void RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& title_bar_rect, const char* name, bool* p_open);
-static void RenderDimmedBackgroundBehindWindow(ImGuiWindow* window, ImU32 col);
-static void RenderDimmedBackgrounds();
-static void SetLastItemDataForWindow(ImGuiWindow* window, const ImRect& rect);
-static void SetLastItemDataForChildWindowItem(ImGuiWindow* window, const ImRect& rect);
+	// Misc
+	static void UpdateFontsNewFrame();
+	static void UpdateFontsEndFrame();
+	static void UpdateTexturesNewFrame();
+	static void UpdateTexturesEndFrame();
+	static void UpdateSettings();
+	static int UpdateWindowManualResize(
+	    ImGuiWindow* window,
+	    int* border_hovered,
+	    int* border_held,
+	    int resize_grip_count,
+	    ImU32 resize_grip_col[4],
+	    const ImRect& visibility_rect);
+	static void RenderWindowOuterBorders(ImGuiWindow* window);
+	static void RenderWindowDecorations(
+	    ImGuiWindow* window,
+	    const ImRect& title_bar_rect,
+	    bool title_bar_is_highlight,
+	    bool handle_borders_and_resize_grips,
+	    int resize_grip_count,
+	    const ImU32 resize_grip_col[4],
+	    float resize_grip_draw_size);
+	static void RenderWindowTitleBarContents(ImGuiWindow* window, const ImRect& title_bar_rect, const char* name, bool* p_open);
+	static void RenderDimmedBackgroundBehindWindow(ImGuiWindow* window, ImU32 col);
+	static void RenderDimmedBackgrounds();
+	static void SetLastItemDataForWindow(ImGuiWindow* window, const ImRect& rect);
+	static void SetLastItemDataForChildWindowItem(ImGuiWindow* window, const ImRect& rect);
 
-// Viewports
-const ImGuiID IMGUI_VIEWPORT_DEFAULT_ID = 0x11111111;  // Using an arbitrary constant instead of e.g. ImHashStr("ViewportDefault", 0); so
-                                                       // it's easier to spot in the debugger. The exact value doesn't matter.
-static void UpdateViewportsNewFrame();
+	// Viewports
+	const ImGuiID IMGUI_VIEWPORT_DEFAULT_ID = 0x11111111;  // Using an arbitrary constant instead of e.g. ImHashStr("ViewportDefault", 0);
+	                                                       // so it's easier to spot in the debugger. The exact value doesn't matter.
+	static void UpdateViewportsNewFrame();
 
 }  // namespace ImGui
 
@@ -18028,8 +18028,8 @@ static const char* FormatTextureRefForDebugDisplay(char* buf, int buf_size, ImTe
 #ifdef IMGUI_ENABLE_FREETYPE
 namespace ImGuiFreeType
 {
-IMGUI_API const ImFontLoader* GetFontLoader();
-IMGUI_API bool DebugEditFontLoaderFlags(unsigned int* p_font_builder_flags);
+	IMGUI_API const ImFontLoader* GetFontLoader();
+	IMGUI_API bool DebugEditFontLoaderFlags(unsigned int* p_font_builder_flags);
 }  // namespace ImGuiFreeType
 #endif
 

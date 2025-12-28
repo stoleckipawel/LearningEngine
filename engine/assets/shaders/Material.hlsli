@@ -11,10 +11,10 @@ namespace Material
 	{
 		float3 BaseColor;
 		float3 NormalTangent;
-		float  Roughness;
+		float Roughness;
 		float3 Emissive;
-		float  Metallic;
-		float  AmbientOcclusion;
+		float Metallic;
+		float AmbientOcclusion;
 	};
 
 	Properties MakeDefaultProperties()

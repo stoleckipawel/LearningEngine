@@ -72,16 +72,9 @@ void Renderer::GatherPrimitives()
 	// Spawn shapes in front of the camera so they're guaranteed to be visible.
 	const DirectX::XMFLOAT3 camPos = GCamera.GetPosition();
 	const DirectX::XMFLOAT3 camDir = GCamera.GetDirection();
-	const DirectX::XMFLOAT3 spawnCenter{
-	    camPos.x + camDir.x * 10.0f,
-	    camPos.y + camDir.y * 10.0f,
-	    camPos.z + camDir.z * 10.0f};
+	const DirectX::XMFLOAT3 spawnCenter{camPos.x + camDir.x * 10.0f, camPos.y + camDir.y * 10.0f, camPos.z + camDir.z * 10.0f};
 
-	m_primitiveFactory->AppendRandomShapes(
-	    64,
-	    spawnCenter,
-	    XMFLOAT3{20.0f, 20.0f, 20.0f},
-	    1337);
+	m_primitiveFactory->AppendRandomShapes(64, spawnCenter, XMFLOAT3{20.0f, 20.0f, 20.0f}, 1337);
 
 	m_primitiveFactory->Upload();
 }

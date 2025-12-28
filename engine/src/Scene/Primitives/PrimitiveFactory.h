@@ -46,17 +46,14 @@ class PrimitiveFactory
 	// Append N random shapes with random positions inside an AABB defined by (center +/- extents).
 	// Rotation/scale use the Primitive defaults (rotation = 0, scale = 1).
 	// If seed == 0, a non-deterministic seed is used.
-	void AppendRandomShapes(
-	    std::uint32_t count,
-	    const DirectX::XMFLOAT3& center,
-	    const DirectX::XMFLOAT3& extents,
-	    std::uint32_t seed = 0);
+	void AppendRandomShapes(std::uint32_t count, const DirectX::XMFLOAT3& center, const DirectX::XMFLOAT3& extents, std::uint32_t seed = 0);
 
 	// Upload all primitives geometry to the GPU.
 	void Upload();
 
 	// Get const reference to the vector of all managed primitives.
 	const std::vector<std::unique_ptr<Primitive>>& GetPrimitives() const;
+
   private:
 	// Storage for all managed primitives.
 	std::vector<std::unique_ptr<Primitive>> m_primitives;

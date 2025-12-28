@@ -34,8 +34,9 @@ class UI
 
 	// Submits ImGui draw data to the current DX12 command list.
 	void Render() noexcept;
-	
+
 	ViewMode::Type GetViewMode() noexcept;
+
   private:
 	// Begins an ImGui frame. Updates delta time and display size.
 	void NewFrame();
