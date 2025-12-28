@@ -13,7 +13,7 @@ file(GLOB_RECURSE ENGINE_HEADERS
 )
 
 # Create engine static library
-add_library(Engine STATIC
+add_library(SparkleEngine STATIC
   ${ENGINE_SOURCES}
   ${ENGINE_HEADERS}
 )
@@ -24,7 +24,7 @@ add_subdirectory(third_party/imgui)
 # Include directories
 # Public: exposed to consumers (samples, games)
 # Private: internal engine modules organized by responsibility
-target_include_directories(Engine 
+target_include_directories(SparkleEngine 
   PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
   PRIVATE
@@ -50,11 +50,11 @@ target_include_directories(Engine
 )
 
 # Require C++20
-target_compile_features(Engine PUBLIC cxx_std_20)
+target_compile_features(SparkleEngine PUBLIC cxx_std_20)
 
 
 # Link libraries
-target_link_libraries(Engine PUBLIC
+target_link_libraries(SparkleEngine PUBLIC
   d3d12
   dxgi
   d3dcompiler
@@ -75,7 +75,7 @@ else()
 endif()
 
 # --- PCH setup ---
-target_precompile_headers(Engine
+target_precompile_headers(SparkleEngine
     PRIVATE
       src/Core/PCH.h
 )
