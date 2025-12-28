@@ -43,10 +43,10 @@ class PrimitiveFactory
 	    const DirectX::XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
 	    const DirectX::XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});
 
-	// Append N spheres with random positions inside an AABB defined by (center +/- extents).
-	// Rotation/scale use the PrimitiveSphere defaults.
+	// Append N random shapes with random positions inside an AABB defined by (center +/- extents).
+	// Rotation/scale use the Primitive defaults (rotation = 0, scale = 1).
 	// If seed == 0, a non-deterministic seed is used.
-	void AppendRandomSpheres(
+	void AppendRandomShapes(
 	    std::uint32_t count,
 	    const DirectX::XMFLOAT3& center,
 	    const DirectX::XMFLOAT3& extents,

@@ -71,7 +71,7 @@ void Renderer::GatherPrimitives()
 {
 	m_primitiveFactory = std::make_unique<PrimitiveFactory>();
 
-	// Spawn spheres in front of the camera so they're guaranteed to be visible.
+	// Spawn shapes in front of the camera so they're guaranteed to be visible.
 	const DirectX::XMFLOAT3 camPos = GCamera.GetPosition();
 	const DirectX::XMFLOAT3 camDir = GCamera.GetDirection();
 	const DirectX::XMFLOAT3 spawnCenter{
@@ -79,7 +79,7 @@ void Renderer::GatherPrimitives()
 	    camPos.y + camDir.y * 10.0f,
 	    camPos.z + camDir.z * 10.0f};
 
-	m_primitiveFactory->AppendRandomSpheres(
+	m_primitiveFactory->AppendRandomShapes(
 	    64,
 	    spawnCenter,
 	    XMFLOAT3{20.0f, 20.0f, 20.0f},

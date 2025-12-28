@@ -82,7 +82,7 @@ void PrimitiveFactory::AppendShape(
 	}
 }
 
-void PrimitiveFactory::AppendRandomSpheres(
+void PrimitiveFactory::AppendRandomShapes(
 	std::uint32_t count,
 	const DirectX::XMFLOAT3& center,
 	const DirectX::XMFLOAT3& extents,
@@ -115,11 +115,33 @@ void PrimitiveFactory::AppendRandomSpheres(
 	std::uniform_real_distribution<float> distTx(tx0, tx1);
 	std::uniform_real_distribution<float> distTy(ty0, ty1);
 	std::uniform_real_distribution<float> distTz(tz0, tz1);
+	std::uniform_real_distribution<float> distRot(-DirectX::XM_PI, DirectX::XM_PI);
+	std::uniform_real_distribution<float> distScale(0.35f, 1.75f);
+
+	static constexpr Shape kSpawnableShapes[] = {
+	    Shape::Box,
+	    Shape::Sphere,
+	    Shape::Cone,
+	    Shape::Cylinder,
+	    Shape::Torus,
+	    Shape::Capsule,
+	    Shape::Hemisphere,
+	    Shape::Pyramid,
+	    Shape::Disk,
+	    Shape::Octahedron,
+	    Shape::Tetrahedron,
+	    Shape::Icosahedron,
+	    Shape::Dodecahedron,
+	    Shape::Icosphere,
+	};
+	std::uniform_int_distribution<size_t> distShape(0, (sizeof(kSpawnableShapes) / sizeof(kSpawnableShapes[0])) - 1);
 
 	for (std::uint32_t i = 0; i < count; ++i)
 	{
 		const DirectX::XMFLOAT3 t{distTx(rng), distTy(rng), distTz(rng)};
-		AppendShape(Shape::Sphere, t);
+		const DirectX::XMFLOAT3 r{0.0f, 0.0f, 0.0f	};
+		const DirectX::XMFLOAT3 s{1.0f, 1.0f, 1.0f	};
+		AppendShape(kSpawnableShapes[distShape(rng)], t, r, s);
 	}
 }
 
