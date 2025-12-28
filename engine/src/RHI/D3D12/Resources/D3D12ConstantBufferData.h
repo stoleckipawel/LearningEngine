@@ -37,8 +37,10 @@
 struct alignas(256) PerFrameConstantBufferData
 {
 	uint32_t FrameIndex;     // Current frame number
-	float TotalTime;         // Seconds since engine start
-	float DeltaTime;         // Seconds since last frame
+	float TotalTime;         // Seconds since engine start (unscaled)
+	float DeltaTime;         // Seconds since last frame (unscaled)
+	float ScaledTotalTime;   // Seconds of scaled/game time since start (stops when paused)
+	float ScaledDeltaTime;   // Seconds since last frame (scaled, 0 when paused)
 	uint32_t ViewModeIndex;  // Current renderer debug view mode
 
 	DirectX::XMFLOAT2 ViewportSize;     // Render target width, height

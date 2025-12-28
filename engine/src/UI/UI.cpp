@@ -109,7 +109,7 @@ ViewMode::Type UI::GetViewMode() noexcept
 void UI::NewFrame()
 {
 	ImGuiIO& io = ImGui::GetIO();
-	io.DeltaTime = GTimer.GetDelta(Engine::TimeUnit::Seconds);
+	io.DeltaTime = static_cast<float>(GTimer.GetDelta(Engine::TimeDomain::Unscaled, Engine::TimeUnit::Seconds));
 	io.DisplaySize = ImVec2(GWindow.GetWidth(), GWindow.GetHeight());
 
 	ImGui_ImplDX12_NewFrame();

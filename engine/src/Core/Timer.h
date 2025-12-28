@@ -21,6 +21,13 @@ namespace Engine
 		Nanoseconds
 	};
 
+	// Which clock domain to query.
+	enum class TimeDomain : uint8_t
+	{
+		Unscaled,  // wall/real time (ignores timeScale, continues when paused)
+		Scaled     // game time (multiplied by timeScale, stops when paused)
+	};
+
 	// -------------------------------------------------------------------------
 	// TimeInfo: immutable snapshot of frame timing. Cheap to copy by value.
 	// -------------------------------------------------------------------------
@@ -28,6 +35,7 @@ namespace Engine
 	{
 		uint64_t frameIndex = 0;                    // 1-based frame counter
 		Duration unscaledTime = Duration::zero();   // total wall time since init
+		Duration scaledTime = Duration::zero();     // total scaled/game time since init (stops when paused)
 		Duration unscaledDelta = Duration::zero();  // raw delta this frame (seconds)
 		double timeScale = 1.0;                     // game-time multiplier
 		Duration scaledDelta = Duration::zero();    // delta * timeScale (0 if paused)
@@ -75,11 +83,6 @@ namespace Engine
 		// Immutable snapshot of current frame timing.
 		[[nodiscard]] TimeInfo GetTimeInfo() const noexcept { return m_timeInfo; }
 
-		// Raw duration accessors for advanced/internal use.
-		[[nodiscard]] Duration GetDeltaRaw() const noexcept { return m_timeInfo.scaledDelta; }
-		[[nodiscard]] Duration GetUnscaledDeltaRaw() const noexcept { return m_unscaledDelta; }
-		[[nodiscard]] Duration GetTotalTimeRaw() const noexcept { return m_unscaledTotal; }
-
 		// Frame counter (1-based, incremented each Tick).
 		[[nodiscard]] uint64_t GetFrameCount() const noexcept { return m_frameCount; }
 
@@ -87,9 +90,8 @@ namespace Engine
 		// Unit-aware accessors (default: Milliseconds)
 		// -------------------------------------------------------------------------
 
-		[[nodiscard]] double GetDelta(TimeUnit unit = TimeUnit::Milliseconds) const noexcept;
-		[[nodiscard]] double GetUnscaledDelta(TimeUnit unit = TimeUnit::Milliseconds) const noexcept;
-		[[nodiscard]] double GetTotalTime(TimeUnit unit = TimeUnit::Milliseconds) const noexcept;
+		[[nodiscard]] double GetDelta(TimeDomain domain, TimeUnit unit = TimeUnit::Milliseconds) const noexcept;
+		[[nodiscard]] double GetTotalTime(TimeDomain domain, TimeUnit unit = TimeUnit::Milliseconds) const noexcept;
 
 		// -------------------------------------------------------------------------
 		// Time-scale controls

@@ -3,7 +3,7 @@
 
 void main(in VsInput Input, out VsOutput Output)
 {
-	const float rotationOffset = FrameIndex * 0.005f;
+	const float rotationOffset = ScaledTotalTime * 0.3f;
 	const float3 rotationAxis = float3(0.0f, 1.0f, 0.0f);
 
 	// 1) Rotate position, normal, and tangent in LOCAL space first

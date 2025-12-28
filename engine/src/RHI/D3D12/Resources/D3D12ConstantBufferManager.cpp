@@ -59,8 +59,10 @@ void D3D12ConstantBufferManager::UpdatePerFrame()
 {
 	PerFrameConstantBufferData data = {};
 	data.FrameIndex = GTimer.GetFrameCount();
-	data.TotalTime = GTimer.GetTotalTime();
-	data.DeltaTime = GTimer.GetDelta();
+	data.TotalTime = static_cast<float>(GTimer.GetTotalTime(Engine::TimeDomain::Unscaled, Engine::TimeUnit::Seconds));
+	data.DeltaTime = static_cast<float>(GTimer.GetDelta(Engine::TimeDomain::Unscaled, Engine::TimeUnit::Seconds));
+	data.ScaledTotalTime = static_cast<float>(GTimer.GetTotalTime(Engine::TimeDomain::Scaled, Engine::TimeUnit::Seconds));
+	data.ScaledDeltaTime = static_cast<float>(GTimer.GetDelta(Engine::TimeDomain::Scaled, Engine::TimeUnit::Seconds));
 	data.ViewportSize = GWindow.GetViewportSize();
 	data.ViewportSizeInv = GWindow.GetViewportSizeInv();
 	data.ViewModeIndex = static_cast<uint32_t>(GUI.GetViewMode());

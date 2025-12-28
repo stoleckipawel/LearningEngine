@@ -43,6 +43,7 @@ void Timer::Tick() noexcept
 	// Update snapshot for consumers.
 	m_timeInfo.frameIndex = m_frameCount;
 	m_timeInfo.unscaledTime = m_unscaledTotal;
+	m_timeInfo.scaledTime = m_scaledTotal;
 	m_timeInfo.unscaledDelta = m_unscaledDelta;
 	m_timeInfo.timeScale = m_timeScale;
 	m_timeInfo.scaledDelta = bPaused ? Duration::zero() : Duration{m_unscaledDelta.count() * m_timeScale};
@@ -71,17 +72,14 @@ double Timer::ToUnit(Duration d, TimeUnit u) noexcept
 // -----------------------------------------------------------------------------
 // Unit-aware accessors
 // -----------------------------------------------------------------------------
-double Timer::GetDelta(TimeUnit unit) const noexcept
+double Timer::GetDelta(TimeDomain domain, TimeUnit unit) const noexcept
 {
-	return ToUnit(m_timeInfo.scaledDelta, unit);
+	const Duration delta = (domain == TimeDomain::Scaled) ? m_timeInfo.scaledDelta : m_unscaledDelta;
+	return ToUnit(delta, unit);
 }
 
-double Timer::GetUnscaledDelta(TimeUnit unit) const noexcept
+double Timer::GetTotalTime(TimeDomain domain, TimeUnit unit) const noexcept
 {
-	return ToUnit(m_unscaledDelta, unit);
-}
-
-double Timer::GetTotalTime(TimeUnit unit) const noexcept
-{
-	return ToUnit(m_unscaledTotal, unit);
+	const Duration total = (domain == TimeDomain::Scaled) ? m_scaledTotal : m_unscaledTotal;
+	return ToUnit(total, unit);
 }
