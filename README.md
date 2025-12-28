@@ -35,8 +35,6 @@ BuildSolution.bat
 BuildSamples.bat Release
 ```
 
-**Or open** `build/Sparkle.sln` **in Visual Studio 2022**
-
 </td>
 </tr>
 </table>
