@@ -4,6 +4,9 @@
 
 #include "Primitive.h"
 
+#include <cmath>
+#include <random>
+
 #include "Primitives/Basic/PrimitiveBox.h"
 #include "Primitives/Basic/PrimitiveCapsule.h"
 #include "Primitives/Basic/PrimitiveCone.h"
@@ -76,6 +79,47 @@ void PrimitiveFactory::AppendShape(
 			break;
 		default:
 			break;
+	}
+}
+
+void PrimitiveFactory::AppendRandomSpheres(
+	std::uint32_t count,
+	const DirectX::XMFLOAT3& center,
+	const DirectX::XMFLOAT3& extents,
+	std::uint32_t seed)
+{
+	if (count == 0)
+		return;
+
+	m_primitives.reserve(m_primitives.size() + static_cast<size_t>(count));
+
+	const DirectX::XMFLOAT3 e{std::fabs(extents.x), std::fabs(extents.y), std::fabs(extents.z)};
+	const float tx0 = center.x - e.x;
+	const float tx1 = center.x + e.x;
+	const float ty0 = center.y - e.y;
+	const float ty1 = center.y + e.y;
+	const float tz0 = center.z - e.z;
+	const float tz1 = center.z + e.z;
+
+	std::mt19937 rng;
+	if (seed == 0)
+	{
+		std::random_device rd;
+		rng.seed(rd());
+	}
+	else
+	{
+		rng.seed(seed);
+	}
+
+	std::uniform_real_distribution<float> distTx(tx0, tx1);
+	std::uniform_real_distribution<float> distTy(ty0, ty1);
+	std::uniform_real_distribution<float> distTz(tz0, tz1);
+
+	for (std::uint32_t i = 0; i < count; ++i)
+	{
+		const DirectX::XMFLOAT3 t{distTx(rng), distTy(rng), distTz(rng)};
+		AppendShape(Shape::Sphere, t);
 	}
 }
 

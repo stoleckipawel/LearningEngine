@@ -80,7 +80,7 @@ PerObjectVSConstantBufferData Primitive::GetPerObjectVSConstants() const noexcep
 	DirectX::XMStoreFloat4x4(&data.WorldMTX, world);
 
 	const DirectX::XMMATRIX worldInvTranspose = GetWorldInverseTransposeMatrix();
-	DirectX::XMStoreFloat3x3(&data.WorldInvTransposeMTX, worldInvTranspose);
+	DirectX::XMStoreFloat3x4(&data.WorldInvTransposeMTX, worldInvTranspose);
 
 	return data;
 }

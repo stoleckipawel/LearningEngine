@@ -2,6 +2,7 @@
 #pragma once
 
 #include <DirectXMath.h>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -41,6 +42,15 @@ class PrimitiveFactory
 	    const DirectX::XMFLOAT3& translation = {0.0f, 0.0f, 0.0f},
 	    const DirectX::XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
 	    const DirectX::XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});
+
+	// Append N spheres with random positions inside an AABB defined by (center +/- extents).
+	// Rotation/scale use the PrimitiveSphere defaults.
+	// If seed == 0, a non-deterministic seed is used.
+	void AppendRandomSpheres(
+	    std::uint32_t count,
+	    const DirectX::XMFLOAT3& center,
+	    const DirectX::XMFLOAT3& extents,
+	    std::uint32_t seed = 0);
 
 	// Upload all primitives geometry to the GPU.
 	void Upload();

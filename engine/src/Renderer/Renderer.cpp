@@ -17,6 +17,7 @@
 #include "D3D12DepthStencil.h"
 #include "UI.h"
 #include "Timer.h"
+#include "Camera.h"
 
 // Global renderer instance
 Renderer GRenderer;
@@ -70,24 +71,19 @@ void Renderer::GatherPrimitives()
 {
 	m_primitiveFactory = std::make_unique<PrimitiveFactory>();
 
-	// Hard-coded 20 primitive with varied translation, rotation, and smaller scale or further from camera
-	std::vector<std::tuple<XMFLOAT3, XMFLOAT3, XMFLOAT3>> shapeParams = {
-	    // translation                rotation (radians)           scale
-	    {{-10.0f, 0.0f, -5.0f}, {0.0f, 0.0f, 0.0f}, {1.2f, 1.2f, 1.2f}}, {{-8.0f, 2.0f, 6.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-	    {{-6.0f, -2.0f, -8.0f}, {0.5f, 0.5f, 0.0f}, {1.5f, 1.5f, 1.5f}}, {{-4.0f, 0.0f, 8.0f}, {0.0f, 0.7f, 0.0f}, {1.3f, 1.3f, 1.3f}},
-	    {{-2.0f, 2.0f, -6.0f}, {1.0f, 0.0f, 0.5f}, {1.0f, 1.0f, 1.0f}},  {{0.0f, -2.0f, 6.0f}, {0.0f, 0.0f, 1.0f}, {0.9f, 0.9f, 0.9f}},
-	    {{2.0f, 0.0f, -8.0f}, {0.3f, 0.8f, 0.2f}, {1.2f, 1.2f, 1.2f}},   {{4.0f, 4.0f, 8.0f}, {0.0f, 1.2f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-	    {{6.0f, -4.0f, -6.0f}, {1.0f, 0.5f, 0.0f}, {0.7f, 0.7f, 0.7f}},  {{8.0f, 0.0f, 6.0f}, {0.7f, 0.0f, 1.0f}, {1.3f, 1.3f, 1.3f}},
-	    {{-9.0f, -3.0f, 10.0f}, {0.2f, 0.3f, 0.4f}, {0.8f, 0.8f, 0.8f}}, {{-7.0f, 3.0f, -10.0f}, {0.6f, 0.1f, 0.2f}, {1.1f, 1.1f, 1.1f}},
-	    {{-5.0f, -1.0f, 9.0f}, {0.4f, 0.6f, 0.8f}, {1.0f, 1.0f, 1.0f}},  {{-3.0f, 1.0f, -9.0f}, {0.9f, 0.2f, 0.3f}, {0.9f, 0.9f, 0.9f}},
-	    {{-1.0f, -3.0f, 8.0f}, {0.1f, 0.4f, 0.7f}, {1.2f, 1.2f, 1.2f}},  {{1.0f, 3.0f, -8.0f}, {0.5f, 0.9f, 0.1f}, {1.0f, 1.0f, 1.0f}},
-	    {{3.0f, -1.0f, 7.0f}, {0.8f, 0.3f, 0.6f}, {0.7f, 0.7f, 0.7f}},   {{5.0f, 1.0f, -7.0f}, {0.2f, 0.7f, 0.5f}, {1.1f, 1.1f, 1.1f}},
-	    {{7.0f, -3.0f, 6.0f}, {0.3f, 0.6f, 0.9f}, {0.8f, 0.8f, 0.8f}},   {{9.0f, 3.0f, -5.0f}, {0.7f, 0.2f, 0.4f}, {1.0f, 1.0f, 1.0f}}};
+	// Spawn spheres in front of the camera so they're guaranteed to be visible.
+	const DirectX::XMFLOAT3 camPos = GCamera.GetPosition();
+	const DirectX::XMFLOAT3 camDir = GCamera.GetDirection();
+	const DirectX::XMFLOAT3 spawnCenter{
+	    camPos.x + camDir.x * 10.0f,
+	    camPos.y + camDir.y * 10.0f,
+	    camPos.z + camDir.z * 10.0f};
 
-	for (const auto& [translation, rotation, scale] : shapeParams)
-	{
-		m_primitiveFactory->AppendShape(PrimitiveFactory::Shape::Sphere, translation, rotation, scale);
-	}
+	m_primitiveFactory->AppendRandomSpheres(
+	    64,
+	    spawnCenter,
+	    XMFLOAT3{20.0f, 20.0f, 20.0f},
+	    1337);
 
 	m_primitiveFactory->Upload();
 }

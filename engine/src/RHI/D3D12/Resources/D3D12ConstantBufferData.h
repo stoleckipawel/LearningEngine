@@ -71,7 +71,7 @@ CBV_CHECK(PerViewConstantBufferData);
 struct alignas(256) PerObjectVSConstantBufferData
 {
 	DirectX::XMFLOAT4X4 WorldMTX;              // Local -> World
-	DirectX::XMFLOAT3X3 WorldInvTransposeMTX;  // For correct normal transformation under non-uniform scale (3x3)
+	DirectX::XMFLOAT3X4 WorldInvTransposeMTX;  // Normal matrix (inverse-transpose, 3x4 = 48 bytes matches HLSL float3x3 cbuffer packing)
 
 	// remaining space in the 256-byte slot is reserved for future use
 };
