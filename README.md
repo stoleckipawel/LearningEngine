@@ -1,8 +1,8 @@
-# LearningEngine
+# Sparkle Engine
 
 ## Overview
 
-LearningEngine is a modular DirectX 12 rendering engine built for learning and experimentation. 
+Sparkle is a modular DirectX 12 rendering engine built for learning and experimentation. 
 
 **Key Features:**
 - D3D12 backend.
@@ -53,7 +53,7 @@ Why optional tools matter:
 	Builds all sample projects for Debug or Release. Output executables are in `bin/Debug` or `bin/Release`.
 
 4. **Manual Build (Visual Studio)**
-	Open `build/Playground.sln` in Visual Studio. Build using Debug/Release. Default startup project: `ExampleD3D12`.
+	Open `build/Sparkle.sln` in Visual Studio. Build using Debug/Release. Default startup project: `ExampleD3D12`.
 
 # Batch Script Reference
 
@@ -94,7 +94,7 @@ The root `BuildSamples.bat` delegates to the internal implementation at `tools\i
 ## Directory Structure
 
 ```
-LearningEngine/
+Sparkle/
 ├── engine/                           # Engine library
 │   ├── include/                      # Public API headers (exposed to samples/games)
 │   │   ├── App.h                     # Application framework
@@ -159,7 +159,7 @@ LearningEngine/
 │           └── main.cpp
 │
 ├── build/                            # Generated build files (gitignored)
-│   └── Playground.sln                # Visual Studio solution
+│   └── Sparkle.sln                   # Visual Studio solution
 │
 └── bin/                              # Compiled binaries (gitignored)
     ├── Debug/

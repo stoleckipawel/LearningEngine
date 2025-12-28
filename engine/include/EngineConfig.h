@@ -45,7 +45,7 @@ namespace EngineSettings
 	// Start the application fullscreen when true.
 	inline bool StartFullscreen = false;
 	// Initial window title; application code may modify at runtime.
-	inline std::string WindowTitle = "PlaygroundEngine";
+	inline std::string WindowTitle = "Sparkle Engine";
 
 	// Prefer high-performance adapter when enumerating GPUs. When true, queries
 	// adapters by GPU preference; otherwise falls back to power-saving preference.

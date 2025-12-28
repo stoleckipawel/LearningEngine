@@ -1,4 +1,4 @@
-# LearningEngine Coding Style
+# Sparkle Coding Style
 
 This document captures the coding conventions used across the engine. The repository-level tooling (`.clang-format`, `.clang-tidy`) is authoritative — editors, CI, and local tooling should follow those files.
 

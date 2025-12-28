@@ -1,5 +1,5 @@
 # ============================================================================
-# ClangFormat configuration for LearningEngine
+# ClangFormat configuration for Sparkle Engine
 # Target:
 #   - Game engines & real-time rendering code (C++ & HLSL)
 #   - High readability, diff-friendly formatting
