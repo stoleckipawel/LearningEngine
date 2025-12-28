@@ -116,7 +116,7 @@ void PrimitiveFactory::AppendRandomShapes(
 	std::uniform_real_distribution<float> distTy(ty0, ty1);
 	std::uniform_real_distribution<float> distTz(tz0, tz1);
 	std::uniform_real_distribution<float> distRot(-DirectX::XM_PI, DirectX::XM_PI);
-	std::uniform_real_distribution<float> distScale(0.35f, 1.75f);
+	std::uniform_real_distribution<float> distScale(0.25f, 1.5f);
 
 	static constexpr Shape kSpawnableShapes[] = {
 	    Shape::Box,

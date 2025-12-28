@@ -2,7 +2,7 @@
 
 namespace Lighting
 {
-float CalculateDirect(float3 NormalWorld)
+float3 CalculateDirect(float3 NormalWorld)
 {
 	const float3 lightDir = normalize(float3(0.0f, 1.0f, 0.0f));
 
@@ -11,4 +11,11 @@ float CalculateDirect(float3 NormalWorld)
 
 	return NoL_s;
 }
+
+float3 CalculateIndireect()
+{
+	float3 ambientColor = float3(0.05f, 0.05f, 0.05f);
+	return ambientColor;
+}
+
 }  // namespace Lighting
