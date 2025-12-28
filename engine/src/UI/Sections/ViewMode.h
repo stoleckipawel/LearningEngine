@@ -16,6 +16,11 @@ class ViewMode final : public UIRendererSection
 		GBufferRoughness,
 		GBufferMetallic,
 		GBufferEmissive,
+		GBufferAmbientOcclusion,
+		DirectDiffuse,
+		DirectSpecular,
+		IndirectDiffuse,
+		IndirectSpecular,
 		Count
 	};
 

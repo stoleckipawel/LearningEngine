@@ -19,6 +19,13 @@ IndentWidth: 4
 TabWidth: 4
 UseTab: ForIndentation
 
+# Indent code within namespaces:
+# namespace Foo 
+#{
+#     int x;
+# }
+NamespaceIndentation: All
+
 ContinuationIndentWidth: 4
 
 # Prefer wrapping long calls/decls (prevents huge one-liners)

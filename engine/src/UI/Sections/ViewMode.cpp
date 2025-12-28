@@ -10,6 +10,11 @@ static constexpr const char* kViewModeNames[] = {
 	"GBuffer Roughness",
 	"GBuffer Metallic",
 	"GBuffer Emissive",
+	"GBuffer Ambient Occlusion",
+	"Direct Diffuse",
+	"Direct Specular",
+	"Indirect Diffuse",
+	"Indirect Specular",
 };
 
 void ViewMode::BuildUI()
