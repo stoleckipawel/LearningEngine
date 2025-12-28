@@ -6,12 +6,17 @@
 #include "D3D12DescriptorHeapManager.h"
 #include "Timer.h"
 
-#if USE_GUI
+#include "Panels/RendererPanel.h"
+#include "Sections/StatsOverlay.h"
+#include "Sections/ViewMode.h"
+
 #include <imgui.h>
 #include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_dx12.h>
 // Global UI instance used by the engine
 UI GUI;
+
+UI::~UI() noexcept = default;
 
 // Forward declaration to ensure the Win32 backend handler is visible to this unit.
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -34,6 +39,9 @@ bool UI::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam) noexc
 // Creates ImGui context and initializes Win32/DX12 backends.
 void UI::Initialize()
 {
+	if (!m_rendererPanel)
+		m_rendererPanel = std::make_unique<RendererPanel>();
+
 	// Create ImGui context and set a default style.
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -76,6 +84,42 @@ void UI::Initialize()
 
 	// Setup DPI scaling and style sizes.
 	SetupDPIScaling();
+
+	if (!m_rendererPanel->HasSection(UIRendererSectionId::Stats))
+		m_rendererPanel->SetSection(std::make_unique<StatsOverlay>());
+
+	if (!m_rendererPanel->HasSection(UIRendererSectionId::ViewMode))
+		m_rendererPanel->SetSection(std::make_unique<ViewMode>());
+}
+
+void UI::AddRendererSection(std::unique_ptr<UIRendererSection> section) noexcept
+{
+	if (!m_rendererPanel)
+		m_rendererPanel = std::make_unique<RendererPanel>();
+
+	m_rendererPanel->SetSection(std::move(section));
+}
+
+const ViewMode& UI::GetViewMode() noexcept
+{
+	if (!m_rendererPanel)
+		m_rendererPanel = std::make_unique<RendererPanel>();
+
+	if (!m_rendererPanel->HasSection(UIRendererSectionId::ViewMode))
+		m_rendererPanel->SetSection(std::make_unique<ViewMode>());
+
+	return static_cast<const ViewMode&>(m_rendererPanel->GetSection(UIRendererSectionId::ViewMode));
+}
+
+const StatsOverlay& UI::GetStatsOverlay() noexcept
+{
+	if (!m_rendererPanel)
+		m_rendererPanel = std::make_unique<RendererPanel>();
+
+	if (!m_rendererPanel->HasSection(UIRendererSectionId::Stats))
+		m_rendererPanel->SetSection(std::make_unique<StatsOverlay>());
+
+	return static_cast<StatsOverlay&>(m_rendererPanel->GetSection(UIRendererSectionId::Stats));
 }
 
 // Begins an ImGui frame. Updates delta time and display size; binds heaps.
@@ -90,24 +134,11 @@ void UI::NewFrame()
 	ImGui::NewFrame();
 }
 
-// Builds a simple FPS overlay anchored to the top-right.
-void UI::BuildFPSOverlay()
-{
-	ImGuiIO& io = ImGui::GetIO();
-	const float panelWidth = 250.0f;
-	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - panelWidth, 0.0f), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(panelWidth, 100.0f), ImGuiCond_Always);
-	ImGui::Begin("Stats", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
-	ImGui::Text("FPS: %.1f", io.Framerate);
-	ImGui::Text("FrameTime: %.2f ms", io.DeltaTime * 1000.0f);
-	ImGui::Text("FrameIndex: %llu", static_cast<unsigned long long>(GTimer.GetFrameCount()));
-	ImGui::End();
-}
-
 // Builds demo UI and finalizes draw data for this frame.
 void UI::Build()
 {
-	BuildFPSOverlay();
+	if (m_rendererPanel)
+		m_rendererPanel->BuildUI();
 
 #if USE_IMGUI_DEMO_WINDOW
 	bool showDemoWindow = true;
@@ -116,6 +147,7 @@ void UI::Build()
 
 	ImGui::Render();
 }
+
 
 void UI::Update()
 {
@@ -147,4 +179,3 @@ void UI::SetupDPIScaling() noexcept
 	// Bake a fixed style scale until dynamic style scaling is supported.
 	style.ScaleAllSizes(mainScale);
 }
-#endif

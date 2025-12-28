@@ -167,9 +167,7 @@ void Window::SetFullScreen(bool bSetFullScreen)
 // Window message handler (WndProc)
 LRESULT Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-#if USE_GUI
 	if (GUI.OnWindowMessage(wnd, msg, wParam, lParam))
-#endif
 	{
 		// GUI Layer enforces being first & if it returns true we must stop processing further events
 		return true;

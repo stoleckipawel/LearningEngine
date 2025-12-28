@@ -1,7 +1,13 @@
 #pragma once
 
-#if USE_GUI
 #include <Windows.h>
+
+#include <memory>
+
+class RendererPanel;
+class UIRendererSection;
+class ViewMode;
+class StatsOverlay;
 
 // UI manages ImGui integration (Win32 + DX12 backends).
 // Threading: All ImGui calls must be made from the main thread where the
@@ -9,6 +15,9 @@
 class UI
 {
   public:
+	UI() = default;
+	~UI() noexcept;
+
 	// Creates ImGui context and initializes Win32/DX12 backends.
 	// May log/abort on failure via engine error helpers.
 	void Initialize();
@@ -25,18 +34,25 @@ class UI
 	// Submits ImGui draw data to the current DX12 command list.
 	void Render() noexcept;
 
+	// Registers a debug section to be hosted by the right-side panel.
+	// The panel owns the section and will render it each frame.
+	void AddRendererSection(std::unique_ptr<UIRendererSection> section) noexcept;
+	
+	const ViewMode& GetViewMode() noexcept;
+
+	const StatsOverlay& GetStatsOverlay() noexcept;
+
   private:
 	// Begins an ImGui frame. Updates delta time and display size.
 	void NewFrame();
-
-	void BuildFPSOverlay();
 
 	// Builds UI content and finalizes draw data.
 	void Build();
 
 	void SetupDPIScaling() noexcept;
+
+	std::unique_ptr<RendererPanel> m_rendererPanel;
 };
 
 // Global UI instance used by the engine.
 extern UI GUI;
-#endif

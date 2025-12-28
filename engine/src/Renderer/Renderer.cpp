@@ -60,9 +60,7 @@ void Renderer::Initialize() noexcept
 	// Create depth stencil and other frame buffers
 	CreateFrameBuffers();
 
-#if USE_GUI
 	GUI.Initialize();
-#endif
 
 	PostLoad();
 }
@@ -247,9 +245,7 @@ void Renderer::PopulateCommandList()
 	// POST-RENDER
 	// -----------------------------------------------------------------------------
 
-#if USE_GUI
 	GUI.Render();
-#endif
 
 	// Transition depth buffer to read state before presenting
 	m_depthStencil->SetReadState();
@@ -342,10 +338,7 @@ void Renderer::SetupFrame() noexcept
 	//       would be called once per view, not once per frame.
 	GD3D12ConstantBufferManager.UpdatePerView();
 
-#if USE_GUI
-	// Pass seconds to UI which expects seconds-precision delta
 	GUI.Update();
-#endif
 }
 
 // -----------------------------------------------------------------------------
