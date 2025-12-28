@@ -5,7 +5,6 @@
 #include <array>
 #include "D3D12ConstantBufferData.h"
 #include "D3D12ConstantBuffer.h"
-#include "Primitive.h"
 
 //------------------------------------------------------------------------------
 // ConstantBufferManager
@@ -58,8 +57,9 @@ class D3D12ConstantBufferManager
 	// Update per-view constant buffer. Call once per camera/view.
 	void UpdatePerView();
 
-	// Update per-object VS constant buffer for a primitive.
-	[[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS UpdatePerObjectVS(const Primitive& primitive);
+	// Update per-object VS constant buffer for a draw.
+	// Any system can provide this data (Primitive, SkeletalMesh, etc.) without coupling.
+	[[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS UpdatePerObjectVS(const PerObjectVSConstantBufferData& data);
 
 	// Update per-object PS constant buffer (material data).
 	[[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS UpdatePerObjectPS();

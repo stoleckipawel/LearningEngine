@@ -1,6 +1,7 @@
 #pragma once
 
 #include "D3D12Rhi.h"
+#include "D3D12ConstantBufferData.h"
 #include <DirectXMath.h>
 
 #include <span>
@@ -16,8 +17,8 @@ struct Vertex
 	DirectX::XMFLOAT3 position;  // Vertex position (x, y, z)
 	DirectX::XMFLOAT2 uv;        // Texture coordinates (u, v)
 	DirectX::XMFLOAT4 color;     // Vertex color (r, g, b, a)
-	DirectX::XMFLOAT3 normal;   // Vertex normal (x, y, z)
-	DirectX::XMFLOAT4 tangent;// Vertex tangent (x, y, z, w) — xyz is the tangent direction, w is the handedness sign (+1 or -1).
+	DirectX::XMFLOAT3 normal;    // Vertex normal (x, y, z)
+	DirectX::XMFLOAT4 tangent;   // Vertex tangent (x, y, z, w) — xyz is direction, w is handedness sign (+1/-1).
 };
 
 // Base class for renderable primitives. Handles upload/binding and per-frame resources.
@@ -32,7 +33,7 @@ class Primitive
 	Primitive(
 	    const DirectX::XMFLOAT3& translation = {0.0f, 0.0f, 0.0f},
 	    const DirectX::XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
-	    const DirectX::XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});
+	    const DirectX::XMFLOAT3& scale = {1.0f, 1.0f, 1.0f}) noexcept;
 
 	// Virtual destructor for polymorphic base
 	virtual ~Primitive() = default;
@@ -57,17 +58,14 @@ class Primitive
 	// Return inverse-transpose of world for correct normal transformation in shaders.
 	DirectX::XMMATRIX GetWorldInverseTransposeMatrix() const noexcept;
 
+	// Fill per-object VS constant buffer data for this primitive.
+	[[nodiscard]] PerObjectVSConstantBufferData GetPerObjectVSConstants() const noexcept;
+
 	// Return the number of indices in the index buffer.
 	UINT GetIndexCount() const noexcept { return m_indexCount; }
 
-	// Set geometry buffers and topology for rendering. Override to bind more resources.
-	virtual void Set();
-
-	// Return the input layout for the vertex structure. Override to customize.
-	virtual std::vector<D3D12_INPUT_ELEMENT_DESC> GetVertexLayout() const;
-
-	// Create a D3D12 resource description for a vertex buffer with VertexCount vertices.
-	virtual D3D12_RESOURCE_DESC CreateVertexBufferDesc(uint32_t VertexCount) const;
+	// Bind vertex/index buffers and primitive topology for rendering.
+	void Bind(ID3D12GraphicsCommandList* commandList) const noexcept;
 
 	// Upload both vertex and index buffers to the GPU.
 	void Upload();
@@ -90,13 +88,13 @@ class Primitive
 
   private:
 	// Transform state (encapsulated)
-	XMFLOAT3 m_translation{0.0f, 0.0f, 0.0f};
-	XMFLOAT3 m_rotationEuler{0.0f, 0.0f, 0.0f};
-	XMFLOAT3 m_scale{1.0f, 1.0f, 1.0f};
+	DirectX::XMFLOAT3 m_translation{0.0f, 0.0f, 0.0f};
+	DirectX::XMFLOAT3 m_rotationEuler{0.0f, 0.0f, 0.0f};
+	DirectX::XMFLOAT3 m_scale{1.0f, 1.0f, 1.0f};
 
 	// Cached world matrix to avoid recomputing each time. Mutable so const accessors
 	// can rebuild lazily without exposing mutability to callers.
-	mutable XMFLOAT4X4 m_worldMatrixCache{};
+	mutable DirectX::XMFLOAT4X4 m_worldMatrixCache{};
 	mutable bool m_bWorldDirty = true;
 
 	// Lazy rebuild helper: rebuild the cached world matrix when dirty.

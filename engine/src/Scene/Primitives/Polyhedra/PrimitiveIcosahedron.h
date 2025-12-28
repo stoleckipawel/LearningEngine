@@ -2,10 +2,11 @@
 
 #include "../Primitive.h"
 
-class PrimitiveTetrahedron : public Primitive
+// PrimitiveIcosahedron — regular icosahedron (20 triangles).
+class PrimitiveIcosahedron : public Primitive
 {
   public:
-	PrimitiveTetrahedron(
+	PrimitiveIcosahedron(
 	    const XMFLOAT3& translation = {0.0f, 0.0f, 0.0f},
 	    const XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
 	    const XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});

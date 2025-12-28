@@ -28,5 +28,5 @@ void main(in VsInput Input, out VsOutput Output)
 	Output.TangentWorld = tangentWorld;
 	Output.BitangentWorld = bitangentWorld;
 	Output.TexCoord = Input.TexCoord;
-	Output.Color = Input.Color; 
+	Output.Color = Input.Color;
 }

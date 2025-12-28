@@ -100,18 +100,8 @@ void D3D12ConstantBufferManager::UpdatePerView()
 //   - Thread-safe allocation allows future multithreaded recording
 //------------------------------------------------------------------------------
 
-D3D12_GPU_VIRTUAL_ADDRESS D3D12ConstantBufferManager::UpdatePerObjectVS(const Primitive& primitive)
+D3D12_GPU_VIRTUAL_ADDRESS D3D12ConstantBufferManager::UpdatePerObjectVS(const PerObjectVSConstantBufferData& data)
 {
-	PerObjectVSConstantBufferData data = {};
-
-	// World matrix: local -> world transform
-	const XMMATRIX world = primitive.GetWorldMatrix();
-	XMStoreFloat4x4(&data.WorldMTX, world);
-
-	// Inverse-transpose: for correct normal transformation under non-uniform scale
-	const XMMATRIX worldInvTranspose = primitive.GetWorldInverseTransposeMatrix();
-	XMStoreFloat3x3(&data.WorldInvTransposeMTX, worldInvTranspose);
-
 	// Allocate from ring buffer and copy data - returns unique GPU VA
 	return GD3D12FrameResourceManager.AllocateConstantBuffer(data);
 }
@@ -123,7 +113,7 @@ D3D12_GPU_VIRTUAL_ADDRESS D3D12ConstantBufferManager::UpdatePerObjectVS(const Pr
 D3D12_GPU_VIRTUAL_ADDRESS D3D12ConstantBufferManager::UpdatePerObjectPS()
 {
 	PerObjectPSConstantBufferData data = {};
-	data.BaseColor = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	data.BaseColor = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	data.Metallic = 0.0f;
 	data.Roughness = 0.5f;
 	data.F0 = 0.04f;  // Typical dielectric F0

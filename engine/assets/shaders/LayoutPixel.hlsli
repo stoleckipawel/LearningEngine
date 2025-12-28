@@ -9,7 +9,7 @@ struct PsInput
 	float3 BitangentWorld : BINORMAL;
 };
 
-struct PsOutput 
+struct PsOutput
 {
 	float4 Color0 : SV_Target;
 };

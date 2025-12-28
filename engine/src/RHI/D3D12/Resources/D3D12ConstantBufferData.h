@@ -41,8 +41,8 @@ struct alignas(256) PerFrameConstantBufferData
 	float DeltaTime;          // Seconds since last frame
 	float _padPerFrameTime0;  // padding to complete 16-byte slot
 
-	XMFLOAT2 ViewportSize;     // Render target width, height
-	XMFLOAT2 ViewportSizeInv;  // 1.0 / width, 1.0 / height
+	DirectX::XMFLOAT2 ViewportSize;     // Render target width, height
+	DirectX::XMFLOAT2 ViewportSizeInv;  // 1.0 / width, 1.0 / height
 
 	// rest of 256-byte slot is intentionally unused/pad
 };
@@ -53,15 +53,15 @@ CBV_CHECK(PerFrameConstantBufferData);
 //------------------------------------------------------------------------------
 struct alignas(256) PerViewConstantBufferData
 {
-	XMFLOAT4X4 ViewMTX;        // World -> View
-	XMFLOAT4X4 ProjectionMTX;  // View -> Clip
-	XMFLOAT4X4 ViewProjMTX;    // World -> Clip (precomputed to save GPU work)
+	DirectX::XMFLOAT4X4 ViewMTX;        // World -> View
+	DirectX::XMFLOAT4X4 ProjectionMTX;  // View -> Clip
+	DirectX::XMFLOAT4X4 ViewProjMTX;    // World -> Clip (precomputed to save GPU work)
 
-	XMFLOAT3 CameraPosition;  // World-space camera position
-	float NearZ;              // Near clip plane
+	DirectX::XMFLOAT3 CameraPosition;  // World-space camera position
+	float NearZ;                       // Near clip plane
 
-	float FarZ;                // Far clip plane
-	XMFLOAT3 CameraDirection;  // World-space camera forward
+	float FarZ;                         // Far clip plane
+	DirectX::XMFLOAT3 CameraDirection;  // World-space camera forward
 };
 CBV_CHECK(PerViewConstantBufferData);
 
@@ -70,8 +70,8 @@ CBV_CHECK(PerViewConstantBufferData);
 //------------------------------------------------------------------------------
 struct alignas(256) PerObjectVSConstantBufferData
 {
-	XMFLOAT4X4 WorldMTX;              // Local -> World
-	XMFLOAT3X3 WorldInvTransposeMTX;  // For correct normal transformation under non-uniform scale (3x3)
+	DirectX::XMFLOAT4X4 WorldMTX;              // Local -> World
+	DirectX::XMFLOAT3X3 WorldInvTransposeMTX;  // For correct normal transformation under non-uniform scale (3x3)
 
 	// remaining space in the 256-byte slot is reserved for future use
 };
@@ -81,7 +81,7 @@ CBV_CHECK(PerObjectVSConstantBufferData);
 //------------------------------------------------------------------------------
 struct alignas(256) PerObjectPSConstantBufferData
 {
-	XMFLOAT4 BaseColor;  // RGBA base/albedo color or tint
+	DirectX::XMFLOAT4 BaseColor;  // RGBA base/albedo color or tint
 
 	float Metallic;          // PBR metallic [0,1]
 	float Roughness;         // PBR roughness [0,1]

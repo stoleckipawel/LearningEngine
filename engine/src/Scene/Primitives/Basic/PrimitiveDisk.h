@@ -2,10 +2,11 @@
 
 #include "../Primitive.h"
 
-class PrimitiveTetrahedron : public Primitive
+// PrimitiveDisk — a flat disk in XZ plane (filled circle).
+class PrimitiveDisk : public Primitive
 {
   public:
-	PrimitiveTetrahedron(
+	PrimitiveDisk(
 	    const XMFLOAT3& translation = {0.0f, 0.0f, 0.0f},
 	    const XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
 	    const XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});

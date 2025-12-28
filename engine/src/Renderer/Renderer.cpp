@@ -5,7 +5,8 @@
 #include "Window.h"
 #include "DxcShaderCompiler.h"
 #include "Texture.h"
-#include "PrimitiveFactory.h"
+#include "Scene/Primitives/PrimitiveFactory.h"
+#include "Scene/Primitives/Primitive.h"
 #include "D3D12PipelineState.h"
 #include "D3D12RootSignature.h"
 #include "D3D12RootBindings.h"
@@ -72,16 +73,16 @@ void Renderer::GatherPrimitives()
 	// Hard-coded 20 primitive with varied translation, rotation, and smaller scale or further from camera
 	std::vector<std::tuple<XMFLOAT3, XMFLOAT3, XMFLOAT3>> shapeParams = {
 	    // translation                rotation (radians)           scale
-		{{-10.0f, 0.0f, -5.0f}, {0.0f, 0.0f, 0.0f}, {1.2f, 1.2f, 1.2f}}, {{-8.0f, 2.0f, 6.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-		{{-6.0f, -2.0f, -8.0f}, {0.5f, 0.5f, 0.0f}, {1.5f, 1.5f, 1.5f}}, {{-4.0f, 0.0f, 8.0f}, {0.0f, 0.7f, 0.0f}, {1.3f, 1.3f, 1.3f}},
-		{{-2.0f, 2.0f, -6.0f}, {1.0f, 0.0f, 0.5f}, {1.0f, 1.0f, 1.0f}},  {{0.0f, -2.0f, 6.0f}, {0.0f, 0.0f, 1.0f}, {0.9f, 0.9f, 0.9f}},
-		{{2.0f, 0.0f, -8.0f}, {0.3f, 0.8f, 0.2f}, {1.2f, 1.2f, 1.2f}},   {{4.0f, 4.0f, 8.0f}, {0.0f, 1.2f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-		{{6.0f, -4.0f, -6.0f}, {1.0f, 0.5f, 0.0f}, {0.7f, 0.7f, 0.7f}},  {{8.0f, 0.0f, 6.0f}, {0.7f, 0.0f, 1.0f}, {1.3f, 1.3f, 1.3f}},
-		{{-9.0f, -3.0f, 10.0f}, {0.2f, 0.3f, 0.4f}, {0.8f, 0.8f, 0.8f}}, {{-7.0f, 3.0f, -10.0f}, {0.6f, 0.1f, 0.2f}, {1.1f, 1.1f, 1.1f}},
-		{{-5.0f, -1.0f, 9.0f}, {0.4f, 0.6f, 0.8f}, {1.0f, 1.0f, 1.0f}},  {{-3.0f, 1.0f, -9.0f}, {0.9f, 0.2f, 0.3f}, {0.9f, 0.9f, 0.9f}},
-		{{-1.0f, -3.0f, 8.0f}, {0.1f, 0.4f, 0.7f}, {1.2f, 1.2f, 1.2f}},  {{1.0f, 3.0f, -8.0f}, {0.5f, 0.9f, 0.1f}, {1.0f, 1.0f, 1.0f}},
-		{{3.0f, -1.0f, 7.0f}, {0.8f, 0.3f, 0.6f}, {0.7f, 0.7f, 0.7f}},   {{5.0f, 1.0f, -7.0f}, {0.2f, 0.7f, 0.5f}, {1.1f, 1.1f, 1.1f}},
-		{{7.0f, -3.0f, 6.0f}, {0.3f, 0.6f, 0.9f}, {0.8f, 0.8f, 0.8f}},   {{9.0f, 3.0f, -5.0f}, {0.7f, 0.2f, 0.4f}, {1.0f, 1.0f, 1.0f}}};
+	    {{-10.0f, 0.0f, -5.0f}, {0.0f, 0.0f, 0.0f}, {1.2f, 1.2f, 1.2f}}, {{-8.0f, 2.0f, 6.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+	    {{-6.0f, -2.0f, -8.0f}, {0.5f, 0.5f, 0.0f}, {1.5f, 1.5f, 1.5f}}, {{-4.0f, 0.0f, 8.0f}, {0.0f, 0.7f, 0.0f}, {1.3f, 1.3f, 1.3f}},
+	    {{-2.0f, 2.0f, -6.0f}, {1.0f, 0.0f, 0.5f}, {1.0f, 1.0f, 1.0f}},  {{0.0f, -2.0f, 6.0f}, {0.0f, 0.0f, 1.0f}, {0.9f, 0.9f, 0.9f}},
+	    {{2.0f, 0.0f, -8.0f}, {0.3f, 0.8f, 0.2f}, {1.2f, 1.2f, 1.2f}},   {{4.0f, 4.0f, 8.0f}, {0.0f, 1.2f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+	    {{6.0f, -4.0f, -6.0f}, {1.0f, 0.5f, 0.0f}, {0.7f, 0.7f, 0.7f}},  {{8.0f, 0.0f, 6.0f}, {0.7f, 0.0f, 1.0f}, {1.3f, 1.3f, 1.3f}},
+	    {{-9.0f, -3.0f, 10.0f}, {0.2f, 0.3f, 0.4f}, {0.8f, 0.8f, 0.8f}}, {{-7.0f, 3.0f, -10.0f}, {0.6f, 0.1f, 0.2f}, {1.1f, 1.1f, 1.1f}},
+	    {{-5.0f, -1.0f, 9.0f}, {0.4f, 0.6f, 0.8f}, {1.0f, 1.0f, 1.0f}},  {{-3.0f, 1.0f, -9.0f}, {0.9f, 0.2f, 0.3f}, {0.9f, 0.9f, 0.9f}},
+	    {{-1.0f, -3.0f, 8.0f}, {0.1f, 0.4f, 0.7f}, {1.2f, 1.2f, 1.2f}},  {{1.0f, 3.0f, -8.0f}, {0.5f, 0.9f, 0.1f}, {1.0f, 1.0f, 1.0f}},
+	    {{3.0f, -1.0f, 7.0f}, {0.8f, 0.3f, 0.6f}, {0.7f, 0.7f, 0.7f}},   {{5.0f, 1.0f, -7.0f}, {0.2f, 0.7f, 0.5f}, {1.1f, 1.1f, 1.1f}},
+	    {{7.0f, -3.0f, 6.0f}, {0.3f, 0.6f, 0.9f}, {0.8f, 0.8f, 0.8f}},   {{9.0f, 3.0f, -5.0f}, {0.7f, 0.2f, 0.4f}, {1.0f, 1.0f, 1.0f}}};
 
 	for (const auto& [translation, rotation, scale] : shapeParams)
 	{
@@ -175,7 +176,7 @@ void Renderer::BindPerObjectResources(const Primitive& primitive) noexcept
 	// -------------------------------------------------------------------------
 	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(
 	    RootBindings::RootParam::PerObjectVS,
-	    GD3D12ConstantBufferManager.UpdatePerObjectVS(primitive));
+	    GD3D12ConstantBufferManager.UpdatePerObjectVS(primitive.GetPerObjectVSConstants()));
 
 	// -------------------------------------------------------------------------
 	// Update and Bind Per-Object PS Constant Buffer (b3)
@@ -230,14 +231,14 @@ void Renderer::PopulateCommandList()
 
 	// Set the pipeline state object (PSO)
 	// ToDo: sort by PSO to minimize state changes
-	m_pso->Set();	
-	
+	m_pso->Set();
+
 	const auto& primitives = m_primitiveFactory->GetPrimitives();
 
 	for (const auto& primitive : primitives)
 	{
 		// Set geometry buffers (VB, IB) and topology for this primitive
-		primitive->Set();
+		primitive->Bind(GD3D12Rhi.GetCommandList().Get());
 
 		// Bind per-object constant buffers (world matrix, material)
 		BindPerObjectResources(*primitive);

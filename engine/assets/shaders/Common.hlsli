@@ -8,4 +8,3 @@
 #include "LayoutPixel.hlsli"
 #include "Material.hlsli"
 #include "Lighting.hlsli"
-

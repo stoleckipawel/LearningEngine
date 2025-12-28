@@ -15,7 +15,7 @@ struct VsOutput
 	float4 Color : COLOR;
 	float3 NormalWorld : NORMAL;
 	float4 TangentWorld : TANGENT;
-	float3 BitangentWorld : BINORMAL;	
+	float3 BitangentWorld : BINORMAL;
 	float4 Position : SV_POSITION;
 };
 
@@ -30,7 +30,7 @@ float4 UnpackTangentWorld(float4 TangentLocal)
 	// Transform tangent.xyz as a direction (3x3) and preserve handedness in w
 	const float3 localTangent = TangentLocal.xyz;
 	const float handedness = TangentLocal.w;
-	const float3 worldTangent = mul(localTangent, (float3x3)WorldMTX);
+	const float3 worldTangent = mul(localTangent, (float3x3) WorldMTX);
 	return float4(worldTangent, handedness);
 }
 
