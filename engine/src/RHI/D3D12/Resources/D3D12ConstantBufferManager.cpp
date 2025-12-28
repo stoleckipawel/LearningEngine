@@ -4,6 +4,7 @@
 #include "Camera.h"
 #include "Timer.h"
 #include "Window.h"
+#include "UI.h"
 #include "D3D12SwapChain.h"
 #include <cmath>
 
@@ -62,6 +63,7 @@ void D3D12ConstantBufferManager::UpdatePerFrame()
 	data.DeltaTime = GTimer.GetDelta();
 	data.ViewportSize = GWindow.GetViewportSize();
 	data.ViewportSizeInv = GWindow.GetViewportSizeInv();
+	data.ViewModeIndex = static_cast<uint32_t>(GUI.GetViewMode());
 
 	const uint32_t frameInFlightIndex = GD3D12SwapChain.GetFrameInFlightIndex();
 	m_PerFrameCB[frameInFlightIndex]->Update(data);

@@ -14,8 +14,7 @@ namespace Lighting
 
 	float3 CalculateIndireect()
 	{
-		float3 ambientColor = float3(0.05f, 0.05f, 0.05f);
-		return ambientColor;
+		return float3(0.02f, 0.02f, 0.02f);
 	}
 
 }  // namespace Lighting

@@ -11,6 +11,7 @@ namespace Material
 	{
 		float3 BaseColor;
 		float3 NormalTangent;
+		float3 NormalWorld;
 		float Roughness;
 		float3 Emissive;
 		float Metallic;
@@ -22,6 +23,7 @@ namespace Material
 		Properties props;
 		props.BaseColor = float3(1.0f, 1.0f, 1.0f);
 		props.NormalTangent = float3(0.0f, 0.0f, 1.0f);
+		props.NormalWorld = float3(0.0f, 0.0f, 1.0f);
 		props.Roughness = 1.0f;
 		props.Emissive = float3(0.0f, 0.0f, 0.0f);
 		props.Metallic = 0.0f;
@@ -66,6 +68,7 @@ namespace Material
 
 		MatProps.BaseColor = SampleBaseColor(UV);
 		MatProps.NormalTangent = SampleNormalTangent(UV);
+		MatProps.NormalWorld = MatProps.NormalTangent; // TODO: Transform to world space
 		MatProps.Roughness = SampleRoughness(UV);
 		MatProps.Emissive = SampleEmissive(UV);
 		MatProps.Metallic = SampleMetalic(UV);

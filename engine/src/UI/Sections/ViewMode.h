@@ -8,7 +8,7 @@
 class ViewMode final : public UIRendererSection
 {
   public:
-	enum class Type : std::uint8_t
+	enum class Type : std::uint8_t //Keep in sync with Viewmode.hlsli
 	{
 		Lit = 0,
 		GBufferDiffuse,

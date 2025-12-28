@@ -316,6 +316,9 @@ void Renderer::SetupFrame() noexcept
 	// -----------------------------------------------------------------------------
 	GTimer.Tick();
 
+	// Update UI first so user changes (e.g. View Mode) are visible the same frame.
+	GUI.Update();
+
 	// -----------------------------------------------------------------------------
 	// CONSTANT BUFFER UPDATES - Update CB data at appropriate frequencies
 	// -----------------------------------------------------------------------------
@@ -330,8 +333,6 @@ void Renderer::SetupFrame() noexcept
 	//       In a multi-view scenario (shadows, reflections), UpdatePerView()
 	//       would be called once per view, not once per frame.
 	GD3D12ConstantBufferManager.UpdatePerView();
-
-	GUI.Update();
 }
 
 // -----------------------------------------------------------------------------

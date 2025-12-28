@@ -10,7 +10,7 @@
 class RendererPanel final
 {
   public:
-	explicit RendererPanel(float widthPixels = 320.0f) noexcept;
+	explicit RendererPanel(float widthPixels = 384.0f) noexcept;
 	~RendererPanel() = default;
 
 	RendererPanel(const RendererPanel&) = delete;
@@ -32,6 +32,6 @@ class RendererPanel final
   private:
 	std::size_t FindSectionIndex(UIRendererSectionId id) const noexcept;
 
-	float m_widthPixels = 320.0f;
+	float m_widthPixels = 384.0f;
 	std::vector<std::unique_ptr<UIRendererSection>> m_sections;
 };
