@@ -1,51 +1,51 @@
 #include "PCH.h"
-#include "Primitive.h"
+#include "Mesh.h"
 #include "D3D12UploadBuffer.h"
 #include "Log.h"
 
-Primitive::Primitive(const DirectX::XMFLOAT3& translation, const DirectX::XMFLOAT3& rotation, const DirectX::XMFLOAT3& scale) noexcept :
+Mesh::Mesh(const DirectX::XMFLOAT3& translation, const DirectX::XMFLOAT3& rotation, const DirectX::XMFLOAT3& scale) noexcept :
     m_translation(translation), m_rotationEuler(rotation), m_scale(scale)
 {
 	m_bWorldDirty = true;
 }
 
 // -- Transform setters/getters -------------------------------------------------
-void Primitive::SetTranslation(const DirectX::XMFLOAT3& t) noexcept
+void Mesh::SetTranslation(const DirectX::XMFLOAT3& t) noexcept
 {
 	m_translation = t;
 	InvalidateWorldCache();
 }
 
-DirectX::XMFLOAT3 Primitive::GetTranslation() const noexcept
+DirectX::XMFLOAT3 Mesh::GetTranslation() const noexcept
 {
 	return m_translation;
 }
 
-void Primitive::SetRotationEuler(const DirectX::XMFLOAT3& r) noexcept
+void Mesh::SetRotationEuler(const DirectX::XMFLOAT3& r) noexcept
 {
 	m_rotationEuler = r;
 	InvalidateWorldCache();
 }
 
-DirectX::XMFLOAT3 Primitive::GetRotationEuler() const noexcept
+DirectX::XMFLOAT3 Mesh::GetRotationEuler() const noexcept
 {
 	return m_rotationEuler;
 }
 
-void Primitive::SetScale(const DirectX::XMFLOAT3& s) noexcept
+void Mesh::SetScale(const DirectX::XMFLOAT3& s) noexcept
 {
 	m_scale = s;
 	InvalidateWorldCache();
 }
 
-DirectX::XMFLOAT3 Primitive::GetScale() const noexcept
+DirectX::XMFLOAT3 Mesh::GetScale() const noexcept
 {
 	return m_scale;
 }
 
 // Lazy rebuild of the cached world matrix. Mutable members are used so const
 // accessors (GetWorldMatrix) can rebuild transparently and remain logically const.
-void Primitive::RebuildWorldIfNeeded() const noexcept
+void Mesh::RebuildWorldIfNeeded() const noexcept
 {
 	if (!m_bWorldDirty)
 		return;
@@ -58,13 +58,13 @@ void Primitive::RebuildWorldIfNeeded() const noexcept
 	m_bWorldDirty = false;
 }
 
-DirectX::XMMATRIX Primitive::GetWorldMatrix() const noexcept
+DirectX::XMMATRIX Mesh::GetWorldMatrix() const noexcept
 {
 	RebuildWorldIfNeeded();
 	return DirectX::XMLoadFloat4x4(&m_worldMatrixCache);
 }
 
-DirectX::XMMATRIX Primitive::GetWorldInverseTransposeMatrix() const noexcept
+DirectX::XMMATRIX Mesh::GetWorldInverseTransposeMatrix() const noexcept
 {
 	RebuildWorldIfNeeded();
 	DirectX::XMMATRIX world = DirectX::XMLoadFloat4x4(&m_worldMatrixCache);
@@ -72,7 +72,7 @@ DirectX::XMMATRIX Primitive::GetWorldInverseTransposeMatrix() const noexcept
 	return DirectX::XMMatrixTranspose(invWorld);
 }
 
-PerObjectVSConstantBufferData Primitive::GetPerObjectVSConstants() const noexcept
+PerObjectVSConstantBufferData Mesh::GetPerObjectVSConstants() const noexcept
 {
 	PerObjectVSConstantBufferData data = {};
 
@@ -85,7 +85,7 @@ PerObjectVSConstantBufferData Primitive::GetPerObjectVSConstants() const noexcep
 	return data;
 }
 
-DirectX::XMFLOAT3X3 Primitive::GetWorldRotationMatrix3x3() const noexcept
+DirectX::XMFLOAT3X3 Mesh::GetWorldRotationMatrix3x3() const noexcept
 {
 	DirectX::XMMATRIX rotation = DirectX::XMMatrixRotationRollPitchYaw(m_rotationEuler.x, m_rotationEuler.y, m_rotationEuler.z);
 	DirectX::XMFLOAT3X3 rot3x3;
@@ -93,7 +93,7 @@ DirectX::XMFLOAT3X3 Primitive::GetWorldRotationMatrix3x3() const noexcept
 	return rot3x3;
 }
 
-void Primitive::UploadVertexBuffer()
+void Mesh::UploadVertexBuffer()
 {
 	std::vector<Vertex> vertexList;
 	GenerateVertices(vertexList);
@@ -105,7 +105,7 @@ void Primitive::UploadVertexBuffer()
 	m_vertexBufferView.StrideInBytes = sizeof(Vertex);
 }
 
-void Primitive::UploadIndexBuffer()
+void Mesh::UploadIndexBuffer()
 {
 	std::vector<DWORD> indexList;
 	GenerateIndices(indexList);
@@ -118,13 +118,13 @@ void Primitive::UploadIndexBuffer()
 	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 }
 
-void Primitive::Upload()
+void Mesh::Upload()
 {
 	UploadIndexBuffer();
 	UploadVertexBuffer();
 }
 
-void Primitive::Bind(ID3D12GraphicsCommandList* commandList) const noexcept
+void Mesh::Bind(ID3D12GraphicsCommandList* commandList) const noexcept
 {
 	if (commandList == nullptr)
 	{
@@ -137,7 +137,7 @@ void Primitive::Bind(ID3D12GraphicsCommandList* commandList) const noexcept
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-std::span<const D3D12_INPUT_ELEMENT_DESC> Primitive::GetStaticVertexLayout() noexcept
+std::span<const D3D12_INPUT_ELEMENT_DESC> Mesh::GetStaticVertexLayout() noexcept
 {
 	static const D3D12_INPUT_ELEMENT_DESC s_layout[] = {
 	    {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},

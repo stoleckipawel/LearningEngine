@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Primitive.h"
+#include "Scene/Mesh.h"
 
-class PrimitiveCylinder : public Primitive
+class PrimitiveCylinder : public Mesh
 {
   public:
 	PrimitiveCylinder(

@@ -1,8 +1,7 @@
-
 #include "PCH.h"
-#include "PrimitiveFactory.h"
+#include "MeshFactory.h"
 
-#include "Primitive.h"
+#include "Scene/Mesh.h"
 
 #include <cmath>
 #include <random>
@@ -24,8 +23,8 @@
 #include "Primitives/Polyhedra/PrimitiveOctahedron.h"
 #include "Primitives/Polyhedra/PrimitiveTetrahedron.h"
 
-void PrimitiveFactory::AppendShape(
-    PrimitiveFactory::Shape shape,
+void MeshFactory::AppendShape(
+    MeshFactory::Shape shape,
     const DirectX::XMFLOAT3& translation,
     const DirectX::XMFLOAT3& rotation,
     const DirectX::XMFLOAT3& scale)
@@ -33,56 +32,56 @@ void PrimitiveFactory::AppendShape(
 	switch (shape)
 	{
 		case Shape::Box:
-			m_primitives.push_back(std::make_unique<PrimitiveBox>(translation, rotation, scale));
+			m_meshes.push_back(std::make_unique<PrimitiveBox>(translation, rotation, scale));
 			break;
 		case Shape::Plane:
-			m_primitives.push_back(std::make_unique<PrimitivePlane>(translation, rotation, scale));
+			m_meshes.push_back(std::make_unique<PrimitivePlane>(translation, rotation, scale));
 			break;
 		case Shape::Sphere:
-			m_primitives.push_back(std::make_unique<PrimitiveSphere>(translation, rotation, scale));
+			m_meshes.push_back(std::make_unique<PrimitiveSphere>(translation, rotation, scale));
 			break;
 		case Shape::Cone:
-			m_primitives.push_back(std::make_unique<PrimitiveCone>(translation, rotation, scale));
+			m_meshes.push_back(std::make_unique<PrimitiveCone>(translation, rotation, scale));
 			break;
 		case Shape::Cylinder:
-			m_primitives.push_back(std::make_unique<PrimitiveCylinder>(translation, rotation, scale));
+			m_meshes.push_back(std::make_unique<PrimitiveCylinder>(translation, rotation, scale));
 			break;
 		case Shape::Torus:
-			m_primitives.push_back(std::make_unique<PrimitiveTorus>(translation, rotation, scale));
+			m_meshes.push_back(std::make_unique<PrimitiveTorus>(translation, rotation, scale));
 			break;
 		case Shape::Capsule:
-			m_primitives.push_back(std::make_unique<PrimitiveCapsule>(translation, rotation, scale));
+			m_meshes.push_back(std::make_unique<PrimitiveCapsule>(translation, rotation, scale));
 			break;
 		case Shape::Hemisphere:
-			m_primitives.push_back(std::make_unique<PrimitiveHemisphere>(translation, rotation, scale));
+			m_meshes.push_back(std::make_unique<PrimitiveHemisphere>(translation, rotation, scale));
 			break;
 		case Shape::Pyramid:
-			m_primitives.push_back(std::make_unique<PrimitivePyramid>(translation, rotation, scale));
+			m_meshes.push_back(std::make_unique<PrimitivePyramid>(translation, rotation, scale));
 			break;
 		case Shape::Disk:
-			m_primitives.push_back(std::make_unique<PrimitiveDisk>(translation, rotation, scale));
+			m_meshes.push_back(std::make_unique<PrimitiveDisk>(translation, rotation, scale));
 			break;
 		case Shape::Octahedron:
-			m_primitives.push_back(std::make_unique<PrimitiveOctahedron>(translation, rotation, scale));
+			m_meshes.push_back(std::make_unique<PrimitiveOctahedron>(translation, rotation, scale));
 			break;
 		case Shape::Tetrahedron:
-			m_primitives.push_back(std::make_unique<PrimitiveTetrahedron>(translation, rotation, scale));
+			m_meshes.push_back(std::make_unique<PrimitiveTetrahedron>(translation, rotation, scale));
 			break;
 		case Shape::Icosahedron:
-			m_primitives.push_back(std::make_unique<PrimitiveIcosahedron>(translation, rotation, scale));
+			m_meshes.push_back(std::make_unique<PrimitiveIcosahedron>(translation, rotation, scale));
 			break;
 		case Shape::Dodecahedron:
-			m_primitives.push_back(std::make_unique<PrimitiveDodecahedron>(translation, rotation, scale));
+			m_meshes.push_back(std::make_unique<PrimitiveDodecahedron>(translation, rotation, scale));
 			break;
 		case Shape::Icosphere:
-			m_primitives.push_back(std::make_unique<PrimitiveIcosphere>(translation, rotation, scale));
+			m_meshes.push_back(std::make_unique<PrimitiveIcosphere>(translation, rotation, scale));
 			break;
 		default:
 			break;
 	}
 }
 
-void PrimitiveFactory::AppendRandomShapes(
+void MeshFactory::AppendRandomShapes(
     std::uint32_t count,
     const DirectX::XMFLOAT3& center,
     const DirectX::XMFLOAT3& extents,
@@ -91,7 +90,7 @@ void PrimitiveFactory::AppendRandomShapes(
 	if (count == 0)
 		return;
 
-	m_primitives.reserve(m_primitives.size() + static_cast<size_t>(count));
+	m_meshes.reserve(m_meshes.size() + static_cast<size_t>(count));
 
 	const DirectX::XMFLOAT3 e{std::fabs(extents.x), std::fabs(extents.y), std::fabs(extents.z)};
 	const float tx0 = center.x - e.x;
@@ -115,8 +114,6 @@ void PrimitiveFactory::AppendRandomShapes(
 	std::uniform_real_distribution<float> distTx(tx0, tx1);
 	std::uniform_real_distribution<float> distTy(ty0, ty1);
 	std::uniform_real_distribution<float> distTz(tz0, tz1);
-	std::uniform_real_distribution<float> distRot(-DirectX::XM_PI, DirectX::XM_PI);
-	std::uniform_real_distribution<float> distScale(0.25f, 1.5f);
 
 	static constexpr Shape kSpawnableShapes[] = {
 	    Shape::Box,
@@ -145,18 +142,18 @@ void PrimitiveFactory::AppendRandomShapes(
 	}
 }
 
-const std::vector<std::unique_ptr<Primitive>>& PrimitiveFactory::GetPrimitives() const
+const std::vector<std::unique_ptr<Mesh>>& MeshFactory::GetMeshes() const
 {
-	return m_primitives;
+	return m_meshes;
 }
 
-void PrimitiveFactory::Upload()
+void MeshFactory::Upload()
 {
-	for (auto& primitive : m_primitives)
+	for (auto& mesh : m_meshes)
 	{
-		if (primitive)
+		if (mesh)
 		{
-			primitive->Upload();
+			mesh->Upload();
 		}
 	}
 }

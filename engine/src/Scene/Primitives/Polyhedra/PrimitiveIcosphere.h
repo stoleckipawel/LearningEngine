@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../Primitive.h"
+#include "Scene/Mesh.h"
 
 // PrimitiveIcosphere — subdivided icosahedron sphere (smooth triangulation).
-class PrimitiveIcosphere : public Primitive
+class PrimitiveIcosphere : public Mesh
 {
   public:
 	PrimitiveIcosphere(

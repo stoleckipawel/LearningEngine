@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../Primitive.h"
+#include "Scene/Mesh.h"
 
 // PrimitiveDisk — a flat disk in XZ plane (filled circle).
-class PrimitiveDisk : public Primitive
+class PrimitiveDisk : public Mesh
 {
   public:
 	PrimitiveDisk(

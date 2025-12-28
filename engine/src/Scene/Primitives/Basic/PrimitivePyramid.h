@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../Primitive.h"
+#include "Scene/Mesh.h"
 
 // PrimitivePyramid — square pyramid with a flat base.
-class PrimitivePyramid : public Primitive
+class PrimitivePyramid : public Mesh
 {
   public:
 	PrimitivePyramid(

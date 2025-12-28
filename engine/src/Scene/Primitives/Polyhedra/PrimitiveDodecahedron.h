@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../Primitive.h"
+#include "Scene/Mesh.h"
 
 // PrimitiveDodecahedron — regular dodecahedron (12 pentagonal faces, triangulated).
-class PrimitiveDodecahedron : public Primitive
+class PrimitiveDodecahedron : public Mesh
 {
   public:
 	PrimitiveDodecahedron(

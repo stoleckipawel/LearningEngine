@@ -4,7 +4,7 @@
 #include "MathUtils.h"
 
 PrimitivePyramid::PrimitivePyramid(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale) :
-    Primitive(translation, rotation, scale)
+    Mesh(translation, rotation, scale)
 {
 }
 

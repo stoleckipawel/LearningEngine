@@ -4,7 +4,7 @@
 #include "MathUtils.h"
 
 PrimitiveIcosphere::PrimitiveIcosphere(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale) :
-    Primitive(translation, rotation, scale)
+    Mesh(translation, rotation, scale)
 {
 }
 
@@ -97,7 +97,7 @@ void PrimitiveIcosphere::GenerateVertices(std::vector<Vertex>& outVertices) cons
 		outVertices.push_back({n, uv, color, n, {tangent.x, tangent.y, tangent.z, 1.0f}});
 	}
 
-	// Stash indices for GenerateIndices via a static cache (keeps Primitive interface unchanged)
+	// Stash indices for GenerateIndices via a static cache (keeps Mesh interface unchanged)
 	// We rebuild indices in GenerateIndices as well to keep both functions deterministic.
 }
 

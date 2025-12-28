@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../Primitive.h"
+#include "Scene/Mesh.h"
 
 // PrimitiveIcosahedron — regular icosahedron (20 triangles).
-class PrimitiveIcosahedron : public Primitive
+class PrimitiveIcosahedron : public Mesh
 {
   public:
 	PrimitiveIcosahedron(

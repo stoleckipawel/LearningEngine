@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../Primitive.h"
+#include "Scene/Mesh.h"
 
 // PrimitivePlane — a simple 2D plane primitive for rendering (XZ plane). Inherits from Primitive.
-class PrimitivePlane : public Primitive
+class PrimitivePlane : public Mesh
 {
   public:
 	PrimitivePlane(

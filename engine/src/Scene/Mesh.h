@@ -7,7 +7,6 @@
 #include <span>
 #include <vector>
 
-
 using Microsoft::WRL::ComPtr;
 
 // Vertex structure for geometry: position, UV, and color.
@@ -21,22 +20,22 @@ struct Vertex
 	DirectX::XMFLOAT4 tangent;   // Vertex tangent (x, y, z, w) — xyz is direction, w is handedness sign (+1/-1).
 };
 
-// Base class for renderable primitives. Handles upload/binding and per-frame resources.
-class Primitive
+// Base class for renderable meshes. Handles upload/binding and per-frame resources.
+class Mesh
 {
   public:
 	// Default input layout for the engine's standard Vertex format.
 	// This is allocation-free and suitable for PSO creation.
 	static std::span<const D3D12_INPUT_ELEMENT_DESC> GetStaticVertexLayout() noexcept;
 
-	// Construct a new Primitive. translation/rotation/scale default to identity (no transform).
-	Primitive(
+	// Construct a new Mesh. translation/rotation/scale default to identity (no transform).
+	Mesh(
 	    const DirectX::XMFLOAT3& translation = {0.0f, 0.0f, 0.0f},
 	    const DirectX::XMFLOAT3& rotation = {0.0f, 0.0f, 0.0f},
 	    const DirectX::XMFLOAT3& scale = {1.0f, 1.0f, 1.0f}) noexcept;
 
 	// Virtual destructor for polymorphic base
-	virtual ~Primitive() = default;
+	virtual ~Mesh() = default;
 
 	// Transform API:  explicit setters/getters
 	void SetTranslation(const DirectX::XMFLOAT3& t) noexcept;
@@ -58,7 +57,7 @@ class Primitive
 	// Return inverse-transpose of world for correct normal transformation in shaders.
 	DirectX::XMMATRIX GetWorldInverseTransposeMatrix() const noexcept;
 
-	// Fill per-object VS constant buffer data for this primitive.
+	// Fill per-object VS constant buffer data for this mesh.
 	[[nodiscard]] PerObjectVSConstantBufferData GetPerObjectVSConstants() const noexcept;
 
 	// Return the number of indices in the index buffer.
@@ -87,7 +86,7 @@ class Primitive
 	void InvalidateWorldCache() noexcept { m_bWorldDirty = true; }
 
   private:
-	// Transform state (encapsulated)
+	// Transform state
 	DirectX::XMFLOAT3 m_translation{0.0f, 0.0f, 0.0f};
 	DirectX::XMFLOAT3 m_rotationEuler{0.0f, 0.0f, 0.0f};
 	DirectX::XMFLOAT3 m_scale{1.0f, 1.0f, 1.0f};

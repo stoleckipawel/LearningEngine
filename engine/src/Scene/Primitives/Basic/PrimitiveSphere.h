@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../Primitive.h"
+#include "Scene/Mesh.h"
 
-// PrimitiveSphere — a UV sphere primitive for rendering. Inherits from Primitive.
-class PrimitiveSphere : public Primitive
+// PrimitiveSphere — a UV sphere primitive for rendering. Inherits from Mesh.
+class PrimitiveSphere : public Mesh
 {
   public:
 	PrimitiveSphere(

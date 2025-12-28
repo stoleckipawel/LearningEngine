@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../Primitive.h"
+#include "Scene/Mesh.h"
 
-// PrimitiveBox — a 3D cube/box primitive for rendering. Inherits from Primitive.
+// PrimitiveBox — a 3D cube/box primitive for rendering. Inherits from Mesh.
 // Provides mesh data for a unit cube centered at the origin.
-class PrimitiveBox : public Primitive
+class PrimitiveBox : public Mesh
 {
   public:
 	// Construct a new PrimitiveBox object. Parameters default to identity (no transform).

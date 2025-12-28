@@ -1,15 +1,17 @@
 
 #pragma once
 
+#include <memory>
+
 // Forward declarations
 class DxcShaderCompiler;
 class Texture;
-class PrimitiveFactory;
 class D3D12PipelineState;
 class D3D12RootSignature;
-class D3D12Sampler;
+class D3D12SamplerLibrary;
 class D3D12DepthStencil;
-class Primitive;
+class Mesh;
+class MeshFactory;
 
 // -----------------------------------------------------------------------------
 // Renderer: Main graphics pipeline manager for the engine
@@ -51,8 +53,8 @@ class Renderer
 	// Create depth stencil and other frame buffer resources
 	void CreateFrameBuffers();
 
-	// Populate primitive factory with scene geometry
-	void GatherPrimitives();
+	// Populate mesh factory with scene geometry
+	void GatherMeshes();
 
 	// -------------------------------------------------------------------------
 	// Command list recording
@@ -88,7 +90,7 @@ class Renderer
 
 	// Bind per-object resources before each draw call
 	// (world matrix CB, material CB)
-	void BindPerObjectResources(const Primitive& primitive) noexcept;
+	void BindPerObjectResources(const Mesh& mesh) noexcept;
 
   private:
 	// -------------------------------------------------------------------------
@@ -97,8 +99,8 @@ class Renderer
 	std::unique_ptr<Texture> m_checkerTexture;
 	std::unique_ptr<Texture> m_skyCubemapTexture;
 	std::unique_ptr<D3D12DepthStencil> m_depthStencil;
-	std::unique_ptr<D3D12Sampler> m_sampler;
-	std::unique_ptr<PrimitiveFactory> m_primitiveFactory;
+	std::unique_ptr<D3D12SamplerLibrary> m_samplerLibrary;
+	std::unique_ptr<MeshFactory> m_meshFactory;
 	std::unique_ptr<D3D12PipelineState> m_pso;
 	std::unique_ptr<D3D12RootSignature> m_rootSignature;
 	std::unique_ptr<DxcShaderCompiler> m_vertexShader;

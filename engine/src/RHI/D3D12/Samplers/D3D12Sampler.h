@@ -7,8 +7,8 @@
 // Ownership:
 //  - Allocates a descriptor slot from the sampler heap on construction.
 //  - Frees the slot on destruction.
-// Move semantics transfer descriptor ownership; copy is disabled to avoid
-// double-freeing a descriptor index.
+//
+// Copy and move are disabled: the sampler owns a unique heap allocation.
 class D3D12Sampler
 {
   public:
@@ -20,12 +20,10 @@ class D3D12Sampler
 	D3D12Sampler(D3D12Sampler&&) = delete;
 	D3D12Sampler& operator=(D3D12Sampler&&) = delete;
 
-	// Accessors are noexcept and const-correct. Return by-value is cheap
-	// (handles are small PODs).
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept { return m_samplerHandle.GetGPU(); }
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const noexcept { return m_samplerHandle.GetCPU(); }
 	bool IsValid() const noexcept { return m_samplerHandle.IsValid(); }
 
   private:
-	D3D12DescriptorHandle m_samplerHandle;  // Allocated sampler descriptor handle
+	D3D12DescriptorHandle m_samplerHandle;
 };

@@ -5,15 +5,15 @@
 #include "Window.h"
 #include "DxcShaderCompiler.h"
 #include "Texture.h"
-#include "Scene/Primitives/PrimitiveFactory.h"
-#include "Scene/Primitives/Primitive.h"
+#include "Scene/MeshFactory.h"
+#include "Scene/Mesh.h"
 #include "D3D12PipelineState.h"
 #include "D3D12RootSignature.h"
 #include "D3D12RootBindings.h"
 #include "D3D12ConstantBuffer.h"
 #include "D3D12ConstantBufferManager.h"
 #include "D3D12FrameResource.h"
-#include "D3D12Sampler.h"
+#include "Samplers/D3D12SamplerLibrary.h"
 #include "D3D12DepthStencil.h"
 #include "UI.h"
 #include "Timer.h"
@@ -49,13 +49,16 @@ void Renderer::Initialize() noexcept
 	// Load textures and create sampler
 	m_checkerTexture = std::make_unique<Texture>(std::filesystem::path("ColorCheckerBoard.png"));
 	m_skyCubemapTexture = std::make_unique<Texture>(std::filesystem::path("SkyCubemap.png"));
-	m_sampler = std::make_unique<D3D12Sampler>();
+
+	// Initialize sampler library
+	m_samplerLibrary = std::make_unique<D3D12SamplerLibrary>();
+	m_samplerLibrary->Initialize();
 
 	// Create geometry
-	GatherPrimitives();
+	GatherMeshes();
 
 	// Create pipeline state object
-	m_pso = std::make_unique<D3D12PipelineState>(Primitive::GetStaticVertexLayout(), *m_rootSignature, *m_vertexShader, *m_pixelShader);
+	m_pso = std::make_unique<D3D12PipelineState>(Mesh::GetStaticVertexLayout(), *m_rootSignature, *m_vertexShader, *m_pixelShader);
 
 	// Create depth stencil and other frame buffers
 	CreateFrameBuffers();
@@ -65,18 +68,18 @@ void Renderer::Initialize() noexcept
 	PostLoad();
 }
 
-void Renderer::GatherPrimitives()
+void Renderer::GatherMeshes()
 {
-	m_primitiveFactory = std::make_unique<PrimitiveFactory>();
+	m_meshFactory = std::make_unique<MeshFactory>();
 
 	// Spawn shapes in front of the camera so they're guaranteed to be visible.
 	const DirectX::XMFLOAT3 camPos = GCamera.GetPosition();
 	const DirectX::XMFLOAT3 camDir = GCamera.GetDirection();
 	const DirectX::XMFLOAT3 spawnCenter{camPos.x + camDir.x * 10.0f, camPos.y + camDir.y * 10.0f, camPos.z + camDir.z * 10.0f};
 
-	m_primitiveFactory->AppendRandomShapes(64, spawnCenter, XMFLOAT3{20.0f, 20.0f, 20.0f}, 1337);
+	m_meshFactory->AppendRandomShapes(128, spawnCenter, XMFLOAT3{20.0f, 20.0f, 20.0f}, 1337);
 
-	m_primitiveFactory->Upload();
+	m_meshFactory->Upload();
 }
 
 // -----------------------------------------------------------------------------
@@ -144,9 +147,10 @@ void Renderer::BindPerFrameResources() noexcept
 	// -------------------------------------------------------------------------
 	// Bind Samplers - descriptor table
 	// -------------------------------------------------------------------------
-	if (m_sampler)
+	if (m_samplerLibrary)
 	{
-		GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(RootBindings::RootParam::Sampler, m_sampler->GetGPUHandle());
+		const auto& sampler = m_samplerLibrary->GetLinear(D3D12SamplerLibrary::AddressMode::Wrap, D3D12SamplerLibrary::Dimension::Tex2D);
+		GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(RootBindings::RootParam::Sampler, sampler.GetGPUHandle());
 	}
 }
 
@@ -154,7 +158,7 @@ void Renderer::BindPerFrameResources() noexcept
 // Binds per-object resources before each draw call
 // These bindings change for every primitive/mesh being rendered.
 // -----------------------------------------------------------------------------
-void Renderer::BindPerObjectResources(const Primitive& primitive) noexcept
+void Renderer::BindPerObjectResources(const Mesh& mesh) noexcept
 {
 	// -------------------------------------------------------------------------
 	// Update and Bind Per-Object VS Constant Buffer (b2)
@@ -163,7 +167,7 @@ void Renderer::BindPerObjectResources(const Primitive& primitive) noexcept
 	// -------------------------------------------------------------------------
 	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(
 	    RootBindings::RootParam::PerObjectVS,
-	    GD3D12ConstantBufferManager.UpdatePerObjectVS(primitive.GetPerObjectVSConstants()));
+	    GD3D12ConstantBufferManager.UpdatePerObjectVS(mesh.GetPerObjectVSConstants()));
 
 	// -------------------------------------------------------------------------
 	// Update and Bind Per-Object PS Constant Buffer (b3)
@@ -220,18 +224,18 @@ void Renderer::PopulateCommandList()
 	// ToDo: sort by PSO to minimize state changes
 	m_pso->Set();
 
-	const auto& primitives = m_primitiveFactory->GetPrimitives();
+	const auto& meshes = m_meshFactory->GetMeshes();
 
-	for (const auto& primitive : primitives)
+	for (const auto& mesh : meshes)
 	{
 		// Set geometry buffers (VB, IB) and topology for this primitive
-		primitive->Bind(GD3D12Rhi.GetCommandList().Get());
+		mesh->Bind(GD3D12Rhi.GetCommandList().Get());
 
 		// Bind per-object constant buffers (world matrix, material)
-		BindPerObjectResources(*primitive);
+		BindPerObjectResources(*mesh);
 
 		// Issue the draw call for this primitive
-		GD3D12Rhi.GetCommandList()->DrawIndexedInstanced(primitive->GetIndexCount(), 1, 0, 0, 0);
+		GD3D12Rhi.GetCommandList()->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
 	}
 
 	// -----------------------------------------------------------------------------
@@ -378,6 +382,17 @@ void Renderer::Shutdown() noexcept
 	GD3D12Rhi.Flush();
 
 	GUI.Shutdown();
+
+	m_pso.reset();
+	m_rootSignature.reset();
+	m_vertexShader.reset();
+	m_pixelShader.reset();
+	m_meshFactory.reset();
+	m_depthStencil.reset();
+	m_samplerLibrary.reset();
+	m_skyCubemapTexture.reset();
+	m_checkerTexture.reset();
+
 	GD3D12ConstantBufferManager.Shutdown();
 	GD3D12FrameResourceManager.Shutdown();
 	GD3D12SwapChain.Shutdown();

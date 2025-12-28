@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Primitive.h"
+#include "Scene/Mesh.h"
 
-class PrimitiveOctahedron : public Primitive
+class PrimitiveOctahedron : public Mesh
 {
   public:
 	PrimitiveOctahedron(

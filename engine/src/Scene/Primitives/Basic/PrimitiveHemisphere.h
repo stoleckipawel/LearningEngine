@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../Primitive.h"
+#include "Scene/Mesh.h"
 
 // PrimitiveHemisphere — upper hemisphere (y >= 0) with a flat base cap.
-class PrimitiveHemisphere : public Primitive
+class PrimitiveHemisphere : public Mesh
 {
   public:
 	PrimitiveHemisphere(
