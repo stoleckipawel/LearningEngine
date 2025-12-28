@@ -21,6 +21,6 @@ void ViewMode::BuildUI()
 	        kViewModeNames,
 	        static_cast<int>(sizeof(kViewModeNames) / sizeof(kViewModeNames[0]))))
 	{
-		m_mode = static_cast<Id>(modeIndex);
+			m_mode = static_cast<Type>(modeIndex);
 	}
 }

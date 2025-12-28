@@ -8,7 +8,7 @@
 class ViewMode final : public UIRendererSection
 {
   public:
-	enum class Id : std::uint8_t
+	enum class Type : std::uint8_t
 	{
 		Lit = 0,
 		GBufferDiffuse,
@@ -27,15 +27,15 @@ class ViewMode final : public UIRendererSection
 	ViewMode& operator=(const ViewMode&) = delete;
 	ViewMode& operator=(ViewMode&&) = delete;
 
-	Id Get() const noexcept { return m_mode; }
-	void Set(Id mode) noexcept { m_mode = mode; }
+	Type Get() const noexcept { return m_mode; }
+	void Set(Type mode) noexcept { m_mode = mode; }
 
 
 	UIRendererSectionId GetId() const noexcept override { return UIRendererSectionId::ViewMode; }
-	const char* GetTitle() const noexcept override { return "Renderer"; }
+	const char* GetTitle() const noexcept override { return "View Mode"; }
 
 	// Builds the view mode controls. Renders only contents; window/layout is owned by the caller.
 	void BuildUI() override;
   private:
-	Id m_mode = Id::Lit;
+	Type m_mode = Type::Lit;
 };

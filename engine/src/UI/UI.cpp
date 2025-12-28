@@ -92,15 +92,8 @@ void UI::Initialize()
 		m_rendererPanel->SetSection(std::make_unique<ViewMode>());
 }
 
-void UI::AddRendererSection(std::unique_ptr<UIRendererSection> section) noexcept
-{
-	if (!m_rendererPanel)
-		m_rendererPanel = std::make_unique<RendererPanel>();
 
-	m_rendererPanel->SetSection(std::move(section));
-}
-
-const ViewMode& UI::GetViewMode() noexcept
+ViewMode::Type UI::GetViewMode() noexcept
 {
 	if (!m_rendererPanel)
 		m_rendererPanel = std::make_unique<RendererPanel>();
@@ -108,18 +101,8 @@ const ViewMode& UI::GetViewMode() noexcept
 	if (!m_rendererPanel->HasSection(UIRendererSectionId::ViewMode))
 		m_rendererPanel->SetSection(std::make_unique<ViewMode>());
 
-	return static_cast<const ViewMode&>(m_rendererPanel->GetSection(UIRendererSectionId::ViewMode));
-}
-
-const StatsOverlay& UI::GetStatsOverlay() noexcept
-{
-	if (!m_rendererPanel)
-		m_rendererPanel = std::make_unique<RendererPanel>();
-
-	if (!m_rendererPanel->HasSection(UIRendererSectionId::Stats))
-		m_rendererPanel->SetSection(std::make_unique<StatsOverlay>());
-
-	return static_cast<StatsOverlay&>(m_rendererPanel->GetSection(UIRendererSectionId::Stats));
+	const ViewMode& viewMode = static_cast<const ViewMode&>(m_rendererPanel->GetSection(UIRendererSectionId::ViewMode));
+	return viewMode.Get();
 }
 
 // Begins an ImGui frame. Updates delta time and display size; binds heaps.

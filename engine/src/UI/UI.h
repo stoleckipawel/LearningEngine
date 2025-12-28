@@ -4,9 +4,10 @@
 
 #include <memory>
 
+#include "Sections/ViewMode.h"
+
 class RendererPanel;
 class UIRendererSection;
-class ViewMode;
 class StatsOverlay;
 
 // UI manages ImGui integration (Win32 + DX12 backends).
@@ -33,15 +34,8 @@ class UI
 
 	// Submits ImGui draw data to the current DX12 command list.
 	void Render() noexcept;
-
-	// Registers a debug section to be hosted by the right-side panel.
-	// The panel owns the section and will render it each frame.
-	void AddRendererSection(std::unique_ptr<UIRendererSection> section) noexcept;
 	
-	const ViewMode& GetViewMode() noexcept;
-
-	const StatsOverlay& GetStatsOverlay() noexcept;
-
+	ViewMode::Type GetViewMode() noexcept;
   private:
 	// Begins an ImGui frame. Updates delta time and display size.
 	void NewFrame();
