@@ -5,12 +5,12 @@
 //------------------------------------------------------------------------------
 cbuffer PerFrameConstantBufferData : register(b0)
 {
-	uint FrameIndex;     // Current frame number
-	float TotalTime;         // Seconds since engine start (unscaled)
-	float DeltaTime;         // Seconds since last frame (unscaled)
-	float ScaledTotalTime;   // Seconds of scaled/game time since start (stops when paused)
-	float ScaledDeltaTime;   // Seconds since last frame (scaled, 0 when paused)
-	uint ViewModeIndex;  // Current renderer debug view mode (see Viewmode.hlsli)
+	uint FrameIndex;        // Current frame number
+	float TotalTime;        // Seconds since engine start (unscaled)
+	float DeltaTime;        // Seconds since last frame (unscaled)
+	float ScaledTotalTime;  // Seconds of scaled/game time since start (stops when paused)
+	float ScaledDeltaTime;  // Seconds since last frame (scaled, 0 when paused)
+	uint ViewModeIndex;     // Current renderer debug view mode (see Viewmode.hlsli)
 
 	float2 ViewportSize;     // Render target width, height
 	float2 ViewportSizeInv;  // 1.0 / width, 1.0 / height

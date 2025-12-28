@@ -1,96 +1,124 @@
 @echo off
-REM ---------------------------------------------------
-REM CleanIntermediateFiles.bat
-REM ---------------------------------------------------
-REM This script cleans all build, solution, and temporary files for the Playground project:
-REM   1. Removes build, bin, obj, and .vs directories
-REM   2. Deletes Visual Studio solution and project files (*.sln, *.vcxproj, etc.)
-REM   3. Deletes CMake cache, files, and folders
-REM   4. Deletes Ninja intermediate files from root and build folder
-REM ---------------------------------------------------
+:: ============================================================================
+:: CleanIntermediateFiles.bat - Build artifact cleanup utility
+:: ============================================================================
+:: Removes all generated build artifacts, intermediate files, and caches:
+::   - build/, bin/, obj/, .vs/ directories
+::   - Visual Studio project files (*.sln, *.vcxproj, etc.)
+::   - CMake cache and generated files
+::   - Ninja build system artifacts
+::
+:: Usage: CleanIntermediateFiles.bat [CONTINUE]
+::   CONTINUE - Suppress pause (used by parent scripts)
+::
+:: Environment:
+::   PARENT_BATCH  - When set, suppresses pause on completion
+::   LOG_CAPTURED  - Indicates logging is already active
+::   LOGFILE       - Path to current log file
+:: ============================================================================
 
 setlocal
 
-REM Bootstrap logging via tools\internal\BootstrapLog.bat
+:: ---------------------------------------------------------------------------
+:: Logging bootstrap
+:: ---------------------------------------------------------------------------
 if not defined LOG_CAPTURED (
     call "%~dp0tools\internal\BootstrapLog.bat" "%~f0" %*
     exit /B %ERRORLEVEL%
 )
 
-REM --- Set key directory variables ---
+:: ---------------------------------------------------------------------------
+:: Resolve repository root directory
+:: ---------------------------------------------------------------------------
 set "SCRIPT_DIR=%~dp0"
-REM Determine project root: prefer the script directory if it looks like the repo root,
-REM otherwise fall back to the parent directory (scripts may live in a subfolder).
 set "SRC_DIR=%SCRIPT_DIR%"
+
+:: Fallback if script is not at repo root
 if not exist "%SRC_DIR%LICENSE.txt" if not exist "%SRC_DIR%CMakeLists.txt" (
     for %%I in ("%SCRIPT_DIR%..") do set "SRC_DIR=%%~fI\"
 )
+
+:: Define target directories
 set "BUILD_DIR=%SRC_DIR%build"
 set "BIN_DIR=%SRC_DIR%bin"
 set "OBJ_DIR=%SRC_DIR%obj"
 set "VS_DIR=%SRC_DIR%.vs"
 
-REM --- Remove build directory ---
+echo.
+echo [LOG] Cleaning build artifacts...
+echo.
+
+:: ---------------------------------------------------------------------------
+:: Remove directories
+:: ---------------------------------------------------------------------------
 if exist "%BUILD_DIR%" (
-    echo [CLEAN] Deleting build directory: "%BUILD_DIR%"
+    echo [CLEAN] Removing: build\
     rmdir /S /Q "%BUILD_DIR%"
 )
 
-REM --- Remove bin directory ---
 if exist "%BIN_DIR%" (
-    echo [CLEAN] Deleting bin directory: "%BIN_DIR%"
+    echo [CLEAN] Removing: bin\
     rmdir /S /Q "%BIN_DIR%"
 )
 
-REM --- Remove obj directory ---
 if exist "%OBJ_DIR%" (
-    echo [CLEAN] Deleting obj directory: "%OBJ_DIR%"
+    echo [CLEAN] Removing: obj\
     rmdir /S /Q "%OBJ_DIR%"
 )
 
-REM --- Remove .vs (Visual Studio workspace) directory ---
 if exist "%VS_DIR%" (
-    echo [CLEAN] Deleting .vs directory: "%VS_DIR%"
+    echo [CLEAN] Removing: .vs\
     rmdir /S /Q "%VS_DIR%"
 )
 
-REM --- Remove Visual Studio solution and project files ---
-echo [CLEAN] Deleting Visual Studio solution and project files
-del /F /Q "%SRC_DIR%*.sln" "%SRC_DIR%*.vcxproj" "%SRC_DIR%*.vcxproj.filters" "%SRC_DIR%*.vcxproj.user" >nul 2>&1
+:: ---------------------------------------------------------------------------
+:: Remove Visual Studio project files from root
+:: ---------------------------------------------------------------------------
+echo [CLEAN] Removing VS project files from root...
+del /F /Q "%SRC_DIR%*.sln" 2>nul
+del /F /Q "%SRC_DIR%*.vcxproj" 2>nul
+del /F /Q "%SRC_DIR%*.vcxproj.filters" 2>nul
+del /F /Q "%SRC_DIR%*.vcxproj.user" 2>nul
 
-REM --- Remove CMake cache, files, and folders ---
-echo [CLEAN] Deleting CMake files and directories
-del /F /Q "%SRC_DIR%CMakeCache.txt" "%SRC_DIR%cmake_install.cmake" "%SRC_DIR%Makefile" >nul 2>&1
+:: ---------------------------------------------------------------------------
+:: Remove CMake artifacts from root
+:: ---------------------------------------------------------------------------
+echo [CLEAN] Removing CMake artifacts...
+del /F /Q "%SRC_DIR%CMakeCache.txt" 2>nul
+del /F /Q "%SRC_DIR%cmake_install.cmake" 2>nul
+del /F /Q "%SRC_DIR%Makefile" 2>nul
+
 if exist "%SRC_DIR%CMakeFiles" (
-    echo [CLEAN] Deleting CMake directory: "%SRC_DIR%CMakeFiles"
+    echo [CLEAN] Removing: CMakeFiles\
     rmdir /S /Q "%SRC_DIR%CMakeFiles"
 )
 
-REM --- Remove Ninja intermediate files from root ---
-echo [CLEAN] Deleting Ninja intermediate files in repo root
-del /F /Q "%SRC_DIR%build.ninja" "%SRC_DIR%.ninja_log" "%SRC_DIR%.ninja_deps" >nul 2>&1
+:: ---------------------------------------------------------------------------
+:: Remove Ninja artifacts
+:: ---------------------------------------------------------------------------
+echo [CLEAN] Removing Ninja artifacts...
+del /F /Q "%SRC_DIR%build.ninja" 2>nul
+del /F /Q "%SRC_DIR%.ninja_log" 2>nul
+del /F /Q "%SRC_DIR%.ninja_deps" 2>nul
+del /F /Q "%BUILD_DIR%build.ninja" 2>nul
+del /F /Q "%BUILD_DIR%.ninja_log" 2>nul
+del /F /Q "%BUILD_DIR%.ninja_deps" 2>nul
 
-REM --- Remove Ninja intermediate files from build folder ---
-echo [CLEAN] Deleting Ninja intermediate files in build folder
-del /F /Q "%BUILD_DIR%build.ninja" "%BUILD_DIR%.ninja_log" "%BUILD_DIR%.ninja_deps" >nul 2>&1
-
-REM --- Final status ---
+:: ---------------------------------------------------------------------------
+:: Summary
+:: ---------------------------------------------------------------------------
 echo.
-echo [CLEAN] === Clean complete. All build, solution, and temporary files have been removed. ===
+echo [SUCCESS] Clean complete.
 echo.
 
-echo [LOG] CleanIntermediateFiles.bat completed.
-
-REM Preserve LOGFILE across endlocal
+:: Preserve LOGFILE across endlocal
 set "_TMP_LOGFILE=%LOGFILE%"
-endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "_TMP_LOGFILE="
+endlocal & set "LOGFILE=%_TMP_LOGFILE%"
 
-REM If called by parent, exit immediately; otherwise show status and pause so user can read logs
 if defined PARENT_BATCH (
     exit /B 0
-) else (
-    echo.
-    echo [LOG] Logs: %LOGFILE%
-    pause
-    exit /B 0
 )
+
+echo [LOG] Logs: %LOGFILE%
+pause
+exit /B 0

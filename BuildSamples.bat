@@ -1,143 +1,195 @@
 @echo off
-REM Root BuildSamples.bat - prompt user for configuration and delegate to tools\internal\BuildSamplesImpl.bat
+:: ============================================================================
+:: BuildSamples.bat - Interactive sample build dispatcher
+:: ============================================================================
+:: Prompts for build configuration and delegates to the internal implementation.
+:: Supports building individual configurations or all configurations at once.
+::
+:: Usage: BuildSamples.bat
+::   Interactive menu allows selection of: Debug, Release, RelWithDebInfo, All
+::
+:: Environment:
+::   PARENT_BATCH  - When set, suppresses interactive prompts and pause
+::   LOG_CAPTURED  - Indicates logging is already active
+::   LOGFILE       - Path to current log file
+:: ============================================================================
 
 setlocal enabledelayedexpansion
 
-REM Bootstrap logging via tools\internal\BootstrapLog.bat
+:: ---------------------------------------------------------------------------
+:: Logging bootstrap
+:: ---------------------------------------------------------------------------
 if not defined LOG_CAPTURED (
     call "%~dp0tools\internal\BootstrapLog.bat" "%~f0" %*
     exit /B %ERRORLEVEL%
 )
 
-REM Always prompt the user for the configuration (ignore positional args)
-:PROMPT_LOOP
-echo Select configuration to build:
-echo  1^) Debug
-echo  2^) Release
-echo  3^) RelWithDebInfo
-echo  4^) All
-echo Enter choice [1-4]: >CON
+:: ---------------------------------------------------------------------------
+:: Configuration selection menu
+:: ---------------------------------------------------------------------------
+:MENU_LOOP
+echo.
+echo Select build configuration:
+echo   1) Debug
+echo   2) Release
+echo   3) RelWithDebInfo
+echo   4) All
+echo.
+<nul set /P "=Enter choice [1-4]: " >CON
 set "SEL="
-set /P SEL=<CON
+set /P "SEL=" <CON
+
+:: Default to Debug if empty
 if "!SEL!"=="" set "SEL=1"
-if "!SEL!"=="1" set "CHOICE=Debug"
-if "!SEL!"=="2" set "CHOICE=Release"
-if "!SEL!"=="3" set "CHOICE=RelWithDebInfo"
-if "!SEL!"=="4" set "CHOICE=All"
-if "!CHOICE!"=="" (
-    echo Invalid selection '!SEL!'. Please choose 1, 2, 3 or 4.
-    goto PROMPT_LOOP
+
+:: Map selection to configuration name
+set "CONFIG="
+if "!SEL!"=="1" set "CONFIG=Debug"
+if "!SEL!"=="2" set "CONFIG=Release"
+if "!SEL!"=="3" set "CONFIG=RelWithDebInfo"
+if "!SEL!"=="4" set "CONFIG=All"
+
+if not defined CONFIG (
+    echo [ERROR] Invalid selection: '!SEL!' - Please enter 1, 2, 3, or 4.
+    goto MENU_LOOP
 )
 
-REM Normalize common textual arguments
-if /I "%CHOICE%"=="debug" set "CHOICE=Debug"
-if /I "%CHOICE%"=="release" set "CHOICE=Release"
-if /I "%CHOICE%"=="relwithdebinfo" set "CHOICE=RelWithDebInfo"
+echo.
+echo [LOG] Selected configuration: !CONFIG!
 
-echo Building configuration: %CHOICE%
-
-if not exist "%~dp0tools\internal\BuildSamplesImpl.bat" (
-    echo [ERROR] Internal build implementation not found: tools\internal\BuildSamplesImpl.bat
-    exit /B 1
+:: Validate internal implementation exists
+set "IMPL_SCRIPT=%~dp0tools\internal\BuildSamplesImpl.bat"
+if not exist "!IMPL_SCRIPT!" (
+    echo [ERROR] Missing: tools\internal\BuildSamplesImpl.bat
+    call :FINISH 1
 )
 
-REM Mark that we're the parent so children don't pause at the end
+:: ---------------------------------------------------------------------------
+:: Execute build(s)
+:: ---------------------------------------------------------------------------
 set "PARENT_BATCH=1"
 set "HAS_SUCCESS=0"
-if /I "%CHOICE%"=="All" (
-    set "BUILD_RC=0"
+set "OVERALL_RC=0"
+
+if /I "!CONFIG!"=="All" (
+    :: Track per-configuration results for launch prompt
     set "RC_Debug=1"
     set "RC_Release=1"
     set "RC_RelWithDebInfo=1"
+    
     for %%C in (Debug Release RelWithDebInfo) do (
-        echo [LOG] Building configuration: %%C
-        call "%~dp0tools\internal\BuildSamplesImpl.bat" %%C %2
-        set "LAST_BUILD_RC=!ERRORLEVEL!"
-        set "RC_%%C=!LAST_BUILD_RC!"
-        if "!LAST_BUILD_RC!"=="0" set "HAS_SUCCESS=1"
-        if not "!LAST_BUILD_RC!"=="0" (
-            echo [ERROR] Build for %%C failed with exit code !LAST_BUILD_RC!.
-            set "BUILD_RC=!LAST_BUILD_RC!"
+        echo.
+        echo ========================================
+        echo [LOG] Building: %%C
+        echo ========================================
+        call "!IMPL_SCRIPT!" %%C
+        set "CFG_RC=!ERRORLEVEL!"
+        set "RC_%%C=!CFG_RC!"
+        
+        if "!CFG_RC!"=="0" (
+            set "HAS_SUCCESS=1"
+        ) else (
+            echo [ERROR] %%C build failed with code !CFG_RC!
+            set "OVERALL_RC=!CFG_RC!"
         )
     )
 ) else (
-    call "%~dp0tools\internal\BuildSamplesImpl.bat" !CHOICE! %2
-    set "BUILD_RC=%ERRORLEVEL%"
-    if "!BUILD_RC!"=="0" set "HAS_SUCCESS=1"
+    call "!IMPL_SCRIPT!" !CONFIG!
+    set "OVERALL_RC=!ERRORLEVEL!"
+    if "!OVERALL_RC!"=="0" set "HAS_SUCCESS=1"
 )
+
 set "PARENT_BATCH="
 
-REM Optional: launch a built sample executable (interactive)
+:: ---------------------------------------------------------------------------
+:: Optional: Launch built executable
+:: ---------------------------------------------------------------------------
 if "!HAS_SUCCESS!"=="1" call :PROMPT_LAUNCH
 
+echo.
 echo [LOG] BuildSamples.bat completed.
+call :FINISH !OVERALL_RC!
 
-REM Preserve LOGFILE across endlocal
-set "_TMP_LOGFILE=%LOGFILE%"
-endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "_TMP_LOGFILE="
-
-REM If called by parent, exit immediately; otherwise show status and pause so user can read logs
-if defined PARENT_BATCH (
-    exit /B 0
-) else (
-    echo.
-    echo [SUCCESS] BuildSamples completed.
-    echo [LOG] Logs: %LOGFILE%
-    pause
-    exit /B 0
-)
-
-REM ============================================================================
-REM Subroutine: Prompt user to launch built sample
-REM ============================================================================
+:: ============================================================================
+:: Subroutine: Prompt to launch sample executable
+:: ============================================================================
 :PROMPT_LAUNCH
 echo.
-<nul set /P "=Launch a sample executable now? [y/N]: " >CON
-set "RUN_SAMPLE="
-set /P "RUN_SAMPLE=" <CON
-if not defined RUN_SAMPLE goto :EOF
-if /I "!RUN_SAMPLE:~0,1!" NEQ "y" goto :EOF
+<nul set /P "=Launch sample executable? [y/N]: " >CON
+set "LAUNCH="
+set /P "LAUNCH=" <CON
 
-REM Determine which config folder to use
-set "RUN_CONFIG=!CHOICE!"
-if /I "!CHOICE!"=="All" set "RUN_CONFIG=Release"
-if /I "!CHOICE!"=="All" if "!RC_Debug!"=="0" set "RUN_CONFIG=Debug"
+:: Check for affirmative response (y or Y)
+if not defined LAUNCH goto :EOF
+if /I "!LAUNCH:~0,1!" NEQ "y" goto :EOF
+
+:: Determine output directory based on configuration
+set "RUN_CONFIG=!CONFIG!"
+if /I "!CONFIG!"=="All" (
+    :: Prefer Release, fall back to Debug if Release failed
+    set "RUN_CONFIG=Release"
+    if "!RC_Release!" NEQ "0" if "!RC_Debug!"=="0" set "RUN_CONFIG=Debug"
+)
 
 set "BIN_DIR=%~dp0bin\!RUN_CONFIG!"
 if not exist "!BIN_DIR!" (
-    echo [WARN] Output folder not found: "!BIN_DIR!"
+    echo [WARN] Output directory not found: !BIN_DIR!
     goto :EOF
 )
 
-REM Find the first .exe in the output folder
-set "FOUND_EXE="
+:: Find first executable in output directory
+set "TARGET_EXE="
 for %%F in ("!BIN_DIR!\*.exe") do (
-    if not defined FOUND_EXE set "FOUND_EXE=%%~fF"
+    if not defined TARGET_EXE set "TARGET_EXE=%%~fF"
 )
 
-if not defined FOUND_EXE (
-    echo [WARN] No executables found in "!BIN_DIR!".
+if not defined TARGET_EXE (
+    echo [WARN] No executables found in: !BIN_DIR!
     goto :EOF
 )
 
-echo [LOG] Launching: "!FOUND_EXE!"
-start "" "!FOUND_EXE!"
+:: Launch with working directory set to bin folder (for imgui.ini, etc.)
+echo [LOG] Launching: !TARGET_EXE!
+start "" /D "!BIN_DIR!" "!TARGET_EXE!"
 
-REM If "All" was selected, also launch for other successful configs
-if /I "!CHOICE!"=="All" (
+:: For "All" builds, optionally launch other successful configurations
+if /I "!CONFIG!"=="All" (
+    for %%F in ("!TARGET_EXE!") do set "EXE_NAME=%%~nxF"
+    
     for %%C in (Debug Release RelWithDebInfo) do (
         if /I "%%C" NEQ "!RUN_CONFIG!" (
-            set "CFG_RC=!RC_%%C!"
-            if "!CFG_RC!"=="0" (
-                for %%F in ("!FOUND_EXE!") do set "EXE_NAME=%%~nxF"
+            set "CHECK_RC=!RC_%%C!"
+            if "!CHECK_RC!"=="0" (
                 set "OTHER_EXE=%~dp0bin\%%C\!EXE_NAME!"
                 if exist "!OTHER_EXE!" (
-                    echo [LOG] Launching (%%C): "!OTHER_EXE!"
-                    start "" "!OTHER_EXE!"
+                    echo [LOG] Launching [%%C]: !OTHER_EXE!
+                    start "" /D "%~dp0bin\%%C" "!OTHER_EXE!"
                 )
             )
         )
     )
 )
 goto :EOF
+
+:: ============================================================================
+:: Subroutine: Clean exit with proper endlocal handling
+:: ============================================================================
+:FINISH
+set "EXIT_RC=%~1"
+set "_TMP_LOGFILE=%LOGFILE%"
+endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "EXIT_RC=%EXIT_RC%"
+
+if defined PARENT_BATCH (
+    exit /B %EXIT_RC%
+)
+
+echo.
+if "%EXIT_RC%"=="0" (
+    echo [SUCCESS] Build completed successfully.
+) else (
+    echo [ERROR] Build completed with errors.
+)
+echo [LOG] Logs: %LOGFILE%
+pause
+exit /B %EXIT_RC%
 

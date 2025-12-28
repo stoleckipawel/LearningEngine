@@ -1,112 +1,130 @@
 @echo off
-REM tools\RunClangFormat.bat
-REM Runs clang-format on all .cpp .h .hlsl .hlsli files under engine/ and samples/,
-REM shows progress, counts scanned and modified files, and writes a log to Logs/LogClangFormat.txt
+:: ============================================================================
+:: RunClangFormat.bat - Code formatting utility
+:: ============================================================================
+:: Runs clang-format on all source files under engine/ and samples/.
+:: Displays progress, tracks modifications, and generates a summary log.
+::
+:: Supported extensions: .cpp, .h, .hlsl, .hlsli
+:: Output log: logs/LogClangFormat.txt
+::
+:: Usage: RunClangFormat.bat
+:: ============================================================================
 
 setlocal enabledelayedexpansion
 
-REM Determine repository root (parent of this tools folder)
+:: ---------------------------------------------------------------------------
+:: Resolve repository root
+:: ---------------------------------------------------------------------------
 pushd "%~dp0.." >nul
 set "ROOT_DIR=%CD%\"
 popd >nul
 
-set "LOG_DIR=%ROOT_DIR%Logs"
+:: ---------------------------------------------------------------------------
+:: Prepare log directory and file
+:: ---------------------------------------------------------------------------
+set "LOG_DIR=%ROOT_DIR%logs"
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 set "LOGFILE=%LOG_DIR%\LogClangFormat.txt"
 
-echo [LOG] ClangFormat run started: %DATE% %TIME%>"%LOGFILE%"
+echo [LOG] ClangFormat started: %DATE% %TIME% > "%LOGFILE%"
 
-set /A total=0
-for %%e in (cpp h hlsl hlsli) do (
-    for /R "%ROOT_DIR%engine" %%F in (*.%%e) do (
-        echo %%~fF | findstr /I /C:"\Logs\" >nul
-        if errorlevel 1 (
-            set /A total+=1
-        )
+:: ---------------------------------------------------------------------------
+:: Count total files to process (for progress display)
+:: ---------------------------------------------------------------------------
+echo [LOG] Scanning for source files...
+
+set /A TOTAL=0
+for %%E in (cpp h hlsl hlsli) do (
+    for /R "%ROOT_DIR%engine" %%F in (*.%%E) do (
+        echo %%~fF | findstr /I /C:"\logs\" >nul || set /A TOTAL+=1
     )
-    for /R "%ROOT_DIR%samples" %%F in (*.%%e) do (
-        echo %%~fF | findstr /I /C:"\Logs\" >nul
-        if errorlevel 1 (
-            set /A total+=1
-        )
-    )
-)
-
-if %total%==0 (
-    echo No files found to format.
-    echo [LOG] No files found.>>"%LOGFILE%"
-    endlocal
-    exit /B 0
-)
-
-set /A idx=0
-set /A modified=0
-
-for %%e in (cpp h hlsl hlsli) do (
-    for /R "%ROOT_DIR%engine" %%F in (*.%%e) do (
-        echo %%~fF | findstr /I /C:"\Logs\" >nul
-        if errorlevel 1 (
-            set /A idx+=1
-            set "file=%%~fF"
-            echo Progress: !idx!/!total! - !file!
-            echo [SCAN] !idx!/!total! - !file!>>"%LOGFILE%"
-
-            set "orighash="
-            for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "%%~fF" MD5 2^>nul') do if not defined orighash set "orighash=%%H"
-
-            clang-format -style=file -i "%%~fF" 2>>"%LOGFILE%"
-            if errorlevel 1 (
-                echo [ERROR] clang-format failed for: %%~fF>>"%LOGFILE%"
-            )
-
-            set "newhash="
-            for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "%%~fF" MD5 2^>nul') do if not defined newhash set "newhash=%%H"
-
-            if not "!orighash!"=="!newhash!" (
-                set /A modified+=1
-                echo [MODIFIED] !file!>>"%LOGFILE%"
-                echo Modified.
-            ) else (
-                echo Unchanged.
-            )
-        )
-    )
-    for /R "%ROOT_DIR%samples" %%F in (*.%%e) do (
-        echo %%~fF | findstr /I /C:"\Logs\" >nul
-        if errorlevel 1 (
-            set /A idx+=1
-            set "file=%%~fF"
-            echo Progress: !idx!/!total! - !file!
-            echo [SCAN] !idx!/!total! - !file!>>"%LOGFILE%"
-
-            set "orighash="
-            for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "%%~fF" MD5 2^>nul') do if not defined orighash set "orighash=%%H"
-
-            clang-format -style=file -i "%%~fF" 2>>"%LOGFILE%"
-            if errorlevel 1 (
-                echo [ERROR] clang-format failed for: %%~fF>>"%LOGFILE%"
-            )
-
-            set "newhash="
-            for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "%%~fF" MD5 2^>nul') do if not defined newhash set "newhash=%%H"
-
-            if not "!orighash!"=="!newhash!" (
-                set /A modified+=1
-                echo [MODIFIED] !file!>>"%LOGFILE%"
-                echo Modified.
-            ) else (
-                echo Unchanged.
-            )
-        )
+    for /R "%ROOT_DIR%samples" %%F in (*.%%E) do (
+        echo %%~fF | findstr /I /C:"\logs\" >nul || set /A TOTAL+=1
     )
 )
 
+if %TOTAL%==0 (
+    echo [WARN] No source files found.
+    echo [LOG] No files found. >> "%LOGFILE%"
+    goto :SUMMARY
+)
+
+echo [LOG] Found %TOTAL% files to process.
 echo.
-echo Scanned files: !idx!
-echo Modified files: !modified!
+
+:: ---------------------------------------------------------------------------
+:: Process each file
+:: ---------------------------------------------------------------------------
+set /A IDX=0
+set /A MODIFIED=0
+
+for %%E in (cpp h hlsl hlsli) do (
+    call :PROCESS_DIR "%ROOT_DIR%engine" %%E
+    call :PROCESS_DIR "%ROOT_DIR%samples" %%E
+)
+
+goto :SUMMARY
+
+:: ---------------------------------------------------------------------------
+:: Subroutine: Process all files of given extension in directory tree
+:: ---------------------------------------------------------------------------
+:PROCESS_DIR
+set "SCAN_DIR=%~1"
+set "EXT=%~2"
+
+for /R "%SCAN_DIR%" %%F in (*.%EXT%) do (
+    :: Skip files in logs directory
+    echo %%~fF | findstr /I /C:"\logs\" >nul
+    if errorlevel 1 (
+        set /A IDX+=1
+        set "FILE=%%~fF"
+        
+        :: Display progress
+        echo [!IDX!/!TOTAL!] !FILE!
+        echo [SCAN] !IDX!/!TOTAL! - !FILE! >> "%LOGFILE%"
+        
+        :: Compute hash before formatting
+        set "HASH_BEFORE="
+        for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "%%~fF" MD5 2^>nul') do (
+            if not defined HASH_BEFORE set "HASH_BEFORE=%%H"
+        )
+        
+        :: Run clang-format in-place
+        clang-format -style=file -i "%%~fF" 2>>"%LOGFILE%"
+        if errorlevel 1 (
+            echo [ERROR] clang-format failed: %%~fF >> "%LOGFILE%"
+        )
+        
+        :: Compute hash after formatting
+        set "HASH_AFTER="
+        for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "%%~fF" MD5 2^>nul') do (
+            if not defined HASH_AFTER set "HASH_AFTER=%%H"
+        )
+        
+        :: Check if file was modified
+        if not "!HASH_BEFORE!"=="!HASH_AFTER!" (
+            set /A MODIFIED+=1
+            echo [MODIFIED] !FILE! >> "%LOGFILE%"
+            echo   ^> Modified
+        )
+    )
+)
+goto :EOF
+
+:: ---------------------------------------------------------------------------
+:: Summary
+:: ---------------------------------------------------------------------------
+:SUMMARY
 echo.
-echo [LOG] Summary: Scanned=!idx! Modified=!modified! >> "%LOGFILE%"
-echo [LOG] ClangFormat run finished: %DATE% %TIME% >> "%LOGFILE%"
+echo ========================================
+echo  Scanned:  !IDX! files
+echo  Modified: !MODIFIED! files
+echo ========================================
+echo.
+
+echo [LOG] Summary: Scanned=!IDX! Modified=!MODIFIED! >> "%LOGFILE%"
+echo [LOG] ClangFormat finished: %DATE% %TIME% >> "%LOGFILE%"
 
 endlocal
 pause

@@ -1,31 +1,39 @@
 @echo off
-REM Wrapper: Build samples in RelWithDebInfo configuration (tools).
-REM Bootstraps logging locally if needed, then calls internal implementation with PARENT_BATCH set.
-setlocal
-set "SCRIPT_DIR=%~dp0"
-for %%I in ("%SCRIPT_DIR%..\") do set "ROOT_DIR=%%~fI"
+:: ============================================================================
+:: BuildSamplesRelWithDebInfo.bat - RelWithDebInfo configuration build wrapper
+:: ============================================================================
+:: Convenience wrapper for building samples in RelWithDebInfo configuration.
+:: Delegates to the internal BuildSamplesImpl.bat implementation.
+::
+:: Usage: BuildSamplesRelWithDebInfo.bat
+:: ============================================================================
 
+setlocal
+
+:: Logging bootstrap
 if not defined LOG_CAPTURED (
-	call "%~dp0internal\BootstrapLog.bat" "%~f0" %*
-	exit /B %ERRORLEVEL%
+    call "%~dp0internal\BootstrapLog.bat" "%~f0" %*
+    exit /B %ERRORLEVEL%
 )
 
+:: Delegate to implementation with RelWithDebInfo config
 set "PARENT_BATCH=1"
-call "%~dp0internal\BuildSamplesImpl.bat" RelWithDebInfo %1
-set RC=%ERRORLEVEL%
+call "%~dp0internal\BuildSamplesImpl.bat" RelWithDebInfo
+set "RC=%ERRORLEVEL%"
+set "PARENT_BATCH="
 
 echo [LOG] BuildSamplesRelWithDebInfo.bat completed.
 
-REM Preserve LOGFILE across endlocal
+:: Preserve LOGFILE across endlocal
 set "_TMP_LOGFILE=%LOGFILE%"
-endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "_TMP_LOGFILE="
+set "_TMP_RC=%RC%"
+endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "BUILD_RC=%_TMP_RC%"
 
-REM If called by parent, exit immediately; otherwise show status and pause so user can read logs
 if defined PARENT_BATCH (
-    exit /B 0
-) else (
-    echo.
-    echo [LOG] Logs: %LOGFILE%
-    pause
-    exit /B 0
+    exit /B %BUILD_RC%
 )
+
+echo.
+echo [LOG] Logs: %LOGFILE%
+pause
+exit /B %BUILD_RC%
