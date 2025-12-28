@@ -60,22 +60,22 @@
 
 #include "imgui.h"
 #ifndef IMGUI_DISABLE
-#include "imgui_impl_dx12.h"
+	#include "imgui_impl_dx12.h"
 
-// DirectX
-#include <d3d12.h>
-#include <dxgi1_5.h>
-#include <d3dcompiler.h>
-#ifdef _MSC_VER
-#pragma comment(lib, "d3dcompiler")  // Automatically link with d3dcompiler.lib as we are using D3DCompile() below.
-#endif
+    // DirectX
+	#include <d3d12.h>
+	#include <dxgi1_5.h>
+	#include <d3dcompiler.h>
+	#ifdef _MSC_VER
+		#pragma comment(lib, "d3dcompiler")  // Automatically link with d3dcompiler.lib as we are using D3DCompile() below.
+	#endif
 
-// Clang/GCC warnings with -Weverything
-#if defined(__clang__)
-#pragma clang diagnostic ignored \
-    "-Wold-style-cast"  // warning: use of old-style cast                            // yes, they are more terse.
-#pragma clang diagnostic ignored "-Wsign-conversion"  // warning: implicit conversion changes signedness
-#endif
+    // Clang/GCC warnings with -Weverything
+	#if defined(__clang__)
+		#pragma clang diagnostic ignored \
+		    "-Wold-style-cast"  // warning: use of old-style cast                            // yes, they are more terse.
+		#pragma clang diagnostic ignored "-Wsign-conversion"  // warning: implicit conversion changes signedness
+	#endif
 
 // MinGW workaround, see #4594
 typedef decltype(D3D12SerializeRootSignature)* _PFN_D3D12_SERIALIZE_ROOT_SIGNATURE;
@@ -891,7 +891,7 @@ void ImGui_ImplDX12_InvalidateDeviceObjects()
 	}
 }
 
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 static void ImGui_ImplDX12_InitLegacySingleDescriptorMode(ImGui_ImplDX12_InitInfo* init_info)
 {
 	// Wrap legacy behavior of passing space for a single descriptor
@@ -913,7 +913,7 @@ static void ImGui_ImplDX12_InitLegacySingleDescriptorMode(ImGui_ImplDX12_InitInf
 		bd->LegacySingleDescriptorUsed = false;
 	};
 }
-#endif
+	#endif
 
 bool ImGui_ImplDX12_Init(ImGui_ImplDX12_InitInfo* init_info)
 {
@@ -940,10 +940,10 @@ bool ImGui_ImplDX12_Init(ImGui_ImplDX12_InitInfo* init_info)
 	io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;  // We can honor the ImDrawCmd::VtxOffset field, allowing for large meshes.
 	io.BackendFlags |= ImGuiBackendFlags_RendererHasTextures;   // We can honor ImGuiPlatformIO::Textures[] requests during render.
 
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 	if (init_info->SrvDescriptorAllocFn == nullptr)
 		ImGui_ImplDX12_InitLegacySingleDescriptorMode(init_info);
-#endif
+	#endif
 	IM_ASSERT(init_info->SrvDescriptorAllocFn != nullptr && init_info->SrvDescriptorFreeFn != nullptr);
 
 	// Create buffers with a default size (they will later be grown as needed)
@@ -961,7 +961,7 @@ bool ImGui_ImplDX12_Init(ImGui_ImplDX12_InitInfo* init_info)
 	return true;
 }
 
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 // Legacy initialization API Obsoleted in 1.91.5
 // font_srv_cpu_desc_handle and font_srv_gpu_desc_handle are handles to a single SRV descriptor to use for the internal font texture, they
 // must be in 'srv_descriptor_heap'
@@ -997,7 +997,7 @@ bool ImGui_ImplDX12_Init(
 
 	return ret;
 }
-#endif
+	#endif
 
 void ImGui_ImplDX12_Shutdown()
 {

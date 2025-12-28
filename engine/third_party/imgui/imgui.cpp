@@ -1490,134 +1490,140 @@ issues (on GitHub or privately).
 //-------------------------------------------------------------------------
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
-#define _CRT_SECURE_NO_WARNINGS
+	#define _CRT_SECURE_NO_WARNINGS
 #endif
 
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
+	#define IMGUI_DEFINE_MATH_OPERATORS
 #endif
 
 #include "imgui.h"
 #ifndef IMGUI_DISABLE
-#include "imgui_internal.h"
+	#include "imgui_internal.h"
 
-// System includes
-#include <stdio.h>   // vsnprintf, sscanf, printf
-#include <stdint.h>  // intptr_t
+    // System includes
+	#include <stdio.h>   // vsnprintf, sscanf, printf
+	#include <stdint.h>  // intptr_t
 
-// [Windows] On non-Visual Studio compilers, we default to IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS unless explicitly enabled
-#if defined(_WIN32) && !defined(_MSC_VER) && !defined(IMGUI_ENABLE_WIN32_DEFAULT_IME_FUNCTIONS) && \
-    !defined(IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS)
-#define IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS
-#endif
+    // [Windows] On non-Visual Studio compilers, we default to IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS unless explicitly enabled
+	#if defined(_WIN32) && !defined(_MSC_VER) && !defined(IMGUI_ENABLE_WIN32_DEFAULT_IME_FUNCTIONS) && \
+	    !defined(IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS)
+		#define IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS
+	#endif
 
-// [Windows] OS specific includes (optional)
-#if defined(_WIN32) && defined(IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS) && defined(IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS) && \
-    defined(IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS) && defined(IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS) &&                         \
-    !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
-#define IMGUI_DISABLE_WIN32_FUNCTIONS
-#endif
-#if defined(_WIN32) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#ifndef __MINGW32__
-#include <Windows.h>  // _wfopen, OpenClipboard
-#else
-#include <windows.h>
-#endif
-#if defined(WINAPI_FAMILY) && ((defined(WINAPI_FAMILY_APP) && WINAPI_FAMILY == WINAPI_FAMILY_APP) || \
-                               (defined(WINAPI_FAMILY_GAMES) && WINAPI_FAMILY == WINAPI_FAMILY_GAMES))
-// The UWP and GDK Win32 API subsets don't support clipboard nor IME functions
-#define IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS
-#define IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS
-#define IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
-#endif
-#endif
+    // [Windows] OS specific includes (optional)
+	#if defined(_WIN32) && defined(IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS) && defined(IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS) && \
+	    defined(IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS) && defined(IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS) &&                         \
+	    !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
+		#define IMGUI_DISABLE_WIN32_FUNCTIONS
+	#endif
+	#if defined(_WIN32) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
+		#ifndef WIN32_LEAN_AND_MEAN
+			#define WIN32_LEAN_AND_MEAN
+		#endif
+		#ifndef NOMINMAX
+			#define NOMINMAX
+		#endif
+		#ifndef __MINGW32__
+			#include <Windows.h>  // _wfopen, OpenClipboard
+		#else
+			#include <windows.h>
+		#endif
+		#if defined(WINAPI_FAMILY) && ((defined(WINAPI_FAMILY_APP) && WINAPI_FAMILY == WINAPI_FAMILY_APP) || \
+		                               (defined(WINAPI_FAMILY_GAMES) && WINAPI_FAMILY == WINAPI_FAMILY_GAMES))
+		    // The UWP and GDK Win32 API subsets don't support clipboard nor IME functions
+			#define IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS
+			#define IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS
+			#define IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
+		#endif
+	#endif
 
-// [Apple] OS specific includes
-#if defined(__APPLE__)
-#include <TargetConditionals.h>
-#endif
+    // [Apple] OS specific includes
+	#if defined(__APPLE__)
+		#include <TargetConditionals.h>
+	#endif
 
-// Visual Studio warnings
-#ifdef _MSC_VER
-#pragma warning(disable : 4127)            // condition expression is constant
-#pragma warning(disable : 4996)            // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
-#if defined(_MSC_VER) && _MSC_VER >= 1922  // MSVC 2019 16.2 or later
-#pragma warning(disable : 5054)            // operator '|': deprecated between enumerations of different types
-#endif
-#pragma warning( \
-    disable : 26451)  // [Static Analyzer] Arithmetic overflow : Using operator 'xxx' on a 4 byte value and then casting the result to an 8
-                      // byte value. Cast the value to the wider type before calling operator 'xxx' to avoid overflow(io.2).
-#pragma warning(disable : 26495)  // [Static Analyzer] Variable 'XXX' is uninitialized. Always initialize a member variable (type.6).
-#pragma warning(disable : 26812)  // [Static Analyzer] The enum type 'xxx' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
-#endif
+    // Visual Studio warnings
+	#ifdef _MSC_VER
+		#pragma warning(disable : 4127)  // condition expression is constant
+		#pragma warning(disable : 4996)  // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
+		#if defined(_MSC_VER) && _MSC_VER >= 1922  // MSVC 2019 16.2 or later
+			#pragma warning(disable : 5054)        // operator '|': deprecated between enumerations of different types
+		#endif
+		#pragma warning( \
+		    disable      \
+		    : 26451)  // [Static Analyzer] Arithmetic overflow : Using operator 'xxx' on a 4 byte value and then casting the result to an 8
+		              // byte value. Cast the value to the wider type before calling operator 'xxx' to avoid overflow(io.2).
+		#pragma warning( \
+		    disable : 26495)  // [Static Analyzer] Variable 'XXX' is uninitialized. Always initialize a member variable (type.6).
+		#pragma warning(disable : 26812)  // [Static Analyzer] The enum type 'xxx' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+	#endif
 
-// Clang/GCC warnings with -Weverything
-#if defined(__clang__)
-#if __has_warning("-Wunknown-warning-option")
-#pragma clang diagnostic ignored "-Wunknown-warning-option"  // warning: unknown warning group 'xxx'                      // not all
-                                                             // warnings are known by all Clang versions and they tend to be rename-happy..
-                                                             // so ignoring warnings triggers new warnings on some configuration. Great!
-#endif
-#pragma clang diagnostic ignored "-Wunknown-pragmas"  // warning: unknown warning group 'xxx'
-#pragma clang diagnostic ignored \
-    "-Wold-style-cast"                            // warning: use of old-style cast                            // yes, they are more terse.
-#pragma clang diagnostic ignored "-Wfloat-equal"  // warning: comparing floating point with == or != is unsafe // storing and comparing
-                                                  // against same constants (typically 0.0f) is ok.
-#pragma clang diagnostic ignored "-Wformat"       // warning: format specifies type 'int' but the argument has type 'unsigned int'
-#pragma clang diagnostic ignored "-Wformat-nonliteral"  // warning: format string is not a string literal            // passing non-literal
-                                                        // to vsnformat(). yes, user passing incorrect format strings can crash the code.
-#pragma clang diagnostic ignored \
-    "-Wformat-pedantic"  // warning: format specifies type 'void *' but the argument has type 'xxxx *' // unreasonable, would lead to
-                         // casting every %p arg to void*. probably enabled by -pedantic.
-#pragma clang diagnostic ignored \
-    "-Wexit-time-destructors"  // warning: declaration requires an exit-time destructor     // exit-time destruction order is undefined. if
-                               // MemFree() leads to users code that has been disabled before exit it might cause problems. ImGui coding
-                               // style welcomes static/globals.
-#pragma clang diagnostic ignored "-Wglobal-constructors"  // warning: declaration requires a global destructor         // similar to above,
-                                                          // not sure what the exact difference is.
-#pragma clang diagnostic ignored "-Wsign-conversion"      // warning: implicit conversion changes signedness
-#pragma clang diagnostic ignored "-Wint-to-void-pointer-cast"       // warning: cast to 'void *' from smaller integer type 'int'
-#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"  // warning: zero as null pointer constant                    // some
-                                                                    // standard header variations use #define NULL 0
-#pragma clang diagnostic ignored \
-    "-Wdouble-promotion"  // warning: implicit conversion from 'float' to 'double' when passing argument to function  // using printf() is a
-                          // misery with this as C++ va_arg ellipsis changes float to double.
-#pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"  // warning: implicit conversion from 'xxx' to 'float' may lose precision
-#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"            // warning: 'xxx' is an unsafe pointer used for buffer access
-#pragma clang diagnostic ignored \
-    "-Wnontrivial-memaccess"  // warning: first argument in call to 'memset' is a pointer to non-trivially copyable type
-#pragma clang diagnostic ignored "-Wswitch-default"  // warning: 'switch' missing 'default' label
-#elif defined(__GNUC__)
-// We disable -Wpragmas because GCC doesn't provide a has_warning equivalent and some forks/patches may not follow the warning/version
-// association.
-#pragma GCC diagnostic ignored "-Wpragmas"              // warning: unknown option after '#pragma GCC diagnostic' kind
-#pragma GCC diagnostic ignored "-Wunused-function"      // warning: 'xxxx' defined but not used
-#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"  // warning: cast to pointer from integer of different size
-#pragma GCC diagnostic ignored "-Wfloat-equal"          // warning: comparing floating-point with '==' or '!=' is unsafe
-#pragma GCC diagnostic ignored \
-    "-Wformat"  // warning: format '%p' expects argument of type 'int'/'void*', but argument X has type 'unsigned int'/'ImGuiWindow*'
-#pragma GCC diagnostic ignored \
-    "-Wdouble-promotion"                       // warning: implicit conversion from 'float' to 'double' when passing argument to function
-#pragma GCC diagnostic ignored "-Wconversion"  // warning: conversion to 'xxxx' from 'xxxx' may alter its value
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"  // warning: format not a string literal, format string not checked
-#pragma GCC diagnostic ignored \
-    "-Wstrict-overflow"  // warning: assuming signed overflow does not occur when assuming that (X - c) > X is always false
-#pragma GCC diagnostic ignored "-Wclass-memaccess"  // [__GNUC__ >= 8] warning: 'memset/memcpy' clearing/writing an object of type 'xxxx'
-                                                    // with no trivial copy-assignment; use assignment or value-initialization instead
-#pragma GCC diagnostic ignored "-Wcast-qual"        // warning: cast from type 'const xxxx *' to type 'xxxx *' casts away qualifiers
-#endif
+    // Clang/GCC warnings with -Weverything
+	#if defined(__clang__)
+		#if __has_warning("-Wunknown-warning-option")
+			#pragma clang diagnostic ignored \
+			    "-Wunknown-warning-option"  // warning: unknown warning group 'xxx'                      // not all
+			                                // warnings are known by all Clang versions and they tend to be rename-happy..
+			                                // so ignoring warnings triggers new warnings on some configuration. Great!
+		#endif
+		#pragma clang diagnostic ignored "-Wunknown-pragmas"  // warning: unknown warning group 'xxx'
+		#pragma clang diagnostic ignored \
+		    "-Wold-style-cast"  // warning: use of old-style cast                            // yes, they are more terse.
+		#pragma clang diagnostic ignored "-Wfloat-equal"  // warning: comparing floating point with == or != is unsafe // storing and
+		                                                  // comparing against same constants (typically 0.0f) is ok.
+		#pragma clang diagnostic ignored "-Wformat"       // warning: format specifies type 'int' but the argument has type 'unsigned int'
+		#pragma clang diagnostic ignored \
+		    "-Wformat-nonliteral"  // warning: format string is not a string literal            // passing non-literal
+		                           // to vsnformat(). yes, user passing incorrect format strings can crash the code.
+		#pragma clang diagnostic ignored \
+		    "-Wformat-pedantic"  // warning: format specifies type 'void *' but the argument has type 'xxxx *' // unreasonable, would lead
+		                         // to casting every %p arg to void*. probably enabled by -pedantic.
+		#pragma clang diagnostic ignored \
+		    "-Wexit-time-destructors"  // warning: declaration requires an exit-time destructor     // exit-time destruction order is
+		                               // undefined. if MemFree() leads to users code that has been disabled before exit it might cause
+		                               // problems. ImGui coding style welcomes static/globals.
+		#pragma clang diagnostic ignored "-Wglobal-constructors"  // warning: declaration requires a global destructor         // similar to
+		                                                          // above, not sure what the exact difference is.
+		#pragma clang diagnostic ignored "-Wsign-conversion"      // warning: implicit conversion changes signedness
+		#pragma clang diagnostic ignored "-Wint-to-void-pointer-cast"       // warning: cast to 'void *' from smaller integer type 'int'
+		#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"  // warning: zero as null pointer constant                    //
+		                                                                    // some standard header variations use #define NULL 0
+		#pragma clang diagnostic ignored \
+		    "-Wdouble-promotion"  // warning: implicit conversion from 'float' to 'double' when passing argument to function  // using
+		                          // printf() is a misery with this as C++ va_arg ellipsis changes float to double.
+		#pragma clang diagnostic ignored \
+		    "-Wimplicit-int-float-conversion"                     // warning: implicit conversion from 'xxx' to 'float' may lose precision
+		#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"  // warning: 'xxx' is an unsafe pointer used for buffer access
+		#pragma clang diagnostic ignored \
+		    "-Wnontrivial-memaccess"  // warning: first argument in call to 'memset' is a pointer to non-trivially copyable type
+		#pragma clang diagnostic ignored "-Wswitch-default"  // warning: 'switch' missing 'default' label
+	#elif defined(__GNUC__)
+	    // We disable -Wpragmas because GCC doesn't provide a has_warning equivalent and some forks/patches may not follow the
+	    // warning/version association.
+		#pragma GCC diagnostic ignored "-Wpragmas"              // warning: unknown option after '#pragma GCC diagnostic' kind
+		#pragma GCC diagnostic ignored "-Wunused-function"      // warning: 'xxxx' defined but not used
+		#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"  // warning: cast to pointer from integer of different size
+		#pragma GCC diagnostic ignored "-Wfloat-equal"          // warning: comparing floating-point with '==' or '!=' is unsafe
+		#pragma GCC diagnostic ignored "-Wformat"  // warning: format '%p' expects argument of type 'int'/'void*', but argument X has type
+		                                           // 'unsigned int'/'ImGuiWindow*'
+		#pragma GCC diagnostic ignored \
+		    "-Wdouble-promotion"  // warning: implicit conversion from 'float' to 'double' when passing argument to function
+		#pragma GCC diagnostic ignored "-Wconversion"         // warning: conversion to 'xxxx' from 'xxxx' may alter its value
+		#pragma GCC diagnostic ignored "-Wformat-nonliteral"  // warning: format not a string literal, format string not checked
+		#pragma GCC diagnostic ignored \
+		    "-Wstrict-overflow"  // warning: assuming signed overflow does not occur when assuming that (X - c) > X is always false
+		#pragma GCC diagnostic ignored \
+		    "-Wclass-memaccess"                       // [__GNUC__ >= 8] warning: 'memset/memcpy' clearing/writing an object of type 'xxxx'
+		                                              // with no trivial copy-assignment; use assignment or value-initialization instead
+		#pragma GCC diagnostic ignored "-Wcast-qual"  // warning: cast from type 'const xxxx *' to type 'xxxx *' casts away qualifiers
+	#endif
 
-// Debug options
-#define IMGUI_DEBUG_NAV_SCORING \
-	0  // Display navigation scoring preview when hovering items. Hold Ctrl to display for all candidates. Ctrl+Arrow to change last
-	   // direction.
-#define IMGUI_DEBUG_NAV_RECTS 0  // Display the reference navigation rectangle for each window
+    // Debug options
+	#define IMGUI_DEBUG_NAV_SCORING \
+		0  // Display navigation scoring preview when hovering items. Hold Ctrl to display for all candidates. Ctrl+Arrow to change last
+		   // direction.
+	#define IMGUI_DEBUG_NAV_RECTS 0  // Display the reference navigation rectangle for each window
 
 // Default font size if unspecified in both style.FontSizeBase and AddFontXXX() calls.
 static const float FONT_DEFAULT_SIZE = 20.0f;
@@ -1693,11 +1699,11 @@ namespace ImGui
 	// Error Checking and Debug Tools
 	static void ErrorCheckNewFrameSanityChecks();
 	static void ErrorCheckEndFrameSanityChecks();
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	static void UpdateDebugToolItemPicker();
 	static void UpdateDebugToolItemPathQuery();
 	static void UpdateDebugToolFlashStyleColor();
-#endif
+	#endif
 
 	// Inputs
 	static void UpdateKeyboardInputs();
@@ -1740,42 +1746,43 @@ namespace ImGui
 
 }  // namespace ImGui
 
-//-----------------------------------------------------------------------------
-// [SECTION] CONTEXT AND MEMORY ALLOCATORS
-//-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
+    // [SECTION] CONTEXT AND MEMORY ALLOCATORS
+    //-----------------------------------------------------------------------------
 
-// DLL users:
-// - Heaps and globals are not shared across DLL boundaries!
-// - You will need to call SetCurrentContext() + SetAllocatorFunctions() for each static/DLL boundary you are calling from.
-// - Same applies for hot-reloading mechanisms that are reliant on reloading DLL (note that many hot-reloading mechanisms work without DLL).
-// - Using Dear ImGui via a shared library is not recommended, because of function call overhead and because we don't guarantee backward nor
-// forward ABI compatibility.
-// - Confused? In a debugger: add GImGui to your watch window and notice how its value changes depending on your current location (which DLL
-// boundary you are in).
+    // DLL users:
+    // - Heaps and globals are not shared across DLL boundaries!
+    // - You will need to call SetCurrentContext() + SetAllocatorFunctions() for each static/DLL boundary you are calling from.
+    // - Same applies for hot-reloading mechanisms that are reliant on reloading DLL (note that many hot-reloading mechanisms work without
+    // DLL).
+    // - Using Dear ImGui via a shared library is not recommended, because of function call overhead and because we don't guarantee backward
+    // nor forward ABI compatibility.
+    // - Confused? In a debugger: add GImGui to your watch window and notice how its value changes depending on your current location (which
+    // DLL boundary you are in).
 
-// Current context pointer. Implicitly used by all Dear ImGui functions. Always assumed to be != NULL.
-// - ImGui::CreateContext() will automatically set this pointer if it is NULL.
-//   Change to a different context by calling ImGui::SetCurrentContext().
-// - Important: Dear ImGui functions are not thread-safe because of this pointer.
-//   If you want thread-safety to allow N threads to access N different contexts:
-//   - Change this variable to use thread local storage so each thread can refer to a different context, in your imconfig.h:
-//         struct ImGuiContext;
-//         extern thread_local ImGuiContext* MyImGuiTLS;
-//         #define GImGui MyImGuiTLS
-//     And then define MyImGuiTLS in one of your cpp files. Note that thread_local is a C++11 keyword, earlier C++ uses compiler-specific
-//     keyword.
-//   - Future development aims to make this context pointer explicit to all calls. Also read https://github.com/ocornut/imgui/issues/586
-//   - If you need a finite number of contexts, you may compile and use multiple instances of the ImGui code from a different namespace.
-// - DLL users: read comments above.
-#ifndef GImGui
+    // Current context pointer. Implicitly used by all Dear ImGui functions. Always assumed to be != NULL.
+    // - ImGui::CreateContext() will automatically set this pointer if it is NULL.
+    //   Change to a different context by calling ImGui::SetCurrentContext().
+    // - Important: Dear ImGui functions are not thread-safe because of this pointer.
+    //   If you want thread-safety to allow N threads to access N different contexts:
+    //   - Change this variable to use thread local storage so each thread can refer to a different context, in your imconfig.h:
+    //         struct ImGuiContext;
+    //         extern thread_local ImGuiContext* MyImGuiTLS;
+    //         #define GImGui MyImGuiTLS
+    //     And then define MyImGuiTLS in one of your cpp files. Note that thread_local is a C++11 keyword, earlier C++ uses
+    //     compiler-specific keyword.
+    //   - Future development aims to make this context pointer explicit to all calls. Also read https://github.com/ocornut/imgui/issues/586
+    //   - If you need a finite number of contexts, you may compile and use multiple instances of the ImGui code from a different namespace.
+    // - DLL users: read comments above.
+	#ifndef GImGui
 ImGuiContext* GImGui = NULL;
-#endif
+	#endif
 
-// Memory Allocator functions. Use SetAllocatorFunctions() to change them.
-// - You probably don't want to modify that mid-program, and if you use global/static e.g. ImVector<> instances you may need to keep them
-// accessible during program destruction.
-// - DLL users: read comments above.
-#ifndef IMGUI_DISABLE_DEFAULT_ALLOCATORS
+    // Memory Allocator functions. Use SetAllocatorFunctions() to change them.
+    // - You probably don't want to modify that mid-program, and if you use global/static e.g. ImVector<> instances you may need to keep
+    // them accessible during program destruction.
+    // - DLL users: read comments above.
+	#ifndef IMGUI_DISABLE_DEFAULT_ALLOCATORS
 static void* MallocWrapper(size_t size, void* user_data)
 {
 	IM_UNUSED(user_data);
@@ -1786,7 +1793,7 @@ static void FreeWrapper(void* ptr, void* user_data)
 	IM_UNUSED(user_data);
 	free(ptr);
 }
-#else
+	#else
 static void* MallocWrapper(size_t size, void* user_data)
 {
 	IM_UNUSED(user_data);
@@ -1800,7 +1807,7 @@ static void FreeWrapper(void* ptr, void* user_data)
 	IM_UNUSED(ptr);
 	IM_ASSERT(0);
 }
-#endif
+	#endif
 static ImGuiMemAllocFunc GImAllocatorAllocFunc = MallocWrapper;
 static ImGuiMemFreeFunc GImAllocatorFreeFunc = FreeWrapper;
 static void* GImAllocatorUserData = NULL;
@@ -1994,9 +2001,9 @@ ImGuiIO::ImGuiIO()
 	Fonts = NULL;
 	FontDefault = NULL;
 	FontAllowUserScaling = false;
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 	FontGlobalScale = 1.0f;  // Use style.FontScaleMain instead!
-#endif
+	#endif
 	DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 
 	// Keyboard/Gamepad Navigation options
@@ -2010,11 +2017,11 @@ ImGuiIO::ImGuiIO()
 
 	// Miscellaneous options
 	MouseDrawCursor = false;
-#ifdef __APPLE__
+	#ifdef __APPLE__
 	ConfigMacOSXBehaviors = true;  // Set Mac OS X style defaults based on __APPLE__ compile time flag
-#else
+	#else
 	ConfigMacOSXBehaviors = false;
-#endif
+	#endif
 	ConfigInputTrickleEventQueue = true;
 	ConfigInputTextCursorBlink = true;
 	ConfigInputTextEnterKeepActive = false;
@@ -2103,11 +2110,11 @@ void ImGuiIO::AddInputCharacterUTF16(ImWchar16 c)
 		}
 		else
 		{
-#if IM_UNICODE_CODEPOINT_MAX == 0xFFFF
+	#if IM_UNICODE_CODEPOINT_MAX == 0xFFFF
 			cp = IM_UNICODE_CODEPOINT_INVALID;  // Codepoint will not fit in ImWchar
-#else
+	#else
 			cp = (ImWchar) (((InputQueueSurrogate - 0xD800) << 10) + (c - 0xDC00) + 0x10000);
-#endif
+	#endif
 		}
 
 		InputQueueSurrogate = 0;
@@ -2741,39 +2748,39 @@ const char* ImStrSkipBlank(const char* str)
 	return str;
 }
 
-// A) MSVC version appears to return -1 on overflow, whereas glibc appears to return total count (which may be >= buf_size).
-// Ideally we would test for only one of those limits at runtime depending on the behavior the vsnprintf(), but trying to deduct it at
-// compile time sounds like a pandora can of worm. B) When buf==NULL vsnprintf() will return the output size.
-#ifndef IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
+    // A) MSVC version appears to return -1 on overflow, whereas glibc appears to return total count (which may be >= buf_size).
+    // Ideally we would test for only one of those limits at runtime depending on the behavior the vsnprintf(), but trying to deduct it at
+    // compile time sounds like a pandora can of worm. B) When buf==NULL vsnprintf() will return the output size.
+	#ifndef IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
 
-// We support stb_sprintf which is much faster (see: https://github.com/nothings/stb/blob/master/stb_sprintf.h)
-// You may set IMGUI_USE_STB_SPRINTF to use our default wrapper, or set IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
-// and setup the wrapper yourself. (FIXME-OPT: Some of our high-level operations such as ImGuiTextBuffer::appendfv() are
-// designed using two-passes worst case, which probably could be improved using the stbsp_vsprintfcb() function.)
-#ifdef IMGUI_USE_STB_SPRINTF
-#ifndef IMGUI_DISABLE_STB_SPRINTF_IMPLEMENTATION
-#define STB_SPRINTF_IMPLEMENTATION
-#endif
-#ifdef IMGUI_STB_SPRINTF_FILENAME
-#include IMGUI_STB_SPRINTF_FILENAME
-#else
-#include "stb_sprintf.h"
-#endif
-#endif  // #ifdef IMGUI_USE_STB_SPRINTF
+	    // We support stb_sprintf which is much faster (see: https://github.com/nothings/stb/blob/master/stb_sprintf.h)
+	    // You may set IMGUI_USE_STB_SPRINTF to use our default wrapper, or set IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
+	    // and setup the wrapper yourself. (FIXME-OPT: Some of our high-level operations such as ImGuiTextBuffer::appendfv() are
+	    // designed using two-passes worst case, which probably could be improved using the stbsp_vsprintfcb() function.)
+		#ifdef IMGUI_USE_STB_SPRINTF
+			#ifndef IMGUI_DISABLE_STB_SPRINTF_IMPLEMENTATION
+				#define STB_SPRINTF_IMPLEMENTATION
+			#endif
+			#ifdef IMGUI_STB_SPRINTF_FILENAME
+				#include IMGUI_STB_SPRINTF_FILENAME
+			#else
+				#include "stb_sprintf.h"
+			#endif
+		#endif  // #ifdef IMGUI_USE_STB_SPRINTF
 
-#if defined(_MSC_VER) && !defined(vsnprintf)
-#define vsnprintf _vsnprintf
-#endif
+		#if defined(_MSC_VER) && !defined(vsnprintf)
+			#define vsnprintf _vsnprintf
+		#endif
 
 int ImFormatString(char* buf, size_t buf_size, const char* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-#ifdef IMGUI_USE_STB_SPRINTF
+		#ifdef IMGUI_USE_STB_SPRINTF
 	int w = stbsp_vsnprintf(buf, (int) buf_size, fmt, args);
-#else
+		#else
 	int w = vsnprintf(buf, buf_size, fmt, args);
-#endif
+		#endif
 	va_end(args);
 	if (buf == NULL)
 		return w;
@@ -2785,11 +2792,11 @@ int ImFormatString(char* buf, size_t buf_size, const char* fmt, ...)
 
 int ImFormatStringV(char* buf, size_t buf_size, const char* fmt, va_list args)
 {
-#ifdef IMGUI_USE_STB_SPRINTF
+		#ifdef IMGUI_USE_STB_SPRINTF
 	int w = stbsp_vsnprintf(buf, (int) buf_size, fmt, args);
-#else
+		#else
 	int w = vsnprintf(buf, buf_size, fmt, args);
-#endif
+		#endif
 	if (buf == NULL)
 		return w;
 	if (w == -1 || w >= (int) buf_size)
@@ -2797,7 +2804,7 @@ int ImFormatStringV(char* buf, size_t buf_size, const char* fmt, va_list args)
 	buf[w] = 0;
 	return w;
 }
-#endif  // #ifdef IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
+	#endif  // #ifdef IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
 
 void ImFormatStringToTempBuffer(const char** out_buf, const char** out_buf_end, const char* fmt, ...)
 {
@@ -2848,12 +2855,12 @@ void ImFormatStringToTempBufferV(const char** out_buf, const char** out_buf_end,
 	}
 }
 
-#ifndef IMGUI_ENABLE_SSE4_2_CRC
+	#ifndef IMGUI_ENABLE_SSE4_2_CRC
 // CRC32 needs a 1KB lookup table (not cache friendly)
 // Although the code to generate the table is simple and shorter than the table itself, using a const table allows us to easily:
 // - avoid an unnecessary branch/memory tap, - keep the ImHashXXX functions usable by static constructors, - make it thread-safe.
 static const ImU32 GCrc32LookupTable[256] = {
-#ifdef IMGUI_USE_LEGACY_CRC32_ADLER
+		#ifdef IMGUI_USE_LEGACY_CRC32_ADLER
     // Legacy CRC32-adler table used pre 1.91.6 (before 2024/11/27). Only use if you cannot afford invalidating old .ini data.
     0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3, 0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E,
     0x97D2D988, 0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91, 0x1DB71064, 0x6AB020F2, 0xF3B97148, 0x84BE41DE, 0x1ADAD47D, 0x6DDDE4EB,
@@ -2879,7 +2886,7 @@ static const ImU32 GCrc32LookupTable[256] = {
     0x3E6E77DB, 0xAED16A4A, 0xD9D65ADC, 0x40DF0B66, 0x37D83BF0, 0xA9BCAE53, 0xDEBB9EC5, 0x47B2CF7F, 0x30B5FFE9, 0xBDBDF21C, 0xCABAC28A,
     0x53B39330, 0x24B4A3A6, 0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37,
     0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D,
-#else
+		#else
     // CRC32c table compatible with SSE 4.2 instructions
     0x00000000, 0xF26B8303, 0xE13B70F7, 0x1350F3F4, 0xC79A971F, 0x35F1141C, 0x26A1E7E8, 0xD4CA64EB, 0x8AD958CF, 0x78B2DBCC, 0x6BE22838,
     0x9989AB3B, 0x4D43CFD0, 0xBF284CD3, 0xAC78BF27, 0x5E133C24, 0x105EC76F, 0xE235446C, 0xF165B798, 0x030E349B, 0xD7C45070, 0x25AFD373,
@@ -2905,9 +2912,9 @@ static const ImU32 GCrc32LookupTable[256] = {
     0x37FACCF1, 0x69E9F0D5, 0x9B8273D6, 0x88D28022, 0x7AB90321, 0xAE7367CA, 0x5C18E4C9, 0x4F48173D, 0xBD23943E, 0xF36E6F75, 0x0105EC76,
     0x12551F82, 0xE03E9C81, 0x34F4F86A, 0xC69F7B69, 0xD5CF889D, 0x27A40B9E, 0x79B737BA, 0x8BDCB4B9, 0x988C474D, 0x6AE7C44E, 0xBE2DA0A5,
     0x4C4623A6, 0x5F16D052, 0xAD7D5351
-#endif
+		#endif
 };
-#endif
+	#endif
 
 // Known size hash
 // It is ok to call ImHashData on a string with known length but the ### operator won't be supported.
@@ -2917,12 +2924,12 @@ ImGuiID ImHashData(const void* data_p, size_t data_size, ImGuiID seed)
 	ImU32 crc = ~seed;
 	const unsigned char* data = (const unsigned char*) data_p;
 	const unsigned char* data_end = (const unsigned char*) data_p + data_size;
-#ifndef IMGUI_ENABLE_SSE4_2_CRC
+	#ifndef IMGUI_ENABLE_SSE4_2_CRC
 	const ImU32* crc32_lut = GCrc32LookupTable;
 	while (data < data_end)
 		crc = (crc >> 8) ^ crc32_lut[(crc & 0xFF) ^ *data++];
 	return ~crc;
-#else
+	#else
 	while (data + 4 <= data_end)
 	{
 		crc = _mm_crc32_u32(crc, *(ImU32*) data);
@@ -2931,7 +2938,7 @@ ImGuiID ImHashData(const void* data_p, size_t data_size, ImGuiID seed)
 	while (data < data_end)
 		crc = _mm_crc32_u8(crc, *data++);
 	return ~crc;
-#endif
+	#endif
 }
 
 // Zero-terminated string hash, with support for ### to reset back to seed value
@@ -2945,9 +2952,9 @@ ImGuiID ImHashStr(const char* data_p, size_t data_size, ImGuiID seed)
 	seed = ~seed;
 	ImU32 crc = seed;
 	const unsigned char* data = (const unsigned char*) data_p;
-#ifndef IMGUI_ENABLE_SSE4_2_CRC
+	#ifndef IMGUI_ENABLE_SSE4_2_CRC
 	const ImU32* crc32_lut = GCrc32LookupTable;
-#endif
+	#endif
 	if (data_size != 0)
 	{
 		while (data_size-- != 0)
@@ -2955,11 +2962,11 @@ ImGuiID ImHashStr(const char* data_p, size_t data_size, ImGuiID seed)
 			unsigned char c = *data++;
 			if (c == '#' && data_size >= 2 && data[0] == '#' && data[1] == '#')
 				crc = seed;
-#ifndef IMGUI_ENABLE_SSE4_2_CRC
+	#ifndef IMGUI_ENABLE_SSE4_2_CRC
 			crc = (crc >> 8) ^ crc32_lut[(crc & 0xFF) ^ c];
-#else
+	#else
 			crc = _mm_crc32_u8(crc, c);
-#endif
+	#endif
 		}
 	}
 	else
@@ -2968,11 +2975,11 @@ ImGuiID ImHashStr(const char* data_p, size_t data_size, ImGuiID seed)
 		{
 			if (c == '#' && data[0] == '#' && data[1] == '#')
 				crc = seed;
-#ifndef IMGUI_ENABLE_SSE4_2_CRC
+	#ifndef IMGUI_ENABLE_SSE4_2_CRC
 			crc = (crc >> 8) ^ crc32_lut[(crc & 0xFF) ^ c];
-#else
+	#else
 			crc = _mm_crc32_u8(crc, c);
-#endif
+	#endif
 		}
 	}
 	return ~crc;
@@ -2989,16 +2996,17 @@ const char* ImHashSkipUncontributingPrefix(const char* label)
 	return result;
 }
 
-//-----------------------------------------------------------------------------
-// [SECTION] MISC HELPERS/UTILITIES (File functions)
-//-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
+    // [SECTION] MISC HELPERS/UTILITIES (File functions)
+    //-----------------------------------------------------------------------------
 
-// Default file functions
-#ifndef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
+    // Default file functions
+	#ifndef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 
 ImFileHandle ImFileOpen(const char* filename, const char* mode)
 {
-#if defined(_WIN32) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS) && (defined(__MINGW32__) || (!defined(__CYGWIN__) && !defined(__GNUC__)))
+		#if defined(_WIN32) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS) && \
+		    (defined(__MINGW32__) || (!defined(__CYGWIN__) && !defined(__GNUC__)))
 	// We need a fopen() wrapper because MSVC/Windows fopen doesn't handle UTF-8 filenames.
 	// Previously we used ImTextCountCharsFromUtf8/ImTextStrFromUtf8 here but we now need to support ImWchar16 and ImWchar32!
 	const int filename_wsize = ::MultiByteToWideChar(CP_UTF8, 0, filename, -1, NULL, 0);
@@ -3015,9 +3023,9 @@ ImFileHandle ImFileOpen(const char* filename, const char* mode)
 	::MultiByteToWideChar(CP_UTF8, 0, filename, -1, filename_wbuf, filename_wsize);
 	::MultiByteToWideChar(CP_UTF8, 0, mode, -1, mode_wbuf, mode_wsize);
 	return ::_wfopen(filename_wbuf, mode_wbuf);
-#else
+		#else
 	return fopen(filename, mode);
-#endif
+		#endif
 }
 
 // We should in theory be using fseeko()/ftello() with off_t and _fseeki64()/_ftelli64() with __int64, waiting for the PR that does that in
@@ -3040,7 +3048,7 @@ ImU64 ImFileWrite(const void* data, ImU64 sz, ImU64 count, ImFileHandle f)
 {
 	return fwrite(data, (size_t) sz, (size_t) count, f);
 }
-#endif  // #ifndef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
+	#endif  // #ifndef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 
 // Helper: Load file content into memory
 // Memory allocated with IM_ALLOC(), must be freed by user using IM_FREE() == ImGui::MemFree()
@@ -3661,19 +3669,19 @@ bool ImGuiTextFilter::PassFilter(const char* text, const char* text_end) const
 	return false;
 }
 
-//-----------------------------------------------------------------------------
-// [SECTION] ImGuiTextBuffer, ImGuiTextIndex
-//-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
+    // [SECTION] ImGuiTextBuffer, ImGuiTextIndex
+    //-----------------------------------------------------------------------------
 
-// On some platform vsnprintf() takes va_list by reference and modifies it.
-// va_copy is the 'correct' way to copy a va_list but Visual Studio prior to 2013 doesn't have it.
-#ifndef va_copy
-#if defined(__GNUC__) || defined(__clang__)
-#define va_copy(dest, src) __builtin_va_copy(dest, src)
-#else
-#define va_copy(dest, src) (dest = src)
-#endif
-#endif
+    // On some platform vsnprintf() takes va_list by reference and modifies it.
+    // va_copy is the 'correct' way to copy a va_list but Visual Studio prior to 2013 doesn't have it.
+	#ifndef va_copy
+		#if defined(__GNUC__) || defined(__clang__)
+			#define va_copy(dest, src) __builtin_va_copy(dest, src)
+		#else
+			#define va_copy(dest, src) (dest = src)
+		#endif
+	#endif
 
 char ImGuiTextBuffer::EmptyString[1] = {0};
 
@@ -4760,11 +4768,11 @@ ImGuiContext* ImGui::GetCurrentContext()
 
 void ImGui::SetCurrentContext(ImGuiContext* ctx)
 {
-#ifdef IMGUI_SET_CURRENT_CONTEXT_FUNC
+	#ifdef IMGUI_SET_CURRENT_CONTEXT_FUNC
 	IMGUI_SET_CURRENT_CONTEXT_FUNC(ctx);  // For custom thread-based hackery you may want to have control over this.
-#else
+	#else
 	GImGui = ctx;
-#endif
+	#endif
 }
 
 void ImGui::SetAllocatorFunctions(ImGuiMemAllocFunc alloc_func, ImGuiMemFreeFunc free_func, void* user_data)
@@ -5095,15 +5103,15 @@ void ImGui::Initialize()
 		    key == ImGuiKey_KeypadMultiply || key == ImGuiKey_KeypadSubtract || key == ImGuiKey_KeypadAdd || key == ImGuiKey_KeypadEqual)
 			g.KeysMayBeCharInput.SetBit(key);
 
-#ifdef IMGUI_HAS_DOCK
-#endif
+	#ifdef IMGUI_HAS_DOCK
+	#endif
 
 	// Print a debug message when running with debug feature IMGUI_DEBUG_HIGHLIGHT_ALL_ID_CONFLICTS because it is very slow.
 	// DO NOT COMMENT OUT THIS MESSAGE. IT IS DESIGNED TO REMIND YOU THAT IMGUI_DEBUG_HIGHLIGHT_ALL_ID_CONFLICTS SHOULD ONLY BE TEMPORARILY
 	// ENABLED.
-#ifdef IMGUI_DEBUG_HIGHLIGHT_ALL_ID_CONFLICTS
+	#ifdef IMGUI_DEBUG_HIGHLIGHT_ALL_ID_CONFLICTS
 	DebugLog("IMGUI_DEBUG_HIGHLIGHT_ALL_ID_CONFLICTS is enabled.\nMust disable after use! Otherwise Dear ImGui will run slower.\n");
-#endif
+	#endif
 
 	// ImDrawList/ImFontAtlas are designed to function without ImGui, and 99% of it works without an ImGui context.
 	// But this link allows us to facilitate/handle a few edge cases better.
@@ -5192,9 +5200,9 @@ void ImGui::Shutdown()
 
 	if (g.LogFile)
 	{
-#ifndef IMGUI_DISABLE_TTY_FUNCTIONS
+	#ifndef IMGUI_DISABLE_TTY_FUNCTIONS
 		if (g.LogFile != stdout)
-#endif
+	#endif
 			ImFileClose(g.LogFile);
 		g.LogFile = NULL;
 	}
@@ -5621,14 +5629,14 @@ bool ImGui::ItemHoverable(const ImRect& bb, ImGuiID id, ImGuiItemFlags item_flag
 	// Detect ID conflicts
 	// (this is specifically done here by comparing on hover because it allows us a detection of duplicates that is algorithmically extra
 	// cheap, 1 u32 compare per item. No O(log N) lookup whatsoever)
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	if (id != 0 && g.HoveredIdPreviousFrame == id && (item_flags & ImGuiItemFlags_AllowDuplicateId) == 0)
 	{
 		g.HoveredIdPreviousFrameItemCount++;
 		if (g.DebugDrawIdConflictsId == id)
 			window->DrawList->AddRect(bb.Min - ImVec2(1, 1), bb.Max + ImVec2(1, 1), IM_COL32(255, 0, 0, 255), 0.0f, ImDrawFlags_None, 2.0f);
 	}
-#endif
+	#endif
 
 	if (g.HoveredWindow != window)
 		return false;
@@ -5685,7 +5693,7 @@ bool ImGui::ItemHoverable(const ImRect& bb, ImGuiID id, ImGuiItemFlags item_flag
 		return false;
 	}
 
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	if (id != 0)
 	{
 		// [DEBUG] Item Picker tool!
@@ -5697,7 +5705,7 @@ bool ImGui::ItemHoverable(const ImRect& bb, ImGuiID id, ImGuiItemFlags item_flag
 		if (g.DebugItemPickerBreakId == id)
 			IM_DEBUG_BREAK();
 	}
-#endif
+	#endif
 
 	if (g.NavHighlightItemUnderNav && (item_flags & ImGuiItemFlags_NoNavDisableMouseHover) == 0)
 		return false;
@@ -5769,21 +5777,21 @@ float ImGui::CalcWrapWidthForPos(const ImVec2& pos, float wrap_pos_x)
 void* ImGui::MemAlloc(size_t size)
 {
 	void* ptr = (*GImAllocatorAllocFunc)(size, GImAllocatorUserData);
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	if (ImGuiContext* ctx = GImGui)
 		DebugAllocHook(&ctx->DebugAllocInfo, ctx->FrameCount, ptr, size);
-#endif
+	#endif
 	return ptr;
 }
 
 // IM_FREE() == ImGui::MemFree()
 void ImGui::MemFree(void* ptr)
 {
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	if (ptr != NULL)
 		if (ImGuiContext* ctx = GImGui)
 			DebugAllocHook(&ctx->DebugAllocInfo, ctx->FrameCount, ptr, (size_t) -1);
-#endif
+	#endif
 	return (*GImAllocatorFreeFunc)(ptr, GImAllocatorUserData);
 }
 
@@ -6435,7 +6443,7 @@ void ImGui::NewFrame()
 	g.GroupStack.resize(0);
 
 	// [DEBUG] Update debug features
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	UpdateDebugToolItemPicker();
 	UpdateDebugToolItemPathQuery();
 	UpdateDebugToolFlashStyleColor();
@@ -6450,7 +6458,7 @@ void ImGui::NewFrame()
 		g.DebugLogFlags &= ~g.DebugLogAutoDisableFlags;
 		g.DebugLogAutoDisableFlags = ImGuiDebugLogFlags_None;
 	}
-#endif
+	#endif
 
 	// Create implicit/fallback window - which we will only render it if the user has added something to it.
 	// We don't use "Debug" to avoid colliding with user trying to create a "Debug" window with custom flags.
@@ -6466,13 +6474,13 @@ void ImGui::NewFrame()
 
 	// [DEBUG] When io.ConfigDebugBeginReturnValue is set, we make Begin()/BeginChild() return false at different level of the window-stack,
 	// allowing to validate correct Begin/End behavior in user code.
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	if (g.IO.ConfigDebugBeginReturnValueLoop)
 		g.DebugBeginReturnValueCullDepth =
 		    (g.DebugBeginReturnValueCullDepth == -1) ? 0 : ((g.DebugBeginReturnValueCullDepth + ((g.FrameCount % 4) == 0 ? 1 : 0)) % 10);
 	else
 		g.DebugBeginReturnValueCullDepth = -1;
-#endif
+	#endif
 
 	CallContextHooks(&g, ImGuiContextHookType_NewFramePost);
 }
@@ -6868,11 +6876,11 @@ void ImGui::Render()
 		g.IO.MetricsRenderIndices += draw_data->TotalIdxCount;
 	}
 
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	if (g.IO.BackendFlags & ImGuiBackendFlags_RendererHasTextures)
 		for (ImFontAtlas* atlas : g.FontAtlases)
 			ImFontAtlasDebugLogTextureRequests(atlas);
-#endif
+	#endif
 
 	CallContextHooks(&g, ImGuiContextHookType_RenderPost);
 }
@@ -7079,20 +7087,19 @@ void ImGui::SetNextItemAllowOverlap()
 	g.NextItemData.ItemFlags |= ImGuiItemFlags_AllowOverlap;
 }
 
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-// Allow last item to be overlapped by a subsequent item. Both may be activated during the same frame before the later one takes priority.
-// Use SetNextItemAllowOverlap() *before* your item instead of calling this!
-// void ImGui::SetItemAllowOverlap()
-//{
-//    ImGuiContext& g = *GImGui;
-//    ImGuiID id = g.LastItemData.ID;
-//    if (g.HoveredId == id)
-//        g.HoveredIdAllowOverlap = true;
-//    if (g.ActiveId == id) // Before we made this obsolete, most calls to SetItemAllowOverlap() used to avoid this path by testing
-//    g.ActiveId != id.
-//        g.ActiveIdAllowOverlap = true;
-//}
-#endif
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	// Allow last item to be overlapped by a subsequent item. Both may be activated during the same frame before the later one takes
+	// priority. Use SetNextItemAllowOverlap() *before* your item instead of calling this! void ImGui::SetItemAllowOverlap()
+	//{
+	//    ImGuiContext& g = *GImGui;
+	//    ImGuiID id = g.LastItemData.ID;
+	//    if (g.HoveredId == id)
+	//        g.HoveredIdAllowOverlap = true;
+	//    if (g.ActiveId == id) // Before we made this obsolete, most calls to SetItemAllowOverlap() used to avoid this path by testing
+	//    g.ActiveId != id.
+	//        g.ActiveIdAllowOverlap = true;
+	//}
+	#endif
 
 // This is a shortcut for not taking ownership of 100+ keys, frequently used by drag operations.
 // FIXME: It might be undesirable that this will likely disable KeyOwner-aware shortcuts systems. Consider a more fine-tuned version if
@@ -7170,12 +7177,12 @@ bool ImGui::BeginChildEx(const char* name, ImGuiID id, const ImVec2& size_arg, I
 		    (child_flags & (ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY)) != 0 &&
 		    "Must use ImGuiChildFlags_AutoResizeX or ImGuiChildFlags_AutoResizeY with ImGuiChildFlags_AlwaysAutoResize!");
 	}
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-	// if (window_flags & ImGuiWindowFlags_AlwaysUseWindowPadding)
-	//     child_flags |= ImGuiChildFlags_AlwaysUseWindowPadding;
-	// if (window_flags & ImGuiWindowFlags_NavFlattened)
-	//     child_flags |= ImGuiChildFlags_NavFlattened;
-#endif
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+		// if (window_flags & ImGuiWindowFlags_AlwaysUseWindowPadding)
+		//     child_flags |= ImGuiChildFlags_AlwaysUseWindowPadding;
+		// if (window_flags & ImGuiWindowFlags_NavFlattened)
+		//     child_flags |= ImGuiChildFlags_NavFlattened;
+	#endif
 	if (child_flags & ImGuiChildFlags_AutoResizeX)
 		child_flags &= ~ImGuiChildFlags_ResizeX;
 	if (child_flags & ImGuiChildFlags_AutoResizeY)
@@ -8709,7 +8716,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 		}
 
 		// [Test Engine] Register whole window in the item system (before submitting further decorations)
-#ifdef IMGUI_ENABLE_TEST_ENGINE
+	#ifdef IMGUI_ENABLE_TEST_ENGINE
 		if (g.TestEngineHookItems)
 		{
 			IM_ASSERT(window->IDStack.Size == 1);
@@ -8721,7 +8728,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 			window->IDStack.Size = 1;
 			window->DC.NavLayerCurrent = ImGuiNavLayer_Main;
 		}
-#endif
+	#endif
 
 		// Decide if we are going to handle borders and resize grips
 		// 'window->SkipItems' is not updated yet so for child windows we rely on ParentWindow to avoid submitting decorations. (#8815)
@@ -9078,20 +9085,20 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 		SetLastItemDataForWindow(window, title_bar_rect);
 
 		// [DEBUG]
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 		if (g.DebugLocateId != 0 && (window->ID == g.DebugLocateId || window->MoveId == g.DebugLocateId))
 			DebugLocateItemResolveWithLastItem();
-#endif
+	#endif
 
 		// [Test Engine] Register title bar / tab with MoveId.
-#ifdef IMGUI_ENABLE_TEST_ENGINE
+	#ifdef IMGUI_ENABLE_TEST_ENGINE
 		if (!(window->Flags & ImGuiWindowFlags_NoTitleBar))
 		{
 			window->DC.NavLayerCurrent = ImGuiNavLayer_Menu;
 			IMGUI_TEST_ENGINE_ITEM_ADD(g.LastItemData.ID, g.LastItemData.Rect, &g.LastItemData);
 			window->DC.NavLayerCurrent = ImGuiNavLayer_Main;
 		}
-#endif
+	#endif
 	}
 	else
 	{
@@ -9171,7 +9178,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 
 	// [DEBUG] io.ConfigDebugBeginReturnValue override return value to test Begin/End and BeginChild/EndChild behaviors.
 	// (The implicit fallback window is NOT automatically ended allowing it to always be able to receive commands without crashing)
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	if (!window->IsFallbackWindow)
 		if ((g.IO.ConfigDebugBeginReturnValueOnce && window_just_created) ||
 		    (g.IO.ConfigDebugBeginReturnValueLoop && g.DebugBeginReturnValueCullDepth == g.CurrentWindowStack.Size))
@@ -9186,7 +9193,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 			}
 			return false;
 		}
-#endif
+	#endif
 
 	return !window->SkipItems;
 }
@@ -9736,8 +9743,8 @@ ImVec2 ImGui::GetFontTexUvWhitePixel()
 	return GImGui->DrawListSharedData.TexUvWhitePixel;
 }
 
-// Prefer using PushFont(NULL, style.FontSizeBase * factor), or use style.FontScaleMain to scale all windows.
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+    // Prefer using PushFont(NULL, style.FontSizeBase * factor), or use style.FontScaleMain to scale all windows.
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 void ImGui::SetWindowFontScale(float scale)
 {
 	IM_ASSERT(scale > 0.0f);
@@ -9745,7 +9752,7 @@ void ImGui::SetWindowFontScale(float scale)
 	window->FontWindowScale = scale;
 	UpdateCurrentFontSize(0.0f);
 }
-#endif
+	#endif
 
 void ImGui::PushFocusScope(ImGuiID id)
 {
@@ -10072,9 +10079,9 @@ void ImGui::SetCurrentFont(ImFont* font, float font_size_before_scaling, float f
 	if (font != NULL)
 	{
 		IM_ASSERT(font && font->IsLoaded());  // Font Atlas not created. Did you call io.Fonts->GetTexDataAsRGBA32 / GetTexDataAsAlpha8 ?
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 		IM_ASSERT(font->Scale > 0.0f);
-#endif
+	#endif
 		ImFontAtlas* atlas = font->OwnerAtlas;
 		g.DrawListSharedData.FontAtlas = atlas;
 		g.DrawListSharedData.Font = font;
@@ -10119,11 +10126,11 @@ void ImGui::UpdateCurrentFontSize(float restore_font_size_after_scaling)
 			final_size *= window->FontWindowScale;
 
 		// Legacy scale factors
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 		final_size *= g.IO.FontGlobalScale;  // Use style.FontScaleMain instead!
 		if (g.Font != NULL)
 			final_size *= g.Font->Scale;  // Was never really useful.
-#endif
+	#endif
 	}
 
 	// Round font size
@@ -10191,11 +10198,11 @@ ImGuiID ImGuiWindow::GetID(const char* str, const char* str_end)
 {
 	ImGuiID seed = IDStack.back();
 	ImGuiID id = ImHashStr(str, str_end ? (str_end - str) : 0, seed);
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	ImGuiContext& g = *Ctx;
 	if (g.DebugHookIdInfoId == id)
 		ImGui::DebugHookIdInfo(id, ImGuiDataType_String, str, str_end);
-#endif
+	#endif
 	return id;
 }
 
@@ -10203,11 +10210,11 @@ ImGuiID ImGuiWindow::GetID(const void* ptr)
 {
 	ImGuiID seed = IDStack.back();
 	ImGuiID id = ImHashData(&ptr, sizeof(void*), seed);
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	ImGuiContext& g = *Ctx;
 	if (g.DebugHookIdInfoId == id)
 		ImGui::DebugHookIdInfo(id, ImGuiDataType_Pointer, ptr, NULL);
-#endif
+	#endif
 	return id;
 }
 
@@ -10215,11 +10222,11 @@ ImGuiID ImGuiWindow::GetID(int n)
 {
 	ImGuiID seed = IDStack.back();
 	ImGuiID id = ImHashData(&n, sizeof(n), seed);
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	ImGuiContext& g = *Ctx;
 	if (g.DebugHookIdInfoId == id)
 		ImGui::DebugHookIdInfo(id, ImGuiDataType_S32, (void*) (intptr_t) n, NULL);
-#endif
+	#endif
 	return id;
 }
 
@@ -10279,10 +10286,10 @@ void ImGui::PushOverrideID(ImGuiID id)
 {
 	ImGuiContext& g = *GImGui;
 	ImGuiWindow* window = g.CurrentWindow;
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	if (g.DebugHookIdInfoId == id)
 		DebugHookIdInfo(id, ImGuiDataType_ID, NULL, NULL);
-#endif
+	#endif
 	window->IDStack.push_back(id);
 }
 
@@ -10292,22 +10299,22 @@ void ImGui::PushOverrideID(ImGuiID id)
 ImGuiID ImGui::GetIDWithSeed(const char* str, const char* str_end, ImGuiID seed)
 {
 	ImGuiID id = ImHashStr(str, str_end ? (str_end - str) : 0, seed);
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	ImGuiContext& g = *GImGui;
 	if (g.DebugHookIdInfoId == id)
 		DebugHookIdInfo(id, ImGuiDataType_String, str, str_end);
-#endif
+	#endif
 	return id;
 }
 
 ImGuiID ImGui::GetIDWithSeed(int n, ImGuiID seed)
 {
 	ImGuiID id = ImHashData(&n, sizeof(n), seed);
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	ImGuiContext& g = *GImGui;
 	if (g.DebugHookIdInfoId == id)
 		DebugHookIdInfo(id, ImGuiDataType_S32, (void*) (intptr_t) n, NULL);
-#endif
+	#endif
 	return id;
 }
 
@@ -11658,7 +11665,7 @@ void ImGui::SetNextFrameWantCaptureMouse(bool want_capture_mouse)
 	g.WantCaptureMouseNextFrame = want_capture_mouse ? 1 : 0;
 }
 
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 static const char* GetInputSourceName(ImGuiInputSource source)
 {
 	const char* input_source_names[] = {"None", "Mouse", "Keyboard", "Gamepad"};
@@ -11727,7 +11734,7 @@ static void DebugPrintInputEvent(const char* prefix, const ImGuiInputEvent* e)
 		return;
 	}
 }
-#endif
+	#endif
 
 // Process input queue
 // We always call this with the value of 'bool g.IO.ConfigInputTrickleEventQueue'.
@@ -11851,11 +11858,11 @@ void ImGui::UpdateInputEvents(bool trickle_fast_inputs)
 		g.InputEventsTrail.push_back(g.InputEventsQueue[n]);
 
 	// [DEBUG]
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	if (event_n != 0 && (g.DebugLogFlags & ImGuiDebugLogFlags_EventIO))
 		for (int n = 0; n < g.InputEventsQueue.Size; n++)
 			DebugPrintInputEvent(n < event_n ? "Processed" : "Remaining", &g.InputEventsQueue[n]);
-#endif
+	#endif
 
 	// Remaining events will be processed on the next frame
 	if (event_n == g.InputEventsQueue.Size)
@@ -12233,10 +12240,10 @@ static void ImGui::ErrorCheckNewFrameSanityChecks()
 
 	// Emscripten backends are often imprecise in their submission of DeltaTime. (#6114, #3644)
 	// Ideally the Emscripten app/backend should aim to fix or smooth this value and avoid feeding zero, but we tolerate it.
-#ifdef __EMSCRIPTEN__
+	#ifdef __EMSCRIPTEN__
 	if (g.IO.DeltaTime <= 0.0f && g.FrameCount > 0)
 		g.IO.DeltaTime = 0.00001f;
-#endif
+	#endif
 
 	// Check user data
 	// (We pass an error message in the assert expression to make it visible to programmers who are not using a debugger, as most assert
@@ -12268,7 +12275,7 @@ static void ImGui::ErrorCheckNewFrameSanityChecks()
 		    g.IO.ConfigErrorRecoveryEnableAssert || g.IO.ConfigErrorRecoveryEnableDebugLog || g.IO.ConfigErrorRecoveryEnableTooltip ||
 		    g.ErrorCallback != NULL);
 
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 	if (g.IO.FontGlobalScale > 1.0f)
 		IM_ASSERT(g.Style.FontScaleMain == 1.0f && "Since 1.92: use style.FontScaleMain instead of g.IO.FontGlobalScale!");
 
@@ -12297,7 +12304,7 @@ static void ImGui::ErrorCheckNewFrameSanityChecks()
 		{
 			return ctx->IO.SetClipboardTextFn(ctx->IO.ClipboardUserData, text);
 		};
-#endif
+	#endif
 }
 
 static void ImGui::ErrorCheckEndFrameSanityChecks()
@@ -12466,7 +12473,7 @@ bool ImGui::ErrorLog(const char* msg)
 	ImGuiContext& g = *GImGui;
 
 	// Output to debug log
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	ImGuiWindow* window = g.CurrentWindow;
 
 	if (g.IO.ConfigErrorRecoveryEnableDebugLog)
@@ -12499,7 +12506,7 @@ bool ImGui::ErrorLog(const char* msg)
 		}
 		g.ErrorCountCurrentFrame++;
 	}
-#endif
+	#endif
 
 	// Output to callback
 	if (g.ErrorCallback != NULL)
@@ -12511,7 +12518,7 @@ bool ImGui::ErrorLog(const char* msg)
 
 void ImGui::ErrorCheckEndFrameFinalizeErrorTooltip()
 {
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	ImGuiContext& g = *GImGui;
 	if (g.DebugDrawIdConflictsId != 0 && g.IO.KeyCtrl == false)
 		g.DebugDrawIdConflictsCount = g.HoveredIdPreviousFrameItemCount;
@@ -12558,7 +12565,7 @@ void ImGui::ErrorCheckEndFrameFinalizeErrorTooltip()
 		Text(")");
 		EndErrorTooltip();
 	}
-#endif
+	#endif
 }
 
 // Pseudo-tooltip. Follow mouse until Ctrl is held. When Ctrl is held we lock position, allowing to click it.
@@ -12665,10 +12672,10 @@ bool ImGui::ItemAdd(const ImRect& bb, ImGuiID id, const ImRect* nav_bb_arg, ImGu
 	g.NextItemData.HasFlags = ImGuiNextItemDataFlags_None;
 	g.NextItemData.ItemFlags = ImGuiItemFlags_None;
 
-#ifdef IMGUI_ENABLE_TEST_ENGINE
+	#ifdef IMGUI_ENABLE_TEST_ENGINE
 	if (id != 0)
 		IMGUI_TEST_ENGINE_ITEM_ADD(id, g.LastItemData.NavRect, &g.LastItemData);
-#endif
+	#endif
 
 	// Clipping test
 	// (this is an inline copy of IsClippedEx() so we can reuse the is_rect_visible value, otherwise we'd do 'if (IsClippedEx(bb, id))
@@ -12680,7 +12687,7 @@ bool ImGui::ItemAdd(const ImRect& bb, ImGuiID id, const ImRect* nav_bb_arg, ImGu
 				return false;
 
 	// [DEBUG]
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	if (id != 0)
 	{
 		if (id == g.DebugLocateId)
@@ -12693,10 +12700,10 @@ bool ImGui::ItemAdd(const ImRect& bb, ImGuiID id, const ImRect* nav_bb_arg, ImGu
 		    id != window->ID && "Cannot have an empty ID at the root of a window. If you need an empty label, use ## and read the FAQ "
 		                        "about how the ID Stack works!");
 
-		// [DEBUG] Highlight all conflicts WITHOUT needing to hover. THIS WILL SLOW DOWN DEAR IMGUI. DON'T KEEP ACTIVATED.
-		// This will only work for items submitted with ItemAdd(). Some very rare/odd/unrecommended code patterns are calling
-		// ButtonBehavior() without ItemAdd().
-#ifdef IMGUI_DEBUG_HIGHLIGHT_ALL_ID_CONFLICTS
+			// [DEBUG] Highlight all conflicts WITHOUT needing to hover. THIS WILL SLOW DOWN DEAR IMGUI. DON'T KEEP ACTIVATED.
+			// This will only work for items submitted with ItemAdd(). Some very rare/odd/unrecommended code patterns are calling
+			// ButtonBehavior() without ItemAdd().
+		#ifdef IMGUI_DEBUG_HIGHLIGHT_ALL_ID_CONFLICTS
 		if ((g.LastItemData.ItemFlags & ImGuiItemFlags_AllowDuplicateId) == 0)
 		{
 			int* p_alive = g.DebugDrawIdConflictsAliveCount.GetIntRef(
@@ -12711,12 +12718,12 @@ bool ImGui::ItemAdd(const ImRect& bb, ImGuiID id, const ImRect* nav_bb_arg, ImGu
 				window->DrawList
 				    ->AddRect(bb.Min - ImVec2(1, 1), bb.Max + ImVec2(1, 1), IM_COL32(255, 0, 0, 255), 0.0f, ImDrawFlags_None, 2.0f);
 		}
-#endif
+		#endif
 	}
-	// if (g.IO.KeyAlt) window->DrawList->AddRect(bb.Min, bb.Max, IM_COL32(255,255,0,120)); // [DEBUG]
-	// if ((g.LastItemData.ItemFlags & ImGuiItemFlags_NoNav) == 0)
-	//     window->DrawList->AddRect(g.LastItemData.NavRect.Min, g.LastItemData.NavRect.Max, IM_COL32(255,255,0,255)); // [DEBUG]
-#endif
+		// if (g.IO.KeyAlt) window->DrawList->AddRect(bb.Min, bb.Max, IM_COL32(255,255,0,120)); // [DEBUG]
+		// if ((g.LastItemData.ItemFlags & ImGuiItemFlags_NoNav) == 0)
+		//     window->DrawList->AddRect(g.LastItemData.NavRect.Min, g.LastItemData.NavRect.Max, IM_COL32(255,255,0,255)); // [DEBUG]
+	#endif
 
 	if (id != 0 && g.DeactivatedItemData.ID == id)
 		g.DeactivatedItemData.ElapseFrame = g.FrameCount;
@@ -13042,7 +13049,7 @@ ImVec2 ImGui::GetContentRegionAvail()
 	return mx - window->DC.CursorPos;
 }
 
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
 // You should never need those functions. Always use GetCursorScreenPos() and GetContentRegionAvail()!
 // They are bizarre local-coordinates which don't play well with scrolling.
@@ -13062,7 +13069,7 @@ ImVec2 ImGui::GetWindowContentRegionMax()
 	ImGuiWindow* window = GImGui->CurrentWindow;
 	return window->ContentRegionRect.Max - window->Pos;
 }
-#endif
+	#endif
 
 // Lock horizontal starting position + capture group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such
 // as SameLine() on whole group, etc.) Groups are currently a mishmash of functionalities which should perhaps be clarified and separated.
@@ -14683,7 +14690,7 @@ static bool ImGui::NavScoreItem(ImGuiNavItemData* result, const ImRect& nav_bb)
 	}
 
 	const ImGuiDir move_dir = g.NavMoveDir;
-#if IMGUI_DEBUG_NAV_SCORING
+	#if IMGUI_DEBUG_NAV_SCORING
 	char buf[200];
 	if (g.IO.KeyCtrl)  // Hold Ctrl to preview score in matching quadrant. Ctrl+Arrow to rotate.
 	{
@@ -14728,7 +14735,7 @@ static bool ImGui::NavScoreItem(ImGuiNavItemData* result, const ImRect& nav_bb)
 			IMGUI_DEBUG_LOG_NAV("id 0x%08X\n%s\n", g.LastItemData.ID, buf);
 		}
 	}
-#endif
+	#endif
 
 	// Is it in the quadrant we're interested in moving to?
 	bool new_best = false;
@@ -15423,7 +15430,7 @@ static void ImGui::NavUpdate()
 
 	// [DEBUG]
 	g.NavScoringDebugCount = 0;
-#if IMGUI_DEBUG_NAV_RECTS
+	#if IMGUI_DEBUG_NAV_RECTS
 	if (ImGuiWindow* debug_window = g.NavWindow)
 	{
 		ImDrawList* draw_list = GetForegroundDrawList(debug_window);
@@ -15436,7 +15443,7 @@ static void ImGui::NavUpdate()
 		// NavCalcPreferredRefPos(); char buf[32]; ImFormatString(buf, 32, "%d", g.NavLayer); draw_list->AddCircleFilled(p, 3.0f, col);
 		// draw_list->AddText(NULL, 13.0f, p + ImVec2(8,-4), col, buf); }
 	}
-#endif
+	#endif
 }
 
 void ImGui::NavInitRequestApplyResult()
@@ -15561,7 +15568,7 @@ void ImGui::NavUpdateCreateMoveRequest()
 		scoring_page_offset_y = NavUpdatePageUpPageDown();
 
 	// [DEBUG] Always send a request when holding Ctrl. Hold Ctrl + Arrow change the direction.
-#if IMGUI_DEBUG_NAV_SCORING
+	#if IMGUI_DEBUG_NAV_SCORING
 	// if (io.KeyCtrl && IsKeyPressed(ImGuiKey_C))
 	//     g.NavMoveDirForDebug = (ImGuiDir)((g.NavMoveDirForDebug + 1) & 3);
 	if (io.KeyCtrl)
@@ -15571,7 +15578,7 @@ void ImGui::NavUpdateCreateMoveRequest()
 		g.NavMoveClipDir = g.NavMoveDir;
 		g.NavMoveFlags |= ImGuiNavMoveFlags_DebugNoResult;
 	}
-#endif
+	#endif
 
 	// Submit
 	g.NavMoveForwardToNextFrame = false;
@@ -15689,10 +15696,10 @@ void ImGui::NavUpdateCreateTabbingRequest()
 void ImGui::NavMoveRequestApplyResult()
 {
 	ImGuiContext& g = *GImGui;
-#if IMGUI_DEBUG_NAV_SCORING
+	#if IMGUI_DEBUG_NAV_SCORING
 	if (g.NavMoveFlags & ImGuiNavMoveFlags_DebugNoResult)  // [DEBUG] Scoring all items in NavWindow at all times
 		return;
-#endif
+	#endif
 
 	// Select which result to use
 	ImGuiNavItemData* result = (g.NavMoveResultLocal.ID != 0)   ? &g.NavMoveResultLocal
@@ -16928,10 +16935,10 @@ void ImGui::LogToTTY(int auto_open_depth)
 	if (g.LogEnabled)
 		return;
 	IM_UNUSED(auto_open_depth);
-#ifndef IMGUI_DISABLE_TTY_FUNCTIONS
+	#ifndef IMGUI_DISABLE_TTY_FUNCTIONS
 	LogBegin(ImGuiLogFlags_OutputTTY, auto_open_depth);
 	g.LogFile = stdout;
-#endif
+	#endif
 }
 
 // Start logging/capturing text output to given file
@@ -16986,9 +16993,9 @@ void ImGui::LogFinish()
 	switch (g.LogFlags & ImGuiLogFlags_OutputMask_)
 	{
 		case ImGuiLogFlags_OutputTTY:
-#ifndef IMGUI_DISABLE_TTY_FUNCTIONS
+	#ifndef IMGUI_DISABLE_TTY_FUNCTIONS
 			fflush(g.LogFile);
-#endif
+	#endif
 			break;
 		case ImGuiLogFlags_OutputFile:
 			ImFileClose(g.LogFile);
@@ -17017,12 +17024,12 @@ void ImGui::LogButtons()
 	ImGuiContext& g = *GImGui;
 
 	PushID("LogButtons");
-#ifndef IMGUI_DISABLE_TTY_FUNCTIONS
+	#ifndef IMGUI_DISABLE_TTY_FUNCTIONS
 	const bool log_to_tty = Button("Log To TTY");
 	SameLine();
-#else
+	#else
 	const bool log_to_tty = false;
-#endif
+	#endif
 	const bool log_to_file = Button("Log To File");
 	SameLine();
 	const bool log_to_clipboard = Button("Log To Clipboard");
@@ -17520,12 +17527,12 @@ static void ImGui::UpdateViewportsNewFrame()
 // - Default IME handlers
 //-----------------------------------------------------------------------------
 
-#if defined(_WIN32) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS) && !defined(IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS)
+	#if defined(_WIN32) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS) && !defined(IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS)
 
-#ifdef _MSC_VER
-#pragma comment(lib, "user32")
-#pragma comment(lib, "kernel32")
-#endif
+		#ifdef _MSC_VER
+			#pragma comment(lib, "user32")
+			#pragma comment(lib, "kernel32")
+		#endif
 
 // Win32 clipboard implementation
 // We use g.ClipboardHandlerData for temporary storage to ensure it is freed on Shutdown()
@@ -17572,9 +17579,9 @@ static void Platform_SetClipboardTextFn_DefaultImpl(ImGuiContext*, const char* t
 	::CloseClipboard();
 }
 
-#elif defined(__APPLE__) && TARGET_OS_OSX && defined(IMGUI_ENABLE_OSX_DEFAULT_CLIPBOARD_FUNCTIONS)
+	#elif defined(__APPLE__) && TARGET_OS_OSX && defined(IMGUI_ENABLE_OSX_DEFAULT_CLIPBOARD_FUNCTIONS)
 
-#include <Carbon/Carbon.h>  // Use old API to avoid need for separate .mm file
+		#include <Carbon/Carbon.h>  // Use old API to avoid need for separate .mm file
 static PasteboardRef main_clipboard = 0;
 
 // OSX clipboard implementation
@@ -17625,7 +17632,7 @@ static const char* Platform_GetClipboardTextFn_DefaultImpl(ImGuiContext* ctx)
 	return NULL;
 }
 
-#else
+	#else
 
 // Local Dear ImGui-only clipboard implementation, if user hasn't defined better clipboard handlers.
 static const char* Platform_GetClipboardTextFn_DefaultImpl(ImGuiContext* ctx)
@@ -17644,28 +17651,28 @@ static void Platform_SetClipboardTextFn_DefaultImpl(ImGuiContext* ctx, const cha
 	g.ClipboardHandlerData[(int) (text_end - text)] = 0;
 }
 
-#endif  // Default clipboard handlers
+	#endif  // Default clipboard handlers
 
 //-----------------------------------------------------------------------------
 
-#ifndef IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
-#if defined(__APPLE__) && TARGET_OS_IPHONE
-#define IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
-#endif
-#if defined(__3DS__)
-#define IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
-#endif
-#if defined(_WIN32) && defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
-#define IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
-#endif
-#endif  // #ifndef IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
+	#ifndef IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
+		#if defined(__APPLE__) && TARGET_OS_IPHONE
+			#define IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
+		#endif
+		#if defined(__3DS__)
+			#define IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
+		#endif
+		#if defined(_WIN32) && defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
+			#define IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
+		#endif
+	#endif  // #ifndef IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
 
-#ifndef IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
-#ifdef _WIN32
-#include <shellapi.h>  // ShellExecuteA()
-#ifdef _MSC_VER
-#pragma comment(lib, "shell32")
-#endif
+	#ifndef IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
+		#ifdef _WIN32
+			#include <shellapi.h>  // ShellExecuteA()
+			#ifdef _MSC_VER
+				#pragma comment(lib, "shell32")
+			#endif
 static bool Platform_OpenInShellFn_DefaultImpl(ImGuiContext*, const char* path)
 {
 	const int path_wsize = ::MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
@@ -17674,16 +17681,16 @@ static bool Platform_OpenInShellFn_DefaultImpl(ImGuiContext*, const char* path)
 	::MultiByteToWideChar(CP_UTF8, 0, path, -1, path_wbuf.Data, path_wsize);
 	return (INT_PTR)::ShellExecuteW(NULL, L"open", path_wbuf.Data, NULL, NULL, SW_SHOWDEFAULT) > 32;
 }
-#else
-#include <sys/wait.h>
-#include <unistd.h>
+		#else
+			#include <sys/wait.h>
+			#include <unistd.h>
 static bool Platform_OpenInShellFn_DefaultImpl(ImGuiContext*, const char* path)
 {
-#if defined(__APPLE__)
+			#if defined(__APPLE__)
 	const char* args[]{"open", "--", path, NULL};
-#else
+			#else
 	const char* args[]{"xdg-open", path, NULL};
-#endif
+			#endif
 	pid_t pid = fork();
 	if (pid < 0)
 		return false;
@@ -17699,23 +17706,23 @@ static bool Platform_OpenInShellFn_DefaultImpl(ImGuiContext*, const char* path)
 		return WEXITSTATUS(status) == 0;
 	}
 }
-#endif
-#else
+		#endif
+	#else
 static bool Platform_OpenInShellFn_DefaultImpl(ImGuiContext*, const char*)
 {
 	return false;
 }
-#endif  // Default shell handlers
+	#endif  // Default shell handlers
 
-//-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
 
-// Win32 API IME support (for Asian languages, etc.)
-#if defined(_WIN32) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS) && !defined(IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS)
+    // Win32 API IME support (for Asian languages, etc.)
+	#if defined(_WIN32) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS) && !defined(IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS)
 
-#include <imm.h>
-#ifdef _MSC_VER
-#pragma comment(lib, "imm32")
-#endif
+		#include <imm.h>
+		#ifdef _MSC_VER
+			#pragma comment(lib, "imm32")
+		#endif
 
 static void Platform_SetImeDataFn_DefaultImpl(ImGuiContext*, ImGuiViewport* viewport, ImGuiPlatformImeData* data)
 {
@@ -17741,11 +17748,11 @@ static void Platform_SetImeDataFn_DefaultImpl(ImGuiContext*, ImGuiViewport* view
 	}
 }
 
-#else
+	#else
 
 static void Platform_SetImeDataFn_DefaultImpl(ImGuiContext*, ImGuiViewport*, ImGuiPlatformImeData*) {}
 
-#endif  // Default IME handlers
+	#endif  // Default IME handlers
 
 //-----------------------------------------------------------------------------
 // [SECTION] METRICS/DEBUGGER WINDOW
@@ -17776,7 +17783,7 @@ static void Platform_SetImeDataFn_DefaultImpl(ImGuiContext*, ImGuiViewport*, ImG
 // - ShowFontSelector()
 //-----------------------------------------------------------------------------
 
-#if !defined(IMGUI_DISABLE_DEMO_WINDOWS) || !defined(IMGUI_DISABLE_DEBUG_TOOLS)
+	#if !defined(IMGUI_DISABLE_DEMO_WINDOWS) || !defined(IMGUI_DISABLE_DEBUG_TOOLS)
 // Avoid naming collision with imgui_demo.cpp's HelpMarker() for unity builds.
 static void MetricsHelpMarker(const char* desc)
 {
@@ -17789,9 +17796,9 @@ static void MetricsHelpMarker(const char* desc)
 		ImGui::EndTooltip();
 	}
 }
-#endif
+	#endif
 
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 
 void ImGui::DebugRenderViewportThumbnail(ImDrawList* draw_list, ImGuiViewportP* viewport, const ImRect& bb)
 {
@@ -18025,13 +18032,13 @@ static const char* FormatTextureRefForDebugDisplay(char* buf, int buf_size, ImTe
 	    tex_ref.GetTexID());  // Calling TexRef::GetTexID() to avoid assert of cmd->GetTexID()
 }
 
-#ifdef IMGUI_ENABLE_FREETYPE
+		#ifdef IMGUI_ENABLE_FREETYPE
 namespace ImGuiFreeType
 {
 	IMGUI_API const ImFontLoader* GetFontLoader();
 	IMGUI_API bool DebugEditFontLoaderFlags(unsigned int* p_font_builder_flags);
 }  // namespace ImGuiFreeType
-#endif
+		#endif
 
 // [DEBUG] List fonts in a font atlas and display its texture
 void ImGui::ShowFontAtlas(ImFontAtlas* atlas)
@@ -18082,18 +18089,18 @@ void ImGui::ShowFontAtlas(ImFontAtlas* atlas)
 	{
 		const ImFontLoader* loader_current = atlas->FontLoader;
 		BeginDisabled(!atlas->RendererHasTextures);
-#ifdef IMGUI_ENABLE_STB_TRUETYPE
+		#ifdef IMGUI_ENABLE_STB_TRUETYPE
 		const ImFontLoader* loader_stbtruetype = ImFontAtlasGetFontLoaderForStbTruetype();
 		if (RadioButton("stb_truetype", loader_current == loader_stbtruetype))
 			atlas->SetFontLoader(loader_stbtruetype);
-#else
+		#else
 		BeginDisabled();
 		RadioButton("stb_truetype", false);
 		SetItemTooltip("Requires #define IMGUI_ENABLE_STB_TRUETYPE");
 		EndDisabled();
-#endif
+		#endif
 		SameLine();
-#ifdef IMGUI_ENABLE_FREETYPE
+		#ifdef IMGUI_ENABLE_FREETYPE
 		const ImFontLoader* loader_freetype = ImGuiFreeType::GetFontLoader();
 		if (RadioButton("FreeType", loader_current == loader_freetype))
 			atlas->SetFontLoader(loader_freetype);
@@ -18110,12 +18117,12 @@ void ImGui::ShowFontAtlas(ImFontAtlas* atlas)
 					ImFontAtlasFontInitOutput(atlas, font);
 			}
 		}
-#else
+		#else
 		BeginDisabled();
 		RadioButton("FreeType", false);
 		SetItemTooltip("Requires #define IMGUI_ENABLE_FREETYPE + imgui_freetype.cpp.");
 		EndDisabled();
-#endif
+		#endif
 		EndDisabled();
 		TreePop();
 	}
@@ -18484,11 +18491,11 @@ void ImGui::ShowMetricsWindow(bool* p_open)
 		}
 	};
 
-#ifdef IMGUI_DEBUG_HIGHLIGHT_ALL_ID_CONFLICTS
+		#ifdef IMGUI_DEBUG_HIGHLIGHT_ALL_ID_CONFLICTS
 	TextColored(
 	    ImVec4(1.0f, 0.0f, 0.0f, 1.0f),
 	    "IMGUI_DEBUG_HIGHLIGHT_ALL_ID_CONFLICTS is enabled.\nMust disable after use! Otherwise Dear ImGui will run slower.\n");
-#endif
+		#endif
 
 	// Tools
 	if (TreeNode("Tools"))
@@ -18779,13 +18786,13 @@ void ImGui::ShowMetricsWindow(bool* p_open)
 		TreePop();
 	}
 
-	// Details for Docking
-#ifdef IMGUI_HAS_DOCK
+		// Details for Docking
+		#ifdef IMGUI_HAS_DOCK
 	if (TreeNode("Docking"))
 	{
 		TreePop();
 	}
-#endif  // #ifdef IMGUI_HAS_DOCK
+		#endif  // #ifdef IMGUI_HAS_DOCK
 
 	// Settings
 	if (TreeNode("Settings"))
@@ -18827,8 +18834,8 @@ void ImGui::ShowMetricsWindow(bool* p_open)
 			TreePop();
 		}
 
-#ifdef IMGUI_HAS_DOCK
-#endif  // #ifdef IMGUI_HAS_DOCK
+		#ifdef IMGUI_HAS_DOCK
+		#endif  // #ifdef IMGUI_HAS_DOCK
 
 		if (TreeNode("SettingsIniData", "Settings unpacked data (.ini): %d bytes", g.SettingsIniData.size()))
 		{
@@ -19159,12 +19166,12 @@ void ImGui::ShowMetricsWindow(bool* p_open)
 		}
 	}
 
-#ifdef IMGUI_HAS_DOCK
+		#ifdef IMGUI_HAS_DOCK
 	// Overlay: Display Docking info
 	if (show_docking_nodes && g.IO.KeyCtrl)
 	{
 	}
-#endif  // #ifdef IMGUI_HAS_DOCK
+		#endif  // #ifdef IMGUI_HAS_DOCK
 
 	End();
 }
@@ -19479,17 +19486,17 @@ void ImGui::DebugNodeFont(ImFont* font)
 	if (SmallButton("Clear unused"))
 		ImFontAtlasFontDiscardBakes(atlas, font, 2);
 
-	// Display details
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+		// Display details
+		#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 	SetNextItemWidth(GetFontSize() * 8);
 	DragFloat("Font scale", &font->Scale, 0.005f, 0.3f, 2.0f, "%.1f");
-	/*SameLine(); MetricsHelpMarker(
-	    "Note that the default embedded font is NOT meant to be scaled.\n\n"
-	    "Font are currently rendered into bitmaps at a given size at the time of building the atlas. "
-	    "You may oversample them to get some flexibility with scaling. "
-	    "You can also render at multiple sizes and select which one to use at runtime.\n\n"
-	    "(Glimmer of hope: the atlas system will be rewritten in the future to make scaling more flexible.)");*/
-#endif
+			/*SameLine(); MetricsHelpMarker(
+			    "Note that the default embedded font is NOT meant to be scaled.\n\n"
+			    "Font are currently rendered into bitmaps at a given size at the time of building the atlas. "
+			    "You may oversample them to get some flexibility with scaling. "
+			    "You can also render at multiple sizes and select which one to use at runtime.\n\n"
+			    "(Glimmer of hope: the atlas system will be rewritten in the future to make scaling more flexible.)");*/
+		#endif
 
 	char c_str[5];
 	ImTextCharToUtf8(c_str, font->FallbackChar);
@@ -19514,7 +19521,7 @@ void ImGui::DebugNodeFont(ImFont* font)
 		{
 			const ImFontLoader* loader = src->FontLoader ? src->FontLoader : atlas->FontLoader;
 			Text("Loader: '%s'", loader->Name ? loader->Name : "N/A");
-#ifdef IMGUI_ENABLE_FREETYPE
+		#ifdef IMGUI_ENABLE_FREETYPE
 			if (loader->Name != NULL && strcmp(loader->Name, "FreeType") == 0)
 			{
 				unsigned int loader_flags = src->FontLoaderFlags;
@@ -19526,7 +19533,7 @@ void ImGui::DebugNodeFont(ImFont* font)
 					ImFontAtlasFontInitOutput(atlas, font);
 				}
 			}
-#endif
+		#endif
 			TreePop();
 		}
 	}
@@ -20017,13 +20024,13 @@ void ImGui::DebugLogV(const char* fmt, va_list args)
 	g.DebugLogIndex.append(g.DebugLogBuf.c_str(), old_size, g.DebugLogBuf.size());
 	if (g.DebugLogFlags & ImGuiDebugLogFlags_OutputToTTY)
 		IMGUI_DEBUG_PRINTF("%s", g.DebugLogBuf.begin() + old_size);
-#ifdef IMGUI_ENABLE_TEST_ENGINE
+		#ifdef IMGUI_ENABLE_TEST_ENGINE
 	// IMGUI_TEST_ENGINE_LOG() adds a trailing \n automatically
 	const int new_size = g.DebugLogBuf.size();
 	const bool trailing_carriage_return = (g.DebugLogBuf[new_size - 1] == '\n');
 	if (g.DebugLogFlags & ImGuiDebugLogFlags_OutputToTestEngine)
 		IMGUI_TEST_ENGINE_LOG("%.*s", new_size - old_size - (trailing_carriage_return ? 1 : 0), g.DebugLogBuf.begin() + old_size);
-#endif
+		#endif
 }
 
 // FIXME-LAYOUT: To be done automatically via layout mode once we rework ItemSize/ItemAdd into ItemLayout.
@@ -20102,13 +20109,13 @@ void ImGui::ShowDebugLogWindow(bool* p_open)
 	if (BeginPopup("Outputs"))
 	{
 		CheckboxFlags("OutputToTTY", &g.DebugLogFlags, ImGuiDebugLogFlags_OutputToTTY);
-#ifndef IMGUI_ENABLE_TEST_ENGINE
+		#ifndef IMGUI_ENABLE_TEST_ENGINE
 		BeginDisabled();
-#endif
+		#endif
 		CheckboxFlags("OutputToTestEngine", &g.DebugLogFlags, ImGuiDebugLogFlags_OutputToTestEngine);
-#ifndef IMGUI_ENABLE_TEST_ENGINE
+		#ifndef IMGUI_ENABLE_TEST_ENGINE
 		EndDisabled();
-#endif
+		#endif
 		EndPopup();
 	}
 
@@ -20423,10 +20430,10 @@ static int DebugItemPathQuery_FormatLevelInfo(ImGuiDebugItemPathQuery* query, in
 	    query->Results
 	        .Size)  // Only start using fallback below when all queries are done, so during queries we don't flickering ??? markers.
 		return (*buf = 0);
-#ifdef IMGUI_ENABLE_TEST_ENGINE
+		#ifdef IMGUI_ENABLE_TEST_ENGINE
 	if (const char* label = ImGuiTestEngine_FindItemDebugLabel(GImGui, info->ID))  // Source: ImGuiTestEngine's ItemInfo()
 		return ImFormatString(buf, buf_size, format_for_ui ? "??? \"%s\"" : "%s", ImHashSkipUncontributingPrefix(label));
-#endif
+		#endif
 	return ImFormatString(buf, buf_size, "???");
 }
 
@@ -20500,9 +20507,9 @@ void ImGui::ShowIDStackToolWindow(bool* p_open)
 	}
 
 	Text("- Path \"%s\"", query->Complete ? result_path : "");
-#ifdef IMGUI_ENABLE_TEST_ENGINE
+		#ifdef IMGUI_ENABLE_TEST_ENGINE
 	Text("- Label \"%s\"", query->MainID ? ImGuiTestEngine_FindItemDebugLabel(&g, query->MainID) : "");
-#endif
+		#endif
 	Separator();
 
 	// Display decorated stack
@@ -20531,7 +20538,7 @@ void ImGui::ShowIDStackToolWindow(bool* p_open)
 	End();
 }
 
-#else
+	#else
 
 void ImGui::ShowMetricsWindow(bool*) {}
 void ImGui::ShowFontAtlas(ImFontAtlas*) {}
@@ -20552,9 +20559,9 @@ void ImGui::ShowIDStackToolWindow(bool*) {}
 void ImGui::DebugStartItemPicker() {}
 void ImGui::DebugHookIdInfo(ImGuiID, ImGuiDataType, const void*, const void*) {}
 
-#endif  // #ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#endif  // #ifndef IMGUI_DISABLE_DEBUG_TOOLS
 
-#if !defined(IMGUI_DISABLE_DEMO_WINDOWS) || !defined(IMGUI_DISABLE_DEBUG_TOOLS)
+	#if !defined(IMGUI_DISABLE_DEMO_WINDOWS) || !defined(IMGUI_DISABLE_DEBUG_TOOLS)
 // Demo helper function to select among loaded fonts.
 // Here we use the regular BeginCombo()/EndCombo() api which is the more flexible one.
 void ImGui::ShowFontSelector(const char* label)
@@ -20586,16 +20593,16 @@ void ImGui::ShowFontSelector(const char* label)
 		    "- Read FAQ and docs/FONTS.md for more details.\n"
 		    "- If you need to add/remove fonts at runtime (e.g. for DPI change), do it before calling NewFrame().");
 }
-#endif  // #if !defined(IMGUI_DISABLE_DEMO_WINDOWS) || !defined(IMGUI_DISABLE_DEBUG_TOOLS)
+	#endif  // #if !defined(IMGUI_DISABLE_DEMO_WINDOWS) || !defined(IMGUI_DISABLE_DEBUG_TOOLS)
 
-//-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
 
-// Include imgui_user.inl at the end of imgui.cpp to access private data/functions that aren't exposed.
-// Prefer just including imgui_internal.h from your code rather than using this define. If a declaration is missing from imgui_internal.h
-// add it or request it on the github.
-#ifdef IMGUI_INCLUDE_IMGUI_USER_INL
-#include "imgui_user.inl"
-#endif
+    // Include imgui_user.inl at the end of imgui.cpp to access private data/functions that aren't exposed.
+    // Prefer just including imgui_internal.h from your code rather than using this define. If a declaration is missing from
+    // imgui_internal.h add it or request it on the github.
+	#ifdef IMGUI_INCLUDE_IMGUI_USER_INL
+		#include "imgui_user.inl"
+	#endif
 
 //-----------------------------------------------------------------------------
 

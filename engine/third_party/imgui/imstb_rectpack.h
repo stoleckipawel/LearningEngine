@@ -68,20 +68,20 @@
 //
 
 #ifndef STB_INCLUDE_STB_RECT_PACK_H
-#define STB_INCLUDE_STB_RECT_PACK_H
+	#define STB_INCLUDE_STB_RECT_PACK_H
 
-#define STB_RECT_PACK_VERSION 1
+	#define STB_RECT_PACK_VERSION 1
 
-#ifdef STBRP_STATIC
-#define STBRP_DEF static
-#else
-#define STBRP_DEF extern
-#endif
+	#ifdef STBRP_STATIC
+		#define STBRP_DEF static
+	#else
+		#define STBRP_DEF extern
+	#endif
 
-#ifdef __cplusplus
+	#ifdef __cplusplus
 extern "C"
 {
-#endif
+	#endif
 
 	typedef struct stbrp_context stbrp_context;
 	typedef struct stbrp_node stbrp_node;
@@ -89,7 +89,7 @@ extern "C"
 
 	typedef int stbrp_coord;
 
-#define STBRP__MAXVAL 0x7fffffff
+	#define STBRP__MAXVAL 0x7fffffff
 	// Mostly for internal use, but this is the maximum supported coordinate value.
 
 	STBRP_DEF int stbrp_pack_rects(stbrp_context* context, stbrp_rect* rects, int num_rects);
@@ -196,9 +196,9 @@ extern "C"
 		stbrp_node extra[2];  // we allocate two extra nodes so optimal user-node-count is 'width' not 'width+2'
 	};
 
-#ifdef __cplusplus
+	#ifdef __cplusplus
 }
-#endif
+	#endif
 
 #endif
 
@@ -208,23 +208,23 @@ extern "C"
 //
 
 #ifdef STB_RECT_PACK_IMPLEMENTATION
-#ifndef STBRP_SORT
-#include <stdlib.h>
-#define STBRP_SORT qsort
-#endif
+	#ifndef STBRP_SORT
+		#include <stdlib.h>
+		#define STBRP_SORT qsort
+	#endif
 
-#ifndef STBRP_ASSERT
-#include <assert.h>
-#define STBRP_ASSERT assert
-#endif
+	#ifndef STBRP_ASSERT
+		#include <assert.h>
+		#define STBRP_ASSERT assert
+	#endif
 
-#ifdef _MSC_VER
-#define STBRP__NOTUSED(v) (void) (v)
-#define STBRP__CDECL __cdecl
-#else
-#define STBRP__NOTUSED(v) (void) sizeof(v)
-#define STBRP__CDECL
-#endif
+	#ifdef _MSC_VER
+		#define STBRP__NOTUSED(v) (void) (v)
+		#define STBRP__CDECL __cdecl
+	#else
+		#define STBRP__NOTUSED(v) (void) sizeof(v)
+		#define STBRP__CDECL
+	#endif
 
 enum
 {
@@ -301,13 +301,13 @@ static int stbrp__skyline_find_min_y(stbrp_context* c, stbrp_node* first, int x0
 
 	STBRP_ASSERT(first->x <= x0);
 
-#if 0
+	#if 0
    // skip in case we're past the node
    while (node->next->x <= x0)
       ++node;
-#else
+	#else
 	STBRP_ASSERT(node->next->x > x0);  // we ended up handling this in the caller for efficiency
-#endif
+	#endif
 
 	STBRP_ASSERT(node->x <= x0);
 
@@ -524,7 +524,7 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context* context, i
 	if (cur->x < res.x + width)
 		cur->x = (stbrp_coord) (res.x + width);
 
-#ifdef _DEBUG
+	#ifdef _DEBUG
 	cur = context->active_head;
 	while (cur->x < context->width)
 	{
@@ -549,7 +549,7 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context* context, i
 		}
 		STBRP_ASSERT(count == context->num_nodes + 2);
 	}
-#endif
+	#endif
 
 	return res;
 }

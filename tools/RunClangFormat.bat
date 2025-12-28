@@ -17,13 +17,17 @@ set "LOGFILE=%LOG_DIR%\LogClangFormat.txt"
 echo [LOG] ClangFormat run started: %DATE% %TIME%>"%LOGFILE%"
 
 set /A total=0
-for %%D in (engine samples) do (
-    for %%e in (cpp h hlsl hlsli) do (
-        for /R "%ROOT_DIR%%%D" %%F in (*.%%e) do (
-            echo %%~fF | findstr /I /C:"\Logs\" >nul
-            if errorlevel 1 (
-                set /A total+=1
-            )
+for %%e in (cpp h hlsl hlsli) do (
+    for /R "%ROOT_DIR%engine" %%F in (*.%%e) do (
+        echo %%~fF | findstr /I /C:"\Logs\" >nul
+        if errorlevel 1 (
+            set /A total+=1
+        )
+    )
+    for /R "%ROOT_DIR%samples" %%F in (*.%%e) do (
+        echo %%~fF | findstr /I /C:"\Logs\" >nul
+        if errorlevel 1 (
+            set /A total+=1
         )
     )
 )
@@ -38,34 +42,60 @@ if %total%==0 (
 set /A idx=0
 set /A modified=0
 
-for %%D in (engine samples) do (
-    for %%e in (cpp h hlsl hlsli) do (
-        for /R "%ROOT_DIR%%%D" %%F in (*.%%e) do (
-            echo %%~fF | findstr /I /C:"\Logs\" >nul
+for %%e in (cpp h hlsl hlsli) do (
+    for /R "%ROOT_DIR%engine" %%F in (*.%%e) do (
+        echo %%~fF | findstr /I /C:"\Logs\" >nul
+        if errorlevel 1 (
+            set /A idx+=1
+            set "file=%%~fF"
+            echo Progress: !idx!/!total! - !file!
+            echo [SCAN] !idx!/!total! - !file!>>"%LOGFILE%"
+
+            set "orighash="
+            for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "%%~fF" MD5 2^>nul') do if not defined orighash set "orighash=%%H"
+
+            clang-format -style=file -i "%%~fF" 2>>"%LOGFILE%"
             if errorlevel 1 (
-                set /A idx+=1
-                set "file=%%~fF"
-                echo Progress: !idx!/!total! - !file!
-                echo [SCAN] !idx!/!total! - !file!>>"%LOGFILE%"
+                echo [ERROR] clang-format failed for: %%~fF>>"%LOGFILE%"
+            )
 
-                set "orighash="
-                for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "%%~fF" MD5 2^>nul') do if not defined orighash set "orighash=%%H"
+            set "newhash="
+            for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "%%~fF" MD5 2^>nul') do if not defined newhash set "newhash=%%H"
 
-                clang-format -style=file -i "%%~fF" 2>>"%LOGFILE%"
-                if errorlevel 1 (
-                    echo [ERROR] clang-format failed for: %%~fF>>"%LOGFILE%"
-                )
+            if not "!orighash!"=="!newhash!" (
+                set /A modified+=1
+                echo [MODIFIED] !file!>>"%LOGFILE%"
+                echo Modified.
+            ) else (
+                echo Unchanged.
+            )
+        )
+    )
+    for /R "%ROOT_DIR%samples" %%F in (*.%%e) do (
+        echo %%~fF | findstr /I /C:"\Logs\" >nul
+        if errorlevel 1 (
+            set /A idx+=1
+            set "file=%%~fF"
+            echo Progress: !idx!/!total! - !file!
+            echo [SCAN] !idx!/!total! - !file!>>"%LOGFILE%"
 
-                set "newhash="
-                for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "%%~fF" MD5 2^>nul') do if not defined newhash set "newhash=%%H"
+            set "orighash="
+            for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "%%~fF" MD5 2^>nul') do if not defined orighash set "orighash=%%H"
 
-                if not "!orighash!"=="!newhash!" (
-                    set /A modified+=1
-                    echo [MODIFIED] !file!>>"%LOGFILE%"
-                    echo Modified.
-                ) else (
-                    echo Unchanged.
-                )
+            clang-format -style=file -i "%%~fF" 2>>"%LOGFILE%"
+            if errorlevel 1 (
+                echo [ERROR] clang-format failed for: %%~fF>>"%LOGFILE%"
+            )
+
+            set "newhash="
+            for /f "skip=1 tokens=1" %%H in ('certutil -hashfile "%%~fF" MD5 2^>nul') do if not defined newhash set "newhash=%%H"
+
+            if not "!orighash!"=="!newhash!" (
+                set /A modified+=1
+                echo [MODIFIED] !file!>>"%LOGFILE%"
+                echo Modified.
+            ) else (
+                echo Unchanged.
             )
         )
     )
@@ -79,3 +109,4 @@ echo [LOG] Summary: Scanned=!idx! Modified=!modified! >> "%LOGFILE%"
 echo [LOG] ClangFormat run finished: %DATE% %TIME% >> "%LOGFILE%"
 
 endlocal
+pause

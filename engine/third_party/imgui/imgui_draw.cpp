@@ -25,78 +25,83 @@ Index of this file:
 */
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
-#define _CRT_SECURE_NO_WARNINGS
+	#define _CRT_SECURE_NO_WARNINGS
 #endif
 
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
+	#define IMGUI_DEFINE_MATH_OPERATORS
 #endif
 
 #include "imgui.h"
 #ifndef IMGUI_DISABLE
-#include "imgui_internal.h"
-#ifdef IMGUI_ENABLE_FREETYPE
-#include "misc/freetype/imgui_freetype.h"
-#endif
+	#include "imgui_internal.h"
+	#ifdef IMGUI_ENABLE_FREETYPE
+		#include "misc/freetype/imgui_freetype.h"
+	#endif
 
-#include <stdio.h>   // vsnprintf, sscanf, printf
-#include <stdint.h>  // intptr_t
+	#include <stdio.h>   // vsnprintf, sscanf, printf
+	#include <stdint.h>  // intptr_t
 
-// Visual Studio warnings
-#ifdef _MSC_VER
-#pragma warning(disable : 4127)  // condition expression is constant
-#pragma warning(disable : 4505)  // unreferenced local function has been removed (stb stuff)
-#pragma warning(disable : 4996)  // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
-#pragma warning( \
-    disable : 26451)  // [Static Analyzer] Arithmetic overflow : Using operator 'xxx' on a 4 byte value and then casting the result to a 8
-                      // byte value. Cast the value to the wider type before calling operator 'xxx' to avoid overflow(io.2).
-#pragma warning(disable : 26812)  // [Static Analyzer] The enum type 'xxx' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
-#endif
+    // Visual Studio warnings
+	#ifdef _MSC_VER
+		#pragma warning(disable : 4127)  // condition expression is constant
+		#pragma warning(disable : 4505)  // unreferenced local function has been removed (stb stuff)
+		#pragma warning(disable : 4996)  // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
+		#pragma warning( \
+		    disable      \
+		    : 26451)  // [Static Analyzer] Arithmetic overflow : Using operator 'xxx' on a 4 byte value and then casting the result to a 8
+		              // byte value. Cast the value to the wider type before calling operator 'xxx' to avoid overflow(io.2).
+		#pragma warning(disable : 26812)  // [Static Analyzer] The enum type 'xxx' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+	#endif
 
-// Clang/GCC warnings with -Weverything
-#if defined(__clang__)
-#if __has_warning("-Wunknown-warning-option")
-#pragma clang diagnostic ignored "-Wunknown-warning-option"  // warning: unknown warning group 'xxx'                      // not all
-                                                             // warnings are known by all Clang versions and they tend to be rename-happy..
-                                                             // so ignoring warnings triggers new warnings on some configuration. Great!
-#endif
-#pragma clang diagnostic ignored "-Wunknown-pragmas"  // warning: unknown warning group 'xxx'
-#pragma clang diagnostic ignored \
-    "-Wold-style-cast"  // warning: use of old-style cast                            // yes, they are more terse.
-#pragma clang diagnostic ignored \
-    "-Wfloat-equal"  // warning: comparing floating point with == or != is unsafe // storing and comparing against same constants ok.
-#pragma clang diagnostic ignored "-Wglobal-constructors"  // warning: declaration requires a global destructor         // similar to above,
-                                                          // not sure what the exact difference is.
-#pragma clang diagnostic ignored "-Wsign-conversion"      // warning: implicit conversion changes signedness
-#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"  // warning: zero as null pointer constant                    // some
-                                                                    // standard header variations use #define NULL 0
-#pragma clang diagnostic ignored "-Wcomma"                          // warning: possible misuse of comma operator here
-#pragma clang diagnostic ignored "-Wreserved-id-macro"              // warning: macro name is a reserved identifier
-#pragma clang diagnostic ignored \
-    "-Wdouble-promotion"  // warning: implicit conversion from 'float' to 'double' when passing argument to function  // using printf() is a
-                          // misery with this as C++ va_arg ellipsis changes float to double.
-#pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"  // warning: implicit conversion from 'xxx' to 'float' may lose precision
-#pragma clang diagnostic ignored \
-    "-Wreserved-identifier"  // warning: identifier '_Xxx' is reserved because it starts with '_' followed by a capital letter
-#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"  // warning: 'xxx' is an unsafe pointer used for buffer access
-#pragma clang diagnostic ignored \
-    "-Wnontrivial-memaccess"                    // warning: first argument in call to 'memset' is a pointer to non-trivially copyable type
-#pragma clang diagnostic ignored "-Wcast-qual"  // warning: cast from 'const xxxx *' to 'xxx *' drops const qualifier
-#pragma clang diagnostic ignored "-Wswitch-default"  // warning: 'switch' missing 'default' label
-#elif defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wpragmas"          // warning: unknown option after '#pragma GCC diagnostic' kind
-#pragma GCC diagnostic ignored "-Wunused-function"  // warning: 'xxxx' defined but not used
-#pragma GCC diagnostic ignored "-Wfloat-equal"      // warning: comparing floating-point with '==' or '!=' is unsafe
-#pragma GCC diagnostic ignored \
-    "-Wdouble-promotion"                       // warning: implicit conversion from 'float' to 'double' when passing argument to function
-#pragma GCC diagnostic ignored "-Wconversion"  // warning: conversion to 'xxxx' from 'xxxx' may alter its value
-#pragma GCC diagnostic ignored "-Wstack-protector"  // warning: stack protector not protecting local variables: variable length buffer
-#pragma GCC diagnostic ignored "-Wstrict-overflow"  // warning: assuming signed overflow does not occur when simplifying division / ..when
-                                                    // changing X +- C1 cmp C2 to X cmp C2 -+ C1
-#pragma GCC diagnostic ignored "-Wclass-memaccess"  // [__GNUC__ >= 8] warning: 'memset/memcpy' clearing/writing an object of type 'xxxx'
-                                                    // with no trivial copy-assignment; use assignment or value-initialization instead
-#pragma GCC diagnostic ignored "-Wcast-qual"        // warning: cast from type 'const xxxx *' to type 'xxxx *' casts away qualifiers
-#endif
+    // Clang/GCC warnings with -Weverything
+	#if defined(__clang__)
+		#if __has_warning("-Wunknown-warning-option")
+			#pragma clang diagnostic ignored \
+			    "-Wunknown-warning-option"  // warning: unknown warning group 'xxx'                      // not all
+			                                // warnings are known by all Clang versions and they tend to be rename-happy..
+			                                // so ignoring warnings triggers new warnings on some configuration. Great!
+		#endif
+		#pragma clang diagnostic ignored "-Wunknown-pragmas"  // warning: unknown warning group 'xxx'
+		#pragma clang diagnostic ignored \
+		    "-Wold-style-cast"  // warning: use of old-style cast                            // yes, they are more terse.
+		#pragma clang diagnostic ignored "-Wfloat-equal"  // warning: comparing floating point with == or != is unsafe // storing and
+		                                                  // comparing against same constants ok.
+		#pragma clang diagnostic ignored "-Wglobal-constructors"  // warning: declaration requires a global destructor         // similar to
+		                                                          // above, not sure what the exact difference is.
+		#pragma clang diagnostic ignored "-Wsign-conversion"      // warning: implicit conversion changes signedness
+		#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"  // warning: zero as null pointer constant                    //
+		                                                                    // some standard header variations use #define NULL 0
+		#pragma clang diagnostic ignored "-Wcomma"                          // warning: possible misuse of comma operator here
+		#pragma clang diagnostic ignored "-Wreserved-id-macro"              // warning: macro name is a reserved identifier
+		#pragma clang diagnostic ignored \
+		    "-Wdouble-promotion"  // warning: implicit conversion from 'float' to 'double' when passing argument to function  // using
+		                          // printf() is a misery with this as C++ va_arg ellipsis changes float to double.
+		#pragma clang diagnostic ignored \
+		    "-Wimplicit-int-float-conversion"  // warning: implicit conversion from 'xxx' to 'float' may lose precision
+		#pragma clang diagnostic ignored \
+		    "-Wreserved-identifier"  // warning: identifier '_Xxx' is reserved because it starts with '_' followed by a capital letter
+		#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"  // warning: 'xxx' is an unsafe pointer used for buffer access
+		#pragma clang diagnostic ignored \
+		    "-Wnontrivial-memaccess"  // warning: first argument in call to 'memset' is a pointer to non-trivially copyable type
+		#pragma clang diagnostic ignored "-Wcast-qual"       // warning: cast from 'const xxxx *' to 'xxx *' drops const qualifier
+		#pragma clang diagnostic ignored "-Wswitch-default"  // warning: 'switch' missing 'default' label
+	#elif defined(__GNUC__)
+		#pragma GCC diagnostic ignored "-Wpragmas"          // warning: unknown option after '#pragma GCC diagnostic' kind
+		#pragma GCC diagnostic ignored "-Wunused-function"  // warning: 'xxxx' defined but not used
+		#pragma GCC diagnostic ignored "-Wfloat-equal"      // warning: comparing floating-point with '==' or '!=' is unsafe
+		#pragma GCC diagnostic ignored \
+		    "-Wdouble-promotion"  // warning: implicit conversion from 'float' to 'double' when passing argument to function
+		#pragma GCC diagnostic ignored "-Wconversion"  // warning: conversion to 'xxxx' from 'xxxx' may alter its value
+		#pragma GCC diagnostic ignored \
+		    "-Wstack-protector"  // warning: stack protector not protecting local variables: variable length buffer
+		#pragma GCC diagnostic ignored "-Wstrict-overflow"  // warning: assuming signed overflow does not occur when simplifying division /
+		                                                    // ..when changing X +- C1 cmp C2 to X cmp C2 -+ C1
+		#pragma GCC diagnostic ignored \
+		    "-Wclass-memaccess"                       // [__GNUC__ >= 8] warning: 'memset/memcpy' clearing/writing an object of type 'xxxx'
+		                                              // with no trivial copy-assignment; use assignment or value-initialization instead
+		#pragma GCC diagnostic ignored "-Wcast-qual"  // warning: cast from type 'const xxxx *' to type 'xxxx *' casts away qualifiers
+	#endif
 
 //-------------------------------------------------------------------------
 // [SECTION] STB libraries implementation (for stb_truetype and stb_rect_pack)
@@ -109,97 +114,102 @@ Index of this file:
 // #define IMGUI_DISABLE_STB_TRUETYPE_IMPLEMENTATION
 // #define IMGUI_DISABLE_STB_RECT_PACK_IMPLEMENTATION
 
-#ifdef IMGUI_STB_NAMESPACE
+	#ifdef IMGUI_STB_NAMESPACE
 namespace IMGUI_STB_NAMESPACE
 {
-#endif
+	#endif
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4456)   // declaration of 'xx' hides previous local declaration
-#pragma warning(disable : 6011)   // (stb_rectpack) Dereferencing NULL pointer 'cur->next'.
-#pragma warning(disable : 6385)   // (stb_truetype) Reading invalid data from 'buffer':  the readable size is '_Old_3`kernel_width' bytes,
-                                  // but '3' bytes may be read.
-#pragma warning(disable : 28182)  // (stb_rectpack) Dereferencing NULL pointer. 'cur' contains the same NULL value as 'cur->next' did.
-#endif
+	#ifdef _MSC_VER
+		#pragma warning(push)
+		#pragma warning(disable : 4456)  // declaration of 'xx' hides previous local declaration
+		#pragma warning(disable : 6011)  // (stb_rectpack) Dereferencing NULL pointer 'cur->next'.
+		#pragma warning(disable : 6385)  // (stb_truetype) Reading invalid data from 'buffer':  the readable size is '_Old_3`kernel_width'
+		                                 // bytes, but '3' bytes may be read.
+		#pragma warning( \
+		    disable : 28182)  // (stb_rectpack) Dereferencing NULL pointer. 'cur' contains the same NULL value as 'cur->next' did.
+	#endif
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"  // warning: 'xxxx' defined but not used
-#pragma clang diagnostic ignored "-Wmissing-prototypes"
-#pragma clang diagnostic ignored "-Wimplicit-fallthrough"
-#endif
+	#if defined(__clang__)
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wunused-function"  // warning: 'xxxx' defined but not used
+		#pragma clang diagnostic ignored "-Wmissing-prototypes"
+		#pragma clang diagnostic ignored "-Wimplicit-fallthrough"
+	#endif
 
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wtype-limits"  // warning: comparison is always true due to limited range of data type [-Wtype-limits]
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"  // warning: this statement may fall through
-#endif
+	#if defined(__GNUC__)
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored \
+		    "-Wtype-limits"  // warning: comparison is always true due to limited range of data type [-Wtype-limits]
+		#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"  // warning: this statement may fall through
+	#endif
 
-#ifndef STB_RECT_PACK_IMPLEMENTATION  // in case the user already have an implementation in the _same_ compilation unit (e.g. unity builds)
-#ifndef IMGUI_DISABLE_STB_RECT_PACK_IMPLEMENTATION  // in case the user already have an implementation in another compilation unit
-#define STBRP_STATIC
-#define STBRP_ASSERT(x) \
-	do                  \
-	{                   \
-		IM_ASSERT(x);   \
-	} while (0)
-#define STBRP_SORT ImQsort
-#define STB_RECT_PACK_IMPLEMENTATION
-#endif
-#ifdef IMGUI_STB_RECT_PACK_FILENAME
-#include IMGUI_STB_RECT_PACK_FILENAME
-#else
-#include "imstb_rectpack.h"
-#endif
-#endif
+	#ifndef STB_RECT_PACK_IMPLEMENTATION  // in case the user already have an implementation in the _same_ compilation unit (e.g. unity
+	                                      // builds)
+		#ifndef IMGUI_DISABLE_STB_RECT_PACK_IMPLEMENTATION  // in case the user already have an implementation in another compilation unit
+			#define STBRP_STATIC
+			#define STBRP_ASSERT(x) \
+				do                  \
+				{                   \
+					IM_ASSERT(x);   \
+				} while (0)
+			#define STBRP_SORT ImQsort
+			#define STB_RECT_PACK_IMPLEMENTATION
+		#endif
+		#ifdef IMGUI_STB_RECT_PACK_FILENAME
+			#include IMGUI_STB_RECT_PACK_FILENAME
+		#else
+			#include "imstb_rectpack.h"
+		#endif
+	#endif
 
-#ifdef IMGUI_ENABLE_STB_TRUETYPE
-#ifndef STB_TRUETYPE_IMPLEMENTATION  // in case the user already have an implementation in the _same_ compilation unit (e.g. unity builds)
-#ifndef IMGUI_DISABLE_STB_TRUETYPE_IMPLEMENTATION  // in case the user already have an implementation in another compilation unit
-#define STBTT_malloc(x, u) ((void) (u), IM_ALLOC(x))
-#define STBTT_free(x, u) ((void) (u), IM_FREE(x))
-#define STBTT_assert(x) \
-	do                  \
-	{                   \
-		IM_ASSERT(x);   \
-	} while (0)
-#define STBTT_fmod(x, y) ImFmod(x, y)
-#define STBTT_sqrt(x) ImSqrt(x)
-#define STBTT_pow(x, y) ImPow(x, y)
-#define STBTT_fabs(x) ImFabs(x)
-#define STBTT_ifloor(x) ((int) ImFloor(x))
-#define STBTT_iceil(x) ((int) ImCeil(x))
-#define STBTT_strlen(x) ImStrlen(x)
-#define STBTT_STATIC
-#define STB_TRUETYPE_IMPLEMENTATION
-#else
-#define STBTT_DEF extern
-#endif
-#ifdef IMGUI_STB_TRUETYPE_FILENAME
-#include IMGUI_STB_TRUETYPE_FILENAME
-#else
-#include "imstb_truetype.h"
-#endif
-#endif
-#endif  // IMGUI_ENABLE_STB_TRUETYPE
+	#ifdef IMGUI_ENABLE_STB_TRUETYPE
+		#ifndef STB_TRUETYPE_IMPLEMENTATION  // in case the user already have an implementation in the _same_ compilation unit (e.g. unity
+		                                     // builds)
+			#ifndef IMGUI_DISABLE_STB_TRUETYPE_IMPLEMENTATION  // in case the user already have an implementation in another compilation
+			                                                   // unit
+				#define STBTT_malloc(x, u) ((void) (u), IM_ALLOC(x))
+				#define STBTT_free(x, u) ((void) (u), IM_FREE(x))
+				#define STBTT_assert(x) \
+					do                  \
+					{                   \
+						IM_ASSERT(x);   \
+					} while (0)
+				#define STBTT_fmod(x, y) ImFmod(x, y)
+				#define STBTT_sqrt(x) ImSqrt(x)
+				#define STBTT_pow(x, y) ImPow(x, y)
+				#define STBTT_fabs(x) ImFabs(x)
+				#define STBTT_ifloor(x) ((int) ImFloor(x))
+				#define STBTT_iceil(x) ((int) ImCeil(x))
+				#define STBTT_strlen(x) ImStrlen(x)
+				#define STBTT_STATIC
+				#define STB_TRUETYPE_IMPLEMENTATION
+			#else
+				#define STBTT_DEF extern
+			#endif
+			#ifdef IMGUI_STB_TRUETYPE_FILENAME
+				#include IMGUI_STB_TRUETYPE_FILENAME
+			#else
+				#include "imstb_truetype.h"
+			#endif
+		#endif
+	#endif  // IMGUI_ENABLE_STB_TRUETYPE
 
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
+	#if defined(__GNUC__)
+		#pragma GCC diagnostic pop
+	#endif
 
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
+	#if defined(__clang__)
+		#pragma clang diagnostic pop
+	#endif
 
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
+	#if defined(_MSC_VER)
+		#pragma warning(pop)
+	#endif
 
-#ifdef IMGUI_STB_NAMESPACE
+	#ifdef IMGUI_STB_NAMESPACE
 }  // namespace ImStb
 using namespace IMGUI_STB_NAMESPACE;
-#endif
+	#endif
 
 //-----------------------------------------------------------------------------
 // [SECTION] Style functions
@@ -581,11 +591,12 @@ void ImDrawList::AddCallback(ImDrawCallback callback, void* userdata, size_t use
 	AddDrawCmd();  // Force a new command after us (see comment below)
 }
 
-// Compare ClipRect, TexRef and VtxOffset with a single memcmp()
-#define ImDrawCmd_HeaderSize (offsetof(ImDrawCmd, VtxOffset) + sizeof(unsigned int))
-#define ImDrawCmd_HeaderCompare(CMD_LHS, CMD_RHS) (memcmp(CMD_LHS, CMD_RHS, ImDrawCmd_HeaderSize))  // Compare ClipRect, TexRef, VtxOffset
-#define ImDrawCmd_HeaderCopy(CMD_DST, CMD_SRC) (memcpy(CMD_DST, CMD_SRC, ImDrawCmd_HeaderSize))     // Copy ClipRect, TexRef, VtxOffset
-#define ImDrawCmd_AreSequentialIdxOffset(CMD_0, CMD_1) (CMD_0->IdxOffset + CMD_0->ElemCount == CMD_1->IdxOffset)
+    // Compare ClipRect, TexRef and VtxOffset with a single memcmp()
+	#define ImDrawCmd_HeaderSize (offsetof(ImDrawCmd, VtxOffset) + sizeof(unsigned int))
+	#define ImDrawCmd_HeaderCompare(CMD_LHS, CMD_RHS) \
+		(memcmp(CMD_LHS, CMD_RHS, ImDrawCmd_HeaderSize))                                             // Compare ClipRect, TexRef, VtxOffset
+	#define ImDrawCmd_HeaderCopy(CMD_DST, CMD_SRC) (memcpy(CMD_DST, CMD_SRC, ImDrawCmd_HeaderSize))  // Copy ClipRect, TexRef, VtxOffset
+	#define ImDrawCmd_AreSequentialIdxOffset(CMD_0, CMD_1) (CMD_0->IdxOffset + CMD_0->ElemCount == CMD_1->IdxOffset)
 
 // Try to merge two last draw commands
 void ImDrawList::_TryMergeDrawCmds()
@@ -875,36 +886,36 @@ void ImDrawList::PrimQuadUV(
 	_IdxWritePtr += 6;
 }
 
-// On AddPolyline() and AddConvexPolyFilled() we intentionally avoid using ImVec2 and superfluous function calls to optimize
-// debug/non-inlined builds.
-// - Those macros expects l-values and need to be used as their own statement.
-// - Those macros are intentionally not surrounded by the 'do {} while (0)' idiom because even that translates to runtime with debug
-// compilers.
-#define IM_NORMALIZE2F_OVER_ZERO(VX, VY) \
-	{                                    \
-		float d2 = VX * VX + VY * VY;    \
-		if (d2 > 0.0f)                   \
-		{                                \
-			float inv_len = ImRsqrt(d2); \
-			VX *= inv_len;               \
-			VY *= inv_len;               \
-		}                                \
-	}                                    \
-	(void) 0
-#define IM_FIXNORMAL2F_MAX_INVLEN2 100.0f  // 500.0f (see #4053, #3366)
-#define IM_FIXNORMAL2F(VX, VY)                         \
-	{                                                  \
-		float d2 = VX * VX + VY * VY;                  \
-		if (d2 > 0.000001f)                            \
-		{                                              \
-			float inv_len2 = 1.0f / d2;                \
-			if (inv_len2 > IM_FIXNORMAL2F_MAX_INVLEN2) \
-				inv_len2 = IM_FIXNORMAL2F_MAX_INVLEN2; \
-			VX *= inv_len2;                            \
-			VY *= inv_len2;                            \
-		}                                              \
-	}                                                  \
-	(void) 0
+    // On AddPolyline() and AddConvexPolyFilled() we intentionally avoid using ImVec2 and superfluous function calls to optimize
+    // debug/non-inlined builds.
+    // - Those macros expects l-values and need to be used as their own statement.
+    // - Those macros are intentionally not surrounded by the 'do {} while (0)' idiom because even that translates to runtime with debug
+    // compilers.
+	#define IM_NORMALIZE2F_OVER_ZERO(VX, VY) \
+		{                                    \
+			float d2 = VX * VX + VY * VY;    \
+			if (d2 > 0.0f)                   \
+			{                                \
+				float inv_len = ImRsqrt(d2); \
+				VX *= inv_len;               \
+				VY *= inv_len;               \
+			}                                \
+		}                                    \
+		(void) 0
+	#define IM_FIXNORMAL2F_MAX_INVLEN2 100.0f  // 500.0f (see #4053, #3366)
+	#define IM_FIXNORMAL2F(VX, VY)                         \
+		{                                                  \
+			float d2 = VX * VX + VY * VY;                  \
+			if (d2 > 0.000001f)                            \
+			{                                              \
+				float inv_len2 = 1.0f / d2;                \
+				if (inv_len2 > IM_FIXNORMAL2F_MAX_INVLEN2) \
+					inv_len2 = IM_FIXNORMAL2F_MAX_INVLEN2; \
+				VX *= inv_len2;                            \
+				VY *= inv_len2;                            \
+			}                                              \
+		}                                                  \
+		(void) 0
 
 // TODO: Thickness anti-aliased lines cap are missing their AA fringe.
 // We avoid using the ImVec2 math operators here to reduce cost to a minimum for debug/non-inlined builds.
@@ -3018,8 +3029,8 @@ static const ImVec2 FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[ImGuiMouseCursor_COUNT][3
     {ImVec2(109, 0), ImVec2(13, 15), ImVec2(6, 7)},   // ImGuiMouseCursor_NotAllowed
 };
 
-#define IM_FONTGLYPH_INDEX_UNUSED ((ImU16) - 1)     // 0xFFFF
-#define IM_FONTGLYPH_INDEX_NOT_FOUND ((ImU16) - 2)  // 0xFFFE
+	#define IM_FONTGLYPH_INDEX_UNUSED ((ImU16) - 1)     // 0xFFFF
+	#define IM_FONTGLYPH_INDEX_NOT_FOUND ((ImU16) - 2)  // 0xFFFE
 
 ImFontAtlas::ImFontAtlas()
 {
@@ -3394,7 +3405,7 @@ void ImFontAtlasTextureBlockQueueUpload(ImFontAtlas* atlas, ImTextureData* tex, 
 	}
 }
 
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 static void GetTexDataAsFormat(
     ImFontAtlas* atlas,
     ImTextureFormat format,
@@ -3443,7 +3454,7 @@ bool ImFontAtlas::Build()
 	ImFontAtlasBuildMain(this);
 	return true;
 }
-#endif  // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#endif  // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
 ImFont* ImFontAtlas::AddFont(const ImFontConfig* font_cfg_in)
 {
@@ -3555,15 +3566,15 @@ static void Decode85(const unsigned char* src, unsigned char* dst)
 		dst += 4;
 	}
 }
-#ifndef IMGUI_DISABLE_DEFAULT_FONT
+	#ifndef IMGUI_DISABLE_DEFAULT_FONT
 static const char* GetDefaultCompressedFontDataTTF(int* out_size);
-#endif
+	#endif
 
 // Load embedded ProggyClean.ttf at size 13, disable oversampling
 // If you want a similar font which may be better scaled, consider using ProggyVector from the same author!
 ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
 {
-#ifndef IMGUI_DISABLE_DEFAULT_FONT
+	#ifndef IMGUI_DISABLE_DEFAULT_FONT
 	ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
 	if (!font_cfg_template)
 	{
@@ -3580,11 +3591,11 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
 	int ttf_compressed_size = 0;
 	const char* ttf_compressed = GetDefaultCompressedFontDataTTF(&ttf_compressed_size);
 	return AddFontFromMemoryCompressedTTF(ttf_compressed, ttf_compressed_size, font_cfg.SizePixels, &font_cfg);
-#else
+	#else
 	IM_ASSERT(0 && "AddFontDefault() disabled in this build.");
 	IM_UNUSED(font_cfg_template);
 	return NULL;
-#endif  // #ifndef IMGUI_DISABLE_DEFAULT_FONT
+	#endif  // #ifndef IMGUI_DISABLE_DEFAULT_FONT
 }
 
 ImFont*
@@ -3755,7 +3766,7 @@ void ImFontAtlas::RemoveCustomRect(ImFontAtlasRectId id)
 	ImFontAtlasPackDiscardRect(this, id);
 }
 
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 // This API does not make sense anymore with scalable fonts.
 // - Prefer adding a font source (ImFontConfig) using a custom/procedural loader.
 // - You may use ImFontFlags_LockBakedSizes to limit an existing font to known baked sizes:
@@ -3779,9 +3790,9 @@ ImFontAtlasRectId ImFontAtlas::AddCustomRectFontGlyphForSize(
     float advance_x,
     const ImVec2& offset)
 {
-#ifdef IMGUI_USE_WCHAR32
+		#ifdef IMGUI_USE_WCHAR32
 	IM_ASSERT(codepoint <= IM_UNICODE_CODEPOINT_MAX);
-#endif
+		#endif
 	IM_ASSERT(font != NULL);
 	IM_ASSERT(width > 0 && width <= 0xFFFF);
 	IM_ASSERT(height > 0 && height <= 0xFFFF);
@@ -3811,7 +3822,7 @@ ImFontAtlasRectId ImFontAtlas::AddCustomRectFontGlyphForSize(
 	ImFontAtlasBakedAddFontGlyph(this, baked, font->Sources[0], &glyph);
 	return r_id;
 }
-#endif  // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#endif  // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
 bool ImFontAtlas::GetCustomRect(ImFontAtlasRectId id, ImFontAtlasRect* out_r) const
 {
@@ -4523,9 +4534,9 @@ ImTextureData* ImFontAtlasTextureAdd(ImFontAtlas* atlas, int w, int h)
 	return new_tex;
 }
 
-#if 0
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../stb/stb_image_write.h"
+	#if 0
+		#define STB_IMAGE_WRITE_IMPLEMENTATION
+		#include "../stb/stb_image_write.h"
 static void ImFontAtlasDebugWriteTexToDisk(ImTextureData* tex, const char* description)
 {
     ImGuiContext& g = *GImGui;
@@ -4533,7 +4544,7 @@ static void ImFontAtlasDebugWriteTexToDisk(ImTextureData* tex, const char* descr
     ImFormatString(buf, IM_ARRAYSIZE(buf), "[%05d] Texture #%03d - %s.png", g.FrameCount, tex->UniqueID, description);
     stbi_write_png(buf, tex->Width, tex->Height, tex->BytesPerPixel, tex->Pixels, tex->GetPitch()); // tex->BytesPerPixel is technically not component, but ok for the formats we support.
 }
-#endif
+	#endif
 
 void ImFontAtlasTextureRepack(ImFontAtlas* atlas, int w, int h)
 {
@@ -4737,13 +4748,13 @@ void ImFontAtlasBuildInit(ImFontAtlas* atlas)
 	//   and point to it instead of pointing directly to return value of the GetFontLoaderXXX functions.
 	if (atlas->FontLoader == NULL)
 	{
-#ifdef IMGUI_ENABLE_FREETYPE
+	#ifdef IMGUI_ENABLE_FREETYPE
 		atlas->SetFontLoader(ImGuiFreeType::GetFontLoader());
-#elif defined(IMGUI_ENABLE_STB_TRUETYPE)
+	#elif defined(IMGUI_ENABLE_STB_TRUETYPE)
 		atlas->SetFontLoader(ImFontAtlasGetFontLoaderForStbTruetype());
-#else
+	#else
 		IM_ASSERT(0);  // Invalid Build function
-#endif
+	#endif
 	}
 
 	// Create initial texture size
@@ -5071,7 +5082,7 @@ static float BuildLoadGlyphGetAdvanceOrFallback(ImFontBaked* baked, unsigned int
 }
 IM_MSVC_RUNTIME_CHECKS_RESTORE
 
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 void ImFontAtlasDebugLogTextureRequests(ImFontAtlas* atlas)
 {
 	// [DEBUG] Log texture update requests
@@ -5112,7 +5123,7 @@ void ImFontAtlasDebugLogTextureRequests(ImFontAtlas* atlas)
 		}
 	}
 }
-#endif
+	#endif
 
 //-------------------------------------------------------------------------
 // [SECTION] ImFontAtlas: backend for stb_truetype
@@ -5120,7 +5131,7 @@ void ImFontAtlasDebugLogTextureRequests(ImFontAtlas* atlas)
 // (imstb_truetype.h in included near the top of this file, when IMGUI_ENABLE_STB_TRUETYPE is set)
 //-------------------------------------------------------------------------
 
-#ifdef IMGUI_ENABLE_STB_TRUETYPE
+	#ifdef IMGUI_ENABLE_STB_TRUETYPE
 
 // One for each ConfigData
 struct ImGui_ImplStbTrueType_FontSrcData
@@ -5329,7 +5340,7 @@ const ImFontLoader* ImFontAtlasGetFontLoaderForStbTruetype()
 	return &loader;
 }
 
-#endif  // IMGUI_ENABLE_STB_TRUETYPE
+	#endif  // IMGUI_ENABLE_STB_TRUETYPE
 
 //-------------------------------------------------------------------------
 // [SECTION] ImFontAtlas: glyph ranges helpers
@@ -5357,7 +5368,7 @@ const ImWchar* ImFontAtlas::GetGlyphRangesDefault()
 	return &ranges[0];
 }
 
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 const ImWchar* ImFontAtlas::GetGlyphRangesGreek()
 {
 	static const ImWchar ranges[] = {
@@ -5747,7 +5758,7 @@ const ImWchar* ImFontAtlas::GetGlyphRangesVietnamese()
 	};
 	return &ranges[0];
 }
-#endif  // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#endif  // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
 //-----------------------------------------------------------------------------
 // [SECTION] ImFontGlyphRangesBuilder
@@ -5813,9 +5824,9 @@ void ImFontBaked::ClearOutputData()
 ImFont::ImFont()
 {
 	memset(this, 0, sizeof(*this));
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 	Scale = 1.0f;
-#endif
+	#endif
 }
 
 ImFont::~ImFont()
@@ -7025,9 +7036,9 @@ static void stb__lit(const unsigned char* data, unsigned int length)
 	stb__dout += length;
 }
 
-#define stb__in2(x) ((i[x] << 8) + i[(x) + 1])
-#define stb__in3(x) ((i[x] << 16) + stb__in2((x) + 1))
-#define stb__in4(x) ((i[x] << 24) + stb__in3((x) + 1))
+	#define stb__in2(x) ((i[x] << 8) + i[(x) + 1])
+	#define stb__in3(x) ((i[x] << 16) + stb__in2((x) + 1))
+	#define stb__in4(x) ((i[x] << 24) + stb__in3((x) + 1))
 
 static const unsigned char* stb_decompress_token(const unsigned char* i)
 {
@@ -7141,7 +7152,7 @@ static unsigned int stb_decompress(unsigned char* output, const unsigned char* i
 // If you want a similar font which may be better scaled, consider using ProggyVector from the same author!
 //-----------------------------------------------------------------------------
 
-#ifndef IMGUI_DISABLE_DEFAULT_FONT
+	#ifndef IMGUI_DISABLE_DEFAULT_FONT
 
 // File: 'ProggyClean.ttf' (41208 bytes)
 // Exported using binary_to_compressed_c.exe -u8 "ProggyClean.ttf" proggy_clean_ttf
@@ -7509,6 +7520,6 @@ static const char* GetDefaultCompressedFontDataTTF(int* out_size)
 	*out_size = proggy_clean_ttf_compressed_size;
 	return (const char*) proggy_clean_ttf_compressed_data;
 }
-#endif  // #ifndef IMGUI_DISABLE_DEFAULT_FONT
+	#endif  // #ifndef IMGUI_DISABLE_DEFAULT_FONT
 
 #endif  // #ifndef IMGUI_DISABLE

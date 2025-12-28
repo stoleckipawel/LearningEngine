@@ -59,11 +59,11 @@ namespace Logger
 #define LE_LOG_LEVEL_FATAL 5
 
 #ifndef LE_COMPILE_LOG_LEVEL
-#ifdef NDEBUG
-#define LE_COMPILE_LOG_LEVEL LE_LOG_LEVEL_INFO
-#else
-#define LE_COMPILE_LOG_LEVEL LE_LOG_LEVEL_TRACE
-#endif
+	#ifdef NDEBUG
+		#define LE_COMPILE_LOG_LEVEL LE_LOG_LEVEL_INFO
+	#else
+		#define LE_COMPILE_LOG_LEVEL LE_LOG_LEVEL_TRACE
+	#endif
 #endif
 
 // =============================================================================
@@ -88,39 +88,39 @@ void LogWrite(std::string_view msg, LogLevel lvl, const char* file, std::uint32_
 #define LE_LOG(lvl, msg) ::LogWrite((msg), (lvl), __FILE__, __LINE__)
 
 #if LE_COMPILE_LOG_LEVEL <= LE_LOG_LEVEL_TRACE
-#define LOG_TRACE(msg) LE_LOG(LogLevel::Trace, msg)
+	#define LOG_TRACE(msg) LE_LOG(LogLevel::Trace, msg)
 #else
-#define LOG_TRACE(msg) ((void) 0)
+	#define LOG_TRACE(msg) ((void) 0)
 #endif
 
 #if LE_COMPILE_LOG_LEVEL <= LE_LOG_LEVEL_DEBUG
-#define LOG_DEBUG(msg) LE_LOG(LogLevel::Debug, msg)
+	#define LOG_DEBUG(msg) LE_LOG(LogLevel::Debug, msg)
 #else
-#define LOG_DEBUG(msg) ((void) 0)
+	#define LOG_DEBUG(msg) ((void) 0)
 #endif
 
 #if LE_COMPILE_LOG_LEVEL <= LE_LOG_LEVEL_INFO
-#define LOG_INFO(msg) LE_LOG(LogLevel::Info, msg)
+	#define LOG_INFO(msg) LE_LOG(LogLevel::Info, msg)
 #else
-#define LOG_INFO(msg) ((void) 0)
+	#define LOG_INFO(msg) ((void) 0)
 #endif
 
 #if LE_COMPILE_LOG_LEVEL <= LE_LOG_LEVEL_WARNING
-#define LOG_WARNING(msg) LE_LOG(LogLevel::Warning, msg)
+	#define LOG_WARNING(msg) LE_LOG(LogLevel::Warning, msg)
 #else
-#define LOG_WARNING(msg) ((void) 0)
+	#define LOG_WARNING(msg) ((void) 0)
 #endif
 
 #if LE_COMPILE_LOG_LEVEL <= LE_LOG_LEVEL_ERROR
-#define LOG_ERROR(msg) LE_LOG(LogLevel::Error, msg)
+	#define LOG_ERROR(msg) LE_LOG(LogLevel::Error, msg)
 #else
-#define LOG_ERROR(msg) ((void) 0)
+	#define LOG_ERROR(msg) ((void) 0)
 #endif
 
 #if LE_COMPILE_LOG_LEVEL <= LE_LOG_LEVEL_FATAL
-#define LOG_FATAL(msg) LE_LOG(LogLevel::Fatal, msg)
+	#define LOG_FATAL(msg) LE_LOG(LogLevel::Fatal, msg)
 #else
-#define LOG_FATAL(msg) ((void) 0)
+	#define LOG_FATAL(msg) ((void) 0)
 #endif
 
 // =============================================================================

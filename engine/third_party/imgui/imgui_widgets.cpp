@@ -33,85 +33,92 @@ Index of this file:
 */
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
-#define _CRT_SECURE_NO_WARNINGS
+	#define _CRT_SECURE_NO_WARNINGS
 #endif
 
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
+	#define IMGUI_DEFINE_MATH_OPERATORS
 #endif
 
 #include "imgui.h"
 #ifndef IMGUI_DISABLE
-#include "imgui_internal.h"
+	#include "imgui_internal.h"
 
-// System includes
-#include <stdint.h>  // intptr_t
+    // System includes
+	#include <stdint.h>  // intptr_t
 
-//-------------------------------------------------------------------------
-// Warnings
-//-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    // Warnings
+    //-------------------------------------------------------------------------
 
-// Visual Studio warnings
-#ifdef _MSC_VER
-#pragma warning(disable : 4127)            // condition expression is constant
-#pragma warning(disable : 4996)            // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
-#if defined(_MSC_VER) && _MSC_VER >= 1922  // MSVC 2019 16.2 or later
-#pragma warning(disable : 5054)            // operator '|': deprecated between enumerations of different types
-#endif
-#pragma warning( \
-    disable : 26451)  // [Static Analyzer] Arithmetic overflow : Using operator 'xxx' on a 4 byte value and then casting the result to a 8
-                      // byte value. Cast the value to the wider type before calling operator 'xxx' to avoid overflow(io.2).
-#pragma warning(disable : 26812)  // [Static Analyzer] The enum type 'xxx' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
-#endif
+    // Visual Studio warnings
+	#ifdef _MSC_VER
+		#pragma warning(disable : 4127)  // condition expression is constant
+		#pragma warning(disable : 4996)  // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
+		#if defined(_MSC_VER) && _MSC_VER >= 1922  // MSVC 2019 16.2 or later
+			#pragma warning(disable : 5054)        // operator '|': deprecated between enumerations of different types
+		#endif
+		#pragma warning( \
+		    disable      \
+		    : 26451)  // [Static Analyzer] Arithmetic overflow : Using operator 'xxx' on a 4 byte value and then casting the result to a 8
+		              // byte value. Cast the value to the wider type before calling operator 'xxx' to avoid overflow(io.2).
+		#pragma warning(disable : 26812)  // [Static Analyzer] The enum type 'xxx' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+	#endif
 
-// Clang/GCC warnings with -Weverything
-#if defined(__clang__)
-#if __has_warning("-Wunknown-warning-option")
-#pragma clang diagnostic ignored "-Wunknown-warning-option"  // warning: unknown warning group 'xxx'                      // not all
-                                                             // warnings are known by all Clang versions and they tend to be rename-happy..
-                                                             // so ignoring warnings triggers new warnings on some configuration. Great!
-#endif
-#pragma clang diagnostic ignored "-Wunknown-pragmas"  // warning: unknown warning group 'xxx'
-#pragma clang diagnostic ignored \
-    "-Wold-style-cast"                            // warning: use of old-style cast                            // yes, they are more terse.
-#pragma clang diagnostic ignored "-Wfloat-equal"  // warning: comparing floating point with == or != is unsafe // storing and comparing
-                                                  // against same constants (typically 0.0f) is ok.
-#pragma clang diagnostic ignored "-Wformat"       // warning: format specifies type 'int' but the argument has type 'unsigned int'
-#pragma clang diagnostic ignored "-Wformat-nonliteral"  // warning: format string is not a string literal            // passing non-literal
-                                                        // to vsnformat(). yes, user passing incorrect format strings can crash the code.
-#pragma clang diagnostic ignored "-Wsign-conversion"    // warning: implicit conversion changes signedness
-#pragma clang diagnostic ignored "-Wunused-macros"      // warning: macro is not used                                // we define
-                                                        // snprintf/vsnprintf on Windows so they are available, but not always used.
-#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"  // warning: zero as null pointer constant                    // some
-                                                                    // standard header variations use #define NULL 0
-#pragma clang diagnostic ignored \
-    "-Wdouble-promotion"  // warning: implicit conversion from 'float' to 'double' when passing argument to function  // using printf() is a
-                          // misery with this as C++ va_arg ellipsis changes float to double.
-#pragma clang diagnostic ignored \
-    "-Wenum-enum-conversion"  // warning: bitwise operation between different enumeration types ('XXXFlags_' and 'XXXFlagsPrivate_')
-#pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"  // warning: bitwise operation between different enumeration types
-                                                                      // ('XXXFlags_' and 'XXXFlagsPrivate_') is deprecated
-#pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"  // warning: implicit conversion from 'xxx' to 'float' may lose precision
-#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"            // warning: 'xxx' is an unsafe pointer used for buffer access
-#pragma clang diagnostic ignored \
-    "-Wnontrivial-memaccess"  // warning: first argument in call to 'memset' is a pointer to non-trivially copyable type
-#pragma clang diagnostic ignored "-Wswitch-default"  // warning: 'switch' missing 'default' label
-#elif defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wpragmas"      // warning: unknown option after '#pragma GCC diagnostic' kind
-#pragma GCC diagnostic ignored "-Wfloat-equal"  // warning: comparing floating-point with '==' or '!=' is unsafe
-#pragma GCC diagnostic ignored \
-    "-Wformat"  // warning: format '%p' expects argument of type 'int'/'void*', but argument X has type 'unsigned int'/'ImGuiWindow*'
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"                // warning: format not a string literal, format string not checked
-#pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"  // warning: bitwise operation between different enumeration types
-                                                                    // ('XXXFlags_' and 'XXXFlagsPrivate_') is deprecated
-#pragma GCC diagnostic ignored \
-    "-Wdouble-promotion"  // warning: implicit conversion from 'float' to 'double' when passing argument to function
-#pragma GCC diagnostic ignored "-Wstrict-overflow"  // warning: assuming signed overflow does not occur when simplifying division / ..when
-                                                    // changing X +- C1 cmp C2 to X cmp C2 -+ C1
-#pragma GCC diagnostic ignored "-Wclass-memaccess"  // [__GNUC__ >= 8] warning: 'memset/memcpy' clearing/writing an object of type 'xxxx'
-                                                    // with no trivial copy-assignment; use assignment or value-initialization instead
-#pragma GCC diagnostic ignored "-Wcast-qual"        // warning: cast from type 'const xxxx *' to type 'xxxx *' casts away qualifiers
-#endif
+    // Clang/GCC warnings with -Weverything
+	#if defined(__clang__)
+		#if __has_warning("-Wunknown-warning-option")
+			#pragma clang diagnostic ignored \
+			    "-Wunknown-warning-option"  // warning: unknown warning group 'xxx'                      // not all
+			                                // warnings are known by all Clang versions and they tend to be rename-happy..
+			                                // so ignoring warnings triggers new warnings on some configuration. Great!
+		#endif
+		#pragma clang diagnostic ignored "-Wunknown-pragmas"  // warning: unknown warning group 'xxx'
+		#pragma clang diagnostic ignored \
+		    "-Wold-style-cast"  // warning: use of old-style cast                            // yes, they are more terse.
+		#pragma clang diagnostic ignored "-Wfloat-equal"  // warning: comparing floating point with == or != is unsafe // storing and
+		                                                  // comparing against same constants (typically 0.0f) is ok.
+		#pragma clang diagnostic ignored "-Wformat"       // warning: format specifies type 'int' but the argument has type 'unsigned int'
+		#pragma clang diagnostic ignored \
+		    "-Wformat-nonliteral"  // warning: format string is not a string literal            // passing non-literal
+		                           // to vsnformat(). yes, user passing incorrect format strings can crash the code.
+		#pragma clang diagnostic ignored "-Wsign-conversion"  // warning: implicit conversion changes signedness
+		#pragma clang diagnostic ignored "-Wunused-macros"    // warning: macro is not used                                // we define
+		                                                      // snprintf/vsnprintf on Windows so they are available, but not always used.
+		#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"  // warning: zero as null pointer constant                    //
+		                                                                    // some standard header variations use #define NULL 0
+		#pragma clang diagnostic ignored \
+		    "-Wdouble-promotion"  // warning: implicit conversion from 'float' to 'double' when passing argument to function  // using
+		                          // printf() is a misery with this as C++ va_arg ellipsis changes float to double.
+		#pragma clang diagnostic ignored "-Wenum-enum-conversion"  // warning: bitwise operation between different enumeration types
+		                                                           // ('XXXFlags_' and 'XXXFlagsPrivate_')
+		#pragma clang diagnostic ignored \
+		    "-Wdeprecated-enum-enum-conversion"  // warning: bitwise operation between different enumeration types
+		                                         // ('XXXFlags_' and 'XXXFlagsPrivate_') is deprecated
+		#pragma clang diagnostic ignored \
+		    "-Wimplicit-int-float-conversion"                     // warning: implicit conversion from 'xxx' to 'float' may lose precision
+		#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"  // warning: 'xxx' is an unsafe pointer used for buffer access
+		#pragma clang diagnostic ignored \
+		    "-Wnontrivial-memaccess"  // warning: first argument in call to 'memset' is a pointer to non-trivially copyable type
+		#pragma clang diagnostic ignored "-Wswitch-default"  // warning: 'switch' missing 'default' label
+	#elif defined(__GNUC__)
+		#pragma GCC diagnostic ignored "-Wpragmas"      // warning: unknown option after '#pragma GCC diagnostic' kind
+		#pragma GCC diagnostic ignored "-Wfloat-equal"  // warning: comparing floating-point with '==' or '!=' is unsafe
+		#pragma GCC diagnostic ignored "-Wformat"  // warning: format '%p' expects argument of type 'int'/'void*', but argument X has type
+		                                           // 'unsigned int'/'ImGuiWindow*'
+		#pragma GCC diagnostic ignored "-Wformat-nonliteral"  // warning: format not a string literal, format string not checked
+		#pragma GCC diagnostic ignored \
+		    "-Wdeprecated-enum-enum-conversion"  // warning: bitwise operation between different enumeration types
+		                                         // ('XXXFlags_' and 'XXXFlagsPrivate_') is deprecated
+		#pragma GCC diagnostic ignored \
+		    "-Wdouble-promotion"  // warning: implicit conversion from 'float' to 'double' when passing argument to function
+		#pragma GCC diagnostic ignored "-Wstrict-overflow"  // warning: assuming signed overflow does not occur when simplifying division /
+		                                                    // ..when changing X +- C1 cmp C2 to X cmp C2 -+ C1
+		#pragma GCC diagnostic ignored \
+		    "-Wclass-memaccess"                       // [__GNUC__ >= 8] warning: 'memset/memcpy' clearing/writing an object of type 'xxxx'
+		                                              // with no trivial copy-assignment; use assignment or value-initialization instead
+		#pragma GCC diagnostic ignored "-Wcast-qual"  // warning: cast from type 'const xxxx *' to type 'xxxx *' casts away qualifiers
+	#endif
 
 //-------------------------------------------------------------------------
 // Data
@@ -136,19 +143,19 @@ static const ImS32 IM_S32_MIN = INT_MIN;  // (-2147483647 - 1), (0x80000000);
 static const ImS32 IM_S32_MAX = INT_MAX;  // (2147483647), (0x7FFFFFFF)
 static const ImU32 IM_U32_MIN = 0;
 static const ImU32 IM_U32_MAX = UINT_MAX;  // (0xFFFFFFFF)
-#ifdef LLONG_MIN
+	#ifdef LLONG_MIN
 static const ImS64 IM_S64_MIN = LLONG_MIN;  // (-9223372036854775807ll - 1ll);
 static const ImS64 IM_S64_MAX = LLONG_MAX;  // (9223372036854775807ll);
-#else
+	#else
 static const ImS64 IM_S64_MIN = -9223372036854775807LL - 1;
 static const ImS64 IM_S64_MAX = 9223372036854775807LL;
-#endif
+	#endif
 static const ImU64 IM_U64_MIN = 0;
-#ifdef ULLONG_MAX
+	#ifdef ULLONG_MAX
 static const ImU64 IM_U64_MAX = ULLONG_MAX;  // (0xFFFFFFFFFFFFFFFFull);
-#else
+	#else
 static const ImU64 IM_U64_MAX = (2ULL * 9223372036854775807LL + 1);
-#endif
+	#endif
 
 //-------------------------------------------------------------------------
 // [SECTION] Forward Declarations
@@ -615,11 +622,11 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
 	if (flatten_hovered_children)
 		g.HoveredWindow = window;
 
-#ifdef IMGUI_ENABLE_TEST_ENGINE
+	#ifdef IMGUI_ENABLE_TEST_ENGINE
 	// Alternate registration spot, for when caller didn't use ItemAdd()
 	if (g.LastItemData.ID != id)
 		IMGUI_TEST_ENGINE_ITEM_ADD(id, bb, NULL);
-#endif
+	#endif
 
 	bool pressed = false;
 	bool hovered = ItemHoverable(bb, id, item_flags);
@@ -1268,8 +1275,8 @@ void ImGui::Image(ImTextureRef tex_ref, const ImVec2& image_size, const ImVec2& 
 	ImageWithBg(tex_ref, image_size, uv0, uv1);
 }
 
-// 1.91.9 (February 2025) removed 'tint_col' and 'border_col' parameters, made border size not depend on color value. (#8131, #8238)
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+    // 1.91.9 (February 2025) removed 'tint_col' and 'border_col' parameters, made border size not depend on color value. (#8131, #8238)
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 void ImGui::Image(
     ImTextureRef tex_ref,
     const ImVec2& image_size,
@@ -1288,7 +1295,7 @@ void ImGui::Image(
 	PopStyleColor();
 	PopStyleVar();
 }
-#endif
+	#endif
 
 bool ImGui::ImageButtonEx(
     ImGuiID id,
@@ -1345,29 +1352,29 @@ bool ImGui::ImageButton(
 	return ImageButtonEx(window->GetID(str_id), tex_ref, image_size, uv0, uv1, bg_col, tint_col);
 }
 
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-// Legacy API obsoleted in 1.89. Two differences with new ImageButton()
-// - old ImageButton() used ImTextureID as item id (created issue with multiple buttons with same image, transient texture id values, opaque
-// computation of ID)
-// - new ImageButton() requires an explicit 'const char* str_id'
-// - old ImageButton() had frame_padding' override argument.
-// - new ImageButton() always use style.FramePadding.
-/*
-bool ImGui::ImageButton(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const
-ImVec4& bg_col, const ImVec4& tint_col)
-{
-    // Default to using texture ID as ID. User can still push string/integer prefixes.
-    PushID((ImTextureID)(intptr_t)user_texture_id);
-    if (frame_padding >= 0)
-        PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2((float)frame_padding, (float)frame_padding));
-    bool ret = ImageButton("", user_texture_id, size, uv0, uv1, bg_col, tint_col);
-    if (frame_padding >= 0)
-        PopStyleVar();
-    PopID();
-    return ret;
-}
-*/
-#endif  // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	// Legacy API obsoleted in 1.89. Two differences with new ImageButton()
+	// - old ImageButton() used ImTextureID as item id (created issue with multiple buttons with same image, transient texture id values,
+	// opaque computation of ID)
+	// - new ImageButton() requires an explicit 'const char* str_id'
+	// - old ImageButton() had frame_padding' override argument.
+	// - new ImageButton() always use style.FramePadding.
+	/*
+	bool ImGui::ImageButton(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, int frame_padding, const
+	ImVec4& bg_col, const ImVec4& tint_col)
+	{
+	    // Default to using texture ID as ID. User can still push string/integer prefixes.
+	    PushID((ImTextureID)(intptr_t)user_texture_id);
+	    if (frame_padding >= 0)
+	        PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2((float)frame_padding, (float)frame_padding));
+	    bool ret = ImageButton("", user_texture_id, size, uv0, uv1, bg_col, tint_col);
+	    if (frame_padding >= 0)
+	        PopStyleVar();
+	    PopID();
+	    return ret;
+	}
+	*/
+	#endif  // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
 bool ImGui::Checkbox(const char* label, bool* v)
 {
@@ -2005,9 +2012,9 @@ bool ImGui::SplitterBehavior(
 	// to allow caller of SplitterBehavior() to call SetItemAllowOverlap() after the item.
 	// Nowadays we would instead want to use SetNextItemAllowOverlap() before the item.
 	ImGuiButtonFlags button_flags = ImGuiButtonFlags_FlattenChildren;
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 	button_flags |= ImGuiButtonFlags_AllowOverlap;
-#endif
+	#endif
 
 	bool hovered, held;
 	ImRect bb_interact = bb;
@@ -2479,7 +2486,7 @@ bool ImGui::Combo(const char* label, int* current_item, const char* items_separa
 	return value_changed;
 }
 
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
 struct ImGuiGetNameFromIndexOldToNewCallbackData
 {
@@ -2517,7 +2524,7 @@ bool ImGui::Combo(
 	return Combo(label, current_item, ImGuiGetNameFromIndexOldToNewCallback, &old_to_new_data, items_count, popup_max_height_in_items);
 }
 
-#endif
+	#endif
 
 //-------------------------------------------------------------------------
 // [SECTION] Data Type and Data Formatting Helpers [Internal]
@@ -2539,13 +2546,13 @@ static const ImGuiDataTypeInfo GDataTypeInfo[] = {
     {sizeof(unsigned short), "U16", "%u", "%u"},
     {sizeof(int), "S32", "%d", "%d"},  // ImGuiDataType_S32
     {sizeof(unsigned int), "U32", "%u", "%u"},
-#ifdef _MSC_VER
+	#ifdef _MSC_VER
     {sizeof(ImS64), "S64", "%I64d", "%I64d"},  // ImGuiDataType_S64
     {sizeof(ImU64), "U64", "%I64u", "%I64u"},
-#else
+	#else
     {sizeof(ImS64), "S64", "%lld", "%lld"},  // ImGuiDataType_S64
     {sizeof(ImU64), "U64", "%llu", "%llu"},
-#endif
+	#endif
     {sizeof(float), "float", "%.3f", "%f"},   // ImGuiDataType_Float (float are promoted to double in va_arg)
     {sizeof(double), "double", "%f", "%lf"},  // ImGuiDataType_Double
     {sizeof(bool), "bool", "%d", "%d"},       // ImGuiDataType_Bool
@@ -4851,7 +4858,7 @@ bool ImGui::InputDouble(const char* label, double* v, double step, double step_f
 
 namespace ImStb
 {
-#include "imstb_textedit.h"
+	#include "imstb_textedit.h"
 }
 
 // If you want to use InputText() with std::string or any custom dynamic string type, use the wrapper in misc/cpp/imgui_stdlib.h/.cpp!
@@ -4965,8 +4972,8 @@ namespace ImStb
 		r->num_chars = (int) (text_remaining - (text + line_start_idx));
 	}
 
-#define IMSTB_TEXTEDIT_GETNEXTCHARINDEX IMSTB_TEXTEDIT_GETNEXTCHARINDEX_IMPL
-#define IMSTB_TEXTEDIT_GETPREVCHARINDEX IMSTB_TEXTEDIT_GETPREVCHARINDEX_IMPL
+	#define IMSTB_TEXTEDIT_GETNEXTCHARINDEX IMSTB_TEXTEDIT_GETNEXTCHARINDEX_IMPL
+	#define IMSTB_TEXTEDIT_GETPREVCHARINDEX IMSTB_TEXTEDIT_GETPREVCHARINDEX_IMPL
 
 	static int IMSTB_TEXTEDIT_GETNEXTCHARINDEX_IMPL(ImGuiInputTextState* obj, int idx)
 	{
@@ -5065,8 +5072,8 @@ namespace ImStb
 		else
 			return STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj, idx);
 	}
-#define STB_TEXTEDIT_MOVEWORDLEFT STB_TEXTEDIT_MOVEWORDLEFT_IMPL  // They need to be #define for stb_textedit.h
-#define STB_TEXTEDIT_MOVEWORDRIGHT STB_TEXTEDIT_MOVEWORDRIGHT_IMPL
+	#define STB_TEXTEDIT_MOVEWORDLEFT STB_TEXTEDIT_MOVEWORDLEFT_IMPL  // They need to be #define for stb_textedit.h
+	#define STB_TEXTEDIT_MOVEWORDRIGHT STB_TEXTEDIT_MOVEWORDRIGHT_IMPL
 
 	// Reimplementation of stb_textedit_move_line_start()/stb_textedit_move_line_end() which supports word-wrapping.
 	static int STB_TEXTEDIT_MOVELINESTART_IMPL(ImGuiInputTextState* obj, ImStb::STB_TexteditState* state, int cursor)
@@ -5138,8 +5145,8 @@ namespace ImStb
 		return cursor;
 	}
 
-#define STB_TEXTEDIT_MOVELINESTART STB_TEXTEDIT_MOVELINESTART_IMPL
-#define STB_TEXTEDIT_MOVELINEEND STB_TEXTEDIT_MOVELINEEND_IMPL
+	#define STB_TEXTEDIT_MOVELINESTART STB_TEXTEDIT_MOVELINESTART_IMPL
+	#define STB_TEXTEDIT_MOVELINEEND STB_TEXTEDIT_MOVELINEEND_IMPL
 
 	static void STB_TEXTEDIT_DELETECHARS(ImGuiInputTextState* obj, int pos, int n)
 	{
@@ -5186,29 +5193,29 @@ namespace ImStb
 		return new_text_len;
 	}
 
-// We don't use an enum so we can build even with conflicting symbols (if another user of stb_textedit.h leak their STB_TEXTEDIT_K_*
-// symbols)
-#define STB_TEXTEDIT_K_LEFT 0x200000       // keyboard input to move cursor left
-#define STB_TEXTEDIT_K_RIGHT 0x200001      // keyboard input to move cursor right
-#define STB_TEXTEDIT_K_UP 0x200002         // keyboard input to move cursor up
-#define STB_TEXTEDIT_K_DOWN 0x200003       // keyboard input to move cursor down
-#define STB_TEXTEDIT_K_LINESTART 0x200004  // keyboard input to move cursor to start of line
-#define STB_TEXTEDIT_K_LINEEND 0x200005    // keyboard input to move cursor to end of line
-#define STB_TEXTEDIT_K_TEXTSTART 0x200006  // keyboard input to move cursor to start of text
-#define STB_TEXTEDIT_K_TEXTEND 0x200007    // keyboard input to move cursor to end of text
-#define STB_TEXTEDIT_K_DELETE 0x200008     // keyboard input to delete selection or character under cursor
-#define STB_TEXTEDIT_K_BACKSPACE 0x200009  // keyboard input to delete selection or character left of cursor
-#define STB_TEXTEDIT_K_UNDO 0x20000A       // keyboard input to perform undo
-#define STB_TEXTEDIT_K_REDO 0x20000B       // keyboard input to perform redo
-#define STB_TEXTEDIT_K_WORDLEFT 0x20000C   // keyboard input to move cursor left one word
-#define STB_TEXTEDIT_K_WORDRIGHT 0x20000D  // keyboard input to move cursor right one word
-#define STB_TEXTEDIT_K_PGUP 0x20000E       // keyboard input to move cursor up a page
-#define STB_TEXTEDIT_K_PGDOWN 0x20000F     // keyboard input to move cursor down a page
-#define STB_TEXTEDIT_K_SHIFT 0x400000
+	// We don't use an enum so we can build even with conflicting symbols (if another user of stb_textedit.h leak their STB_TEXTEDIT_K_*
+	// symbols)
+	#define STB_TEXTEDIT_K_LEFT 0x200000       // keyboard input to move cursor left
+	#define STB_TEXTEDIT_K_RIGHT 0x200001      // keyboard input to move cursor right
+	#define STB_TEXTEDIT_K_UP 0x200002         // keyboard input to move cursor up
+	#define STB_TEXTEDIT_K_DOWN 0x200003       // keyboard input to move cursor down
+	#define STB_TEXTEDIT_K_LINESTART 0x200004  // keyboard input to move cursor to start of line
+	#define STB_TEXTEDIT_K_LINEEND 0x200005    // keyboard input to move cursor to end of line
+	#define STB_TEXTEDIT_K_TEXTSTART 0x200006  // keyboard input to move cursor to start of text
+	#define STB_TEXTEDIT_K_TEXTEND 0x200007    // keyboard input to move cursor to end of text
+	#define STB_TEXTEDIT_K_DELETE 0x200008     // keyboard input to delete selection or character under cursor
+	#define STB_TEXTEDIT_K_BACKSPACE 0x200009  // keyboard input to delete selection or character left of cursor
+	#define STB_TEXTEDIT_K_UNDO 0x20000A       // keyboard input to perform undo
+	#define STB_TEXTEDIT_K_REDO 0x20000B       // keyboard input to perform redo
+	#define STB_TEXTEDIT_K_WORDLEFT 0x20000C   // keyboard input to move cursor left one word
+	#define STB_TEXTEDIT_K_WORDRIGHT 0x20000D  // keyboard input to move cursor right one word
+	#define STB_TEXTEDIT_K_PGUP 0x20000E       // keyboard input to move cursor up a page
+	#define STB_TEXTEDIT_K_PGDOWN 0x20000F     // keyboard input to move cursor down a page
+	#define STB_TEXTEDIT_K_SHIFT 0x400000
 
-#define IMSTB_TEXTEDIT_IMPLEMENTATION
-#define IMSTB_TEXTEDIT_memmove memmove
-#include "imstb_textedit.h"
+	#define IMSTB_TEXTEDIT_IMPLEMENTATION
+	#define IMSTB_TEXTEDIT_memmove memmove
+	#include "imstb_textedit.h"
 
 	// stb_textedit internally allows for a single undo record to do addition and deletion, but somehow, calling
 	// the stb_textedit_paste() function creates two separate records, so we perform it manually. (FIXME: Report to nothings/stb?)
@@ -6859,7 +6866,7 @@ bool ImGui::InputTextEx(
 
 void ImGui::DebugNodeInputTextState(ImGuiInputTextState* state)
 {
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	ImGuiContext& g = *GImGui;
 	ImStb::STB_TexteditState* stb_state = state->Stb;
 	ImStb::StbUndoState* undo_state = &stb_state->undostate;
@@ -6911,9 +6918,9 @@ void ImGui::DebugNodeInputTextState(ImGuiInputTextState* state)
 		PopStyleVar();
 	}
 	EndChild();
-#else
+	#else
 	IM_UNUSED(state);
-#endif
+	#endif
 }
 
 //-------------------------------------------------------------------------
@@ -9151,13 +9158,13 @@ int ImGui::TypingSelectFindBestLeadingMatch(
 
 void ImGui::DebugNodeTypingSelectState(ImGuiTypingSelectState* data)
 {
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	Text("SearchBuffer = \"%s\"", data->SearchBuffer);
 	Text("SingleCharMode = %d, Size = %d, Lock = %d", data->Request.SingleCharMode, data->Request.SingleCharSize, data->SingleCharModeLock);
 	Text("LastRequest = time: %.2f, frame: %d", data->LastRequestTime, data->LastRequestFrame);
-#else
+	#else
 	IM_UNUSED(data);
-#endif
+	#endif
 }
 
 //-------------------------------------------------------------------------
@@ -9946,7 +9953,7 @@ void ImGui::MultiSelectAddSetRange(
 
 void ImGui::DebugNodeMultiSelectState(ImGuiMultiSelectState* storage)
 {
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 	const bool is_active =
 	    (storage->LastFrameActive >=
 	     GetFrameCount() - 2);  // Note that fully clipped early out scrolling tables will appear as inactive here.
@@ -9978,9 +9985,9 @@ void ImGui::DebugNodeMultiSelectState(ImGuiMultiSelectState* storage)
 	    storage->NavIdSelected);
 	Text("LastSelectionSize = %d", storage->LastSelectionSize);  // Provided by user
 	TreePop();
-#else
+	#else
 	IM_UNUSED(storage);
-#endif
+	#endif
 }
 
 //-------------------------------------------------------------------------
@@ -12420,7 +12427,7 @@ bool ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, ImG
 		}
 	}
 
-#if 0
+	#if 0
     if (hovered && g.HoveredIdNotActiveTimer > TOOLTIP_DELAY && bb.GetWidth() < tab->ContentWidth)
     {
         // Enlarge tab display when hovering
@@ -12428,7 +12435,7 @@ bool ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, ImG
         display_draw_list = GetForegroundDrawList(window);
         TabItemBackground(display_draw_list, bb, flags, GetColorU32(ImGuiCol_TitleBgActive));
     }
-#endif
+	#endif
 
 	// Render tab shape
 	const bool is_visible = (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_Visible) && !(flags & ImGuiTabItemFlags_Invisible);
@@ -12600,11 +12607,11 @@ void ImGui::TabItemLabelAndCloseButton(
 
 	// In Style V2 we'll have full override of all colors per state (e.g. focused, selected)
 	// But right now if you want to alter text color of tabs this is what you need to do.
-#if 0
+	#if 0
     const float backup_alpha = g.Style.Alpha;
     if (!is_contents_visible)
         g.Style.Alpha *= 0.7f;
-#endif
+	#endif
 
 	// Render text label (with clipping + alpha gradient) + unsaved marker
 	ImRect text_ellipsis_clip_bb(bb.Min.x + frame_padding.x, bb.Min.y + frame_padding.y, bb.Max.x - frame_padding.x, bb.Max.y);
@@ -12685,10 +12692,10 @@ void ImGui::TabItemLabelAndCloseButton(
 	LogSetNextTextDecoration("/", "\\");
 	RenderTextEllipsis(draw_list, text_ellipsis_clip_bb.Min, text_ellipsis_clip_bb.Max, ellipsis_max_x, label, NULL, &label_size);
 
-#if 0
+	#if 0
     if (!is_contents_visible)
         g.Style.Alpha = backup_alpha;
-#endif
+	#endif
 
 	if (out_just_closed)
 		*out_just_closed = close_button_pressed;

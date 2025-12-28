@@ -22,8 +22,8 @@
 #pragma once
 #include "imgui.h"  // IMGUI_IMPL_API
 #ifndef IMGUI_DISABLE
-#include <dxgiformat.h>  // DXGI_FORMAT
-#include <d3d12.h>       // D3D12_CPU_DESCRIPTOR_HANDLE
+	#include <dxgiformat.h>  // DXGI_FORMAT
+	#include <d3d12.h>       // D3D12_CPU_DESCRIPTOR_HANDLE
 
 // Initialization data, for ImGui_ImplDX12_Init()
 struct ImGui_ImplDX12_InitInfo
@@ -46,11 +46,11 @@ struct ImGui_ImplDX12_InitInfo
 	    ImGui_ImplDX12_InitInfo* info,
 	    D3D12_CPU_DESCRIPTOR_HANDLE cpu_desc_handle,
 	    D3D12_GPU_DESCRIPTOR_HANDLE gpu_desc_handle);
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 	D3D12_CPU_DESCRIPTOR_HANDLE
 	LegacySingleSrvCpuDescriptor;  // To facilitate transition from single descriptor to allocator callback, you may use those.
 	D3D12_GPU_DESCRIPTOR_HANDLE LegacySingleSrvGpuDescriptor;
-#endif
+	#endif
 
 	ImGui_ImplDX12_InitInfo() { memset(this, 0, sizeof(*this)); }
 };
@@ -61,7 +61,7 @@ IMGUI_IMPL_API void ImGui_ImplDX12_Shutdown();
 IMGUI_IMPL_API void ImGui_ImplDX12_NewFrame();
 IMGUI_IMPL_API void ImGui_ImplDX12_RenderDrawData(ImDrawData* draw_data, ID3D12GraphicsCommandList* graphics_command_list);
 
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 // Legacy initialization API Obsoleted in 1.91.5
 // - font_srv_cpu_desc_handle and font_srv_gpu_desc_handle are handles to a single SRV descriptor to use for the internal font texture, they
 // must be in 'srv_descriptor_heap'
@@ -73,7 +73,7 @@ IMGUI_IMPL_API bool ImGui_ImplDX12_Init(
     ID3D12DescriptorHeap* srv_descriptor_heap,
     D3D12_CPU_DESCRIPTOR_HANDLE font_srv_cpu_desc_handle,
     D3D12_GPU_DESCRIPTOR_HANDLE font_srv_gpu_desc_handle);
-#endif
+	#endif
 
 // Use if you want to reset your rendering device without losing Dear ImGui state.
 IMGUI_IMPL_API bool ImGui_ImplDX12_CreateDeviceObjects();

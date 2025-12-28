@@ -125,129 +125,132 @@ Index of this file:
 */
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
-#define _CRT_SECURE_NO_WARNINGS
+	#define _CRT_SECURE_NO_WARNINGS
 #endif
 
 #include "imgui.h"
 #ifndef IMGUI_DISABLE
 
-// System includes
-#include <ctype.h>   // toupper
-#include <limits.h>  // INT_MIN, INT_MAX
-#include <math.h>    // sqrtf, powf, cosf, sinf, floorf, ceilf
-#include <stdio.h>   // vsnprintf, sscanf, printf
-#include <stdlib.h>  // NULL, malloc, free, atoi
-#include <stdint.h>  // intptr_t
-#if !defined(_MSC_VER) || _MSC_VER >= 1800
-#include <inttypes.h>  // PRId64/PRIu64, not avail in some MinGW headers.
-#endif
-#ifdef __EMSCRIPTEN__
-#include <emscripten/version.h>  // __EMSCRIPTEN_major__ etc.
-#endif
+    // System includes
+	#include <ctype.h>   // toupper
+	#include <limits.h>  // INT_MIN, INT_MAX
+	#include <math.h>    // sqrtf, powf, cosf, sinf, floorf, ceilf
+	#include <stdio.h>   // vsnprintf, sscanf, printf
+	#include <stdlib.h>  // NULL, malloc, free, atoi
+	#include <stdint.h>  // intptr_t
+	#if !defined(_MSC_VER) || _MSC_VER >= 1800
+		#include <inttypes.h>  // PRId64/PRIu64, not avail in some MinGW headers.
+	#endif
+	#ifdef __EMSCRIPTEN__
+		#include <emscripten/version.h>  // __EMSCRIPTEN_major__ etc.
+	#endif
 
-// Visual Studio warnings
-#ifdef _MSC_VER
-#pragma warning(disable : 4127)  // condition expression is constant
-#pragma warning(disable : 4996)  // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
-#pragma warning( \
-    disable : 26451)  // [Static Analyzer] Arithmetic overflow : Using operator 'xxx' on a 4 byte value and then casting the result to an 8
-                      // byte value. Cast the value to the wider type before calling operator 'xxx' to avoid overflow(io.2).
-#endif
+    // Visual Studio warnings
+	#ifdef _MSC_VER
+		#pragma warning(disable : 4127)  // condition expression is constant
+		#pragma warning(disable : 4996)  // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
+		#pragma warning( \
+		    disable      \
+		    : 26451)  // [Static Analyzer] Arithmetic overflow : Using operator 'xxx' on a 4 byte value and then casting the result to an 8
+		              // byte value. Cast the value to the wider type before calling operator 'xxx' to avoid overflow(io.2).
+	#endif
 
-// Clang/GCC warnings with -Weverything
-#if defined(__clang__)
-#if __has_warning("-Wunknown-warning-option")
-#pragma clang diagnostic ignored "-Wunknown-warning-option"  // warning: unknown warning group 'xxx'                     // not all warnings
-                                                             // are known by all Clang versions and they tend to be rename-happy.. so
-                                                             // ignoring warnings triggers new warnings on some configuration. Great!
-#endif
-#pragma clang diagnostic ignored "-Wunknown-pragmas"  // warning: unknown warning group 'xxx'
-#pragma clang diagnostic ignored \
-    "-Wold-style-cast"  // warning: use of old-style cast                           // yes, they are more terse.
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"  // warning: 'xx' is deprecated: The POSIX name for this..   // for strdup used
-                                                              // in demo code (so user can copy & paste the code)
-#pragma clang diagnostic ignored "-Wint-to-void-pointer-cast"  // warning: cast to 'void *' from smaller integer type
-#pragma clang diagnostic ignored "-Wformat"           // warning: format specifies type 'int' but the argument has type 'unsigned int'
-#pragma clang diagnostic ignored "-Wformat-security"  // warning: format string is not a string literal
-#pragma clang diagnostic ignored \
-    "-Wexit-time-destructors"  // warning: declaration requires an exit-time destructor    // exit-time destruction order is undefined. if
-                               // MemFree() leads to users code that has been disabled before exit it might cause problems. ImGui coding
-                               // style welcomes static/globals.
-#pragma clang diagnostic ignored "-Wunused-macros"  // warning: macro is not used                               // we define
-                                                    // snprintf/vsnprintf on Windows so they are available, but not always used.
-#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"  // warning: zero as null pointer constant                   // some
-                                                                    // standard header variations use #define NULL 0
-#pragma clang diagnostic ignored \
-    "-Wdouble-promotion"  // warning: implicit conversion from 'float' to 'double' when passing argument to function  // using printf() is a
-                          // misery with this as C++ va_arg ellipsis changes float to double.
-#pragma clang diagnostic ignored "-Wreserved-id-macro"              // warning: macro name is a reserved identifier
-#pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"  // warning: implicit conversion from 'xxx' to 'float' may lose precision
-#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"            // warning: 'xxx' is an unsafe pointer used for buffer access
-#pragma clang diagnostic ignored "-Wswitch-default"                 // warning: 'switch' missing 'default' label
-#elif defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wpragmas"              // warning: unknown option after '#pragma GCC diagnostic' kind
-#pragma GCC diagnostic ignored "-Wfloat-equal"          // warning: comparing floating-point with '==' or '!=' is unsafe
-#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"  // warning: cast to pointer from integer of different size
-#pragma GCC diagnostic ignored \
-    "-Wformat"  // warning: format '%p' expects argument of type 'int'/'void*', but argument X has type 'unsigned int'/'ImGuiWindow*'
-#pragma GCC diagnostic ignored "-Wformat-security"  // warning: format string is not a string literal (potentially insecure)
-#pragma GCC diagnostic ignored \
-    "-Wdouble-promotion"                       // warning: implicit conversion from 'float' to 'double' when passing argument to function
-#pragma GCC diagnostic ignored "-Wconversion"  // warning: conversion to 'xxxx' from 'xxxx' may alter its value
-#pragma GCC diagnostic ignored "-Wmisleading-indentation"  // [__GNUC__ >= 6] warning: this 'if' clause does not guard this statement //
-                                                           // GCC 6.0+ only. See #883 on GitHub.
-#pragma GCC diagnostic ignored "-Wstrict-overflow"  // warning: assuming signed overflow does not occur when simplifying division / ..when
-                                                    // changing X +- C1 cmp C2 to X cmp C2 -+ C1
-#pragma GCC diagnostic ignored "-Wcast-qual"        // warning: cast from type 'const xxxx *' to type 'xxxx *' casts away qualifiers
-#endif
+    // Clang/GCC warnings with -Weverything
+	#if defined(__clang__)
+		#if __has_warning("-Wunknown-warning-option")
+			#pragma clang diagnostic ignored \
+			    "-Wunknown-warning-option"  // warning: unknown warning group 'xxx'                     // not all warnings
+			                                // are known by all Clang versions and they tend to be rename-happy.. so
+			                                // ignoring warnings triggers new warnings on some configuration. Great!
+		#endif
+		#pragma clang diagnostic ignored "-Wunknown-pragmas"  // warning: unknown warning group 'xxx'
+		#pragma clang diagnostic ignored \
+		    "-Wold-style-cast"  // warning: use of old-style cast                           // yes, they are more terse.
+		#pragma clang diagnostic ignored "-Wdeprecated-declarations"   // warning: 'xx' is deprecated: The POSIX name for this..   // for
+		                                                               // strdup used in demo code (so user can copy & paste the code)
+		#pragma clang diagnostic ignored "-Wint-to-void-pointer-cast"  // warning: cast to 'void *' from smaller integer type
+		#pragma clang diagnostic ignored "-Wformat"  // warning: format specifies type 'int' but the argument has type 'unsigned int'
+		#pragma clang diagnostic ignored "-Wformat-security"  // warning: format string is not a string literal
+		#pragma clang diagnostic ignored \
+		    "-Wexit-time-destructors"  // warning: declaration requires an exit-time destructor    // exit-time destruction order is
+		                               // undefined. if MemFree() leads to users code that has been disabled before exit it might cause
+		                               // problems. ImGui coding style welcomes static/globals.
+		#pragma clang diagnostic ignored "-Wunused-macros"  // warning: macro is not used                               // we define
+		                                                    // snprintf/vsnprintf on Windows so they are available, but not always used.
+		#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"  // warning: zero as null pointer constant                   //
+		                                                                    // some standard header variations use #define NULL 0
+		#pragma clang diagnostic ignored \
+		    "-Wdouble-promotion"  // warning: implicit conversion from 'float' to 'double' when passing argument to function  // using
+		                          // printf() is a misery with this as C++ va_arg ellipsis changes float to double.
+		#pragma clang diagnostic ignored "-Wreserved-id-macro"  // warning: macro name is a reserved identifier
+		#pragma clang diagnostic ignored \
+		    "-Wimplicit-int-float-conversion"                     // warning: implicit conversion from 'xxx' to 'float' may lose precision
+		#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"  // warning: 'xxx' is an unsafe pointer used for buffer access
+		#pragma clang diagnostic ignored "-Wswitch-default"       // warning: 'switch' missing 'default' label
+	#elif defined(__GNUC__)
+		#pragma GCC diagnostic ignored "-Wpragmas"              // warning: unknown option after '#pragma GCC diagnostic' kind
+		#pragma GCC diagnostic ignored "-Wfloat-equal"          // warning: comparing floating-point with '==' or '!=' is unsafe
+		#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"  // warning: cast to pointer from integer of different size
+		#pragma GCC diagnostic ignored "-Wformat"  // warning: format '%p' expects argument of type 'int'/'void*', but argument X has type
+		                                           // 'unsigned int'/'ImGuiWindow*'
+		#pragma GCC diagnostic ignored "-Wformat-security"  // warning: format string is not a string literal (potentially insecure)
+		#pragma GCC diagnostic ignored \
+		    "-Wdouble-promotion"  // warning: implicit conversion from 'float' to 'double' when passing argument to function
+		#pragma GCC diagnostic ignored "-Wconversion"              // warning: conversion to 'xxxx' from 'xxxx' may alter its value
+		#pragma GCC diagnostic ignored "-Wmisleading-indentation"  // [__GNUC__ >= 6] warning: this 'if' clause does not guard this
+		                                                           // statement // GCC 6.0+ only. See #883 on GitHub.
+		#pragma GCC diagnostic ignored "-Wstrict-overflow"  // warning: assuming signed overflow does not occur when simplifying division /
+		                                                    // ..when changing X +- C1 cmp C2 to X cmp C2 -+ C1
+		#pragma GCC diagnostic ignored "-Wcast-qual"        // warning: cast from type 'const xxxx *' to type 'xxxx *' casts away qualifiers
+	#endif
 
-// Play it nice with Windows users (Update: May 2018, Notepad now supports Unix-style carriage returns!)
-#ifdef _WIN32
-#define IM_NEWLINE "\r\n"
-#else
-#define IM_NEWLINE "\n"
-#endif
+    // Play it nice with Windows users (Update: May 2018, Notepad now supports Unix-style carriage returns!)
+	#ifdef _WIN32
+		#define IM_NEWLINE "\r\n"
+	#else
+		#define IM_NEWLINE "\n"
+	#endif
 
-// Helpers
-#if defined(_MSC_VER) && !defined(snprintf)
-#define snprintf _snprintf
-#endif
-#if defined(_MSC_VER) && !defined(vsnprintf)
-#define vsnprintf _vsnprintf
-#endif
+    // Helpers
+	#if defined(_MSC_VER) && !defined(snprintf)
+		#define snprintf _snprintf
+	#endif
+	#if defined(_MSC_VER) && !defined(vsnprintf)
+		#define vsnprintf _vsnprintf
+	#endif
 
-// Format specifiers for 64-bit values (hasn't been decently standardized before VS2013)
-#if !defined(PRId64) && defined(_MSC_VER)
-#define PRId64 "I64d"
-#define PRIu64 "I64u"
-#elif !defined(PRId64)
-#define PRId64 "lld"
-#define PRIu64 "llu"
-#endif
+    // Format specifiers for 64-bit values (hasn't been decently standardized before VS2013)
+	#if !defined(PRId64) && defined(_MSC_VER)
+		#define PRId64 "I64d"
+		#define PRIu64 "I64u"
+	#elif !defined(PRId64)
+		#define PRId64 "lld"
+		#define PRIu64 "llu"
+	#endif
 
-// Helpers macros
-// We normally try to not use many helpers in imgui_demo.cpp in order to make code easier to copy and paste,
-// but making an exception here as those are largely simplifying code...
-// In other imgui sources we can use nicer internal functions from imgui_internal.h (ImMin/ImMax) but not in the demo.
-#define IM_MIN(A, B) (((A) < (B)) ? (A) : (B))
-#define IM_MAX(A, B) (((A) >= (B)) ? (A) : (B))
-#define IM_CLAMP(V, MN, MX) ((V) < (MN) ? (MN) : (V) > (MX) ? (MX) : (V))
+    // Helpers macros
+    // We normally try to not use many helpers in imgui_demo.cpp in order to make code easier to copy and paste,
+    // but making an exception here as those are largely simplifying code...
+    // In other imgui sources we can use nicer internal functions from imgui_internal.h (ImMin/ImMax) but not in the demo.
+	#define IM_MIN(A, B) (((A) < (B)) ? (A) : (B))
+	#define IM_MAX(A, B) (((A) >= (B)) ? (A) : (B))
+	#define IM_CLAMP(V, MN, MX) ((V) < (MN) ? (MN) : (V) > (MX) ? (MX) : (V))
 
-// Enforce cdecl calling convention for functions called by the standard library,
-// in case compilation settings changed the default to e.g. __vectorcall
-#ifndef IMGUI_CDECL
-#ifdef _MSC_VER
-#define IMGUI_CDECL __cdecl
-#else
-#define IMGUI_CDECL
-#endif
-#endif
+    // Enforce cdecl calling convention for functions called by the standard library,
+    // in case compilation settings changed the default to e.g. __vectorcall
+	#ifndef IMGUI_CDECL
+		#ifdef _MSC_VER
+			#define IMGUI_CDECL __cdecl
+		#else
+			#define IMGUI_CDECL
+		#endif
+	#endif
 
 //-----------------------------------------------------------------------------
 // [SECTION] Forward Declarations
 //-----------------------------------------------------------------------------
 
-#if !defined(IMGUI_DISABLE_DEMO_WINDOWS)
+	#if !defined(IMGUI_DISABLE_DEMO_WINDOWS)
 
 // Forward Declarations
 struct ImGuiDemoWindowData;
@@ -306,12 +309,12 @@ extern ImGuiDemoMarkerCallback GImGuiDemoMarkerCallback;
 extern void* GImGuiDemoMarkerCallbackUserData;
 ImGuiDemoMarkerCallback GImGuiDemoMarkerCallback = NULL;
 void* GImGuiDemoMarkerCallbackUserData = NULL;
-#define IMGUI_DEMO_MARKER(section)                                                                           \
-	do                                                                                                       \
-	{                                                                                                        \
-		if (GImGuiDemoMarkerCallback != NULL)                                                                \
-			GImGuiDemoMarkerCallback("imgui_demo.cpp", __LINE__, section, GImGuiDemoMarkerCallbackUserData); \
-	} while (0)
+		#define IMGUI_DEMO_MARKER(section)                                                                           \
+			do                                                                                                       \
+			{                                                                                                        \
+				if (GImGuiDemoMarkerCallback != NULL)                                                                \
+					GImGuiDemoMarkerCallback("imgui_demo.cpp", __LINE__, section, GImGuiDemoMarkerCallbackUserData); \
+			} while (0)
 
 //-----------------------------------------------------------------------------
 // [SECTION] Demo Window / ShowDemoWindow()
@@ -848,11 +851,11 @@ static void DemoWindowMenuBar(ImGuiDemoWindowData* demo_data)
 		{
 			IMGUI_DEMO_MARKER("Menu/Tools");
 			ImGuiIO& io = ImGui::GetIO();
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+		#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 			const bool has_debug_tools = true;
-#else
+		#else
 			const bool has_debug_tools = false;
-#endif
+		#endif
 			ImGui::MenuItem("Metrics/Debugger", NULL, &demo_data->ShowMetrics, has_debug_tools);
 			if (ImGui::BeginMenu("Debug Options"))
 			{
@@ -1633,28 +1636,28 @@ static void DemoWindowWidgetsDataTypes()
 	IMGUI_DEMO_MARKER("Widgets/Data Types");
 	if (ImGui::TreeNode("Data Types"))
 	{
-// DragScalar/InputScalar/SliderScalar functions allow various data types
-// - signed/unsigned
-// - 8/16/32/64-bits
-// - integer/float/double
-// To avoid polluting the public API with all possible combinations, we use the ImGuiDataType enum
-// to pass the type, and passing all arguments by pointer.
-// This is the reason the test code below creates local variables to hold "zero" "one" etc. for each type.
-// In practice, if you frequently use a given type that is not covered by the normal API entry points,
-// you can wrap it yourself inside a 1 line function which can take typed argument as value instead of void*,
-// and then pass their address to the generic function. For example:
-//   bool MySliderU64(const char *label, u64* value, u64 min = 0, u64 max = 0, const char* format = "%lld")
-//   {
-//      return SliderScalar(label, ImGuiDataType_U64, value, &min, &max, format);
-//   }
+		// DragScalar/InputScalar/SliderScalar functions allow various data types
+		// - signed/unsigned
+		// - 8/16/32/64-bits
+		// - integer/float/double
+		// To avoid polluting the public API with all possible combinations, we use the ImGuiDataType enum
+		// to pass the type, and passing all arguments by pointer.
+		// This is the reason the test code below creates local variables to hold "zero" "one" etc. for each type.
+		// In practice, if you frequently use a given type that is not covered by the normal API entry points,
+		// you can wrap it yourself inside a 1 line function which can take typed argument as value instead of void*,
+		// and then pass their address to the generic function. For example:
+		//   bool MySliderU64(const char *label, u64* value, u64 min = 0, u64 max = 0, const char* format = "%lld")
+		//   {
+		//      return SliderScalar(label, ImGuiDataType_U64, value, &min, &max, format);
+		//   }
 
-// Setup limits (as helper variables so we can take their address, as explained above)
-// Note: SliderScalar() functions have a maximum usable range of half the natural type maximum, hence the /2.
-#ifndef LLONG_MIN
+		// Setup limits (as helper variables so we can take their address, as explained above)
+		// Note: SliderScalar() functions have a maximum usable range of half the natural type maximum, hence the /2.
+		#ifndef LLONG_MIN
 		ImS64 LLONG_MIN = -9223372036854775807LL - 1;
 		ImS64 LLONG_MAX = 9223372036854775807LL;
 		ImU64 ULLONG_MAX = (2ULL * 9223372036854775807LL + 1);
-#endif
+		#endif
 		const char s8_zero = 0, s8_one = 1, s8_fifty = 50, s8_min = -128, s8_max = 127;
 		const ImU8 u8_zero = 0, u8_one = 1, u8_fifty = 50, u8_min = 0, u8_max = 255;
 		const short s16_zero = 0, s16_one = 1, s16_fifty = 50, s16_min = -32768, s16_max = 32767;
@@ -8419,20 +8422,20 @@ static void DemoWindowTables()
 			if (show_headers)
 				ImGui::TableHeadersRow();
 
-			// Show data
-			// FIXME-TABLE FIXME-NAV: How we can get decent up/down even though we have the buttons here?
-#if 1
+				// Show data
+				// FIXME-TABLE FIXME-NAV: How we can get decent up/down even though we have the buttons here?
+		#if 1
 			// Demonstrate using clipper for large vertical lists
 			ImGuiListClipper clipper;
 			clipper.Begin(items.Size);
 			while (clipper.Step())
 			{
 				for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++)
-#else
+		#else
 			// Without clipper
 			{
 				for (int row_n = 0; row_n < items.Size; row_n++)
-#endif
+		#endif
 				{
 					MyItem* item = &items[row_n];
 					// if (!filter.PassFilter(item->Name))
@@ -9250,79 +9253,79 @@ void ImGui::ShowAboutWindow(bool* p_open)
 		    (int) sizeof(ImDrawIdx),
 		    (int) sizeof(ImDrawVert));
 		ImGui::Text("define: __cplusplus=%d", (int) __cplusplus);
-#ifdef IMGUI_ENABLE_TEST_ENGINE
+		#ifdef IMGUI_ENABLE_TEST_ENGINE
 		ImGui::Text("define: IMGUI_ENABLE_TEST_ENGINE");
-#endif
-#ifdef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+		#endif
+		#ifdef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 		ImGui::Text("define: IMGUI_DISABLE_OBSOLETE_FUNCTIONS");
-#endif
-#ifdef IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS
+		#endif
+		#ifdef IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS
 		ImGui::Text("define: IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS");
-#endif
-#ifdef IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS
+		#endif
+		#ifdef IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS
 		ImGui::Text("define: IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS");
-#endif
-#ifdef IMGUI_DISABLE_WIN32_FUNCTIONS
+		#endif
+		#ifdef IMGUI_DISABLE_WIN32_FUNCTIONS
 		ImGui::Text("define: IMGUI_DISABLE_WIN32_FUNCTIONS");
-#endif
-#ifdef IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
+		#endif
+		#ifdef IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
 		ImGui::Text("define: IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS");
-#endif
-#ifdef IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
+		#endif
+		#ifdef IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
 		ImGui::Text("define: IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS");
-#endif
-#ifdef IMGUI_DISABLE_DEFAULT_MATH_FUNCTIONS
+		#endif
+		#ifdef IMGUI_DISABLE_DEFAULT_MATH_FUNCTIONS
 		ImGui::Text("define: IMGUI_DISABLE_DEFAULT_MATH_FUNCTIONS");
-#endif
-#ifdef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
+		#endif
+		#ifdef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 		ImGui::Text("define: IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS");
-#endif
-#ifdef IMGUI_DISABLE_FILE_FUNCTIONS
+		#endif
+		#ifdef IMGUI_DISABLE_FILE_FUNCTIONS
 		ImGui::Text("define: IMGUI_DISABLE_FILE_FUNCTIONS");
-#endif
-#ifdef IMGUI_DISABLE_DEFAULT_ALLOCATORS
+		#endif
+		#ifdef IMGUI_DISABLE_DEFAULT_ALLOCATORS
 		ImGui::Text("define: IMGUI_DISABLE_DEFAULT_ALLOCATORS");
-#endif
-#ifdef IMGUI_USE_BGRA_PACKED_COLOR
+		#endif
+		#ifdef IMGUI_USE_BGRA_PACKED_COLOR
 		ImGui::Text("define: IMGUI_USE_BGRA_PACKED_COLOR");
-#endif
-#ifdef _WIN32
+		#endif
+		#ifdef _WIN32
 		ImGui::Text("define: _WIN32");
-#endif
-#ifdef _WIN64
+		#endif
+		#ifdef _WIN64
 		ImGui::Text("define: _WIN64");
-#endif
-#ifdef __linux__
+		#endif
+		#ifdef __linux__
 		ImGui::Text("define: __linux__");
-#endif
-#ifdef __APPLE__
+		#endif
+		#ifdef __APPLE__
 		ImGui::Text("define: __APPLE__");
-#endif
-#ifdef _MSC_VER
+		#endif
+		#ifdef _MSC_VER
 		ImGui::Text("define: _MSC_VER=%d", _MSC_VER);
-#endif
-#ifdef _MSVC_LANG
+		#endif
+		#ifdef _MSVC_LANG
 		ImGui::Text("define: _MSVC_LANG=%d", (int) _MSVC_LANG);
-#endif
-#ifdef __MINGW32__
+		#endif
+		#ifdef __MINGW32__
 		ImGui::Text("define: __MINGW32__");
-#endif
-#ifdef __MINGW64__
+		#endif
+		#ifdef __MINGW64__
 		ImGui::Text("define: __MINGW64__");
-#endif
-#ifdef __GNUC__
+		#endif
+		#ifdef __GNUC__
 		ImGui::Text("define: __GNUC__=%d", (int) __GNUC__);
-#endif
-#ifdef __clang_version__
+		#endif
+		#ifdef __clang_version__
 		ImGui::Text("define: __clang_version__=%s", __clang_version__);
-#endif
-#ifdef __EMSCRIPTEN__
+		#endif
+		#ifdef __EMSCRIPTEN__
 		ImGui::Text("define: __EMSCRIPTEN__");
 		ImGui::Text("Emscripten: %d.%d.%d", __EMSCRIPTEN_major__, __EMSCRIPTEN_minor__, __EMSCRIPTEN_tiny__);
-#endif
-#ifdef NDEBUG
+		#endif
+		#ifdef NDEBUG
 		ImGui::Text("define: NDEBUG");
-#endif
+		#endif
 
 		// Heuristic to detect no-op IM_ASSERT() macros
 		// - This is designed so people opening bug reports would convey and notice that they have disabled asserts for Dear ImGui code.
@@ -9751,12 +9754,12 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
 				if (!filter.PassFilter(name))
 					continue;
 				PushID(i);
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+		#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 				if (Button("?"))
 					DebugFlashStyleColor((ImGuiCol) i);
 				SetItemTooltip("Flash given color to identify places where it is used.");
 				SameLine();
-#endif
+		#endif
 				ColorEdit4("##color", (float*) &style.Colors[i], ImGuiColorEditFlags_AlphaBar | alpha_flags);
 				if (memcmp(&style.Colors[i], &ref->Colors[i], sizeof(ImVec4)) != 0)
 				{
@@ -12395,8 +12398,8 @@ void ShowExampleAppAssetsBrowser(bool* p_open)
 	assets_browser.Draw("Example: Assets Browser", p_open);
 }
 
-// End of Demo code
-#else
+	// End of Demo code
+	#else
 
 void ImGui::ShowAboutWindow(bool*) {}
 void ImGui::ShowDemoWindow(bool*) {}
@@ -12407,6 +12410,6 @@ bool ImGui::ShowStyleSelector(const char*)
 	return false;
 }
 
-#endif  // #ifndef IMGUI_DISABLE_DEMO_WINDOWS
+	#endif  // #ifndef IMGUI_DISABLE_DEMO_WINDOWS
 
 #endif  // #ifndef IMGUI_DISABLE

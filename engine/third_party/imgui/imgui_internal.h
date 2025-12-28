@@ -50,91 +50,97 @@ Index of this file:
 // [SECTION] Header mess
 //-----------------------------------------------------------------------------
 
-#ifndef IMGUI_VERSION
-#include "imgui.h"
-#endif
+	#ifndef IMGUI_VERSION
+		#include "imgui.h"
+	#endif
 
-#include <stdio.h>   // FILE*, sscanf
-#include <stdlib.h>  // NULL, malloc, free, qsort, atoi, atof
-#include <math.h>    // sqrtf, fabsf, fmodf, powf, floorf, ceilf, cosf, sinf
-#include <limits.h>  // INT_MIN, INT_MAX
+	#include <stdio.h>   // FILE*, sscanf
+	#include <stdlib.h>  // NULL, malloc, free, qsort, atoi, atof
+	#include <math.h>    // sqrtf, fabsf, fmodf, powf, floorf, ceilf, cosf, sinf
+	#include <limits.h>  // INT_MIN, INT_MAX
 
-// Enable SSE intrinsics if available
-#if (defined __SSE__ || defined __x86_64__ || defined _M_X64 || (defined(_M_IX86_FP) && (_M_IX86_FP >= 1))) && !defined(IMGUI_DISABLE_SSE)
-#define IMGUI_ENABLE_SSE
-#include <immintrin.h>
-#if (defined __AVX__ || defined __SSE4_2__)
-#define IMGUI_ENABLE_SSE4_2
-#include <nmmintrin.h>
-#endif
-#endif
-// Emscripten has partial SSE 4.2 support where _mm_crc32_u32 is not available. See https://emscripten.org/docs/porting/simd.html#id11 and
-// #8213
-#if defined(IMGUI_ENABLE_SSE4_2) && !defined(IMGUI_USE_LEGACY_CRC32_ADLER) && !defined(__EMSCRIPTEN__)
-#define IMGUI_ENABLE_SSE4_2_CRC
-#endif
+    // Enable SSE intrinsics if available
+	#if (defined __SSE__ || defined __x86_64__ || defined _M_X64 || (defined(_M_IX86_FP) && (_M_IX86_FP >= 1))) && \
+	    !defined(IMGUI_DISABLE_SSE)
+		#define IMGUI_ENABLE_SSE
+		#include <immintrin.h>
+		#if (defined __AVX__ || defined __SSE4_2__)
+			#define IMGUI_ENABLE_SSE4_2
+			#include <nmmintrin.h>
+		#endif
+	#endif
+    // Emscripten has partial SSE 4.2 support where _mm_crc32_u32 is not available. See https://emscripten.org/docs/porting/simd.html#id11
+    // and #8213
+	#if defined(IMGUI_ENABLE_SSE4_2) && !defined(IMGUI_USE_LEGACY_CRC32_ADLER) && !defined(__EMSCRIPTEN__)
+		#define IMGUI_ENABLE_SSE4_2_CRC
+	#endif
 
-// Visual Studio warnings
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4251)   // class 'xxx' needs to have dll-interface to be used by clients of struct 'xxx' // when IMGUI_API is set
-                                  // to__declspec(dllexport)
-#pragma warning(disable : 26495)  // [Static Analyzer] Variable 'XXX' is uninitialized. Always initialize a member variable (type.6).
-#pragma warning(disable : 26812)  // [Static Analyzer] The enum type 'xxx' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
-#if defined(_MSC_VER) && _MSC_VER >= 1922  // MSVC 2019 16.2 or later
-#pragma warning(disable : 5054)            // operator '|': deprecated between enumerations of different types
-#endif
-#endif
+    // Visual Studio warnings
+	#ifdef _MSC_VER
+		#pragma warning(push)
+		#pragma warning(disable : 4251)  // class 'xxx' needs to have dll-interface to be used by clients of struct 'xxx' // when IMGUI_API
+		                                 // is set to__declspec(dllexport)
+		#pragma warning( \
+		    disable : 26495)  // [Static Analyzer] Variable 'XXX' is uninitialized. Always initialize a member variable (type.6).
+		#pragma warning(disable : 26812)  // [Static Analyzer] The enum type 'xxx' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+		#if defined(_MSC_VER) && _MSC_VER >= 1922  // MSVC 2019 16.2 or later
+			#pragma warning(disable : 5054)        // operator '|': deprecated between enumerations of different types
+		#endif
+	#endif
 
-// Clang/GCC warnings with -Weverything
-#if defined(__clang__)
-#pragma clang diagnostic push
-#if __has_warning("-Wunknown-warning-option")
-#pragma clang diagnostic ignored "-Wunknown-warning-option"  // warning: unknown warning group 'xxx'
-#endif
-#pragma clang diagnostic ignored "-Wunknown-pragmas"  // warning: unknown warning group 'xxx'
-#pragma clang diagnostic ignored "-Wfloat-equal"      // warning: comparing floating point with == or != is unsafe // storing and comparing
-                                                      // against same constants ok, for ImFloor()
-#pragma clang diagnostic ignored "-Wold-style-cast"   // warning: use of old-style cast
-#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"  // warning: zero as null pointer constant
-#pragma clang diagnostic ignored \
-    "-Wdouble-promotion"  // warning: implicit conversion from 'float' to 'double' when passing argument to function
-#pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"  // warning: implicit conversion from 'xxx' to 'float' may lose precision
-#pragma clang diagnostic ignored "-Wmissing-noreturn"               // warning: function 'xxx' could be declared with attribute 'noreturn'
-#pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"  // warning: bitwise operation between different enumeration types
-                                                                      // ('XXXFlags_' and 'XXXFlagsPrivate_') is deprecated
-#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"              // warning: 'xxx' is an unsafe pointer used for buffer access
-#pragma clang diagnostic ignored \
-    "-Wnontrivial-memaccess"  // warning: first argument in call to 'memset' is a pointer to non-trivially copyable type
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpragmas"          // warning: unknown option after '#pragma GCC diagnostic' kind
-#pragma GCC diagnostic ignored "-Wfloat-equal"      // warning: comparing floating-point with '==' or '!=' is unsafe
-#pragma GCC diagnostic ignored "-Wclass-memaccess"  // [__GNUC__ >= 8] warning: 'memset/memcpy' clearing/writing an object of type 'xxxx'
-                                                    // with no trivial copy-assignment; use assignment or value-initialization instead
-#pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"  // warning: bitwise operation between different enumeration types
-                                                                    // ('XXXFlags_' and 'XXXFlagsPrivate_') is deprecated
-#endif
+    // Clang/GCC warnings with -Weverything
+	#if defined(__clang__)
+		#pragma clang diagnostic push
+		#if __has_warning("-Wunknown-warning-option")
+			#pragma clang diagnostic ignored "-Wunknown-warning-option"  // warning: unknown warning group 'xxx'
+		#endif
+		#pragma clang diagnostic ignored "-Wunknown-pragmas"  // warning: unknown warning group 'xxx'
+		#pragma clang diagnostic ignored "-Wfloat-equal"      // warning: comparing floating point with == or != is unsafe // storing and
+	                                                          // comparing against same constants ok, for ImFloor()
+		#pragma clang diagnostic ignored "-Wold-style-cast"   // warning: use of old-style cast
+		#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"  // warning: zero as null pointer constant
+		#pragma clang diagnostic ignored \
+		    "-Wdouble-promotion"  // warning: implicit conversion from 'float' to 'double' when passing argument to function
+		#pragma clang diagnostic ignored \
+		    "-Wimplicit-int-float-conversion"                  // warning: implicit conversion from 'xxx' to 'float' may lose precision
+		#pragma clang diagnostic ignored "-Wmissing-noreturn"  // warning: function 'xxx' could be declared with attribute 'noreturn'
+		#pragma clang diagnostic ignored \
+		    "-Wdeprecated-enum-enum-conversion"                   // warning: bitwise operation between different enumeration types
+		                                                          // ('XXXFlags_' and 'XXXFlagsPrivate_') is deprecated
+		#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"  // warning: 'xxx' is an unsafe pointer used for buffer access
+		#pragma clang diagnostic ignored \
+		    "-Wnontrivial-memaccess"  // warning: first argument in call to 'memset' is a pointer to non-trivially copyable type
+	#elif defined(__GNUC__)
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Wpragmas"      // warning: unknown option after '#pragma GCC diagnostic' kind
+		#pragma GCC diagnostic ignored "-Wfloat-equal"  // warning: comparing floating-point with '==' or '!=' is unsafe
+		#pragma GCC diagnostic ignored \
+		    "-Wclass-memaccess"  // [__GNUC__ >= 8] warning: 'memset/memcpy' clearing/writing an object of type 'xxxx'
+		                         // with no trivial copy-assignment; use assignment or value-initialization instead
+		#pragma GCC diagnostic ignored \
+		    "-Wdeprecated-enum-enum-conversion"  // warning: bitwise operation between different enumeration types
+		                                         // ('XXXFlags_' and 'XXXFlagsPrivate_') is deprecated
+	#endif
 
-// In 1.89.4, we moved the implementation of "courtesy maths operators" from imgui_internal.h in imgui.h
-// As they are frequently requested, we do not want to encourage to many people using imgui_internal.h
-#if defined(IMGUI_DEFINE_MATH_OPERATORS) && !defined(IMGUI_DEFINE_MATH_OPERATORS_IMPLEMENTED)
-#error Please '#define IMGUI_DEFINE_MATH_OPERATORS' _BEFORE_ including imgui.h!
-#endif
+    // In 1.89.4, we moved the implementation of "courtesy maths operators" from imgui_internal.h in imgui.h
+    // As they are frequently requested, we do not want to encourage to many people using imgui_internal.h
+	#if defined(IMGUI_DEFINE_MATH_OPERATORS) && !defined(IMGUI_DEFINE_MATH_OPERATORS_IMPLEMENTED)
+		#error Please '#define IMGUI_DEFINE_MATH_OPERATORS' _BEFORE_ including imgui.h!
+	#endif
 
-// Legacy defines
-#ifdef IMGUI_DISABLE_FORMAT_STRING_FUNCTIONS  // Renamed in 1.74
-#error Use IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
-#endif
-#ifdef IMGUI_DISABLE_MATH_FUNCTIONS  // Renamed in 1.74
-#error Use IMGUI_DISABLE_DEFAULT_MATH_FUNCTIONS
-#endif
+    // Legacy defines
+	#ifdef IMGUI_DISABLE_FORMAT_STRING_FUNCTIONS  // Renamed in 1.74
+		#error Use IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
+	#endif
+	#ifdef IMGUI_DISABLE_MATH_FUNCTIONS  // Renamed in 1.74
+		#error Use IMGUI_DISABLE_DEFAULT_MATH_FUNCTIONS
+	#endif
 
-// Enable stb_truetype by default unless FreeType is enabled.
-// You can compile with both by defining both IMGUI_ENABLE_FREETYPE and IMGUI_ENABLE_STB_TRUETYPE together.
-#ifndef IMGUI_ENABLE_FREETYPE
-#define IMGUI_ENABLE_STB_TRUETYPE
-#endif
+    // Enable stb_truetype by default unless FreeType is enabled.
+    // You can compile with both by defining both IMGUI_ENABLE_FREETYPE and IMGUI_ENABLE_STB_TRUETYPE together.
+	#ifndef IMGUI_ENABLE_FREETYPE
+		#define IMGUI_ENABLE_STB_TRUETYPE
+	#endif
 
 //-----------------------------------------------------------------------------
 // [SECTION] Forward declarations
@@ -234,179 +240,182 @@ typedef ImU16 ImGuiTableDrawChannelIdx;
 // See implementation of this variable in imgui.cpp for comments and details.
 //-----------------------------------------------------------------------------
 
-#ifndef GImGui
+	#ifndef GImGui
 extern IMGUI_API ImGuiContext* GImGui;  // Current implicit context pointer
-#endif
+	#endif
 
-//-----------------------------------------------------------------------------
-// [SECTION] Macros
-//-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
+    // [SECTION] Macros
+    //-----------------------------------------------------------------------------
 
-// Debug Printing Into TTY
-// (since IMGUI_VERSION_NUM >= 18729: IMGUI_DEBUG_LOG was reworked into IMGUI_DEBUG_PRINTF (and removed framecount from it). If you were
-// using a #define IMGUI_DEBUG_LOG please rename)
-#ifndef IMGUI_DEBUG_PRINTF
-#ifndef IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
-#define IMGUI_DEBUG_PRINTF(_FMT, ...) printf(_FMT, __VA_ARGS__)
-#else
-#define IMGUI_DEBUG_PRINTF(_FMT, ...) ((void) 0)
-#endif
-#endif
+    // Debug Printing Into TTY
+    // (since IMGUI_VERSION_NUM >= 18729: IMGUI_DEBUG_LOG was reworked into IMGUI_DEBUG_PRINTF (and removed framecount from it). If you were
+    // using a #define IMGUI_DEBUG_LOG please rename)
+	#ifndef IMGUI_DEBUG_PRINTF
+		#ifndef IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
+			#define IMGUI_DEBUG_PRINTF(_FMT, ...) printf(_FMT, __VA_ARGS__)
+		#else
+			#define IMGUI_DEBUG_PRINTF(_FMT, ...) ((void) 0)
+		#endif
+	#endif
 
-// Debug Logging for ShowDebugLogWindow(). This is designed for relatively rare events so please don't spam.
-#define IMGUI_DEBUG_LOG_ERROR(...)                           \
-	do                                                       \
-	{                                                        \
-		if (g.DebugLogFlags & ImGuiDebugLogFlags_EventError) \
-			IMGUI_DEBUG_LOG(__VA_ARGS__);                    \
-		else                                                 \
-			g.DebugLogSkippedErrors++;                       \
-	} while (0)
-#define IMGUI_DEBUG_LOG_ACTIVEID(...)                           \
-	do                                                          \
-	{                                                           \
-		if (g.DebugLogFlags & ImGuiDebugLogFlags_EventActiveId) \
-			IMGUI_DEBUG_LOG(__VA_ARGS__);                       \
-	} while (0)
-#define IMGUI_DEBUG_LOG_FOCUS(...)                           \
-	do                                                       \
-	{                                                        \
-		if (g.DebugLogFlags & ImGuiDebugLogFlags_EventFocus) \
-			IMGUI_DEBUG_LOG(__VA_ARGS__);                    \
-	} while (0)
-#define IMGUI_DEBUG_LOG_POPUP(...)                           \
-	do                                                       \
-	{                                                        \
-		if (g.DebugLogFlags & ImGuiDebugLogFlags_EventPopup) \
-			IMGUI_DEBUG_LOG(__VA_ARGS__);                    \
-	} while (0)
-#define IMGUI_DEBUG_LOG_NAV(...)                           \
-	do                                                     \
-	{                                                      \
-		if (g.DebugLogFlags & ImGuiDebugLogFlags_EventNav) \
-			IMGUI_DEBUG_LOG(__VA_ARGS__);                  \
-	} while (0)
-#define IMGUI_DEBUG_LOG_SELECTION(...)                           \
-	do                                                           \
-	{                                                            \
-		if (g.DebugLogFlags & ImGuiDebugLogFlags_EventSelection) \
-			IMGUI_DEBUG_LOG(__VA_ARGS__);                        \
-	} while (0)
-#define IMGUI_DEBUG_LOG_CLIPPER(...)                           \
-	do                                                         \
-	{                                                          \
-		if (g.DebugLogFlags & ImGuiDebugLogFlags_EventClipper) \
-			IMGUI_DEBUG_LOG(__VA_ARGS__);                      \
-	} while (0)
-#define IMGUI_DEBUG_LOG_IO(...)                           \
-	do                                                    \
-	{                                                     \
-		if (g.DebugLogFlags & ImGuiDebugLogFlags_EventIO) \
-			IMGUI_DEBUG_LOG(__VA_ARGS__);                 \
-	} while (0)
-#define IMGUI_DEBUG_LOG_FONT(...)                                   \
-	do                                                              \
-	{                                                               \
-		ImGuiContext* g2 = GImGui;                                  \
-		if (g2 && g2->DebugLogFlags & ImGuiDebugLogFlags_EventFont) \
-			IMGUI_DEBUG_LOG(__VA_ARGS__);                           \
-	} while (0)  // Called from ImFontAtlas function which may operate without a context.
-#define IMGUI_DEBUG_LOG_INPUTROUTING(...)                           \
-	do                                                              \
-	{                                                               \
-		if (g.DebugLogFlags & ImGuiDebugLogFlags_EventInputRouting) \
-			IMGUI_DEBUG_LOG(__VA_ARGS__);                           \
-	} while (0)
+    // Debug Logging for ShowDebugLogWindow(). This is designed for relatively rare events so please don't spam.
+	#define IMGUI_DEBUG_LOG_ERROR(...)                           \
+		do                                                       \
+		{                                                        \
+			if (g.DebugLogFlags & ImGuiDebugLogFlags_EventError) \
+				IMGUI_DEBUG_LOG(__VA_ARGS__);                    \
+			else                                                 \
+				g.DebugLogSkippedErrors++;                       \
+		} while (0)
+	#define IMGUI_DEBUG_LOG_ACTIVEID(...)                           \
+		do                                                          \
+		{                                                           \
+			if (g.DebugLogFlags & ImGuiDebugLogFlags_EventActiveId) \
+				IMGUI_DEBUG_LOG(__VA_ARGS__);                       \
+		} while (0)
+	#define IMGUI_DEBUG_LOG_FOCUS(...)                           \
+		do                                                       \
+		{                                                        \
+			if (g.DebugLogFlags & ImGuiDebugLogFlags_EventFocus) \
+				IMGUI_DEBUG_LOG(__VA_ARGS__);                    \
+		} while (0)
+	#define IMGUI_DEBUG_LOG_POPUP(...)                           \
+		do                                                       \
+		{                                                        \
+			if (g.DebugLogFlags & ImGuiDebugLogFlags_EventPopup) \
+				IMGUI_DEBUG_LOG(__VA_ARGS__);                    \
+		} while (0)
+	#define IMGUI_DEBUG_LOG_NAV(...)                           \
+		do                                                     \
+		{                                                      \
+			if (g.DebugLogFlags & ImGuiDebugLogFlags_EventNav) \
+				IMGUI_DEBUG_LOG(__VA_ARGS__);                  \
+		} while (0)
+	#define IMGUI_DEBUG_LOG_SELECTION(...)                           \
+		do                                                           \
+		{                                                            \
+			if (g.DebugLogFlags & ImGuiDebugLogFlags_EventSelection) \
+				IMGUI_DEBUG_LOG(__VA_ARGS__);                        \
+		} while (0)
+	#define IMGUI_DEBUG_LOG_CLIPPER(...)                           \
+		do                                                         \
+		{                                                          \
+			if (g.DebugLogFlags & ImGuiDebugLogFlags_EventClipper) \
+				IMGUI_DEBUG_LOG(__VA_ARGS__);                      \
+		} while (0)
+	#define IMGUI_DEBUG_LOG_IO(...)                           \
+		do                                                    \
+		{                                                     \
+			if (g.DebugLogFlags & ImGuiDebugLogFlags_EventIO) \
+				IMGUI_DEBUG_LOG(__VA_ARGS__);                 \
+		} while (0)
+	#define IMGUI_DEBUG_LOG_FONT(...)                                   \
+		do                                                              \
+		{                                                               \
+			ImGuiContext* g2 = GImGui;                                  \
+			if (g2 && g2->DebugLogFlags & ImGuiDebugLogFlags_EventFont) \
+				IMGUI_DEBUG_LOG(__VA_ARGS__);                           \
+		} while (0)  // Called from ImFontAtlas function which may operate without a context.
+	#define IMGUI_DEBUG_LOG_INPUTROUTING(...)                           \
+		do                                                              \
+		{                                                               \
+			if (g.DebugLogFlags & ImGuiDebugLogFlags_EventInputRouting) \
+				IMGUI_DEBUG_LOG(__VA_ARGS__);                           \
+		} while (0)
 
-// Static Asserts
-#define IM_STATIC_ASSERT(_COND) static_assert(_COND, "")
+    // Static Asserts
+	#define IM_STATIC_ASSERT(_COND) static_assert(_COND, "")
 
-// "Paranoid" Debug Asserts are meant to only be enabled during specific debugging/work, otherwise would slow down the code too much.
-// We currently don't have many of those so the effect is currently negligible, but onward intent to add more aggressive ones in the code.
-// #define IMGUI_DEBUG_PARANOID
-#ifdef IMGUI_DEBUG_PARANOID
-#define IM_ASSERT_PARANOID(_EXPR) IM_ASSERT(_EXPR)
-#else
-#define IM_ASSERT_PARANOID(_EXPR)
-#endif
+    // "Paranoid" Debug Asserts are meant to only be enabled during specific debugging/work, otherwise would slow down the code too much.
+    // We currently don't have many of those so the effect is currently negligible, but onward intent to add more aggressive ones in the
+    // code. #define IMGUI_DEBUG_PARANOID
+	#ifdef IMGUI_DEBUG_PARANOID
+		#define IM_ASSERT_PARANOID(_EXPR) IM_ASSERT(_EXPR)
+	#else
+		#define IM_ASSERT_PARANOID(_EXPR)
+	#endif
 
-// Misc Macros
-#define IM_PI 3.14159265358979323846f
-#ifdef _WIN32
-#define IM_NEWLINE \
-	"\r\n"  // Play it nice with Windows users (Update: since 2018-05, Notepad finally appears to support Unix-style carriage returns!)
-#else
-#define IM_NEWLINE "\n"
-#endif
-#ifndef IM_TABSIZE  // Until we move this to runtime and/or add proper tab support, at least allow users to compile-time override
-#define IM_TABSIZE (4)
-#endif
-#define IM_MEMALIGN(_OFF, _ALIGN) \
-	(((_OFF) + ((_ALIGN) - 1)) & ~((_ALIGN) - 1))  // Memory align e.g. IM_ALIGN(0,4)=0, IM_ALIGN(1,4)=4, IM_ALIGN(4,4)=4, IM_ALIGN(5,4)=8
-#define IM_F32_TO_INT8_UNBOUND(_VAL) ((int) ((_VAL) * 255.0f + ((_VAL) >= 0 ? 0.5f : -0.5f)))  // Unsaturated, for display purpose
-#define IM_F32_TO_INT8_SAT(_VAL) ((int) (ImSaturate(_VAL) * 255.0f + 0.5f))                    // Saturated, always output 0..255
-#define IM_TRUNC(_VAL) ((float) (int) (_VAL))           // ImTrunc() is not inlined in MSVC debug builds
-#define IM_ROUND(_VAL) ((float) (int) ((_VAL) + 0.5f))  //
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-#define IM_FLOOR IM_TRUNC  // [OBSOLETE] Renamed in 1.90.0 (Sept 2023)
-#endif
+    // Misc Macros
+	#define IM_PI 3.14159265358979323846f
+	#ifdef _WIN32
+		#define IM_NEWLINE \
+			"\r\n"  // Play it nice with Windows users (Update: since 2018-05, Notepad finally appears to support Unix-style carriage
+			        // returns!)
+	#else
+		#define IM_NEWLINE "\n"
+	#endif
+	#ifndef IM_TABSIZE  // Until we move this to runtime and/or add proper tab support, at least allow users to compile-time override
+		#define IM_TABSIZE (4)
+	#endif
+	#define IM_MEMALIGN(_OFF, _ALIGN) \
+		(((_OFF) + ((_ALIGN) - 1)) &  \
+		 ~((_ALIGN) - 1))  // Memory align e.g. IM_ALIGN(0,4)=0, IM_ALIGN(1,4)=4, IM_ALIGN(4,4)=4, IM_ALIGN(5,4)=8
+	#define IM_F32_TO_INT8_UNBOUND(_VAL) ((int) ((_VAL) * 255.0f + ((_VAL) >= 0 ? 0.5f : -0.5f)))  // Unsaturated, for display purpose
+	#define IM_F32_TO_INT8_SAT(_VAL) ((int) (ImSaturate(_VAL) * 255.0f + 0.5f))                    // Saturated, always output 0..255
+	#define IM_TRUNC(_VAL) ((float) (int) (_VAL))           // ImTrunc() is not inlined in MSVC debug builds
+	#define IM_ROUND(_VAL) ((float) (int) ((_VAL) + 0.5f))  //
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+		#define IM_FLOOR IM_TRUNC  // [OBSOLETE] Renamed in 1.90.0 (Sept 2023)
+	#endif
 
-// Hint for branch prediction
-#if (defined(__cplusplus) && (__cplusplus >= 202002L)) || (defined(_MSVC_LANG) && (_MSVC_LANG >= 202002L))
-#define IM_LIKELY [[likely]]
-#define IM_UNLIKELY [[unlikely]]
-#else
-#define IM_LIKELY
-#define IM_UNLIKELY
-#endif
+    // Hint for branch prediction
+	#if (defined(__cplusplus) && (__cplusplus >= 202002L)) || (defined(_MSVC_LANG) && (_MSVC_LANG >= 202002L))
+		#define IM_LIKELY [[likely]]
+		#define IM_UNLIKELY [[unlikely]]
+	#else
+		#define IM_LIKELY
+		#define IM_UNLIKELY
+	#endif
 
-// Enforce cdecl calling convention for functions called by the standard library, in case compilation settings changed the default to e.g.
-// __vectorcall
-#ifdef _MSC_VER
-#define IMGUI_CDECL __cdecl
-#else
-#define IMGUI_CDECL
-#endif
+    // Enforce cdecl calling convention for functions called by the standard library, in case compilation settings changed the default to
+    // e.g.
+    // __vectorcall
+	#ifdef _MSC_VER
+		#define IMGUI_CDECL __cdecl
+	#else
+		#define IMGUI_CDECL
+	#endif
 
-// Warnings
-#if defined(_MSC_VER) && !defined(__clang__)
-#define IM_MSVC_WARNING_SUPPRESS(XXXX) __pragma(warning(suppress : XXXX))
-#else
-#define IM_MSVC_WARNING_SUPPRESS(XXXX)
-#endif
+    // Warnings
+	#if defined(_MSC_VER) && !defined(__clang__)
+		#define IM_MSVC_WARNING_SUPPRESS(XXXX) __pragma(warning(suppress : XXXX))
+	#else
+		#define IM_MSVC_WARNING_SUPPRESS(XXXX)
+	#endif
 
-// Debug Tools
-// Use 'Metrics/Debugger->Tools->Item Picker' to break into the call-stack of a specific item.
-// This will call IM_DEBUG_BREAK() which you may redefine yourself. See https://github.com/scottt/debugbreak for more reference.
-#ifndef IM_DEBUG_BREAK
-#if defined(_MSC_VER)
-#define IM_DEBUG_BREAK() __debugbreak()
-#elif defined(__clang__)
-#define IM_DEBUG_BREAK() __builtin_debugtrap()
-#elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
-#define IM_DEBUG_BREAK() __asm__ volatile("int3;nop")
-#elif defined(__GNUC__) && defined(__thumb__)
-#define IM_DEBUG_BREAK() __asm__ volatile(".inst 0xde01")
-#elif defined(__GNUC__) && defined(__arm__) && !defined(__thumb__)
-#define IM_DEBUG_BREAK() __asm__ volatile(".inst 0xe7f001f0")
-#else
-#define IM_DEBUG_BREAK() \
-	IM_ASSERT(0)  // It is expected that you define IM_DEBUG_BREAK() into something that will break nicely in a debugger!
-#endif
-#endif  // #ifndef IM_DEBUG_BREAK
+    // Debug Tools
+    // Use 'Metrics/Debugger->Tools->Item Picker' to break into the call-stack of a specific item.
+    // This will call IM_DEBUG_BREAK() which you may redefine yourself. See https://github.com/scottt/debugbreak for more reference.
+	#ifndef IM_DEBUG_BREAK
+		#if defined(_MSC_VER)
+			#define IM_DEBUG_BREAK() __debugbreak()
+		#elif defined(__clang__)
+			#define IM_DEBUG_BREAK() __builtin_debugtrap()
+		#elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+			#define IM_DEBUG_BREAK() __asm__ volatile("int3;nop")
+		#elif defined(__GNUC__) && defined(__thumb__)
+			#define IM_DEBUG_BREAK() __asm__ volatile(".inst 0xde01")
+		#elif defined(__GNUC__) && defined(__arm__) && !defined(__thumb__)
+			#define IM_DEBUG_BREAK() __asm__ volatile(".inst 0xe7f001f0")
+		#else
+			#define IM_DEBUG_BREAK() \
+				IM_ASSERT(0)  // It is expected that you define IM_DEBUG_BREAK() into something that will break nicely in a debugger!
+		#endif
+	#endif  // #ifndef IM_DEBUG_BREAK
 
-// Format specifiers, printing 64-bit hasn't been decently standardized...
-// In a real application you should be using PRId64 and PRIu64 from <inttypes.h> (non-windows) and on Windows define them yourself.
-#if defined(_MSC_VER) && !defined(__clang__)
-#define IM_PRId64 "I64d"
-#define IM_PRIu64 "I64u"
-#define IM_PRIX64 "I64X"
-#else
-#define IM_PRId64 "lld"
-#define IM_PRIu64 "llu"
-#define IM_PRIX64 "llX"
-#endif
-#define IM_TEXTUREID_TO_U64(_TEXID) ((ImU64) (intptr_t) (_TEXID))
+    // Format specifiers, printing 64-bit hasn't been decently standardized...
+    // In a real application you should be using PRId64 and PRIu64 from <inttypes.h> (non-windows) and on Windows define them yourself.
+	#if defined(_MSC_VER) && !defined(__clang__)
+		#define IM_PRId64 "I64d"
+		#define IM_PRIu64 "I64u"
+		#define IM_PRIX64 "I64X"
+	#else
+		#define IM_PRId64 "lld"
+		#define IM_PRIu64 "llu"
+		#define IM_PRIX64 "llX"
+	#endif
+	#define IM_TEXTUREID_TO_U64(_TEXID) ((ImU64) (intptr_t) (_TEXID))
 
 //-----------------------------------------------------------------------------
 // [SECTION] Generic helpers
@@ -440,14 +449,14 @@ IMGUI_API ImGuiID ImHashData(const void* data, size_t data_size, ImGuiID seed = 
 IMGUI_API ImGuiID ImHashStr(const char* data, size_t data_size = 0, ImGuiID seed = 0);
 IMGUI_API const char* ImHashSkipUncontributingPrefix(const char* label);
 
-// Helpers: Sorting
-#ifndef ImQsort
+    // Helpers: Sorting
+	#ifndef ImQsort
 inline void ImQsort(void* base, size_t count, size_t size_of_element, int(IMGUI_CDECL* compare_func)(void const*, void const*))
 {
 	if (count > 1)
 		qsort(base, count, size_of_element, compare_func);
 }
-#endif
+	#endif
 
 // Helpers: Color Blending
 IMGUI_API ImU32 ImAlphaBlendColors(ImU32 col_a, ImU32 col_b);
@@ -483,9 +492,9 @@ inline unsigned int ImCountSetBits(unsigned int v)
 	return count;
 }
 
-// Helpers: String
-#define ImStrlen strlen
-#define ImMemchr memchr
+    // Helpers: String
+	#define ImStrlen strlen
+	#define ImMemchr memchr
 IMGUI_API int ImStricmp(const char* str1, const char* str2);                 // Case insensitive compare.
 IMGUI_API int ImStrnicmp(const char* str1, const char* str2, size_t count);  // Case insensitive compare to a certain count.
 IMGUI_API void ImStrncpy(char* dst, const char* src, size_t count);  // Copy to a certain count and always zero terminate (strncpy doesn't).
@@ -589,9 +598,9 @@ IMGUI_API const char* ImTextCalcWordWrapNextLineStart(
     const char* text_end,
     ImDrawTextFlags flags = 0);  // trim trailing space and find beginning of next line
 
-// Helpers: File System
-#ifdef IMGUI_DISABLE_FILE_FUNCTIONS
-#define IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
+    // Helpers: File System
+	#ifdef IMGUI_DISABLE_FILE_FUNCTIONS
+		#define IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 typedef void* ImFileHandle;
 inline ImFileHandle ImFileOpen(const char*, const char*)
 {
@@ -613,32 +622,32 @@ inline ImU64 ImFileWrite(const void*, ImU64, ImU64, ImFileHandle)
 {
 	return 0;
 }
-#endif
-#ifndef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
+	#endif
+	#ifndef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 typedef FILE* ImFileHandle;
 IMGUI_API ImFileHandle ImFileOpen(const char* filename, const char* mode);
 IMGUI_API bool ImFileClose(ImFileHandle file);
 IMGUI_API ImU64 ImFileGetSize(ImFileHandle file);
 IMGUI_API ImU64 ImFileRead(void* data, ImU64 size, ImU64 count, ImFileHandle file);
 IMGUI_API ImU64 ImFileWrite(const void* data, ImU64 size, ImU64 count, ImFileHandle file);
-#else
-#define IMGUI_DISABLE_TTY_FUNCTIONS  // Can't use stdout, fflush if we are not using default file functions
-#endif
+	#else
+		#define IMGUI_DISABLE_TTY_FUNCTIONS  // Can't use stdout, fflush if we are not using default file functions
+	#endif
 IMGUI_API void* ImFileLoadToMemory(const char* filename, const char* mode, size_t* out_file_size = NULL, int padding_bytes = 0);
 
 // Helpers: Maths
 IM_MSVC_RUNTIME_CHECKS_OFF
-// - Wrapper for standard libs functions. (Note that imgui_demo.cpp does _not_ use them to keep the code easy to copy)
-#ifndef IMGUI_DISABLE_DEFAULT_MATH_FUNCTIONS
-#define ImFabs(X) fabsf(X)
-#define ImSqrt(X) sqrtf(X)
-#define ImFmod(X, Y) fmodf((X), (Y))
-#define ImCos(X) cosf(X)
-#define ImSin(X) sinf(X)
-#define ImAcos(X) acosf(X)
-#define ImAtan2(Y, X) atan2f((Y), (X))
-#define ImAtof(STR) atof(STR)
-#define ImCeil(X) ceilf(X)
+    // - Wrapper for standard libs functions. (Note that imgui_demo.cpp does _not_ use them to keep the code easy to copy)
+	#ifndef IMGUI_DISABLE_DEFAULT_MATH_FUNCTIONS
+		#define ImFabs(X) fabsf(X)
+		#define ImSqrt(X) sqrtf(X)
+		#define ImFmod(X, Y) fmodf((X), (Y))
+		#define ImCos(X) cosf(X)
+		#define ImSin(X) sinf(X)
+		#define ImAcos(X) acosf(X)
+		#define ImAtan2(Y, X) atan2f((Y), (X))
+		#define ImAtof(STR) atof(STR)
+		#define ImCeil(X) ceilf(X)
 inline float ImPow(float x, float y)
 {
 	return powf(x, y);
@@ -675,22 +684,22 @@ inline double ImSign(double x)
 {
 	return (x < 0.0) ? -1.0 : (x > 0.0) ? 1.0 : 0.0;
 }
-#ifdef IMGUI_ENABLE_SSE
+		#ifdef IMGUI_ENABLE_SSE
 inline float ImRsqrt(float x)
 {
 	return _mm_cvtss_f32(_mm_rsqrt_ss(_mm_set_ss(x)));
 }
-#else
+		#else
 inline float ImRsqrt(float x)
 {
 	return 1.0f / sqrtf(x);
 }
-#endif
+		#endif
 inline double ImRsqrt(double x)
 {
 	return 1.0 / sqrt(x);
 }
-#endif
+	#endif
 // - ImMin/ImMax/ImClamp/ImLerp/ImSwap are used by widgets which support variety of types: signed/unsigned int/long long float/double
 // (Exceptionally using templates here but we could also redefine them for those types)
 template <typename T> T ImMin(T lhs, T rhs)
@@ -1000,13 +1009,13 @@ struct IMGUI_API ImRect
 	const ImVec4& AsVec4() const { return *(const ImVec4*) &Min.x; }
 };
 
-// Helper: ImBitArray
-#define IM_BITARRAY_TESTBIT(_ARRAY, _N)                  \
-	((_ARRAY[(_N) >> 5] & ((ImU32) 1 << ((_N) & 31))) != \
-	 0)  // Macro version of ImBitArrayTestBit(): ensure args have side-effect or are costly!
-#define IM_BITARRAY_CLEARBIT(_ARRAY, _N) \
-	((_ARRAY[(_N) >> 5] &=               \
-	  ~((ImU32) 1 << ((_N) & 31))))  // Macro version of ImBitArrayClearBit(): ensure args have side-effect or are costly!
+    // Helper: ImBitArray
+	#define IM_BITARRAY_TESTBIT(_ARRAY, _N)                  \
+		((_ARRAY[(_N) >> 5] & ((ImU32) 1 << ((_N) & 31))) != \
+		 0)  // Macro version of ImBitArrayTestBit(): ensure args have side-effect or are costly!
+	#define IM_BITARRAY_CLEARBIT(_ARRAY, _N) \
+		((_ARRAY[(_N) >> 5] &=               \
+		  ~((ImU32) 1 << ((_N) & 31))))  // Macro version of ImBitArrayClearBit(): ensure args have side-effect or are costly!
 inline size_t ImBitArrayGetStorageSizeInBytes(int bitcount)
 {
 	return (size_t) ((bitcount + 31) >> 5) << 2;
@@ -1442,38 +1451,38 @@ struct ImGuiTextIndex
 // Helper: ImGuiStorage
 IMGUI_API ImGuiStoragePair* ImLowerBound(ImGuiStoragePair* in_begin, ImGuiStoragePair* in_end, ImGuiID key);
 
-//-----------------------------------------------------------------------------
-// [SECTION] ImDrawList support
-//-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
+    // [SECTION] ImDrawList support
+    //-----------------------------------------------------------------------------
 
-// ImDrawList: Helper function to calculate a circle's segment count given its radius and a "maximum error" value.
-// Estimation of number of circle segment based on error is derived using method described in https://stackoverflow.com/a/2244088/15194693
-// Number of segments (N) is calculated using equation:
-//   N = ceil ( pi / acos(1 - error / r) )     where r > 0, error <= r
-// Our equation is significantly simpler that one in the post thanks for choosing segment that is
-// perpendicular to X axis. Follow steps in the article from this starting condition and you will
-// will get this result.
-//
-// Rendering circles with an odd number of segments, while mathematically correct will produce
-// asymmetrical results on the raster grid. Therefore we're rounding N to next even number (7->8, 8->8, 9->10 etc.)
-#define IM_ROUNDUP_TO_EVEN(_V) ((((_V) + 1) / 2) * 2)
-#define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN 4
-#define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX 512
-#define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(_RAD, _MAXERROR)                                      \
-	ImClamp(                                                                                       \
-	    IM_ROUNDUP_TO_EVEN((int) ImCeil(IM_PI / ImAcos(1 - ImMin((_MAXERROR), (_RAD)) / (_RAD)))), \
-	    IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN,                                                       \
-	    IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX)
+    // ImDrawList: Helper function to calculate a circle's segment count given its radius and a "maximum error" value.
+    // Estimation of number of circle segment based on error is derived using method described in
+    // https://stackoverflow.com/a/2244088/15194693 Number of segments (N) is calculated using equation:
+    //   N = ceil ( pi / acos(1 - error / r) )     where r > 0, error <= r
+    // Our equation is significantly simpler that one in the post thanks for choosing segment that is
+    // perpendicular to X axis. Follow steps in the article from this starting condition and you will
+    // will get this result.
+    //
+    // Rendering circles with an odd number of segments, while mathematically correct will produce
+    // asymmetrical results on the raster grid. Therefore we're rounding N to next even number (7->8, 8->8, 9->10 etc.)
+	#define IM_ROUNDUP_TO_EVEN(_V) ((((_V) + 1) / 2) * 2)
+	#define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN 4
+	#define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX 512
+	#define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(_RAD, _MAXERROR)                                      \
+		ImClamp(                                                                                       \
+		    IM_ROUNDUP_TO_EVEN((int) ImCeil(IM_PI / ImAcos(1 - ImMin((_MAXERROR), (_RAD)) / (_RAD)))), \
+		    IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN,                                                       \
+		    IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX)
 
-// Raw equation from IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC rewritten for 'r' and 'error'.
-#define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(_N, _MAXERROR) ((_MAXERROR) / (1 - ImCos(IM_PI / ImMax((float) (_N), IM_PI))))
-#define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_ERROR(_N, _RAD) ((1 - ImCos(IM_PI / ImMax((float) (_N), IM_PI))) / (_RAD))
+    // Raw equation from IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC rewritten for 'r' and 'error'.
+	#define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(_N, _MAXERROR) ((_MAXERROR) / (1 - ImCos(IM_PI / ImMax((float) (_N), IM_PI))))
+	#define IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_ERROR(_N, _RAD) ((1 - ImCos(IM_PI / ImMax((float) (_N), IM_PI))) / (_RAD))
 
-// ImDrawList: Lookup table size for adaptive arc drawing, cover full circle.
-#ifndef IM_DRAWLIST_ARCFAST_TABLE_SIZE
-#define IM_DRAWLIST_ARCFAST_TABLE_SIZE 48  // Number of samples in lookup table.
-#endif
-#define IM_DRAWLIST_ARCFAST_SAMPLE_MAX IM_DRAWLIST_ARCFAST_TABLE_SIZE  // Sample index _PathArcToFastEx() for 360 angle.
+    // ImDrawList: Lookup table size for adaptive arc drawing, cover full circle.
+	#ifndef IM_DRAWLIST_ARCFAST_TABLE_SIZE
+		#define IM_DRAWLIST_ARCFAST_TABLE_SIZE 48  // Number of samples in lookup table.
+	#endif
+	#define IM_DRAWLIST_ARCFAST_SAMPLE_MAX IM_DRAWLIST_ARCFAST_TABLE_SIZE  // Sample index _PathArcToFastEx() for 360 angle.
 
 // Data shared between all ImDrawList instances
 // Conceptually this could have been called e.g. ImDrawListSharedContext
@@ -1654,17 +1663,17 @@ enum ImGuiItemStatusFlags_
 	                                        // don't use yet: API/system will change as we refactor Itemadd()).
 	ImGuiItemStatusFlags_HasClipRect = 1 << 9,   // g.LastItemData.ClipRect is valid.
 	ImGuiItemStatusFlags_HasShortcut = 1 << 10,  // g.LastItemData.Shortcut valid. Set by SetNextItemShortcut() -> ItemAdd().
-// ImGuiItemStatusFlags_FocusedByTabbing = 1 << 8,   // Removed IN 1.90.1 (Dec 2023). The trigger is part of g.NavActivateId. See commit
-// 54c1bdeceb.
+    // ImGuiItemStatusFlags_FocusedByTabbing = 1 << 8,   // Removed IN 1.90.1 (Dec 2023). The trigger is part of g.NavActivateId. See commit
+    // 54c1bdeceb.
 
-// Additional status + semantic for ImGuiTestEngine
-#ifdef IMGUI_ENABLE_TEST_ENGINE
+    // Additional status + semantic for ImGuiTestEngine
+	#ifdef IMGUI_ENABLE_TEST_ENGINE
 	ImGuiItemStatusFlags_Openable = 1 << 20,   // Item is an openable (e.g. TreeNode)
 	ImGuiItemStatusFlags_Opened = 1 << 21,     // Opened status
 	ImGuiItemStatusFlags_Checkable = 1 << 22,  // Item is a checkable (e.g. CheckBox, MenuItem)
 	ImGuiItemStatusFlags_Checked = 1 << 23,    // Checked status
 	ImGuiItemStatusFlags_Inputable = 1 << 24,  // Item is a text-inputable (e.g. InputText, SliderXXX, DragXXX)
-#endif
+	#endif
 };
 
 // Extend ImGuiHoveredFlags_
@@ -1898,14 +1907,14 @@ struct IMGUI_API ImGuiInputTextDeactivatedState
 	}
 };
 
-// Forward declare imstb_textedit.h structure + make its main configuration define accessible
-#undef IMSTB_TEXTEDIT_STRING
-#undef IMSTB_TEXTEDIT_CHARTYPE
-#define IMSTB_TEXTEDIT_STRING ImGuiInputTextState
-#define IMSTB_TEXTEDIT_CHARTYPE char
-#define IMSTB_TEXTEDIT_GETWIDTH_NEWLINE (-1.0f)
-#define IMSTB_TEXTEDIT_UNDOSTATECOUNT 99
-#define IMSTB_TEXTEDIT_UNDOCHARCOUNT 999
+    // Forward declare imstb_textedit.h structure + make its main configuration define accessible
+	#undef IMSTB_TEXTEDIT_STRING
+	#undef IMSTB_TEXTEDIT_CHARTYPE
+	#define IMSTB_TEXTEDIT_STRING ImGuiInputTextState
+	#define IMSTB_TEXTEDIT_CHARTYPE char
+	#define IMSTB_TEXTEDIT_GETWIDTH_NEWLINE (-1.0f)
+	#define IMSTB_TEXTEDIT_UNDOSTATECOUNT 99
+	#define IMSTB_TEXTEDIT_UNDOCHARCOUNT 999
 namespace ImStb
 {
 	struct STB_TexteditState;
@@ -2214,27 +2223,27 @@ struct ImGuiPopupData
 // Bit array for named keys
 typedef ImBitArray<ImGuiKey_NamedKey_COUNT, -ImGuiKey_NamedKey_BEGIN> ImBitArrayForNamedKeys;
 
-// [Internal] Key ranges
-#define ImGuiKey_LegacyNativeKey_BEGIN 0
-#define ImGuiKey_LegacyNativeKey_END 512
-#define ImGuiKey_Keyboard_BEGIN (ImGuiKey_NamedKey_BEGIN)
-#define ImGuiKey_Keyboard_END (ImGuiKey_GamepadStart)
-#define ImGuiKey_Gamepad_BEGIN (ImGuiKey_GamepadStart)
-#define ImGuiKey_Gamepad_END (ImGuiKey_GamepadRStickDown + 1)
-#define ImGuiKey_Mouse_BEGIN (ImGuiKey_MouseLeft)
-#define ImGuiKey_Mouse_END (ImGuiKey_MouseWheelY + 1)
-#define ImGuiKey_Aliases_BEGIN (ImGuiKey_Mouse_BEGIN)
-#define ImGuiKey_Aliases_END (ImGuiKey_Mouse_END)
+    // [Internal] Key ranges
+	#define ImGuiKey_LegacyNativeKey_BEGIN 0
+	#define ImGuiKey_LegacyNativeKey_END 512
+	#define ImGuiKey_Keyboard_BEGIN (ImGuiKey_NamedKey_BEGIN)
+	#define ImGuiKey_Keyboard_END (ImGuiKey_GamepadStart)
+	#define ImGuiKey_Gamepad_BEGIN (ImGuiKey_GamepadStart)
+	#define ImGuiKey_Gamepad_END (ImGuiKey_GamepadRStickDown + 1)
+	#define ImGuiKey_Mouse_BEGIN (ImGuiKey_MouseLeft)
+	#define ImGuiKey_Mouse_END (ImGuiKey_MouseWheelY + 1)
+	#define ImGuiKey_Aliases_BEGIN (ImGuiKey_Mouse_BEGIN)
+	#define ImGuiKey_Aliases_END (ImGuiKey_Mouse_END)
 
-// [Internal] Named shortcuts for Navigation
-#define ImGuiKey_NavKeyboardTweakSlow ImGuiMod_Ctrl
-#define ImGuiKey_NavKeyboardTweakFast ImGuiMod_Shift
-#define ImGuiKey_NavGamepadTweakSlow ImGuiKey_GamepadL1
-#define ImGuiKey_NavGamepadTweakFast ImGuiKey_GamepadR1
-#define ImGuiKey_NavGamepadActivate (g.IO.ConfigNavSwapGamepadButtons ? ImGuiKey_GamepadFaceRight : ImGuiKey_GamepadFaceDown)
-#define ImGuiKey_NavGamepadCancel (g.IO.ConfigNavSwapGamepadButtons ? ImGuiKey_GamepadFaceDown : ImGuiKey_GamepadFaceRight)
-#define ImGuiKey_NavGamepadMenu ImGuiKey_GamepadFaceLeft
-#define ImGuiKey_NavGamepadInput ImGuiKey_GamepadFaceUp
+    // [Internal] Named shortcuts for Navigation
+	#define ImGuiKey_NavKeyboardTweakSlow ImGuiMod_Ctrl
+	#define ImGuiKey_NavKeyboardTweakFast ImGuiMod_Shift
+	#define ImGuiKey_NavGamepadTweakSlow ImGuiKey_GamepadL1
+	#define ImGuiKey_NavGamepadTweakFast ImGuiKey_GamepadR1
+	#define ImGuiKey_NavGamepadActivate (g.IO.ConfigNavSwapGamepadButtons ? ImGuiKey_GamepadFaceRight : ImGuiKey_GamepadFaceDown)
+	#define ImGuiKey_NavGamepadCancel (g.IO.ConfigNavSwapGamepadButtons ? ImGuiKey_GamepadFaceDown : ImGuiKey_GamepadFaceRight)
+	#define ImGuiKey_NavGamepadMenu ImGuiKey_GamepadFaceLeft
+	#define ImGuiKey_NavGamepadInput ImGuiKey_GamepadFaceUp
 
 enum ImGuiInputEventType
 {
@@ -2309,12 +2318,12 @@ struct ImGuiInputEvent
 	ImGuiInputEvent() { memset(this, 0, sizeof(*this)); }
 };
 
-// Input function taking an 'ImGuiID owner_id' argument defaults to (ImGuiKeyOwner_Any == 0) aka don't test ownership, which matches legacy
-// behavior.
-#define ImGuiKeyOwner_Any \
-	((ImGuiID) 0)  // Accept key that have an owner, UNLESS a call to SetKeyOwner() explicitly used ImGuiInputFlags_LockThisFrame or
-	               // ImGuiInputFlags_LockUntilRelease.
-#define ImGuiKeyOwner_NoOwner ((ImGuiID) - 1)  // Require key to have no owner.
+    // Input function taking an 'ImGuiID owner_id' argument defaults to (ImGuiKeyOwner_Any == 0) aka don't test ownership, which matches
+    // legacy behavior.
+	#define ImGuiKeyOwner_Any \
+		((ImGuiID) 0)  // Accept key that have an owner, UNLESS a call to SetKeyOwner() explicitly used ImGuiInputFlags_LockThisFrame or
+		               // ImGuiInputFlags_LockUntilRelease.
+	#define ImGuiKeyOwner_NoOwner ((ImGuiID) - 1)  // Require key to have no owner.
 // #define ImGuiKeyOwner_None ImGuiKeyOwner_NoOwner  // We previously called this 'ImGuiKeyOwner_None' but it was inconsistent with our
 // pattern that _None values == 0 and quite dangerous. Also using _NoOwner makes the IsKeyPressed() calls more explicit.
 
@@ -2516,13 +2525,13 @@ enum ImGuiNavRenderCursorFlags_
 	ImGuiNavRenderCursorFlags_AlwaysDraw =
 	    1 << 2,  // Draw rectangular highlight if (g.NavId == id) even when g.NavCursorVisible == false, aka even when using the mouse.
 	ImGuiNavRenderCursorFlags_NoRounding = 1 << 3,
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 	ImGuiNavHighlightFlags_None = ImGuiNavRenderCursorFlags_None,              // Renamed in 1.91.4
 	ImGuiNavHighlightFlags_Compact = ImGuiNavRenderCursorFlags_Compact,        // Renamed in 1.91.4
 	ImGuiNavHighlightFlags_AlwaysDraw = ImGuiNavRenderCursorFlags_AlwaysDraw,  // Renamed in 1.91.4
 	ImGuiNavHighlightFlags_NoRounding = ImGuiNavRenderCursorFlags_NoRounding,  // Renamed in 1.91.4
-// ImGuiNavHighlightFlags_TypeThin       = ImGuiNavRenderCursorFlags_Compact,    // Renamed in 1.90.2
-#endif
+	// ImGuiNavHighlightFlags_TypeThin       = ImGuiNavRenderCursorFlags_Compact,    // Renamed in 1.90.2
+	#endif
 };
 
 enum ImGuiNavMoveFlags_
@@ -2654,15 +2663,15 @@ enum ImGuiOldColumnFlags_
 	ImGuiOldColumnFlags_GrowParentContentsSize = 1 << 4,  // Restore pre-1.51 behavior of extending the parent window contents size but
 	                                                      // _without affecting the columns width at all_. Will eventually remove.
 
-// Obsolete names (will be removed)
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-// ImGuiColumnsFlags_None                    = ImGuiOldColumnFlags_None,
-// ImGuiColumnsFlags_NoBorder                = ImGuiOldColumnFlags_NoBorder,
-// ImGuiColumnsFlags_NoResize                = ImGuiOldColumnFlags_NoResize,
-// ImGuiColumnsFlags_NoPreserveWidths        = ImGuiOldColumnFlags_NoPreserveWidths,
-// ImGuiColumnsFlags_NoForceWithinWindow     = ImGuiOldColumnFlags_NoForceWithinWindow,
-// ImGuiColumnsFlags_GrowParentContentsSize  = ImGuiOldColumnFlags_GrowParentContentsSize,
-#endif
+    // Obsolete names (will be removed)
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	// ImGuiColumnsFlags_None                    = ImGuiOldColumnFlags_None,
+	// ImGuiColumnsFlags_NoBorder                = ImGuiOldColumnFlags_NoBorder,
+	// ImGuiColumnsFlags_NoResize                = ImGuiOldColumnFlags_NoResize,
+	// ImGuiColumnsFlags_NoPreserveWidths        = ImGuiOldColumnFlags_NoPreserveWidths,
+	// ImGuiColumnsFlags_NoForceWithinWindow     = ImGuiOldColumnFlags_NoForceWithinWindow,
+	// ImGuiColumnsFlags_GrowParentContentsSize  = ImGuiOldColumnFlags_GrowParentContentsSize,
+	#endif
 };
 
 struct ImGuiOldColumnData
@@ -2725,12 +2734,12 @@ struct ImGuiBoxSelectState
 	ImGuiBoxSelectState() { memset(this, 0, sizeof(*this)); }
 };
 
-//-----------------------------------------------------------------------------
-// [SECTION] Multi-select support
-//-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
+    // [SECTION] Multi-select support
+    //-----------------------------------------------------------------------------
 
-// We always assume that -1 is an invalid value (which works for indices and pointers)
-#define ImGuiSelectionUserData_Invalid ((ImGuiSelectionUserData) - 1)
+    // We always assume that -1 is an invalid value (which works for indices and pointers)
+	#define ImGuiSelectionUserData_Invalid ((ImGuiSelectionUserData) - 1)
 
 // Temporary storage for multi-select
 struct IMGUI_API ImGuiMultiSelectTempData
@@ -2796,9 +2805,9 @@ struct IMGUI_API ImGuiMultiSelectState
 // [SECTION] Docking support
 //-----------------------------------------------------------------------------
 
-#ifdef IMGUI_HAS_DOCK
-// <this is filled in 'docking' branch>
-#endif  // #ifdef IMGUI_HAS_DOCK
+	#ifdef IMGUI_HAS_DOCK
+	// <this is filled in 'docking' branch>
+	#endif  // #ifdef IMGUI_HAS_DOCK
 
 //-----------------------------------------------------------------------------
 // [SECTION] Viewport support
@@ -2932,25 +2941,25 @@ struct ImGuiLocEntry
 	const char* Text;
 };
 
-//-----------------------------------------------------------------------------
-// [SECTION] Error handling, State recovery support
-//-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
+    // [SECTION] Error handling, State recovery support
+    //-----------------------------------------------------------------------------
 
-// Macros used by Recoverable Error handling
-// - Only dispatch error if _EXPR: evaluate as assert (similar to an assert macro).
-// - The message will always be a string literal, in order to increase likelihood of being display by an assert handler.
-// - See 'Demo->Configuration->Error Handling' and ImGuiIO definitions for details on error handling.
-// - Read https://github.com/ocornut/imgui/wiki/Error-Handling for details on error handling.
-#ifndef IM_ASSERT_USER_ERROR
-#define IM_ASSERT_USER_ERROR(_EXPR, _MSG)      \
-	do                                         \
-	{                                          \
-		if (!(_EXPR) && ImGui::ErrorLog(_MSG)) \
-		{                                      \
-			IM_ASSERT((_EXPR) && _MSG);        \
-		}                                      \
-	} while (0)  // Recoverable User Error
-#endif
+    // Macros used by Recoverable Error handling
+    // - Only dispatch error if _EXPR: evaluate as assert (similar to an assert macro).
+    // - The message will always be a string literal, in order to increase likelihood of being display by an assert handler.
+    // - See 'Demo->Configuration->Error Handling' and ImGuiIO definitions for details on error handling.
+    // - Read https://github.com/ocornut/imgui/wiki/Error-Handling for details on error handling.
+	#ifndef IM_ASSERT_USER_ERROR
+		#define IM_ASSERT_USER_ERROR(_EXPR, _MSG)      \
+			do                                         \
+			{                                          \
+				if (!(_EXPR) && ImGui::ErrorLog(_MSG)) \
+				{                                      \
+					IM_ASSERT((_EXPR) && _MSG);        \
+				}                                      \
+			} while (0)  // Recoverable User Error
+	#endif
 
 // The error callback is currently not public, as it is expected that only advanced users will rely on it.
 typedef void (*ImGuiErrorCallback)(ImGuiContext* ctx, void* user_data, const char* msg);  // Function signature for g.ErrorCallback
@@ -3517,10 +3526,10 @@ struct ImGuiContext
 	ImGuiDebugItemPathQuery DebugItemPathQuery;
 	ImGuiIDStackTool DebugIDStackTool;
 	ImGuiDebugAllocInfo DebugAllocInfo;
-#if defined(IMGUI_DEBUG_HIGHLIGHT_ALL_ID_CONFLICTS) && !defined(IMGUI_DISABLE_DEBUG_TOOLS)
+	#if defined(IMGUI_DEBUG_HIGHLIGHT_ALL_ID_CONFLICTS) && !defined(IMGUI_DISABLE_DEBUG_TOOLS)
 	ImGuiStorage DebugDrawIdConflictsAliveCount;
 	ImGuiStorage DebugDrawIdConflictsHighlightSet;
-#endif
+	#endif
 
 	// Misc
 	float FramerateSecPerFrame[60];  // Calculate estimate of framerate for user over the last 60 frames..
@@ -3874,9 +3883,9 @@ struct IMGUI_API ImGuiTabBar
 // [SECTION] Table support
 //-----------------------------------------------------------------------------
 
-#define IM_COL32_DISABLE IM_COL32(0, 0, 0, 1)  // Special sentinel code which cannot be used as a regular color.
-#define IMGUI_TABLE_MAX_COLUMNS \
-	512  // Arbitrary "safety" maximum, may be lifted in the future if needed. Must fit in ImGuiTableColumnIdx/ImGuiTableDrawChannelIdx.
+	#define IM_COL32_DISABLE IM_COL32(0, 0, 0, 1)  // Special sentinel code which cannot be used as a regular color.
+	#define IMGUI_TABLE_MAX_COLUMNS \
+		512  // Arbitrary "safety" maximum, may be lifted in the future if needed. Must fit in ImGuiTableColumnIdx/ImGuiTableDrawChannelIdx.
 
 // [Internal] sizeof() ~ 112
 // We use the terminology "Enabled" to refer to a column that is not Hidden by user/api.
@@ -4914,12 +4923,12 @@ namespace ImGui
 	    const ImRect& bb,
 	    ImGuiID id,
 	    ImGuiNavRenderCursorFlags flags = ImGuiNavRenderCursorFlags_None);  // Navigation highlight
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 	inline void RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavRenderCursorFlags flags = ImGuiNavRenderCursorFlags_None)
 	{
 		RenderNavCursor(bb, id, flags);
 	}  // Renamed in 1.91.4
-#endif
+	#endif
 	IMGUI_API const char*
 	FindRenderedTextEnd(const char* text, const char* text_end = NULL);  // Find the optional ## from which we stop displaying text.
 	IMGUI_API void
@@ -5213,22 +5222,24 @@ namespace ImGui
 	IMGUI_API void DebugRenderKeyboardPreview(ImDrawList* draw_list);
 	IMGUI_API void DebugRenderViewportThumbnail(ImDrawList* draw_list, ImGuiViewportP* viewport, const ImRect& bb);
 
-// Obsolete functions
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-// inline void   SetItemUsingMouseWheel()                                            { SetItemKeyOwner(ImGuiKey_MouseWheelY); }      //
-// Changed in 1.89 inline bool   TreeNodeBehaviorIsOpen(ImGuiID id, ImGuiTreeNodeFlags flags = 0)    { return TreeNodeUpdateNextOpen(id,
-// flags); }   // Renamed in 1.89 inline bool   IsKeyPressedMap(ImGuiKey key, bool repeat = true)                   {
-// IM_ASSERT(IsNamedKey(key)); return IsKeyPressed(key, repeat); } // Removed in 1.87: Mapping from named key is always identity!
+	// Obsolete functions
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	// inline void   SetItemUsingMouseWheel()                                            { SetItemKeyOwner(ImGuiKey_MouseWheelY); }      //
+	// Changed in 1.89 inline bool   TreeNodeBehaviorIsOpen(ImGuiID id, ImGuiTreeNodeFlags flags = 0)    { return TreeNodeUpdateNextOpen(id,
+	// flags); }   // Renamed in 1.89 inline bool   IsKeyPressedMap(ImGuiKey key, bool repeat = true)                   {
+	// IM_ASSERT(IsNamedKey(key)); return IsKeyPressed(key, repeat); } // Removed in 1.87: Mapping from named key is always identity!
 
-// Refactored focus/nav/tabbing system in 1.82 and 1.84. If you have old/custom copy-and-pasted widgets which used FocusableItemRegister():
-//  (Old) IMGUI_VERSION_NUM  < 18209: using 'ItemAdd(....)'                              and 'bool tab_focused = FocusableItemRegister(...)'
-//  (Old) IMGUI_VERSION_NUM >= 18209: using 'ItemAdd(..., ImGuiItemAddFlags_Focusable)'  and 'bool tab_focused = (g.LastItemData.StatusFlags
-//  & ImGuiItemStatusFlags_Focused) != 0' (New) IMGUI_VERSION_NUM >= 18413: using 'ItemAdd(..., ImGuiItemFlags_Inputable)'     and 'bool
-//  tab_focused = (g.NavActivateId == id && (g.NavActivateFlags & ImGuiActivateFlags_PreferInput))'
-// inline bool   FocusableItemRegister(ImGuiWindow* window, ImGuiID id)              // -> pass ImGuiItemAddFlags_Inputable flag to
-// ItemAdd() inline void   FocusableItemUnregister(ImGuiWindow* window)                        // -> unnecessary: TempInputText() uses
-// ImGuiInputTextFlags_MergedItem
-#endif
+	// Refactored focus/nav/tabbing system in 1.82 and 1.84. If you have old/custom copy-and-pasted widgets which used
+	// FocusableItemRegister():
+	//  (Old) IMGUI_VERSION_NUM  < 18209: using 'ItemAdd(....)'                              and 'bool tab_focused =
+	//  FocusableItemRegister(...)' (Old) IMGUI_VERSION_NUM >= 18209: using 'ItemAdd(..., ImGuiItemAddFlags_Focusable)'  and 'bool
+	//  tab_focused = (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_Focused) != 0' (New) IMGUI_VERSION_NUM >= 18413: using
+	//  'ItemAdd(..., ImGuiItemFlags_Inputable)'     and 'bool tab_focused = (g.NavActivateId == id && (g.NavActivateFlags &
+	//  ImGuiActivateFlags_PreferInput))'
+	// inline bool   FocusableItemRegister(ImGuiWindow* window, ImGuiID id)              // -> pass ImGuiItemAddFlags_Inputable flag to
+	// ItemAdd() inline void   FocusableItemUnregister(ImGuiWindow* window)                        // -> unnecessary: TempInputText() uses
+	// ImGuiInputTextFlags_MergedItem
+	#endif
 
 }  // namespace ImGui
 
@@ -5266,20 +5277,20 @@ struct ImFontLoader
 	ImFontLoader() { memset(this, 0, sizeof(*this)); }
 };
 
-#ifdef IMGUI_ENABLE_STB_TRUETYPE
+	#ifdef IMGUI_ENABLE_STB_TRUETYPE
 IMGUI_API const ImFontLoader* ImFontAtlasGetFontLoaderForStbTruetype();
-#endif
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+	#endif
+	#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 typedef ImFontLoader ImFontBuilderIO;  // [renamed/changed in 1.92] The types are not actually compatible but we provide this as a
                                        // compile-time error report helper.
-#endif
+	#endif
 
 //-----------------------------------------------------------------------------
 // [SECTION] ImFontAtlas internal API
 //-----------------------------------------------------------------------------
 
-#define IMGUI_FONT_SIZE_MAX (512.0f)
-#define IMGUI_FONT_SIZE_THRESHOLD_FOR_LOADADVANCEXONLYMODE (128.0f)
+	#define IMGUI_FONT_SIZE_MAX (512.0f)
+	#define IMGUI_FONT_SIZE_THRESHOLD_FOR_LOADADVANCEXONLYMODE (128.0f)
 
 // Helpers: ImTextureRef ==/!= operators provided as convenience
 // (note that _TexID and _TexData are never set simultaneously)
@@ -5292,11 +5303,11 @@ inline bool operator!=(const ImTextureRef& lhs, const ImTextureRef& rhs)
 	return lhs._TexID != rhs._TexID || lhs._TexData != rhs._TexData;
 }
 
-// Refer to ImFontAtlasPackGetRect() to better understand how this works.
-#define ImFontAtlasRectId_IndexMask_ (0x0007FFFF)  // 20-bits signed: index to access builder->RectsIndex[].
-#define ImFontAtlasRectId_GenerationMask_ \
-	(0x3FF00000)  // 10-bits: entry generation, so each ID is unique and get can safely detected old identifiers.
-#define ImFontAtlasRectId_GenerationShift_ (20)
+    // Refer to ImFontAtlasPackGetRect() to better understand how this works.
+	#define ImFontAtlasRectId_IndexMask_ (0x0007FFFF)  // 20-bits signed: index to access builder->RectsIndex[].
+	#define ImFontAtlasRectId_GenerationMask_ \
+		(0x3FF00000)  // 10-bits: entry generation, so each ID is unique and get can safely detected old identifiers.
+	#define ImFontAtlasRectId_GenerationShift_ (20)
 inline int ImFontAtlasRectId_GetIndex(ImFontAtlasRectId id)
 {
 	return (id & ImFontAtlasRectId_IndexMask_);
@@ -5343,17 +5354,17 @@ struct ImFontAtlasPostProcessData
 	int Height;
 };
 
-// We avoid dragging imstb_rectpack.h into public header (partly because binding generators are having issues with it)
-#ifdef IMGUI_STB_NAMESPACE
+    // We avoid dragging imstb_rectpack.h into public header (partly because binding generators are having issues with it)
+	#ifdef IMGUI_STB_NAMESPACE
 namespace IMGUI_STB_NAMESPACE
 {
 	struct stbrp_node;
 }
 typedef IMGUI_STB_NAMESPACE::stbrp_node stbrp_node_im;
-#else
+	#else
 struct stbrp_node;
 typedef stbrp_node stbrp_node_im;
-#endif
+	#endif
 struct stbrp_context_opaque
 {
 	char data[80];
@@ -5479,9 +5490,9 @@ IMGUI_API int ImTextureDataGetFormatBytesPerPixel(ImTextureFormat format);
 IMGUI_API const char* ImTextureDataGetStatusName(ImTextureStatus status);
 IMGUI_API const char* ImTextureDataGetFormatName(ImTextureFormat format);
 
-#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	#ifndef IMGUI_DISABLE_DEBUG_TOOLS
 IMGUI_API void ImFontAtlasDebugLogTextureRequests(ImFontAtlas* atlas);
-#endif
+	#endif
 
 IMGUI_API bool ImFontAtlasGetMouseCursorTexData(
     ImFontAtlas* atlas,
@@ -5495,36 +5506,37 @@ IMGUI_API bool ImFontAtlasGetMouseCursorTexData(
 // [SECTION] Test Engine specific hooks (imgui_test_engine)
 //-----------------------------------------------------------------------------
 
-#ifdef IMGUI_ENABLE_TEST_ENGINE
+	#ifdef IMGUI_ENABLE_TEST_ENGINE
 extern void
 ImGuiTestEngineHook_ItemAdd(ImGuiContext* ctx, ImGuiID id, const ImRect& bb, const ImGuiLastItemData* item_data);  // item_data may be NULL
 extern void ImGuiTestEngineHook_ItemInfo(ImGuiContext* ctx, ImGuiID id, const char* label, ImGuiItemStatusFlags flags);
 extern void ImGuiTestEngineHook_Log(ImGuiContext* ctx, const char* fmt, ...);
 extern const char* ImGuiTestEngine_FindItemDebugLabel(ImGuiContext* ctx, ImGuiID id);
 
-// In IMGUI_VERSION_NUM >= 18934: changed IMGUI_TEST_ENGINE_ITEM_ADD(bb,id) to IMGUI_TEST_ENGINE_ITEM_ADD(id,bb,item_data);
-#define IMGUI_TEST_ENGINE_ITEM_ADD(_ID, _BB, _ITEM_DATA) \
-	if (g.TestEngineHookItems)                           \
-	ImGuiTestEngineHook_ItemAdd(&g, _ID, _BB, _ITEM_DATA)  // Register item bounding box
-#define IMGUI_TEST_ENGINE_ITEM_INFO(_ID, _LABEL, _FLAGS) \
-	if (g.TestEngineHookItems)                           \
-	ImGuiTestEngineHook_ItemInfo(&g, _ID, _LABEL, _FLAGS)                                // Register item label and status flags (optional)
-#define IMGUI_TEST_ENGINE_LOG(_FMT, ...) ImGuiTestEngineHook_Log(&g, _FMT, __VA_ARGS__)  // Custom log entry from user land into test log
-#else
-#define IMGUI_TEST_ENGINE_ITEM_ADD(_ID, _BB, _ITEM_DATA) ((void) 0)
-#define IMGUI_TEST_ENGINE_ITEM_INFO(_ID, _LABEL, _FLAGS) ((void) g)
-#endif
+	    // In IMGUI_VERSION_NUM >= 18934: changed IMGUI_TEST_ENGINE_ITEM_ADD(bb,id) to IMGUI_TEST_ENGINE_ITEM_ADD(id,bb,item_data);
+		#define IMGUI_TEST_ENGINE_ITEM_ADD(_ID, _BB, _ITEM_DATA) \
+			if (g.TestEngineHookItems)                           \
+			ImGuiTestEngineHook_ItemAdd(&g, _ID, _BB, _ITEM_DATA)  // Register item bounding box
+		#define IMGUI_TEST_ENGINE_ITEM_INFO(_ID, _LABEL, _FLAGS) \
+			if (g.TestEngineHookItems)                           \
+			ImGuiTestEngineHook_ItemInfo(&g, _ID, _LABEL, _FLAGS)  // Register item label and status flags (optional)
+		#define IMGUI_TEST_ENGINE_LOG(_FMT, ...) \
+			ImGuiTestEngineHook_Log(&g, _FMT, __VA_ARGS__)  // Custom log entry from user land into test log
+	#else
+		#define IMGUI_TEST_ENGINE_ITEM_ADD(_ID, _BB, _ITEM_DATA) ((void) 0)
+		#define IMGUI_TEST_ENGINE_ITEM_INFO(_ID, _LABEL, _FLAGS) ((void) g)
+	#endif
 
 //-----------------------------------------------------------------------------
 
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
+	#if defined(__clang__)
+		#pragma clang diagnostic pop
+	#elif defined(__GNUC__)
+		#pragma GCC diagnostic pop
+	#endif
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
+	#ifdef _MSC_VER
+		#pragma warning(pop)
+	#endif
 
 #endif  // #ifndef IMGUI_DISABLE

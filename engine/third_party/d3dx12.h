@@ -2476,8 +2476,8 @@ struct DefaultSampleDesc
 	operator DXGI_SAMPLE_DESC() noexcept { return DXGI_SAMPLE_DESC{1, 0}; }
 };
 
-#pragma warning(push)
-#pragma warning(disable : 4324)
+	#pragma warning(push)
+	#pragma warning(disable : 4324)
 template <typename InnerStructType, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE Type, typename DefaultArg = InnerStructType>
 class alignas(void*) CD3DX12_PIPELINE_STATE_STREAM_SUBOBJECT
 {
@@ -2499,7 +2499,7 @@ class alignas(void*) CD3DX12_PIPELINE_STATE_STREAM_SUBOBJECT
 	InnerStructType* operator&() noexcept { return &_Inner; }
 	InnerStructType const* operator&() const noexcept { return &_Inner; }
 };
-#pragma warning(pop)
+	#pragma warning(pop)
 typedef CD3DX12_PIPELINE_STATE_STREAM_SUBOBJECT<D3D12_PIPELINE_STATE_FLAGS, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_FLAGS>
     CD3DX12_PIPELINE_STATE_STREAM_FLAGS;
 typedef CD3DX12_PIPELINE_STATE_STREAM_SUBOBJECT<UINT, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_NODE_MASK>
@@ -3385,36 +3385,36 @@ inline bool operator==(const D3D12_RENDER_PASS_DEPTH_STENCIL_DESC& a, const D3D1
 }
 
 
-#ifndef D3DX12_NO_STATE_OBJECT_HELPERS
+	#ifndef D3DX12_NO_STATE_OBJECT_HELPERS
 
-//================================================================================================
-// D3DX12 State Object Creation Helpers
-//
-// Helper classes for creating new style state objects out of an arbitrary set of subobjects.
-// Uses STL
-//
-// Start by instantiating CD3DX12_STATE_OBJECT_DESC (see it's public methods).
-// One of its methods is CreateSubobject(), which has a comment showing a couple of options for
-// defining subobjects using the helper classes for each subobject (CD3DX12_DXIL_LIBRARY_SUBOBJECT
-// etc.). The subobject helpers each have methods specific to the subobject for configuring it's
-// contents.
-//
-//================================================================================================
-#include <list>
-#include <vector>
-#include <string>
-#include <memory>
-#ifndef D3DX12_USE_ATL
-#include <wrl/client.h>
-#define D3DX12_COM_PTR Microsoft::WRL::ComPtr
-#define D3DX12_COM_PTR_GET(x) x.Get()
-#define D3DX12_COM_PTR_ADDRESSOF(x) x.GetAddressOf()
-#else
-#include <atlbase.h>
-#define D3DX12_COM_PTR ATL::CComPtr
-#define D3DX12_COM_PTR_GET(x) x.p
-#define D3DX12_COM_PTR_ADDRESSOF(x) &x.p
-#endif
+		//================================================================================================
+		// D3DX12 State Object Creation Helpers
+		//
+		// Helper classes for creating new style state objects out of an arbitrary set of subobjects.
+		// Uses STL
+		//
+		// Start by instantiating CD3DX12_STATE_OBJECT_DESC (see it's public methods).
+		// One of its methods is CreateSubobject(), which has a comment showing a couple of options for
+		// defining subobjects using the helper classes for each subobject (CD3DX12_DXIL_LIBRARY_SUBOBJECT
+		// etc.). The subobject helpers each have methods specific to the subobject for configuring it's
+		// contents.
+		//
+		//================================================================================================
+		#include <list>
+		#include <vector>
+		#include <string>
+		#include <memory>
+		#ifndef D3DX12_USE_ATL
+			#include <wrl/client.h>
+			#define D3DX12_COM_PTR Microsoft::WRL::ComPtr
+			#define D3DX12_COM_PTR_GET(x) x.Get()
+			#define D3DX12_COM_PTR_ADDRESSOF(x) x.GetAddressOf()
+		#else
+			#include <atlbase.h>
+			#define D3DX12_COM_PTR ATL::CComPtr
+			#define D3DX12_COM_PTR_GET(x) x.p
+			#define D3DX12_COM_PTR_ADDRESSOF(x) &x.p
+		#endif
 
 //------------------------------------------------------------------------------------------------
 class CD3DX12_STATE_OBJECT_DESC
@@ -3573,9 +3573,9 @@ class CD3DX12_STATE_OBJECT_DESC
 		D3D12_STATE_SUBOBJECT* m_pSubobject;
 	};
 
-#if (__cplusplus >= 201103L)
+		#if (__cplusplus >= 201103L)
 	std::list<std::unique_ptr<const SUBOBJECT_HELPER_BASE>> m_OwnedSubobjectHelpers;
-#else
+		#else
 	class OWNED_HELPER
 	{
 	  public:
@@ -3585,7 +3585,7 @@ class CD3DX12_STATE_OBJECT_DESC
 	};
 
 	std::list<OWNED_HELPER> m_OwnedSubobjectHelpers;
-#endif
+		#endif
 
 	friend class CD3DX12_DXIL_LIBRARY_SUBOBJECT;
 	friend class CD3DX12_EXISTING_COLLECTION_SUBOBJECT;
@@ -4042,10 +4042,10 @@ class CD3DX12_NODE_MASK_SUBOBJECT : public CD3DX12_STATE_OBJECT_DESC::SUBOBJECT_
 };
 
 
-#undef D3DX12_COM_PTR
-#undef D3DX12_COM_PTR_GET
-#undef D3DX12_COM_PTR_ADDRESSOF
-#endif  // #ifndef D3DX12_NO_STATE_OBJECT_HELPERS
+		#undef D3DX12_COM_PTR
+		#undef D3DX12_COM_PTR_GET
+		#undef D3DX12_COM_PTR_ADDRESSOF
+	#endif  // #ifndef D3DX12_NO_STATE_OBJECT_HELPERS
 
 #endif  // defined( __cplusplus )
 

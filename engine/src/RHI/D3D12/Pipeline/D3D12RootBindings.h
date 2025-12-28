@@ -66,13 +66,13 @@ namespace RootBindings
 	namespace SRVRegister
 	{
 		constexpr uint32_t BaseTexture = 0;  // register(t0) - Albedo/diffuse
-		// Future: Normal, Roughness, Metallic, etc.
+		                                     // Future: Normal, Roughness, Metallic, etc.
 	}  // namespace SRVRegister
 
 	namespace SamplerRegister
 	{
 		constexpr uint32_t LinearWrap = 0;  // register(s0)
-		// Future: Point, Aniso, Shadow comparison, etc.
+		                                    // Future: Point, Aniso, Shadow comparison, etc.
 	}  // namespace SamplerRegister
 
 	//--------------------------------------------------------------------------

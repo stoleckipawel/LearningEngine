@@ -84,32 +84,32 @@
 
 #include "imgui.h"
 #ifndef IMGUI_DISABLE
-#include "imgui_impl_win32.h"
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
-#include <windowsx.h>  // GET_X_LPARAM(), GET_Y_LPARAM()
-#include <tchar.h>
-#include <dwmapi.h>
+	#include "imgui_impl_win32.h"
+	#ifndef WIN32_LEAN_AND_MEAN
+		#define WIN32_LEAN_AND_MEAN
+	#endif
+	#include <windows.h>
+	#include <windowsx.h>  // GET_X_LPARAM(), GET_Y_LPARAM()
+	#include <tchar.h>
+	#include <dwmapi.h>
 
-// Using XInput for gamepad (will load DLL dynamically)
-#ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
-#include <xinput.h>
+    // Using XInput for gamepad (will load DLL dynamically)
+	#ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
+		#include <xinput.h>
 typedef DWORD(WINAPI* PFN_XInputGetCapabilities)(DWORD, DWORD, XINPUT_CAPABILITIES*);
 typedef DWORD(WINAPI* PFN_XInputGetState)(DWORD, XINPUT_STATE*);
-#endif
+	#endif
 
-// Clang/GCC warnings with -Weverything
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wcast-function-type"  // warning: cast between incompatible function types (for loader)
-#endif
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpragmas"             // warning: unknown option after '#pragma GCC diagnostic' kind
-#pragma GCC diagnostic ignored "-Wcast-function-type"  // warning: cast between incompatible function types (for loader)
-#endif
+    // Clang/GCC warnings with -Weverything
+	#if defined(__clang__)
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wcast-function-type"  // warning: cast between incompatible function types (for loader)
+	#endif
+	#if defined(__GNUC__)
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Wpragmas"             // warning: unknown option after '#pragma GCC diagnostic' kind
+		#pragma GCC diagnostic ignored "-Wcast-function-type"  // warning: cast between incompatible function types (for loader)
+	#endif
 
 struct ImGui_ImplWin32_Data
 {
@@ -122,13 +122,13 @@ struct ImGui_ImplWin32_Data
 	ImGuiMouseCursor LastMouseCursor;
 	UINT32 KeyboardCodePage;
 
-#ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
+	#ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
 	bool HasGamepad;
 	bool WantUpdateHasGamepad;
 	HMODULE XInputDLL;
 	PFN_XInputGetCapabilities XInputGetCapabilities;
 	PFN_XInputGetState XInputGetState;
-#endif
+	#endif
 
 	ImGui_ImplWin32_Data() { memset((void*) this, 0, sizeof(*this)); }
 };
@@ -193,7 +193,7 @@ static bool ImGui_ImplWin32_InitEx(void* hwnd, bool platform_has_own_dc)
 	IM_UNUSED(platform_has_own_dc);  // Used in 'docking' branch
 
 	// Dynamically load XInput library
-#ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
+	#ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
 	bd->WantUpdateHasGamepad = true;
 	const char* xinput_dll_names[] = {
 	    "xinput1_4.dll",    // Windows 8+
@@ -210,7 +210,7 @@ static bool ImGui_ImplWin32_InitEx(void* hwnd, bool platform_has_own_dc)
 			bd->XInputGetState = (PFN_XInputGetState)::GetProcAddress(dll, "XInputGetState");
 			break;
 		}
-#endif  // IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
+	#endif  // IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
 
 	return true;
 }
@@ -234,10 +234,10 @@ void ImGui_ImplWin32_Shutdown()
 	ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
 
 	// Unload XInput library
-#ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
+	#ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
 	if (bd->XInputDLL)
 		::FreeLibrary(bd->XInputDLL);
-#endif  // IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
+	#endif  // IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
 
 	io.BackendPlatformName = nullptr;
 	io.BackendPlatformUserData = nullptr;
@@ -368,7 +368,7 @@ static void ImGui_ImplWin32_UpdateMouseData(ImGuiIO& io)
 // Gamepad navigation mapping
 static void ImGui_ImplWin32_UpdateGamepads(ImGuiIO& io)
 {
-#ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
+	#ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
 	ImGui_ImplWin32_Data* bd = ImGui_ImplWin32_GetBackendData(io);
 
 	// Calling XInputGetState() every frame on disconnected gamepads is unfortunately too slow.
@@ -387,16 +387,16 @@ static void ImGui_ImplWin32_UpdateGamepads(ImGuiIO& io)
 		return;
 	io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
 
-#define IM_SATURATE(V) (V < 0.0f ? 0.0f : V > 1.0f ? 1.0f : V)
-#define MAP_BUTTON(KEY_NO, BUTTON_ENUM)                                \
-	{                                                                  \
-		io.AddKeyEvent(KEY_NO, (gamepad.wButtons & BUTTON_ENUM) != 0); \
-	}
-#define MAP_ANALOG(KEY_NO, VALUE, V0, V1)                          \
-	{                                                              \
-		float vn = (float) (VALUE - V0) / (float) (V1 - V0);       \
-		io.AddKeyAnalogEvent(KEY_NO, vn > 0.10f, IM_SATURATE(vn)); \
-	}
+		#define IM_SATURATE(V) (V < 0.0f ? 0.0f : V > 1.0f ? 1.0f : V)
+		#define MAP_BUTTON(KEY_NO, BUTTON_ENUM)                                \
+			{                                                                  \
+				io.AddKeyEvent(KEY_NO, (gamepad.wButtons & BUTTON_ENUM) != 0); \
+			}
+		#define MAP_ANALOG(KEY_NO, VALUE, V0, V1)                          \
+			{                                                              \
+				float vn = (float) (VALUE - V0) / (float) (V1 - V0);       \
+				io.AddKeyAnalogEvent(KEY_NO, vn > 0.10f, IM_SATURATE(vn)); \
+			}
 	MAP_BUTTON(ImGuiKey_GamepadStart, XINPUT_GAMEPAD_START);
 	MAP_BUTTON(ImGuiKey_GamepadBack, XINPUT_GAMEPAD_BACK);
 	MAP_BUTTON(ImGuiKey_GamepadFaceLeft, XINPUT_GAMEPAD_X);
@@ -421,11 +421,11 @@ static void ImGui_ImplWin32_UpdateGamepads(ImGuiIO& io)
 	MAP_ANALOG(ImGuiKey_GamepadRStickRight, gamepad.sThumbRX, +XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, +32767);
 	MAP_ANALOG(ImGuiKey_GamepadRStickUp, gamepad.sThumbRY, +XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, +32767);
 	MAP_ANALOG(ImGuiKey_GamepadRStickDown, gamepad.sThumbRY, -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, -32768);
-#undef MAP_BUTTON
-#undef MAP_ANALOG
-#else  // #ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
+		#undef MAP_BUTTON
+		#undef MAP_ANALOG
+	#else  // #ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
 	IM_UNUSED(io);
-#endif
+	#endif
 }
 
 void ImGui_ImplWin32_NewFrame()
@@ -740,13 +740,13 @@ ImGuiKey ImGui_ImplWin32_KeyEventToImGuiKey(WPARAM wParam, LPARAM lParam)
 	return ImGuiKey_None;
 }
 
-// Allow compilation with old Windows SDK. MinGW doesn't have default _WIN32_WINNT/WINVER versions.
-#ifndef WM_MOUSEHWHEEL
-#define WM_MOUSEHWHEEL 0x020E
-#endif
-#ifndef DBT_DEVNODES_CHANGED
-#define DBT_DEVNODES_CHANGED 0x0007
-#endif
+    // Allow compilation with old Windows SDK. MinGW doesn't have default _WIN32_WINNT/WINVER versions.
+	#ifndef WM_MOUSEHWHEEL
+		#define WM_MOUSEHWHEEL 0x020E
+	#endif
+	#ifndef DBT_DEVNODES_CHANGED
+		#define DBT_DEVNODES_CHANGED 0x0007
+	#endif
 
 // Helper to obtain the source of mouse messages.
 // See https://learn.microsoft.com/en-us/windows/win32/tablet/system-events-and-mouse-messages
@@ -1005,10 +1005,10 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandlerEx(HWND hwnd, UINT msg, WPA
 				return 1;
 			return 0;
 		case WM_DEVICECHANGE:
-#ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
+	#ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
 			if ((UINT) wParam == DBT_DEVNODES_CHANGED)
 				bd->WantUpdateHasGamepad = true;
-#endif
+	#endif
 			return 0;
 	}
 	return 0;
@@ -1051,13 +1051,13 @@ static BOOL _IsWindowsVersionOrGreater(WORD major, WORD minor, WORD)
 	return (RtlVerifyVersionInfoFn(&versionInfo, VER_MAJORVERSION | VER_MINORVERSION, conditionMask) == 0) ? TRUE : FALSE;
 }
 
-#define _IsWindowsVistaOrGreater() _IsWindowsVersionOrGreater(HIBYTE(0x0600), LOBYTE(0x0600), 0)    // _WIN32_WINNT_VISTA
-#define _IsWindows8OrGreater() _IsWindowsVersionOrGreater(HIBYTE(0x0602), LOBYTE(0x0602), 0)        // _WIN32_WINNT_WIN8
-#define _IsWindows8Point1OrGreater() _IsWindowsVersionOrGreater(HIBYTE(0x0603), LOBYTE(0x0603), 0)  // _WIN32_WINNT_WINBLUE
-#define _IsWindows10OrGreater() \
-	_IsWindowsVersionOrGreater(HIBYTE(0x0A00), LOBYTE(0x0A00), 0)  // _WIN32_WINNT_WINTHRESHOLD / _WIN32_WINNT_WIN10
+	#define _IsWindowsVistaOrGreater() _IsWindowsVersionOrGreater(HIBYTE(0x0600), LOBYTE(0x0600), 0)    // _WIN32_WINNT_VISTA
+	#define _IsWindows8OrGreater() _IsWindowsVersionOrGreater(HIBYTE(0x0602), LOBYTE(0x0602), 0)        // _WIN32_WINNT_WIN8
+	#define _IsWindows8Point1OrGreater() _IsWindowsVersionOrGreater(HIBYTE(0x0603), LOBYTE(0x0603), 0)  // _WIN32_WINNT_WINBLUE
+	#define _IsWindows10OrGreater() \
+		_IsWindowsVersionOrGreater(HIBYTE(0x0A00), LOBYTE(0x0A00), 0)  // _WIN32_WINNT_WINTHRESHOLD / _WIN32_WINNT_WIN10
 
-#ifndef DPI_ENUMS_DECLARED
+	#ifndef DPI_ENUMS_DECLARED
 typedef enum
 {
 	PROCESS_DPI_UNAWARE = 0,
@@ -1071,14 +1071,14 @@ typedef enum
 	MDT_RAW_DPI = 2,
 	MDT_DEFAULT = MDT_EFFECTIVE_DPI
 } MONITOR_DPI_TYPE;
-#endif
-#ifndef _DPI_AWARENESS_CONTEXTS_
+	#endif
+	#ifndef _DPI_AWARENESS_CONTEXTS_
 DECLARE_HANDLE(DPI_AWARENESS_CONTEXT);
-#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE (DPI_AWARENESS_CONTEXT) - 3
-#endif
-#ifndef DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
-#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 (DPI_AWARENESS_CONTEXT) - 4
-#endif
+		#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE (DPI_AWARENESS_CONTEXT) - 3
+	#endif
+	#ifndef DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+		#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 (DPI_AWARENESS_CONTEXT) - 4
+	#endif
 typedef HRESULT(WINAPI* PFN_SetProcessDpiAwareness)(PROCESS_DPI_AWARENESS);               // Shcore.lib + dll, Windows 8.1+
 typedef HRESULT(WINAPI* PFN_GetDpiForMonitor)(HMONITOR, MONITOR_DPI_TYPE, UINT*, UINT*);  // Shcore.lib + dll, Windows 8.1+
 typedef DPI_AWARENESS_CONTEXT(WINAPI* PFN_SetThreadDpiAwarenessContext)(
@@ -1107,14 +1107,14 @@ void ImGui_ImplWin32_EnableDpiAwareness()
 			return;
 		}
 	}
-#if _WIN32_WINNT >= 0x0600
+	#if _WIN32_WINNT >= 0x0600
 	::SetProcessDPIAware();
-#endif
+	#endif
 }
 
-#if defined(_MSC_VER) && !defined(NOGDI)
-#pragma comment(lib, "gdi32")  // Link with gdi32.lib for GetDeviceCaps(). MinGW will require linking with '-lgdi32'
-#endif
+	#if defined(_MSC_VER) && !defined(NOGDI)
+		#pragma comment(lib, "gdi32")  // Link with gdi32.lib for GetDeviceCaps(). MinGW will require linking with '-lgdi32'
+	#endif
 
 float ImGui_ImplWin32_GetDpiScaleForMonitor(void* monitor)
 {
@@ -1132,13 +1132,13 @@ float ImGui_ImplWin32_GetDpiScaleForMonitor(void* monitor)
 			return xdpi / 96.0f;
 		}
 	}
-#ifndef NOGDI
+	#ifndef NOGDI
 	const HDC dc = ::GetDC(nullptr);
 	xdpi = ::GetDeviceCaps(dc, LOGPIXELSX);
 	ydpi = ::GetDeviceCaps(dc, LOGPIXELSY);
 	IM_ASSERT(xdpi == ydpi);  // Please contact me if you hit this assert!
 	::ReleaseDC(nullptr, dc);
-#endif
+	#endif
 	return xdpi / 96.0f;
 }
 
@@ -1152,9 +1152,9 @@ float ImGui_ImplWin32_GetDpiScaleForHwnd(void* hwnd)
 // Transparency related helpers (optional)
 //--------------------------------------------------------------------------------------------------------
 
-#if defined(_MSC_VER)
-#pragma comment(lib, "dwmapi")  // Link with dwmapi.lib. MinGW will require linking with '-ldwmapi'
-#endif
+	#if defined(_MSC_VER)
+		#pragma comment(lib, "dwmapi")  // Link with dwmapi.lib. MinGW will require linking with '-ldwmapi'
+	#endif
 
 // [experimental]
 // Borrowed from GLFW's function updateFramebufferTransparency() in src/win32_window.c
@@ -1190,11 +1190,11 @@ void ImGui_ImplWin32_EnableAlphaCompositing(void* hwnd)
 
 //---------------------------------------------------------------------------------------------------------
 
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
+	#if defined(__GNUC__)
+		#pragma GCC diagnostic pop
+	#endif
+	#if defined(__clang__)
+		#pragma clang diagnostic pop
+	#endif
 
 #endif  // #ifndef IMGUI_DISABLE
