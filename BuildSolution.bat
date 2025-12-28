@@ -70,6 +70,7 @@ echo [LOG] Solution file path set to: !SOLUTION_FILE!
 
 REM Step 5: Generate solution if missing
 if not exist "!SOLUTION_FILE!" (
+    set "SOLUTION_WAS_GENERATED=1"
     echo [LOG] Solution file not found. Starting generation process...
     if not exist "!BUILD_DIR!" (
         echo [LOG] Build folder does not exist. Creating: "!BUILD_DIR!"
@@ -100,7 +101,23 @@ if not exist "!SOLUTION_FILE!" (
     cd /D "!SRC_DIR!"
     echo [LOG] Solution successfully generated: "!SOLUTION_FILE!"
 ) else (
+    set "SOLUTION_WAS_GENERATED=0"
     echo [LOG] Solution file already exists: "!SOLUTION_FILE!"
+)
+
+REM Optional: open solution after generation (interactive only)
+if "!SOLUTION_WAS_GENERATED!"=="1" (
+    if not defined PARENT_BATCH (
+        echo.
+        echo Open solution now? [Y/N]: >CON
+        set "OPEN_SOLUTION="
+        set /P OPEN_SOLUTION=<CON
+        for /f "tokens=1" %%A in ("!OPEN_SOLUTION!") do set "OPEN_SOLUTION=%%A"
+        if /I "!OPEN_SOLUTION:~0,1!"=="y" (
+            echo [LOG] Opening solution: "!SOLUTION_FILE!"
+            start "" "!SOLUTION_FILE!"
+        )
+    )
 )
 
 echo [LOG] BuildSolution.bat completed.
