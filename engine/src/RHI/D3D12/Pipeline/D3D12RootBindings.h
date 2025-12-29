@@ -3,85 +3,101 @@
 #include <cstdint>
 #include <d3d12.h>
 
-//------------------------------------------------------------------------------
-// RootBindings.h - Single Source of Truth for Shader Resource Binding Layout
-//------------------------------------------------------------------------------
-// This header defines the canonical binding slots for the engine's root signature.
-// It MUST be kept in sync with:
-//   - RootSignature.cpp (C++ root signature creation)
-//   - ConstantBufferData.hlsli (HLSL register declarations)
-//
-// Design Philosophy:
-//   - Constant buffers use root CBVs (direct GPU VA binding) for low overhead
-//   - Textures/Samplers use descriptor tables for flexibility
-//   - Binding frequency drives slot assignment (per-frame → per-object)
-//
-// Update Frequency (binding cost optimization):
-//   - Slots 0-1: Bound once per frame (low frequency)
-//   - Slots 2-3: Bound per draw call (high frequency)
-//   - Slots 4-5: Bound once per frame or per-material (medium frequency)
-//------------------------------------------------------------------------------
+// =============================================================================
+// Root Bindings
+// =============================================================================
+// Single source of truth for shader resource binding layout.
+// Sync with: D3D12RootSignature.cpp, ConstantBuffers.hlsli, Samplers.hlsli
 
 namespace RootBindings
 {
-	//--------------------------------------------------------------------------
-	// Root Parameter Indices (D3D12 root signature parameter slots)
-	//--------------------------------------------------------------------------
-	// These indices are passed to SetGraphicsRootConstantBufferView() and
-	// SetGraphicsRootDescriptorTable() to bind resources to the pipeline.
-	//--------------------------------------------------------------------------
 
+	// -----------------------------------------------------------------------------
+	// Root Parameter Indices
+	// -----------------------------------------------------------------------------
 	namespace RootParam
 	{
-		// Constant Buffer Views (root CBVs - direct GPU virtual address binding)
-		constexpr uint32_t PerFrame = 0;     // b0 - Per-frame data (time, viewport)
-		constexpr uint32_t PerView = 1;      // b1 - Per-view/camera data (matrices)
-		constexpr uint32_t PerObjectVS = 2;  // b2 - Per-object vertex shader data (world matrix)
-		constexpr uint32_t PerObjectPS = 3;  // b3 - Per-object pixel shader data (material)
+		constexpr uint32_t PerFrame = 0;
+		constexpr uint32_t PerView = 1;
+		constexpr uint32_t PerObjectVS = 2;
+		constexpr uint32_t PerObjectPS = 3;
+		constexpr uint32_t TextureSRV = 4;
+		constexpr uint32_t SamplerTable = 5;
 
-		// Descriptor Tables (heap-based binding)
-		constexpr uint32_t TextureSRV = 4;  // t0+ - Texture SRVs
-		constexpr uint32_t Sampler = 5;     // s0+ - Samplers
-
-		// Total root parameter count (for validation)
 		constexpr uint32_t Count = 6;
 	}  // namespace RootParam
 
-	//--------------------------------------------------------------------------
-	// HLSL Register Slots (constant buffer register assignments)
-	//--------------------------------------------------------------------------
-	// These match the register(bN) declarations in HLSL shaders.
-	// They are separate from RootParam indices when using descriptor tables,
-	// but identical when using root CBVs (our current design).
-	//--------------------------------------------------------------------------
-
+	// -----------------------------------------------------------------------------
+	// Constant Buffer Registers
+	// -----------------------------------------------------------------------------
 	namespace CBRegister
 	{
-		constexpr uint32_t PerFrame = 0;     // register(b0)
-		constexpr uint32_t PerView = 1;      // register(b1)
-		constexpr uint32_t PerObjectVS = 2;  // register(b2)
-		constexpr uint32_t PerObjectPS = 3;  // register(b3)
+		constexpr uint32_t PerFrame = 0;
+		constexpr uint32_t PerView = 1;
+		constexpr uint32_t PerObjectVS = 2;
+		constexpr uint32_t PerObjectPS = 3;
 	}  // namespace CBRegister
 
+	// -----------------------------------------------------------------------------
+	// Texture Registers
+	// -----------------------------------------------------------------------------
 	namespace SRVRegister
 	{
-		constexpr uint32_t BaseTexture = 0;  // register(t0) - Albedo/diffuse
-		                                     // Future: Normal, Roughness, Metallic, etc.
+		constexpr uint32_t BaseTexture = 0;
 	}  // namespace SRVRegister
 
+	// -----------------------------------------------------------------------------
+	// Sampler Registers
+	// -----------------------------------------------------------------------------
+	// Layout: [Point MinMag][Linear MinMag][Anisotropic]
+	// Each group: [MipPoint/MipLinear/NoMip] × [Wrap/Clamp/Mirror]
 	namespace SamplerRegister
 	{
-		constexpr uint32_t LinearWrap = 0;  // register(s0)
-		                                    // Future: Point, Aniso, Shadow comparison, etc.
+		// Point MinMag (s0-s8)
+		constexpr uint32_t PointMipPointWrap = 0;
+		constexpr uint32_t PointMipPointClamp = 1;
+		constexpr uint32_t PointMipPointMirror = 2;
+		constexpr uint32_t PointMipLinearWrap = 3;
+		constexpr uint32_t PointMipLinearClamp = 4;
+		constexpr uint32_t PointMipLinearMirror = 5;
+		constexpr uint32_t PointNoMipWrap = 6;
+		constexpr uint32_t PointNoMipClamp = 7;
+		constexpr uint32_t PointNoMipMirror = 8;
+
+		// Linear MinMag (s9-s17)
+		constexpr uint32_t LinearMipPointWrap = 9;
+		constexpr uint32_t LinearMipPointClamp = 10;
+		constexpr uint32_t LinearMipPointMirror = 11;
+		constexpr uint32_t LinearMipLinearWrap = 12;
+		constexpr uint32_t LinearMipLinearClamp = 13;
+		constexpr uint32_t LinearMipLinearMirror = 14;
+		constexpr uint32_t LinearNoMipWrap = 15;
+		constexpr uint32_t LinearNoMipClamp = 16;
+		constexpr uint32_t LinearNoMipMirror = 17;
+
+		// Anisotropic (s18-s32)
+		constexpr uint32_t Aniso1xWrap = 18;
+		constexpr uint32_t Aniso1xClamp = 19;
+		constexpr uint32_t Aniso1xMirror = 20;
+		constexpr uint32_t Aniso2xWrap = 21;
+		constexpr uint32_t Aniso2xClamp = 22;
+		constexpr uint32_t Aniso2xMirror = 23;
+		constexpr uint32_t Aniso4xWrap = 24;
+		constexpr uint32_t Aniso4xClamp = 25;
+		constexpr uint32_t Aniso4xMirror = 26;
+		constexpr uint32_t Aniso8xWrap = 27;
+		constexpr uint32_t Aniso8xClamp = 28;
+		constexpr uint32_t Aniso8xMirror = 29;
+		constexpr uint32_t Aniso16xWrap = 30;
+		constexpr uint32_t Aniso16xClamp = 31;
+		constexpr uint32_t Aniso16xMirror = 32;
+
+		constexpr uint32_t Count = 33;
 	}  // namespace SamplerRegister
 
-	//--------------------------------------------------------------------------
-	// Shader Visibility Helpers (for documentation and validation)
-	//--------------------------------------------------------------------------
-	// Indicates which shader stages can access each resource.
-	// Used when creating root signature parameters.
-	//--------------------------------------------------------------------------
-
+	// -----------------------------------------------------------------------------
+	// Shader Visibility
+	// -----------------------------------------------------------------------------
 	namespace Visibility
 	{
 		constexpr D3D12_SHADER_VISIBILITY PerFrame = D3D12_SHADER_VISIBILITY_ALL;
@@ -89,7 +105,7 @@ namespace RootBindings
 		constexpr D3D12_SHADER_VISIBILITY PerObjectVS = D3D12_SHADER_VISIBILITY_VERTEX;
 		constexpr D3D12_SHADER_VISIBILITY PerObjectPS = D3D12_SHADER_VISIBILITY_PIXEL;
 		constexpr D3D12_SHADER_VISIBILITY TextureSRV = D3D12_SHADER_VISIBILITY_PIXEL;
-		constexpr D3D12_SHADER_VISIBILITY Sampler = D3D12_SHADER_VISIBILITY_PIXEL;
+		constexpr D3D12_SHADER_VISIBILITY SamplerTable = D3D12_SHADER_VISIBILITY_PIXEL;
 	}  // namespace Visibility
 
 }  // namespace RootBindings

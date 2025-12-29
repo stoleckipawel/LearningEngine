@@ -1,9 +1,8 @@
 #include "PCH.h"
 #include "D3D12SamplerLibrary.h"
-
-#include <cassert>
-
-const std::array<uint32_t, D3D12SamplerLibrary::kAnisoLevelCount> D3D12SamplerLibrary::kAnisoLevels = {1u, 2u, 4u, 8u, 16u};
+#include "D3D12DescriptorHeapManager.h"
+#include "D3D12Rhi.h"
+#include "Log.h"
 
 void D3D12SamplerLibrary::Initialize()
 {
@@ -12,231 +11,117 @@ void D3D12SamplerLibrary::Initialize()
 		return;
 	}
 
-	m_pointWrap2D.emplace(MakeSamplerDesc(FilterMode::Point, AddressMode::Wrap, Dimension::Tex2D));
-	m_pointClamp2D.emplace(MakeSamplerDesc(FilterMode::Point, AddressMode::Clamp, Dimension::Tex2D));
-	m_pointMirror2D.emplace(MakeSamplerDesc(FilterMode::Point, AddressMode::Mirror, Dimension::Tex2D));
+	constexpr uint32_t samplerCount = static_cast<uint32_t>(Slot::Count);
 
-	m_linearWrap2D.emplace(MakeSamplerDesc(FilterMode::Linear, AddressMode::Wrap, Dimension::Tex2D));
-	m_linearClamp2D.emplace(MakeSamplerDesc(FilterMode::Linear, AddressMode::Clamp, Dimension::Tex2D));
-	m_linearMirror2D.emplace(MakeSamplerDesc(FilterMode::Linear, AddressMode::Mirror, Dimension::Tex2D));
-
-	m_pointWrap3D.emplace(MakeSamplerDesc(FilterMode::Point, AddressMode::Wrap, Dimension::Tex3D));
-	m_pointClamp3D.emplace(MakeSamplerDesc(FilterMode::Point, AddressMode::Clamp, Dimension::Tex3D));
-	m_pointMirror3D.emplace(MakeSamplerDesc(FilterMode::Point, AddressMode::Mirror, Dimension::Tex3D));
-
-	m_linearWrap3D.emplace(MakeSamplerDesc(FilterMode::Linear, AddressMode::Wrap, Dimension::Tex3D));
-	m_linearClamp3D.emplace(MakeSamplerDesc(FilterMode::Linear, AddressMode::Clamp, Dimension::Tex3D));
-	m_linearMirror3D.emplace(MakeSamplerDesc(FilterMode::Linear, AddressMode::Mirror, Dimension::Tex3D));
-
-	for (size_t i = 0; i < kAnisoLevelCount; ++i)
+	m_tableHandle = GD3D12DescriptorHeapManager.AllocateContiguous(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, samplerCount);
+	if (!m_tableHandle.IsValid())
 	{
-		const uint32_t maxAnisotropy = kAnisoLevels[i];
-		m_anisoWrap2D[i].emplace(MakeSamplerDesc(FilterMode::Anisotropic, AddressMode::Wrap, Dimension::Tex2D, maxAnisotropy));
-		m_anisoClamp2D[i].emplace(MakeSamplerDesc(FilterMode::Anisotropic, AddressMode::Clamp, Dimension::Tex2D, maxAnisotropy));
-		m_anisoMirror2D[i].emplace(MakeSamplerDesc(FilterMode::Anisotropic, AddressMode::Mirror, Dimension::Tex2D, maxAnisotropy));
-		m_anisoWrap3D[i].emplace(MakeSamplerDesc(FilterMode::Anisotropic, AddressMode::Wrap, Dimension::Tex3D, maxAnisotropy));
-		m_anisoClamp3D[i].emplace(MakeSamplerDesc(FilterMode::Anisotropic, AddressMode::Clamp, Dimension::Tex3D, maxAnisotropy));
-		m_anisoMirror3D[i].emplace(MakeSamplerDesc(FilterMode::Anisotropic, AddressMode::Mirror, Dimension::Tex3D, maxAnisotropy));
+		LOG_FATAL("Failed to allocate sampler descriptor table.");
+		return;
 	}
+
+	m_descriptorSize = GD3D12Rhi.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+
+	// Point MinMag samplers
+	CreateSampler(Slot::PointMipPointWrap, {MinMagFilter::Point, MipFilter::Point, AddressMode::Wrap, 1});
+	CreateSampler(Slot::PointMipPointClamp, {MinMagFilter::Point, MipFilter::Point, AddressMode::Clamp, 1});
+	CreateSampler(Slot::PointMipPointMirror, {MinMagFilter::Point, MipFilter::Point, AddressMode::Mirror, 1});
+	CreateSampler(Slot::PointMipLinearWrap, {MinMagFilter::Point, MipFilter::Linear, AddressMode::Wrap, 1});
+	CreateSampler(Slot::PointMipLinearClamp, {MinMagFilter::Point, MipFilter::Linear, AddressMode::Clamp, 1});
+	CreateSampler(Slot::PointMipLinearMirror, {MinMagFilter::Point, MipFilter::Linear, AddressMode::Mirror, 1});
+	CreateSampler(Slot::PointNoMipWrap, {MinMagFilter::Point, MipFilter::None, AddressMode::Wrap, 1});
+	CreateSampler(Slot::PointNoMipClamp, {MinMagFilter::Point, MipFilter::None, AddressMode::Clamp, 1});
+	CreateSampler(Slot::PointNoMipMirror, {MinMagFilter::Point, MipFilter::None, AddressMode::Mirror, 1});
+
+	// Linear MinMag samplers
+	CreateSampler(Slot::LinearMipPointWrap, {MinMagFilter::Linear, MipFilter::Point, AddressMode::Wrap, 1});
+	CreateSampler(Slot::LinearMipPointClamp, {MinMagFilter::Linear, MipFilter::Point, AddressMode::Clamp, 1});
+	CreateSampler(Slot::LinearMipPointMirror, {MinMagFilter::Linear, MipFilter::Point, AddressMode::Mirror, 1});
+	CreateSampler(Slot::LinearMipLinearWrap, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Wrap, 1});
+	CreateSampler(Slot::LinearMipLinearClamp, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Clamp, 1});
+	CreateSampler(Slot::LinearMipLinearMirror, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Mirror, 1});
+	CreateSampler(Slot::LinearNoMipWrap, {MinMagFilter::Linear, MipFilter::None, AddressMode::Wrap, 1});
+	CreateSampler(Slot::LinearNoMipClamp, {MinMagFilter::Linear, MipFilter::None, AddressMode::Clamp, 1});
+	CreateSampler(Slot::LinearNoMipMirror, {MinMagFilter::Linear, MipFilter::None, AddressMode::Mirror, 1});
+
+	// Anisotropic samplers
+	CreateSampler(Slot::Aniso1xWrap, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Wrap, 1});
+	CreateSampler(Slot::Aniso1xClamp, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Clamp, 1});
+	CreateSampler(Slot::Aniso1xMirror, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Mirror, 1});
+	CreateSampler(Slot::Aniso2xWrap, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Wrap, 2});
+	CreateSampler(Slot::Aniso2xClamp, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Clamp, 2});
+	CreateSampler(Slot::Aniso2xMirror, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Mirror, 2});
+	CreateSampler(Slot::Aniso4xWrap, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Wrap, 4});
+	CreateSampler(Slot::Aniso4xClamp, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Clamp, 4});
+	CreateSampler(Slot::Aniso4xMirror, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Mirror, 4});
+	CreateSampler(Slot::Aniso8xWrap, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Wrap, 8});
+	CreateSampler(Slot::Aniso8xClamp, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Clamp, 8});
+	CreateSampler(Slot::Aniso8xMirror, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Mirror, 8});
+	CreateSampler(Slot::Aniso16xWrap, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Wrap, 16});
+	CreateSampler(Slot::Aniso16xClamp, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Clamp, 16});
+	CreateSampler(Slot::Aniso16xMirror, {MinMagFilter::Linear, MipFilter::Linear, AddressMode::Mirror, 16});
 
 	m_bInitialized = true;
 }
 
 void D3D12SamplerLibrary::Shutdown() noexcept
 {
-	for (auto& sampler : m_anisoMirror3D)
+	if (m_tableHandle.IsValid())
 	{
-		sampler.reset();
+		GD3D12DescriptorHeapManager.FreeContiguous(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, m_tableHandle, static_cast<uint32_t>(Slot::Count));
+		m_tableHandle = D3D12DescriptorHandle{};
 	}
-	for (auto& sampler : m_anisoClamp3D)
-	{
-		sampler.reset();
-	}
-	for (auto& sampler : m_anisoWrap3D)
-	{
-		sampler.reset();
-	}
-	for (auto& sampler : m_anisoMirror2D)
-	{
-		sampler.reset();
-	}
-	for (auto& sampler : m_anisoClamp2D)
-	{
-		sampler.reset();
-	}
-	for (auto& sampler : m_anisoWrap2D)
-	{
-		sampler.reset();
-	}
-
-	m_linearMirror3D.reset();
-	m_linearClamp3D.reset();
-	m_linearWrap3D.reset();
-	m_pointMirror3D.reset();
-	m_pointClamp3D.reset();
-	m_pointWrap3D.reset();
-
-	m_linearMirror2D.reset();
-	m_linearClamp2D.reset();
-	m_linearWrap2D.reset();
-	m_pointMirror2D.reset();
-	m_pointClamp2D.reset();
-	m_pointWrap2D.reset();
-
 	m_bInitialized = false;
 }
 
-const D3D12Sampler& D3D12SamplerLibrary::GetPoint(AddressMode addressMode, Dimension dimension) const
+D3D12SamplerLibrary::~D3D12SamplerLibrary() noexcept
 {
-	assert(m_bInitialized);
-
-	if (dimension == Dimension::Tex2D)
-	{
-		switch (addressMode)
-		{
-			case AddressMode::Wrap:
-				return *m_pointWrap2D;
-			case AddressMode::Clamp:
-				return *m_pointClamp2D;
-			case AddressMode::Mirror:
-				return *m_pointMirror2D;
-		}
-	}
-	else
-	{
-		switch (addressMode)
-		{
-			case AddressMode::Wrap:
-				return *m_pointWrap3D;
-			case AddressMode::Clamp:
-				return *m_pointClamp3D;
-			case AddressMode::Mirror:
-				return *m_pointMirror3D;
-		}
-	}
-
-	assert(false);
-	return *m_pointWrap2D;
+	Shutdown();
 }
 
-const D3D12Sampler& D3D12SamplerLibrary::GetLinear(AddressMode addressMode, Dimension dimension) const
+void D3D12SamplerLibrary::CreateSampler(Slot slot, const SamplerConfig& config)
 {
-	assert(m_bInitialized);
+	const bool isAnisotropic = config.maxAnisotropy > 1;
 
-	if (dimension == Dimension::Tex2D)
-	{
-		switch (addressMode)
-		{
-			case AddressMode::Wrap:
-				return *m_linearWrap2D;
-			case AddressMode::Clamp:
-				return *m_linearClamp2D;
-			case AddressMode::Mirror:
-				return *m_linearMirror2D;
-		}
-	}
-	else
-	{
-		switch (addressMode)
-		{
-			case AddressMode::Wrap:
-				return *m_linearWrap3D;
-			case AddressMode::Clamp:
-				return *m_linearClamp3D;
-			case AddressMode::Mirror:
-				return *m_linearMirror3D;
-		}
-	}
-
-	assert(false);
-	return *m_linearWrap2D;
-}
-
-const D3D12Sampler& D3D12SamplerLibrary::GetAnisotropic(AddressMode addressMode, Dimension dimension, AnisotropyLevel level) const
-{
-	assert(m_bInitialized);
-
-	const uint32_t idx = GetAnisoIndex(level);
-	assert(idx < kAnisoLevelCount);
-
-	if (dimension == Dimension::Tex2D)
-	{
-		switch (addressMode)
-		{
-			case AddressMode::Wrap:
-				return *m_anisoWrap2D[idx];
-			case AddressMode::Clamp:
-				return *m_anisoClamp2D[idx];
-			case AddressMode::Mirror:
-				return *m_anisoMirror2D[idx];
-		}
-	}
-	else
-	{
-		switch (addressMode)
-		{
-			case AddressMode::Wrap:
-				return *m_anisoWrap3D[idx];
-			case AddressMode::Clamp:
-				return *m_anisoClamp3D[idx];
-			case AddressMode::Mirror:
-				return *m_anisoMirror3D[idx];
-		}
-	}
-
-	assert(false);
-	return *m_anisoWrap2D[0];
-}
-
-uint32_t D3D12SamplerLibrary::GetAnisoIndex(AnisotropyLevel level)
-{
-	const uint32_t value = static_cast<uint32_t>(level);
-
-	for (size_t i = 0; i < kAnisoLevelCount; ++i)
-	{
-		if (kAnisoLevels[i] == value)
-		{
-			return static_cast<uint32_t>(i);
-		}
-	}
-
-	assert(false && "Unsupported anisotropy level");
-	return 0;
-}
-
-D3D12_SAMPLER_DESC
-D3D12SamplerLibrary::MakeSamplerDesc(FilterMode filterMode, AddressMode addressMode, Dimension dimension, uint32_t maxAnisotropy)
-{
 	D3D12_SAMPLER_DESC desc = {};
-	switch (filterMode)
-	{
-		case FilterMode::Point:
-			desc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-			desc.MaxAnisotropy = 1;
-			break;
-		case FilterMode::Linear:
-			desc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-			desc.MaxAnisotropy = 1;
-			break;
-		case FilterMode::Anisotropic:
-			desc.Filter = D3D12_FILTER_ANISOTROPIC;
-			desc.MaxAnisotropy = static_cast<UINT>(maxAnisotropy);
-			break;
-	}
-
-	desc.AddressU = ToD3D12AddressMode(addressMode);
-	desc.AddressV = ToD3D12AddressMode(addressMode);
-	desc.AddressW = (dimension == Dimension::Tex3D) ? ToD3D12AddressMode(addressMode) : D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	desc.Filter = ToD3D12Filter(config.minMag, config.mip, isAnisotropic);
+	desc.AddressU = ToD3D12Address(config.address);
+	desc.AddressV = desc.AddressU;
+	desc.AddressW = desc.AddressU;
 	desc.MipLODBias = 0.0f;
+	desc.MaxAnisotropy = config.maxAnisotropy;
 	desc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 	desc.MinLOD = 0.0f;
-	desc.MaxLOD = D3D12_FLOAT32_MAX;
-	return desc;
+	desc.MaxLOD = (config.mip == MipFilter::None) ? 0.0f : D3D12_FLOAT32_MAX;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = m_tableHandle.GetCPU();
+	cpuHandle.ptr += static_cast<SIZE_T>(static_cast<uint32_t>(slot)) * m_descriptorSize;
+
+	GD3D12Rhi.GetDevice()->CreateSampler(&desc, cpuHandle);
 }
 
-D3D12_TEXTURE_ADDRESS_MODE D3D12SamplerLibrary::ToD3D12AddressMode(AddressMode addressMode)
+D3D12_FILTER D3D12SamplerLibrary::ToD3D12Filter(MinMagFilter minMag, MipFilter mip, bool anisotropic)
 {
-	switch (addressMode)
+	if (anisotropic)
+	{
+		return D3D12_FILTER_ANISOTROPIC;
+	}
+
+	// D3D12_FILTER encoding: bits [0-1] mip, [2-3] mag, [4-5] min
+	// 0 = point, 1 = linear
+	const uint32_t minMagBit = (minMag == MinMagFilter::Linear) ? 1u : 0u;
+	const uint32_t mipBit = (mip == MipFilter::Linear) ? 1u : 0u;
+
+	// Filter = (min << 4) | (mag << 2) | mip
+	// Since min == mag (unified), both use minMagBit
+	const uint32_t filterValue = (minMagBit << 4) | (minMagBit << 2) | mipBit;
+
+	return static_cast<D3D12_FILTER>(filterValue);
+}
+
+D3D12_TEXTURE_ADDRESS_MODE D3D12SamplerLibrary::ToD3D12Address(AddressMode address)
+{
+	switch (address)
 	{
 		case AddressMode::Wrap:
 			return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -245,6 +130,5 @@ D3D12_TEXTURE_ADDRESS_MODE D3D12SamplerLibrary::ToD3D12AddressMode(AddressMode a
 		case AddressMode::Mirror:
 			return D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
 	}
-
 	return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 }

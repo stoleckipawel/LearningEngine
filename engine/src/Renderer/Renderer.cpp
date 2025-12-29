@@ -26,30 +26,24 @@ void Renderer::Initialize() noexcept
 {
 	GD3D12Rhi.Initialize();
 
-	// Create root signature (defines shader resource binding layout)
 	m_rootSignature = std::make_unique<D3D12RootSignature>();
 
 	// Compile shaders
 	m_vertexShader = DxcShaderCompiler::CompileFromAsset("Passes/Forward/ForwardLitVS.hlsl", ShaderStage::Vertex, "main");
 	m_pixelShader = DxcShaderCompiler::CompileFromAsset("Passes/Forward/ForwardLitPS.hlsl", ShaderStage::Pixel, "main");
 
-	// Initialize descriptor heap manager and swap chain
 	GD3D12DescriptorHeapManager.Initialize();
 	GD3D12SwapChain.Initialize();
-
-	// Initialize frame resource manager (per-frame ring buffer for dynamic CBs)
 	GD3D12FrameResourceManager.Initialize(D3D12FrameResourceManager::DefaultCapacityPerFrame);
-
-	// Initialize the global constant buffer manager
 	GD3D12ConstantBufferManager.Initialize();
+
+	// Initialize sampler library first (requires contiguous descriptor allocation)
+	m_samplerLibrary = std::make_unique<D3D12SamplerLibrary>();
+	m_samplerLibrary->Initialize();
 
 	// Load textures
 	m_checkerTexture = std::make_unique<Texture>(std::filesystem::path("ColorCheckerBoard.png"));
 	m_skyCubemapTexture = std::make_unique<Texture>(std::filesystem::path("SkyCubemap.png"));
-
-	// Initialize sampler library
-	m_samplerLibrary = std::make_unique<D3D12SamplerLibrary>();
-	m_samplerLibrary->Initialize();
 
 	// Create geometry
 	GatherMeshes();
@@ -123,11 +117,12 @@ void Renderer::BindPerFrameResources() noexcept
 		GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(RootBindings::RootParam::TextureSRV, m_checkerTexture->GetGPUHandle());
 	}
 
-	// Sampler descriptor table
-	if (m_samplerLibrary)
+	// Sampler table (all samplers bound once per frame)
+	if (m_samplerLibrary && m_samplerLibrary->IsInitialized())
 	{
-		const auto& sampler = m_samplerLibrary->GetLinear(D3D12SamplerLibrary::AddressMode::Wrap, D3D12SamplerLibrary::Dimension::Tex2D);
-		GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(RootBindings::RootParam::Sampler, sampler.GetGPUHandle());
+		GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(
+		    RootBindings::RootParam::SamplerTable,
+		    m_samplerLibrary->GetTableGPUHandle());
 	}
 }
 

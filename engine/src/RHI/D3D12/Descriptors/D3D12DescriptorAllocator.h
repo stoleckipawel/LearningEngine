@@ -16,22 +16,22 @@ class D3D12DescriptorAllocator
 	explicit D3D12DescriptorAllocator(D3D12DescriptorHeap* Heap) : m_Heap(Heap) {}
 
 	// Allocates a single descriptor slot.
-	// Strategy:
-	//   1) Reuse an index from the free-list if available.
-	//   2) Otherwise use the next linear index if within heap size.
-	// Returns: valid DescriptorHandle on success, invalid on failure.
 	D3D12DescriptorHandle Allocate();
 
+	// Allocates a contiguous block of descriptor slots.
+	// Used for descriptor tables that require sequential descriptors.
+	// Returns handle to first descriptor; subsequent slots are offset by descriptor size.
+	D3D12DescriptorHandle AllocateContiguous(uint32_t count);
+
 	// Returns a previously allocated descriptor slot to the free-list.
-	// The provided handle must be valid and come from this allocator's heap.
 	void Free(const D3D12DescriptorHandle& handle) noexcept;
 
-  private:
-	D3D12DescriptorHeap* m_Heap;  // Heap being managed (not owned)
-	// Vector-backed LIFO free-list.
-	std::vector<UINT> m_freeIndices;
+	// Returns a contiguous block to the free-list.
+	void FreeContiguous(const D3D12DescriptorHandle& firstHandle, uint32_t count) noexcept;
 
-	// Next unallocated index for linear growth when free-list is empty.
+  private:
+	D3D12DescriptorHeap* m_Heap;
+	std::vector<UINT> m_freeIndices;
 	UINT m_currentOffset = 0;
-	std::mutex m_mutex;  // Guards all Allocate/Free operations for thread safety
+	std::mutex m_mutex;
 };

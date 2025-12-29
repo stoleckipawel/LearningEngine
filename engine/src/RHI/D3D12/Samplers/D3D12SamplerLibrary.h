@@ -1,43 +1,93 @@
 #pragma once
 
-#include "D3D12Sampler.h"
+#include "D3D12DescriptorHandle.h"
+#include "D3D12RootBindings.h"
+#include <d3d12.h>
 
-#include <array>
-#include <cstddef>
-#include <cstdint>
-#include <optional>
-
+// =============================================================================
 // D3D12SamplerLibrary
-// - Owns a predefined set of commonly used sampler states.
-// - Samplers are created once during renderer/RHI initialization and reused.
-// - Each sampler is a distinct allocation in the sampler heap.
+// =============================================================================
+// Owns a contiguous block of sampler descriptors for table binding.
+// Samplers are created once during initialization and never modified.
+// Descriptor order matches Samplers.hlsli register declarations.
 class D3D12SamplerLibrary
 {
   public:
+	// -------------------------------------------------------------------------
+	// Filter Configuration
+	// -------------------------------------------------------------------------
+	enum class MinMagFilter : uint8_t
+	{
+		Point,
+		Linear
+	};
+
+	enum class MipFilter : uint8_t
+	{
+		Point,
+		Linear,
+		None  // Disables mipmapping (MaxLOD = 0)
+	};
+
 	enum class AddressMode : uint8_t
 	{
 		Wrap,
 		Clamp,
-		Mirror,
+		Mirror
 	};
 
-	enum class Dimension : uint8_t
+	// -------------------------------------------------------------------------
+	// Sampler Slots
+	// -------------------------------------------------------------------------
+	enum class Slot : uint32_t
 	{
-		Tex2D,
-		Tex3D,
+		// Point MinMag
+		PointMipPointWrap = RootBindings::SamplerRegister::PointMipPointWrap,
+		PointMipPointClamp = RootBindings::SamplerRegister::PointMipPointClamp,
+		PointMipPointMirror = RootBindings::SamplerRegister::PointMipPointMirror,
+		PointMipLinearWrap = RootBindings::SamplerRegister::PointMipLinearWrap,
+		PointMipLinearClamp = RootBindings::SamplerRegister::PointMipLinearClamp,
+		PointMipLinearMirror = RootBindings::SamplerRegister::PointMipLinearMirror,
+		PointNoMipWrap = RootBindings::SamplerRegister::PointNoMipWrap,
+		PointNoMipClamp = RootBindings::SamplerRegister::PointNoMipClamp,
+		PointNoMipMirror = RootBindings::SamplerRegister::PointNoMipMirror,
+
+		// Linear MinMag
+		LinearMipPointWrap = RootBindings::SamplerRegister::LinearMipPointWrap,
+		LinearMipPointClamp = RootBindings::SamplerRegister::LinearMipPointClamp,
+		LinearMipPointMirror = RootBindings::SamplerRegister::LinearMipPointMirror,
+		LinearMipLinearWrap = RootBindings::SamplerRegister::LinearMipLinearWrap,
+		LinearMipLinearClamp = RootBindings::SamplerRegister::LinearMipLinearClamp,
+		LinearMipLinearMirror = RootBindings::SamplerRegister::LinearMipLinearMirror,
+		LinearNoMipWrap = RootBindings::SamplerRegister::LinearNoMipWrap,
+		LinearNoMipClamp = RootBindings::SamplerRegister::LinearNoMipClamp,
+		LinearNoMipMirror = RootBindings::SamplerRegister::LinearNoMipMirror,
+
+		// Anisotropic
+		Aniso1xWrap = RootBindings::SamplerRegister::Aniso1xWrap,
+		Aniso1xClamp = RootBindings::SamplerRegister::Aniso1xClamp,
+		Aniso1xMirror = RootBindings::SamplerRegister::Aniso1xMirror,
+		Aniso2xWrap = RootBindings::SamplerRegister::Aniso2xWrap,
+		Aniso2xClamp = RootBindings::SamplerRegister::Aniso2xClamp,
+		Aniso2xMirror = RootBindings::SamplerRegister::Aniso2xMirror,
+		Aniso4xWrap = RootBindings::SamplerRegister::Aniso4xWrap,
+		Aniso4xClamp = RootBindings::SamplerRegister::Aniso4xClamp,
+		Aniso4xMirror = RootBindings::SamplerRegister::Aniso4xMirror,
+		Aniso8xWrap = RootBindings::SamplerRegister::Aniso8xWrap,
+		Aniso8xClamp = RootBindings::SamplerRegister::Aniso8xClamp,
+		Aniso8xMirror = RootBindings::SamplerRegister::Aniso8xMirror,
+		Aniso16xWrap = RootBindings::SamplerRegister::Aniso16xWrap,
+		Aniso16xClamp = RootBindings::SamplerRegister::Aniso16xClamp,
+		Aniso16xMirror = RootBindings::SamplerRegister::Aniso16xMirror,
+
+		Count = RootBindings::SamplerRegister::Count
 	};
 
-	enum class AnisotropyLevel : uint8_t
-	{
-		x1 = 1,
-		x2 = 2,
-		x4 = 4,
-		x8 = 8,
-		x16 = 16,
-	};
-
+	// -------------------------------------------------------------------------
+	// Lifecycle
+	// -------------------------------------------------------------------------
 	D3D12SamplerLibrary() = default;
-	~D3D12SamplerLibrary() noexcept = default;
+	~D3D12SamplerLibrary() noexcept;
 
 	D3D12SamplerLibrary(const D3D12SamplerLibrary&) = delete;
 	D3D12SamplerLibrary& operator=(const D3D12SamplerLibrary&) = delete;
@@ -46,53 +96,28 @@ class D3D12SamplerLibrary
 
 	void Initialize();
 	void Shutdown() noexcept;
-	bool IsInitialized() const noexcept { return m_bInitialized; }
 
-	const D3D12Sampler& GetPoint(AddressMode addressMode, Dimension dimension) const;
-	const D3D12Sampler& GetLinear(AddressMode addressMode, Dimension dimension) const;
-	const D3D12Sampler& GetAnisotropic(AddressMode addressMode, Dimension dimension, AnisotropyLevel level) const;
+	// -------------------------------------------------------------------------
+	// Accessors
+	// -------------------------------------------------------------------------
+	bool IsInitialized() const noexcept { return m_bInitialized; }
+	D3D12_GPU_DESCRIPTOR_HANDLE GetTableGPUHandle() const noexcept { return m_tableHandle.GetGPU(); }
+	static constexpr uint32_t GetSamplerCount() noexcept { return static_cast<uint32_t>(Slot::Count); }
 
   private:
-	enum class FilterMode : uint8_t
+	struct SamplerConfig
 	{
-		Point,
-		Linear,
-		Anisotropic,
+		MinMagFilter minMag;
+		MipFilter mip;
+		AddressMode address;
+		uint32_t maxAnisotropy;
 	};
 
-	static constexpr size_t kAnisoLevelCount = 5;
-	static const std::array<uint32_t, kAnisoLevelCount> kAnisoLevels;
+	void CreateSampler(Slot slot, const SamplerConfig& config);
+	static D3D12_FILTER ToD3D12Filter(MinMagFilter minMag, MipFilter mip, bool anisotropic);
+	static D3D12_TEXTURE_ADDRESS_MODE ToD3D12Address(AddressMode address);
 
-	static uint32_t GetAnisoIndex(AnisotropyLevel level);
-
-	static D3D12_SAMPLER_DESC
-	MakeSamplerDesc(FilterMode filterMode, AddressMode addressMode, Dimension dimension, uint32_t maxAnisotropy = 1);
-
-	static D3D12_TEXTURE_ADDRESS_MODE ToD3D12AddressMode(AddressMode addressMode);
-
-  private:
 	bool m_bInitialized = false;
-
-	std::optional<D3D12Sampler> m_pointWrap2D;
-	std::optional<D3D12Sampler> m_pointClamp2D;
-	std::optional<D3D12Sampler> m_pointMirror2D;
-
-	std::optional<D3D12Sampler> m_linearWrap2D;
-	std::optional<D3D12Sampler> m_linearClamp2D;
-	std::optional<D3D12Sampler> m_linearMirror2D;
-
-	std::optional<D3D12Sampler> m_pointWrap3D;
-	std::optional<D3D12Sampler> m_pointClamp3D;
-	std::optional<D3D12Sampler> m_pointMirror3D;
-
-	std::optional<D3D12Sampler> m_linearWrap3D;
-	std::optional<D3D12Sampler> m_linearClamp3D;
-	std::optional<D3D12Sampler> m_linearMirror3D;
-
-	std::array<std::optional<D3D12Sampler>, kAnisoLevelCount> m_anisoWrap2D;
-	std::array<std::optional<D3D12Sampler>, kAnisoLevelCount> m_anisoClamp2D;
-	std::array<std::optional<D3D12Sampler>, kAnisoLevelCount> m_anisoMirror2D;
-	std::array<std::optional<D3D12Sampler>, kAnisoLevelCount> m_anisoWrap3D;
-	std::array<std::optional<D3D12Sampler>, kAnisoLevelCount> m_anisoClamp3D;
-	std::array<std::optional<D3D12Sampler>, kAnisoLevelCount> m_anisoMirror3D;
+	D3D12DescriptorHandle m_tableHandle;
+	uint32_t m_descriptorSize = 0;
 };

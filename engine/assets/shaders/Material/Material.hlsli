@@ -1,22 +1,19 @@
 #pragma once
 
 #include "Resources/ConstantBuffers.hlsli"
-
+#include "Resources/Samplers.hlsli"
 #include "Geometry/PixelInput.hlsli"
 #include "Geometry/Transforms.hlsli"
 
 // =============================================================================
 // Material System
 // =============================================================================
-// Material properties and texture sampling
 
 // -----------------------------------------------------------------------------
 // Texture Bindings
 // -----------------------------------------------------------------------------
 
 Texture2D TextureBaseColor : register(t0);
-
-sampler SamplerLinearWrap : register(s0);
 
 // -----------------------------------------------------------------------------
 // Material Namespace
@@ -78,7 +75,7 @@ namespace Material
 
 	float3 SampleBaseColor(float2 UV)
 	{
-		return TextureBaseColor.SampleLevel(SamplerLinearWrap, UV, 0.0f).xyz;
+		return TextureBaseColor.SampleLevel(SamplerAniso16xWrap, UV, 0.0f).xyz;
 	}
 
 	float3 SampleNormalTangent(float2 UV)

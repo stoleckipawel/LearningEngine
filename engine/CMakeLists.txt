@@ -39,6 +39,7 @@ target_include_directories(SparkleEngine
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/D3D12/Resources"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/D3D12/Pipeline"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/D3D12/Shaders"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/D3D12/Samplers"
     # Vulkan backend (placeholder)
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/Vulkan"
     # High-level modules
