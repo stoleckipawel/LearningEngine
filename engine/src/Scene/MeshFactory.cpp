@@ -81,7 +81,8 @@ void MeshFactory::AppendShape(
 	}
 }
 
-void MeshFactory::AppendRandomShapes(
+void MeshFactory::AppendShapes(
+    Shape shape,
     std::uint32_t count,
     const DirectX::XMFLOAT3& center,
     const DirectX::XMFLOAT3& extents,
@@ -115,31 +116,30 @@ void MeshFactory::AppendRandomShapes(
 	std::uniform_real_distribution<float> distTy(ty0, ty1);
 	std::uniform_real_distribution<float> distTz(tz0, tz1);
 
-	static constexpr Shape kSpawnableShapes[] = {
-	    Shape::Box,
-	    Shape::Sphere,
-	    Shape::Cone,
-	    Shape::Cylinder,
-	    Shape::Torus,
-	    Shape::Capsule,
-	    Shape::Hemisphere,
-	    Shape::Pyramid,
-	    Shape::Disk,
-	    Shape::Octahedron,
-	    Shape::Tetrahedron,
-	    Shape::Icosahedron,
-	    Shape::Dodecahedron,
-	    Shape::Icosphere,
-	};
-	std::uniform_int_distribution<size_t> distShape(0, (sizeof(kSpawnableShapes) / sizeof(kSpawnableShapes[0])) - 1);
-
 	for (std::uint32_t i = 0; i < count; ++i)
 	{
 		const DirectX::XMFLOAT3 t{distTx(rng), distTy(rng), distTz(rng)};
 		const DirectX::XMFLOAT3 r{0.0f, 0.0f, 0.0f};
 		const DirectX::XMFLOAT3 s{1.0f, 1.0f, 1.0f};
-		AppendShape(kSpawnableShapes[distShape(rng)], t, r, s);
+		AppendShape(shape, t, r, s);
 	}
+}
+
+void MeshFactory::Clear() noexcept
+{
+	m_meshes.clear();
+}
+
+void MeshFactory::Rebuild(
+    Shape shape,
+    std::uint32_t count,
+    const DirectX::XMFLOAT3& center,
+    const DirectX::XMFLOAT3& extents,
+    std::uint32_t seed)
+{
+	Clear();
+	AppendShapes(shape, count, center, extents, seed);
+	Upload();
 }
 
 const std::vector<std::unique_ptr<Mesh>>& MeshFactory::GetMeshes() const

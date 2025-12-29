@@ -11,10 +11,8 @@ class D3D12RootSignature;
 class D3D12SamplerLibrary;
 class D3D12DepthStencil;
 class Mesh;
-class MeshFactory;
 
 // Renderer orchestrates the graphics pipeline.
-// Owns all major graphics resources and pipeline objects.
 class Renderer
 {
   public:
@@ -26,7 +24,6 @@ class Renderer
   private:
 	void PostLoad() noexcept;
 	void CreateFrameBuffers();
-	void GatherMeshes();
 
 	void PopulateCommandList();
 	void BeginFrame() noexcept;
@@ -50,9 +47,6 @@ class Renderer
 
 	// Sampler library
 	std::unique_ptr<D3D12SamplerLibrary> m_samplerLibrary;
-
-	// Scene
-	std::unique_ptr<MeshFactory> m_meshFactory;
 
 	// Pipeline
 	std::unique_ptr<D3D12PipelineState> m_pso;

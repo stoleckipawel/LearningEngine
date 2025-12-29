@@ -5,7 +5,7 @@
 #include "Window.h"
 #include "DxcShaderCompiler.h"
 #include "Texture.h"
-#include "Scene/MeshFactory.h"
+#include "Scene/Scene.h"
 #include "Scene/Mesh.h"
 #include "D3D12PipelineState.h"
 #include "D3D12RootSignature.h"
@@ -45,8 +45,8 @@ void Renderer::Initialize() noexcept
 	m_checkerTexture = std::make_unique<Texture>(std::filesystem::path("ColorCheckerBoard.png"));
 	m_skyCubemapTexture = std::make_unique<Texture>(std::filesystem::path("SkyCubemap.png"));
 
-	// Create geometry
-	GatherMeshes();
+	// Initialize scene (geometry is built when UI triggers SetPrimitives)
+	GScene.Initialize();
 
 	// Create pipeline state object
 	m_pso = std::make_unique<D3D12PipelineState>(
@@ -61,19 +61,6 @@ void Renderer::Initialize() noexcept
 	GUI.Initialize();
 
 	PostLoad();
-}
-
-void Renderer::GatherMeshes()
-{
-	m_meshFactory = std::make_unique<MeshFactory>();
-
-	// Spawn shapes in front of the camera
-	const DirectX::XMFLOAT3 camPos = GCamera.GetPosition();
-	const DirectX::XMFLOAT3 camDir = GCamera.GetDirection();
-	const DirectX::XMFLOAT3 spawnCenter{camPos.x + camDir.x * 10.0f, camPos.y + camDir.y * 10.0f, camPos.z + camDir.z * 10.0f};
-
-	m_meshFactory->AppendRandomShapes(128, spawnCenter, XMFLOAT3{20.0f, 20.0f, 20.0f}, 1337);
-	m_meshFactory->Upload();
 }
 
 void Renderer::PostLoad() noexcept
@@ -163,7 +150,7 @@ void Renderer::PopulateCommandList()
 	// Draw loop
 	m_pso->Set();
 
-	const auto& meshes = m_meshFactory->GetMeshes();
+	const auto& meshes = GScene.GetMeshes();
 	for (const auto& mesh : meshes)
 	{
 		mesh->Bind(GD3D12Rhi.GetCommandList().Get());
@@ -246,7 +233,7 @@ void Renderer::Shutdown() noexcept
 
 	m_pso.reset();
 	m_rootSignature.reset();
-	m_meshFactory.reset();
+	GScene.Shutdown();
 	m_depthStencil.reset();
 	m_samplerLibrary.reset();
 	m_skyCubemapTexture.reset();
