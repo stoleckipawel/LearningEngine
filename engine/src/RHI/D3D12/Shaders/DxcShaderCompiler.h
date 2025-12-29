@@ -1,89 +1,46 @@
 #pragma once
 
-#include "EngineConfig.h"
-#include <string>
-#include <filesystem>
+#include "ShaderCompileOptions.h"
+#include "ShaderCompileResult.h"
+#include <dxcapi.h>
+#include <wrl/client.h>
 #include <vector>
+#include <string>
 
 using Microsoft::WRL::ComPtr;
 
-// Compiles HLSL using DXC and provides the resulting shader bytecode
-// suitable for creating GPU pipeline state objects.
+// Compiles HLSL shaders using the DirectX Shader Compiler (DXC).
+// Stateless compiler - create options, call Compile(), get result.
 class DxcShaderCompiler
 {
   public:
-	// Shader stages the engine supports. Keep entries explicit so callers
-	// pass a clear intent when requesting compilation.
-	enum class ShaderStage
-	{
-		Vertex,
-		Pixel,
-		Geometry,
-		Hull,
-		Domain,
-		Compute,
-	};
+	// Compiles a shader with the given options.
+	// Returns a result containing bytecode on success, or error message on failure.
+	static ShaderCompileResult Compile(const ShaderCompileOptions& options);
 
-	// Returns the DXC target profile string for `stage`, for example "vs_6_0".
-	// This uses the global shader model defined in `EngineConfig.h`.
-	static std::string BuildShaderProfile(ShaderStage stage);
-
-	// Compile `fileName` using `stage` and `entryPoint`. The compiled bytecode
-	// is accessible via `GetBuffer()`/`GetSize()` on success.
-	DxcShaderCompiler(const std::filesystem::path& fileName, ShaderStage stage, const std::string& entryPoint);
-
-	// Releases internal references to compiled shader data.
-	~DxcShaderCompiler();
-
-	DxcShaderCompiler(const DxcShaderCompiler&) = delete;
-	DxcShaderCompiler& operator=(const DxcShaderCompiler&) = delete;
-
-	// Pointer to compiled shader bytecode and its size for pipeline creation.
-	inline const void* GetBuffer() const { return m_shaderBytecode.pShaderBytecode; }
-	inline size_t GetSize() const { return m_shaderBytecode.BytecodeLength; }
+	// Convenience overload: resolves the shader path and builds options automatically.
+	// sourcePath: relative path from shader root (e.g., "Passes/Forward/ForwardLitVS.hlsl")
+	static ShaderCompileResult
+	CompileFromAsset(const std::filesystem::path& sourcePath, ShaderStage stage, const std::string& entryPoint = "main");
 
   private:
-	// Resolve asset path and validate that the shader file exists.
-	void ResolveAndValidatePath(const std::filesystem::path& fileName);
+	// Builds the DXC argument list from compile options.
+	// Arguments reference strings in the storage vectors - those must outlive the args vector.
+	static void BuildCompileArguments(
+	    const ShaderCompileOptions& options,
+	    const std::wstring& wSourcePath,
+	    const std::wstring& wEntryPoint,
+	    const std::wstring& wTargetProfile,
+	    std::vector<std::wstring>& wIncludeDirs,
+	    std::vector<std::wstring>& wDefines,
+	    std::vector<LPCWSTR>& outArgs);
 
-	// Initialize DXC interfaces required for compilation.
-	void CreateDXCInterfaces();
+	// Extracts bytecode from a successful compilation result.
+	static std::vector<uint8_t> ExtractBytecode(IDxcResult* result);
 
-	// Diagnostic helpers used when compilation fails or for debug logging.
-	void LogDXCArguments();
-	void LogDXCVersion();
-	void DumpShaderDebugInfo();
+	// Extracts error/warning messages from compilation output.
+	static std::string ExtractErrorMessage(IDxcResult* result);
 
-	// Read shader source into a DXC blob and prepare the DXC buffer.
-	void LoadShaderSource();
-
-	// Perform compilation for `stage` and `entryPoint` using DXC.
-	void CompileShader(ShaderStage stage, const std::string& entryPoint);
-
-	// Inspect and store compilation outputs (object, pdb, errors).
-	void HandleCompileResult();
-
-	// Save Shader PDB's to ShaderSymbols folder
-	void SaveShaderSymbols(IDxcBlob* pdbBlob, IDxcBlobUtf16* pdbNameBlob);
-
-	// Compiled bytecode ready for creating pipeline state objects.
-	D3D12_SHADER_BYTECODE m_shaderBytecode{};
-
-	// Resolved on-disk path for the shader asset.
-	std::filesystem::path m_resolvedPath;
-
-	// DXC interfaces used during compilation.
-	ComPtr<IDxcCompiler3> m_dxcCompiler;
-	ComPtr<IDxcUtils> m_dxcUtils;
-	ComPtr<IDxcIncludeHandler> m_includeHandler;
-
-	// Arguments passed to DXC (kept for logging/debugging).
-	std::vector<LPCWSTR> m_compileArgs;
-
-	// Source blob and buffer passed to the DXC compiler.
-	ComPtr<IDxcBlobEncoding> m_sourceBlob;
-	DxcBuffer m_sourceBuffer{};
-
-	// Output result from the DXC compile operation.
-	ComPtr<IDxcResult> m_compileResult;
+	// Saves shader symbols (PDB) to disk for debugging.
+	static void SaveShaderSymbols(IDxcResult* result, const std::filesystem::path& sourcePath);
 };

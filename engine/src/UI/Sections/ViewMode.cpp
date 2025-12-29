@@ -11,8 +11,11 @@ static constexpr const char* kViewModeNames[] = {
     "GBuffer Metallic",
     "GBuffer Emissive",
     "GBuffer Ambient Occlusion",
+    "GBuffer Subsurface Color",
+    "GBuffer Subsurface Strength",
     "Direct Diffuse",
     "Direct Specular",
+    "Direct Subsurface",
     "Indirect Diffuse",
     "Indirect Specular",
 };

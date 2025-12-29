@@ -54,6 +54,10 @@ inline std::string GetEnvVar(const char* name)
 //   1. Absolute path (if provided and exists)
 //   2. Sample asset directories (SAMPLES_PATH env)
 //   3. Engine asset directory (ENGINE_PATH env)
+//
+// The inputPath may contain subdirectories (e.g. "Passes/Forward/ForwardLitVS.hlsl")
+// which are preserved relative to the asset root.
+//
 // Returns an absolute path if found, otherwise empty.
 inline std::filesystem::path ResolveAssetPath(const std::filesystem::path& inputPath, AssetType type = AssetType::Other)
 {
@@ -74,11 +78,11 @@ inline std::filesystem::path ResolveAssetPath(const std::filesystem::path& input
 			for (const auto& entry : std::filesystem::directory_iterator(samplesDir))
 			{
 				if (!entry.is_directory())
-					continue;  // Only look in directories
+					continue;
 				std::filesystem::path sampleAsset = entry.path();
 				if (!assetSubdir.empty())
 					sampleAsset /= assetSubdir;
-				sampleAsset /= inputPath.filename();  // Use filename only
+				sampleAsset /= inputPath;  // Preserve full relative path
 				if (std::filesystem::exists(sampleAsset))
 					return std::filesystem::absolute(sampleAsset);
 			}
@@ -92,7 +96,7 @@ inline std::filesystem::path ResolveAssetPath(const std::filesystem::path& input
 		std::filesystem::path engineAsset(enginePathEnv);
 		if (!assetSubdir.empty())
 			engineAsset /= assetSubdir;
-		engineAsset /= inputPath.filename();
+		engineAsset /= inputPath;  // Preserve full relative path
 		if (std::filesystem::exists(engineAsset))
 			return std::filesystem::absolute(engineAsset);
 	}

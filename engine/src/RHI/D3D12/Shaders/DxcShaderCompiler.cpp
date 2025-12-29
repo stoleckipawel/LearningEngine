@@ -1,308 +1,281 @@
 #include "PCH.h"
 #include "DxcShaderCompiler.h"
+#include "DxcContext.h"
 #include "AssetPathResolver.h"
-// Return the DXC target profile string for `stage` (for example "vs_6_0").
-// Implementation is in this cpp file so the public header remains small
-// and callers do not need the implementation details.
-std::string DxcShaderCompiler::BuildShaderProfile(ShaderStage stage)
+
+namespace
 {
-	const char* prefix = "ps";
-	switch (stage)
+	// Walks up from a resolved shader path to find the "shaders" directory.
+	std::filesystem::path FindShaderIncludeRoot(const std::filesystem::path& resolvedPath)
 	{
-		case DxcShaderCompiler::ShaderStage::Vertex:
-			prefix = "vs";
-			break;
-		case DxcShaderCompiler::ShaderStage::Pixel:
-			prefix = "ps";
-			break;
-		case DxcShaderCompiler::ShaderStage::Geometry:
-			prefix = "gs";
-			break;
-		case DxcShaderCompiler::ShaderStage::Hull:
-			prefix = "hs";
-			break;
-		case DxcShaderCompiler::ShaderStage::Domain:
-			prefix = "ds";
-			break;
-		case DxcShaderCompiler::ShaderStage::Compute:
-			prefix = "cs";
-			break;
-		default:
-			prefix = "ps";
-			break;
+		std::filesystem::path dir = resolvedPath.parent_path();
+		while (!dir.empty())
+		{
+			if (dir.filename() == "shaders")
+				return dir;
+			dir = dir.parent_path();
+		}
+		return resolvedPath.parent_path();
 	}
 
-	// Reserve a small buffer to avoid multiple reallocations. Typical output
-	// is short (e.g. "vs_6_0").
-	std::string out;
-	out.reserve(8);
-	out.append(prefix);
-	out.push_back('_');
-	out.append(std::to_string(EngineSettings::ShaderModelMajor));
-	out.push_back('_');
-	out.append(std::to_string(EngineSettings::ShaderModelMinor));
-	return out;
-}
-
-// Compiles a shader from file and stores the bytecode using DXC
-// fileName: name of HLSL file
-// model: shader model string (e.g., "vs_6_0", "ps_6_0")
-// entryPoint: entry function name (usually "main")
-DxcShaderCompiler::DxcShaderCompiler(const std::filesystem::path& fileName, ShaderStage stage, const std::string& entryPoint)
-{
-	// Orchestrates shader compilation steps
-	// 1. Resolve and validate shader file path
-	// 2. Create DXC compiler and utility interfaces
-	// 3. Prepare DXC compile arguments
-	// 4. Load shader source file into DXC blob
-	// 5. Compile shader
-	// 6. Handle compilation result and output
-
-	ResolveAndValidatePath(fileName);
-	CreateDXCInterfaces();
-	LoadShaderSource();
-	CompileShader(stage, entryPoint);
-	HandleCompileResult();
-}
-
-// Releases shader compiler resources
-DxcShaderCompiler::~DxcShaderCompiler()
-{
-	m_shaderBytecode.BytecodeLength = 0;
-	m_shaderBytecode.pShaderBytecode = nullptr;
-}
-
-// Resolves the asset path for the shader file and checks if it exists.
-void DxcShaderCompiler::ResolveAndValidatePath(const std::filesystem::path& fileName)
-{
-	// Resolve asset path for shader file and validate existence
-	m_resolvedPath = ResolveAssetPath(fileName, AssetType::Shader);
-	if (!std::filesystem::exists(m_resolvedPath))
+	// Converts a narrow string to wide string.
+	std::wstring ToWide(const std::string& str)
 	{
-		LOG_FATAL("Shader file does not exist: " + m_resolvedPath.string());
+		return std::wstring(str.begin(), str.end());
 	}
-	else
-	{
-		LOG_INFO("Compiling shader: " + m_resolvedPath.string());
-	}
-}
 
-// Creates DXC compiler, utility, and include handler interfaces.
-void DxcShaderCompiler::CreateDXCInterfaces()
+	// Converts a path to wide string for DXC.
+	std::wstring ToWide(const std::filesystem::path& path)
+	{
+		return path.wstring();
+	}
+}  // namespace
+
+ShaderCompileResult
+DxcShaderCompiler::CompileFromAsset(const std::filesystem::path& sourcePath, ShaderStage stage, const std::string& entryPoint)
 {
-	// Create DXC compiler interface
-	HRESULT hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(m_dxcCompiler.ReleaseAndGetAddressOf()));
-	if (FAILED(hr))
+	std::filesystem::path resolvedPath = ResolveAssetPath(sourcePath, AssetType::Shader);
+	if (resolvedPath.empty() || !std::filesystem::exists(resolvedPath))
 	{
-		LOG_FATAL("Failed to create DXC compiler");
-		return;
+		return ShaderCompileResult::Failure("Shader file not found: " + sourcePath.string());
 	}
-	// Create DXC utility interface
-	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(m_dxcUtils.ReleaseAndGetAddressOf()));
-	if (FAILED(hr))
-	{
-		LOG_FATAL("Failed to create DXC utils");
-		return;
-	}
-	// Create default include handler for #include directives
-	hr = m_dxcUtils->CreateDefaultIncludeHandler(m_includeHandler.ReleaseAndGetAddressOf());
-	if (FAILED(hr))
-	{
-		LOG_FATAL("Failed to create DXC include handler");
-		return;
-	}
-}
 
-// Loads the shader source file into a DXC blob for compilation.
-void DxcShaderCompiler::LoadShaderSource()
-{
-	// Load shader source file into DXC blob
-	HRESULT hr = m_dxcUtils->LoadFile(m_resolvedPath.c_str(), nullptr, m_sourceBlob.ReleaseAndGetAddressOf());
-	if (FAILED(hr) || !m_sourceBlob)
-	{
-		LOG_FATAL("Failed to load shader source file: " + m_resolvedPath.string());
-		return;
-	}
-	// Fill DXC buffer struct with source blob data
-	m_sourceBuffer.Ptr = m_sourceBlob->GetBufferPointer();
-	m_sourceBuffer.Size = m_sourceBlob->GetBufferSize();
-	m_sourceBuffer.Encoding = DXC_CP_ACP;  // Assume ANSI text or BOM specifies encoding
-}
-
-// Prepares DXC compile arguments and invokes DXC to compile the shader.
-void DxcShaderCompiler::CompileShader(ShaderStage stage, const std::string& entryPoint)
-{
-	// Build shader profile from DxcShaderCompiler helper so callers only pass stage.
-	const std::string model = DxcShaderCompiler::BuildShaderProfile(stage);
-
-	// Prepare DXC compile arguments for entry point, target profile, resource binding, warnings, reflection, debug
-	// info, and optimization
-	std::wstring wEntry(entryPoint.begin(), entryPoint.end());
-	std::wstring wModel(model.begin(), model.end());
-	// Build LPCWSTR argument array as in Microsoft DXC samples
-	LPCWSTR pszArgs[] = {
-	    m_resolvedPath.c_str(),       // Shader source file path (for error reporting and PIX source view)
-	    L"-E",                        // Entry point flag
-	    wEntry.c_str(),               // Entry point function name
-	    L"-T",                        // Target profile flag
-	    wModel.c_str(),               // Target profile (e.g., "vs_6_0", "ps_6_0")
-	    DXC_ARG_ALL_RESOURCES_BOUND,  // Assume all resources are bound
-	    DXC_ARG_WARNINGS_ARE_ERRORS,  // Treat warnings as errors
-	    L"-Qstrip_reflect",           // Strip reflection data into a separate blob
-	    L"-Qstrip_debug",             // Strip debug info from output
+	ShaderCompileOptions options;
+	options.SourcePath = resolvedPath;
+	options.IncludeDir = FindShaderIncludeRoot(resolvedPath);
+	options.EntryPoint = entryPoint;
+	options.Stage = stage;
 
 #if defined(ENGINE_SHADERS_DEBUG)
-	    DXC_ARG_DEBUG,  // Enable debug info (full format)
+	options.EnableDebugInfo = true;
 #endif
 
 #if defined(ENGINE_SHADERS_OPTIMIZED)
-	    DXC_ARG_OPTIMIZATION_LEVEL3,  // Enable full optimizations for release
+	options.EnableOptimizations = true;
 #else
-	    DXC_ARG_SKIP_OPTIMIZATIONS,  // Skip optimizations for easier debugging
+	options.EnableOptimizations = false;
 #endif
-	};
 
-	// Store pointers for debug printing
-	m_compileArgs.assign(std::begin(pszArgs), std::end(pszArgs));
-
-	// Compile shader using DXC
-	HRESULT hr = m_dxcCompiler->Compile(
-	    &m_sourceBuffer,                                        // Source buffer
-	    pszArgs,                                                // Compile arguments
-	    static_cast<UINT>(std::size(pszArgs)),                  // Number of arguments
-	    m_includeHandler.Get(),                                 // #include handler
-	    IID_PPV_ARGS(m_compileResult.ReleaseAndGetAddressOf())  // Compiler output
-	);
-
-	if (FAILED(hr) || !m_compileResult)
-	{
-		LOG_FATAL("DXC failed to compile shader");
-		return;
-	}
+	LOG_INFO("Compiling shader: " + resolvedPath.string());
+	return Compile(options);
 }
 
-// Handles DXC compilation result: logs errors, checks status, saves binary and PDB outputs.
-void DxcShaderCompiler::HandleCompileResult()
+ShaderCompileResult DxcShaderCompiler::Compile(const ShaderCompileOptions& options)
 {
-	// Print errors and warnings if present from DXC
-	ComPtr<IDxcBlobUtf8> errorBlob = nullptr;
-	m_compileResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errorBlob.ReleaseAndGetAddressOf()), nullptr);
-	if (errorBlob != nullptr && errorBlob->GetStringLength() != 0)
+	DxcContext& ctx = GetDxcContext();
+	if (!ctx.IsValid())
 	{
-		LOG_FATAL(std::string("DXC Warnings/Errors: ") + std::string(errorBlob->GetStringPointer(), errorBlob->GetStringLength()));
+		return ShaderCompileResult::Failure("DXC context is not initialized");
 	}
 
-	// Check compilation status and abort if failed
-	HRESULT hrStatus;
-	m_compileResult->GetStatus(&hrStatus);
-	if (FAILED(hrStatus))
+	// Load source file
+	ComPtr<IDxcBlobEncoding> sourceBlob;
+	HRESULT hr = ctx.GetUtils()->LoadFile(options.SourcePath.c_str(), nullptr, sourceBlob.ReleaseAndGetAddressOf());
+	if (FAILED(hr) || !sourceBlob)
 	{
-		LOG_FATAL("DXC Compilation Failed");
-		DumpShaderDebugInfo();
+		return ShaderCompileResult::Failure("Failed to load shader source: " + options.SourcePath.string());
 	}
 
-	// Save compiled shader binary to disk and store bytecode for engine use
-	ComPtr<IDxcBlob> shaderBlob = nullptr;
-	ComPtr<IDxcBlobUtf16> shaderNameBlob = nullptr;
-	m_compileResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(shaderBlob.ReleaseAndGetAddressOf()), shaderNameBlob.ReleaseAndGetAddressOf());
-	if (shaderBlob != nullptr && shaderNameBlob != nullptr)
+	DxcBuffer sourceBuffer{};
+	sourceBuffer.Ptr = sourceBlob->GetBufferPointer();
+	sourceBuffer.Size = sourceBlob->GetBufferSize();
+	sourceBuffer.Encoding = DXC_CP_ACP;
+
+	// Build compile arguments - store wide strings to keep pointers valid
+	std::wstring wSourcePath = ToWide(options.SourcePath);
+	std::wstring wEntryPoint = ToWide(options.EntryPoint);
+	std::wstring wTargetProfile = ToWide(options.BuildTargetProfile());
+	std::vector<std::wstring> wIncludeDirs;
+	std::vector<std::wstring> wDefines;
+	std::vector<LPCWSTR> args;
+
+	BuildCompileArguments(options, wSourcePath, wEntryPoint, wTargetProfile, wIncludeDirs, wDefines, args);
+
+	// Create include handler and compile
+	ComPtr<IDxcIncludeHandler> includeHandler = ctx.CreateIncludeHandler();
+
+	ComPtr<IDxcResult> result;
+	hr = ctx.GetCompiler()->Compile(
+	    &sourceBuffer,
+	    args.data(),
+	    static_cast<UINT>(args.size()),
+	    includeHandler.Get(),
+	    IID_PPV_ARGS(result.ReleaseAndGetAddressOf()));
+
+	if (FAILED(hr) || !result)
 	{
-		FILE* fp = nullptr;
-		_wfopen_s(&fp, shaderNameBlob->GetStringPointer(), L"wb");
-		fwrite(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), 1, fp);
-		fclose(fp);
-		// Convert wide string to UTF-8 for logging
-		std::wstring ws(shaderNameBlob->GetStringPointer());
-		std::string filename(ws.begin(), ws.end());
-		LOG_INFO("Shader binary saved: " + filename);
+		return ShaderCompileResult::Failure("DXC Compile() call failed");
 	}
-	m_shaderBytecode.BytecodeLength = shaderBlob->GetBufferSize();
-	m_shaderBytecode.pShaderBytecode = shaderBlob->GetBufferPointer();
 
-	// Save PDB (debug info) to disk for debugging and PIX integration.
-	// Place the PDB into a dedicated `ShaderSymbols` folder
-	// using the filename suggested by DXC (preserve the filename).
-	ComPtr<IDxcBlob> pdbBlob = nullptr;
-	ComPtr<IDxcBlobUtf16> pdbNameBlob = nullptr;
-	m_compileResult->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(pdbBlob.ReleaseAndGetAddressOf()), pdbNameBlob.ReleaseAndGetAddressOf());
+	// Check for errors
+	std::string errorMsg = ExtractErrorMessage(result.Get());
 
-	SaveShaderSymbols(pdbBlob.Get(), pdbNameBlob.Get());
+	HRESULT status;
+	result->GetStatus(&status);
+	if (FAILED(status))
+	{
+		if (errorMsg.empty())
+			errorMsg = "Compilation failed with no error message";
+		LOG_FATAL("Shader compilation failed: " + errorMsg);
+		return ShaderCompileResult::Failure(std::move(errorMsg));
+	}
+
+	// Log warnings if present
+	if (!errorMsg.empty())
+	{
+		LOG_WARNING("Shader warnings: " + errorMsg);
+	}
+
+	// Extract bytecode
+	std::vector<uint8_t> bytecode = ExtractBytecode(result.Get());
+	if (bytecode.empty())
+	{
+		return ShaderCompileResult::Failure("Failed to extract shader bytecode");
+	}
+
+	// Save debug symbols
+	SaveShaderSymbols(result.Get(), options.SourcePath);
+
+	LOG_INFO("Shader compiled successfully: " + options.SourcePath.filename().string());
+	return ShaderCompileResult::Success(std::move(bytecode));
 }
 
-// Save Shader PDB's to ShaderSymbols folder
-void DxcShaderCompiler::SaveShaderSymbols(IDxcBlob* pdbBlob, IDxcBlobUtf16* pdbNameBlob)
+void DxcShaderCompiler::BuildCompileArguments(
+    const ShaderCompileOptions& options,
+    const std::wstring& wSourcePath,
+    const std::wstring& wEntryPoint,
+    const std::wstring& wTargetProfile,
+    std::vector<std::wstring>& wIncludeDirs,
+    std::vector<std::wstring>& wDefines,
+    std::vector<LPCWSTR>& outArgs)
 {
-	if (pdbBlob == nullptr || pdbNameBlob == nullptr)
-		return;
+	outArgs.clear();
+	outArgs.reserve(32);
 
-	// Use the DXC-provided path as the base. Create a ShaderSymbols folder in that directory
-	// and save the PDB there using the same filename DXC suggested.
-	std::wstring wPdbName(pdbNameBlob->GetStringPointer());
-	std::filesystem::path dxcProvidedPath(wPdbName);
-	std::filesystem::path baseDir = dxcProvidedPath.parent_path();
+	// Source file (for error messages and PIX)
+	outArgs.push_back(wSourcePath.c_str());
 
-	std::error_code ec;
-	std::filesystem::path symbolsDir = baseDir / L"ShaderSymbols";
-	if (!std::filesystem::exists(symbolsDir))
+	// Entry point
+	outArgs.push_back(L"-E");
+	outArgs.push_back(wEntryPoint.c_str());
+
+	// Target profile
+	outArgs.push_back(L"-T");
+	outArgs.push_back(wTargetProfile.c_str());
+
+	// HLSL version
+	outArgs.push_back(L"-HV");
+	outArgs.push_back(L"2021");
+
+	// Include directories
+	wIncludeDirs.clear();
+	wIncludeDirs.push_back(ToWide(options.IncludeDir));
+	for (const auto& dir : options.AdditionalIncludeDirs)
 	{
-		std::filesystem::create_directories(symbolsDir, ec);
+		wIncludeDirs.push_back(ToWide(dir));
 	}
-	std::filesystem::path pdbOut = symbolsDir / dxcProvidedPath.filename();
-
-	FILE* fp = nullptr;
-	_wfopen_s(&fp, pdbOut.wstring().c_str(), L"wb");
-	if (fp != nullptr)
+	for (const auto& dir : wIncludeDirs)
 	{
-		fwrite(pdbBlob->GetBufferPointer(), pdbBlob->GetBufferSize(), 1, fp);
-		fclose(fp);
+		outArgs.push_back(L"-I");
+		outArgs.push_back(dir.c_str());
 	}
-}
 
-// Log DXC Shader Debug Info
-void DxcShaderCompiler::DumpShaderDebugInfo()
-{
-	LogDXCVersion();
-	LogDXCArguments();
-}
-
-// Logs the DXC compile arguments for debugging purposes.
-void DxcShaderCompiler::LogDXCArguments()
-{
-	// Only log in debug builds
-#if defined(_DEBUG)
-	constexpr size_t kMaxArgsToLog = 32;
-	std::string log;
-	log.reserve(256);
-	log += "DXC Compile Arguments:\n";
-	size_t count = std::min(m_compileArgs.size(), kMaxArgsToLog);
-	for (size_t i = 0; i < count; ++i)
+	// Preprocessor defines
+	wDefines.clear();
+	for (const auto& def : options.Defines)
 	{
-		// Convert wide string to UTF-8 for logging
-		const wchar_t* arg = m_compileArgs[i];
-		std::wstring ws(arg);
-		std::string utf8(ws.begin(), ws.end());
-		log += "  [" + std::to_string(i) + "] " + utf8 + "\n";
+		wDefines.push_back(ToWide(def));
 	}
-	if (m_compileArgs.size() > kMaxArgsToLog)
-		log += "  ... (truncated)\n";
-	LOG_DEBUG(log);
-#endif
-}
-
-// Logs DXC version for debugging
-void DxcShaderCompiler::LogDXCVersion()
-{
-#if defined(_DEBUG)
-	ComPtr<IDxcVersionInfo> versionInfo = nullptr;
-	if (SUCCEEDED(m_dxcCompiler->QueryInterface(__uuidof(IDxcVersionInfo), reinterpret_cast<void**>(versionInfo.ReleaseAndGetAddressOf()))))
+	for (const auto& def : wDefines)
 	{
-		UINT major = 0, minor = 0;
-		versionInfo->GetVersion(&major, &minor);
-		LOG_DEBUG("DXC Version: " + std::to_string(major) + "." + std::to_string(minor));
+		outArgs.push_back(L"-D");
+		outArgs.push_back(def.c_str());
+	}
+
+	// Strictness and resource binding
+	outArgs.push_back(DXC_ARG_ENABLE_STRICTNESS);
+	outArgs.push_back(DXC_ARG_ALL_RESOURCES_BOUND);
+
+	// Warnings
+	if (options.TreatWarningsAsErrors)
+	{
+		outArgs.push_back(DXC_ARG_WARNINGS_ARE_ERRORS);
+	}
+
+	// Stripping
+	if (options.StripReflection)
+	{
+		outArgs.push_back(L"-Qstrip_reflect");
+	}
+	if (options.StripDebugInfo)
+	{
+		outArgs.push_back(L"-Qstrip_debug");
+	}
+
+	// Debug info
+	if (options.EnableDebugInfo)
+	{
+		outArgs.push_back(DXC_ARG_DEBUG);
+	}
+
+	// Optimization level
+	if (options.EnableOptimizations)
+	{
+		outArgs.push_back(DXC_ARG_OPTIMIZATION_LEVEL3);
 	}
 	else
 	{
-		LOG_DEBUG("DXC Version: <unavailable>");
+		outArgs.push_back(DXC_ARG_SKIP_OPTIMIZATIONS);
 	}
-#endif
+}
+
+std::vector<uint8_t> DxcShaderCompiler::ExtractBytecode(IDxcResult* result)
+{
+	ComPtr<IDxcBlob> shaderBlob;
+	HRESULT hr = result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(shaderBlob.ReleaseAndGetAddressOf()), nullptr);
+	if (FAILED(hr) || !shaderBlob || shaderBlob->GetBufferSize() == 0)
+	{
+		return {};
+	}
+
+	const uint8_t* data = static_cast<const uint8_t*>(shaderBlob->GetBufferPointer());
+	return std::vector<uint8_t>(data, data + shaderBlob->GetBufferSize());
+}
+
+std::string DxcShaderCompiler::ExtractErrorMessage(IDxcResult* result)
+{
+	ComPtr<IDxcBlobUtf8> errorBlob;
+	result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errorBlob.ReleaseAndGetAddressOf()), nullptr);
+	if (errorBlob && errorBlob->GetStringLength() > 0)
+	{
+		return std::string(errorBlob->GetStringPointer(), errorBlob->GetStringLength());
+	}
+	return {};
+}
+
+void DxcShaderCompiler::SaveShaderSymbols(IDxcResult* result, const std::filesystem::path& sourcePath)
+{
+	ComPtr<IDxcBlob> pdbBlob;
+	ComPtr<IDxcBlobUtf16> pdbNameBlob;
+	result->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(pdbBlob.ReleaseAndGetAddressOf()), pdbNameBlob.ReleaseAndGetAddressOf());
+
+	if (!pdbBlob || !pdbNameBlob)
+		return;
+
+	// Build output path: ShaderSymbols/<shader_name>.pdb
+	std::filesystem::path symbolsDir = sourcePath.parent_path() / "ShaderSymbols";
+	std::error_code ec;
+	std::filesystem::create_directories(symbolsDir, ec);
+
+	std::wstring pdbName(pdbNameBlob->GetStringPointer());
+	std::filesystem::path pdbFilename = std::filesystem::path(pdbName).filename();
+	std::filesystem::path pdbPath = symbolsDir / pdbFilename;
+
+	FILE* fp = nullptr;
+	_wfopen_s(&fp, pdbPath.c_str(), L"wb");
+	if (fp)
+	{
+		fwrite(pdbBlob->GetBufferPointer(), 1, pdbBlob->GetBufferSize(), fp);
+		fclose(fp);
+	}
 }

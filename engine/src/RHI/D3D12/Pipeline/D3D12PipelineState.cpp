@@ -75,36 +75,35 @@ void D3D12PipelineState::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC&
 	ds.BackFace.StencilPassOp = stencilDesc.BackFaceStencilPassOp;
 }
 
-// Constructs and creates the graphics pipeline state object.
 D3D12PipelineState::D3D12PipelineState(
     std::span<const D3D12_INPUT_ELEMENT_DESC> vertexLayout,
     D3D12RootSignature& rootSignature,
-    DxcShaderCompiler& vertexShader,
-    DxcShaderCompiler& pixelShader)
+    ShaderBytecode vertexShader,
+    ShaderBytecode pixelShader)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
-	// -- Vertex Data
+	// Vertex layout
 	psoDesc.InputLayout.NumElements = static_cast<UINT>(vertexLayout.size());
 	psoDesc.InputLayout.pInputElementDescs = vertexLayout.data();
 	psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
 
-	// -- Root Signature
+	// Root signature
 	psoDesc.pRootSignature = rootSignature.GetRaw();
 
-	// -- Shaders
-	psoDesc.VS.pShaderBytecode = vertexShader.GetBuffer();
-	psoDesc.VS.BytecodeLength = vertexShader.GetSize();
-	psoDesc.PS.pShaderBytecode = pixelShader.GetBuffer();
-	psoDesc.PS.BytecodeLength = pixelShader.GetSize();
+	// Shaders
+	psoDesc.VS.pShaderBytecode = vertexShader.Data;
+	psoDesc.VS.BytecodeLength = vertexShader.Size;
+	psoDesc.PS.pShaderBytecode = pixelShader.Data;
+	psoDesc.PS.BytecodeLength = pixelShader.Size;
 
-	// -- Rasterizer
+	// Rasterizer state
 	SetRasterizerState(psoDesc, false, D3D12_CULL_MODE_BACK);
 
-	// -- Stream Output (disabled)
+	// Stream output (disabled)
 	SetStreamOutput(psoDesc);
 
-	// -- Blend State (default single-target config)
+	// Blend state
 	psoDesc.BlendState.AlphaToCoverageEnable = FALSE;
 	psoDesc.BlendState.IndependentBlendEnable = FALSE;
 	D3D12_RENDER_TARGET_BLEND_DESC rtBlend = {};
@@ -120,23 +119,23 @@ D3D12PipelineState::D3D12PipelineState(
 	rtBlend.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 	SetRenderTargetBlendState(psoDesc, rtBlend);
 
-	// -- Depth (reversed-Z by default in engine)
+	// Depth state (reversed-Z)
 	DepthTestDesc depthTestDesc = {};
 	depthTestDesc.DepthEnable = true;
 	depthTestDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 	depthTestDesc.DepthFunc = D3D12_COMPARISON_FUNC_GREATER_EQUAL;
 	SetDepthTestState(psoDesc, depthTestDesc);
 
-	// -- Stencil
+	// Stencil state
 	StencilTestDesc stencilDesc = {};
 	SetStencilTestState(psoDesc, stencilDesc);
 
-	// -- Render target / DSV formats
+	// Render target formats
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = GD3D12SwapChain.GetBackBufferFormat();
 	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-	// -- Misc
+	// Multisampling
 	psoDesc.NodeMask = 0;
 	psoDesc.CachedPSO = {};
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
@@ -144,7 +143,7 @@ D3D12PipelineState::D3D12PipelineState(
 	psoDesc.SampleDesc.Count = 1;
 	psoDesc.SampleDesc.Quality = 0;
 
-	// -- Create PSO and report detailed debug information on failure
+	// Create PSO
 	HRESULT hr = GD3D12Rhi.GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(m_pso.ReleaseAndGetAddressOf()));
 	if (FAILED(hr))
 	{

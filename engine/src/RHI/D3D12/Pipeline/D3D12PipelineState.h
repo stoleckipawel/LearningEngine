@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DxcShaderCompiler.h"
+#include "ShaderCompileResult.h"
 #include "D3D12RootSignature.h"
 
 #include <span>
@@ -40,20 +40,17 @@ class D3D12PipelineState
 	D3D12PipelineState(
 	    std::span<const D3D12_INPUT_ELEMENT_DESC> vertexLayout,
 	    D3D12RootSignature& rootSignature,
-	    DxcShaderCompiler& vertexShader,
-	    DxcShaderCompiler& pixelShader);
+	    ShaderBytecode vertexShader,
+	    ShaderBytecode pixelShader);
 
-	// Destructor releases pipeline state object
 	~D3D12PipelineState() noexcept;
 
-	// Deleted copy constructor and assignment operator to enforce unique ownership
 	D3D12PipelineState(const D3D12PipelineState&) = delete;
 	D3D12PipelineState& operator=(const D3D12PipelineState&) = delete;
 
-	// Sets the pipeline state object for the current command list.
+	// Binds this pipeline state to the command list.
 	void Set() const noexcept;
 
-	// Returns a const reference to the underlying pipeline state COM pointer.
 	const ComPtr<ID3D12PipelineState>& Get() const noexcept { return m_pso; }
 
   private:
@@ -66,5 +63,5 @@ class D3D12PipelineState
 	void SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, StencilTestDesc stencilDesc) noexcept;
 
   private:
-	ComPtr<ID3D12PipelineState> m_pso = nullptr;  // Pipeline state COM pointer
+	ComPtr<ID3D12PipelineState> m_pso = nullptr;
 };
