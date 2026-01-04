@@ -11,23 +11,20 @@
 // AssetSystem: Unified Asset Path Resolution Service
 // =============================================================================
 //
-// Central service for asset path management. Reads ENGINE_PATH and PROJECT_PATH
-// from environment variables and provides typed path resolution. Project assets
-// override Engine assets when both exist.
+// Central service for asset path management with marker-based discovery.
 //
-// ENVIRONMENT VARIABLES:
-//   ENGINE_PATH  - Required. Root of engine installation (assets at /assets).
-//   PROJECT_PATH - Optional. Root of game project (assets at /assets).
+// MARKER HIERARCHY:
+//   .sparkle         - Workspace root (repository level)
+//   .sparkle-engine  - Engine root (engine/ subdirectory)
+//   .sparkle-project - Project root (each game/sample project)
+//
+// DISCOVERY:
+//   1. Walk up from executable/working directory for markers
+//   2. If workspace root found, engine is at <workspace>/engine/
 //
 // USAGE:
 //   GAssetSystem.Initialize();
-//
-//   // Get typed directory (shader, texture, etc.)
 //   const auto& shaderDir = GAssetSystem.GetShaderPath();
-//
-//   // Resolve relative path to absolute
-//   if (auto path = GAssetSystem.ResolvePath("brick.png", AssetType::Texture))
-//       LoadTexture(*path);
 //
 
 class AssetSystem final
@@ -44,7 +41,7 @@ class AssetSystem final
 	// Lifecycle
 	// =========================================================================
 
-	// Call once at application startup before any asset operations.
+	// Initializes with automatic marker-based path discovery.
 	void Initialize();
 
 	// Reset to uninitialized state. Call during shutdown.
@@ -110,7 +107,7 @@ class AssetSystem final
 	AssetSystem() = default;
 	~AssetSystem() = default;
 
-	void ConfigurePathsFromEnvironment();
+	void DiscoverPaths();
 	void InitializeTypedPaths();
 	void InitializeOutputPaths();
 	void ValidatePaths();

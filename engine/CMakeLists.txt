@@ -88,7 +88,3 @@ target_precompile_headers(SparkleEngine
     PRIVATE
       src/Core/PCH.h
 )
-
-# Set ENGINE_PATH environment variable for engine
-set(ENGINE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
-set(ENV{ENGINE_PATH} "${ENGINE_PATH}")

@@ -17,6 +17,10 @@ target_compile_features(ExampleD3D12 PRIVATE cxx_std_20)
 # Link against engine static library
 target_link_libraries(ExampleD3D12 PRIVATE SparkleEngine)
 
-# Set PROJECT_PATH environment variable for project
-set(PROJECT_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
-set(ENV{PROJECT_PATH} "${PROJECT_PATH}")
+# Configure Visual Studio debugger to launch from project directory.
+# Path discovery uses marker files, so we just need the working directory set correctly.
+if(MSVC)
+    set_target_properties(ExampleD3D12 PROPERTIES
+        VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    )
+endif()

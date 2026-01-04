@@ -22,7 +22,7 @@ void AssetSystem::Initialize()
 	m_workingDirectory = std::filesystem::current_path();
 	m_executableDirectory = Engine::FileSystem::GetExecutableDirectory();
 
-	ConfigurePathsFromEnvironment();
+	DiscoverPaths();
 
 	m_projectPath = Engine::FileSystem::NormalizePath(m_projectPath);
 	m_projectAssetsPath = Engine::FileSystem::NormalizePath(m_projectAssetsPath);
@@ -36,21 +36,15 @@ void AssetSystem::Initialize()
 	m_bInitialized = true;
 }
 
-void AssetSystem::ConfigurePathsFromEnvironment()
+void AssetSystem::DiscoverPaths()
 {
-	// Engine path is required. Asset root is derived as <ENGINE_PATH>/assets.
-	// Optional project path: asset root is derived as <PROJECT_PATH>/assets.
-	//
-	// These are intentionally the only variables we support so build scripts and IDE
-	// launch configs stay simple and consistent.
-
-	if (auto engineRoot = Engine::FileSystem::TryGetEnvironmentPath("ENGINE_PATH"))
+	if (auto engineRoot = Engine::FileSystem::DiscoverEngineRoot())
 	{
 		m_enginePath = *engineRoot;
 		m_engineAssetsPath = m_enginePath / "assets";
 	}
 
-	if (auto projectRoot = Engine::FileSystem::TryGetEnvironmentPath("PROJECT_PATH"))
+	if (auto projectRoot = Engine::FileSystem::DiscoverProjectRoot())
 	{
 		m_projectPath = *projectRoot;
 		m_projectAssetsPath = m_projectPath / "assets";

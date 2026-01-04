@@ -2,9 +2,6 @@
 
 #include "Core/FileSystemUtils.h"
 
-#include <cstdlib>
-#include <string>
-
 #if defined(_WIN32)
 	#define WIN32_LEAN_AND_MEAN
 	#define NOMINMAX
@@ -45,47 +42,94 @@ namespace Engine::FileSystem
 		return std::filesystem::current_path();
 	}
 
-	std::optional<std::filesystem::path> TryGetEnvironmentPath(std::string_view variableName)
+	std::optional<std::filesystem::path> FindAncestorWithMarker(
+	    const std::filesystem::path& startDir,
+	    std::string_view markerFileName,
+	    uint32_t maxDepth)
 	{
-		if (variableName.empty())
+		if (startDir.empty() || markerFileName.empty())
 		{
 			return std::nullopt;
 		}
 
-#if defined(_WIN32)
-		std::wstring wideName(variableName.begin(), variableName.end());
-
-		DWORD requiredChars = GetEnvironmentVariableW(wideName.c_str(), nullptr, 0);
-		if (requiredChars == 0)
+		std::error_code ec;
+		auto currentDir = std::filesystem::weakly_canonical(startDir, ec);
+		if (ec)
 		{
-			return std::nullopt;
+			currentDir = startDir;
 		}
 
-		std::wstring value;
-		value.resize(static_cast<size_t>(requiredChars));
-
-		requiredChars = GetEnvironmentVariableW(wideName.c_str(), value.data(), requiredChars);
-		if (requiredChars == 0)
+		for (uint32_t depth = 0; depth < maxDepth && !currentDir.empty(); ++depth)
 		{
-			return std::nullopt;
+			if (std::filesystem::exists(currentDir / markerFileName, ec))
+			{
+				return currentDir;
+			}
+
+			auto parentDir = currentDir.parent_path();
+			if (parentDir == currentDir)
+			{
+				break;
+			}
+			currentDir = std::move(parentDir);
 		}
 
-		value.resize(static_cast<size_t>(requiredChars));
-		if (value.empty())
+		return std::nullopt;
+	}
+
+	std::optional<std::filesystem::path> DiscoverWorkspaceRoot()
+	{
+		if (auto fromExe = FindAncestorWithMarker(GetExecutableDirectory(), kWorkspaceMarker))
 		{
-			return std::nullopt;
+			return NormalizePath(*fromExe);
 		}
 
-		return std::filesystem::path(value);
-#else
-		std::string name(variableName.begin(), variableName.end());
-		const char* value = std::getenv(name.c_str());
-		if (value == nullptr || value[0] == '\0')
+		std::error_code ec;
+		if (auto fromCwd = FindAncestorWithMarker(std::filesystem::current_path(ec), kWorkspaceMarker); fromCwd && !ec)
 		{
-			return std::nullopt;
+			return NormalizePath(*fromCwd);
 		}
-		return std::filesystem::path(value);
-#endif
+
+		return std::nullopt;
+	}
+
+	std::optional<std::filesystem::path> DiscoverEngineRoot()
+	{
+		// Direct search from executable (handles standalone engine builds)
+		if (auto fromExe = FindAncestorWithMarker(GetExecutableDirectory(), kEngineMarker))
+		{
+			return NormalizePath(*fromExe);
+		}
+
+		// Direct search from working directory
+		std::error_code ec;
+		if (auto fromCwd = FindAncestorWithMarker(std::filesystem::current_path(ec), kEngineMarker); fromCwd && !ec)
+		{
+			return NormalizePath(*fromCwd);
+		}
+
+		// Fall back: find workspace root, then check engine/ subfolder
+		if (auto workspace = DiscoverWorkspaceRoot())
+		{
+			auto enginePath = *workspace / "engine";
+			if (std::filesystem::exists(enginePath / kEngineMarker, ec))
+			{
+				return NormalizePath(enginePath);
+			}
+		}
+
+		return std::nullopt;
+	}
+
+	std::optional<std::filesystem::path> DiscoverProjectRoot()
+	{
+		std::error_code ec;
+		if (auto fromCwd = FindAncestorWithMarker(std::filesystem::current_path(ec), kProjectMarker); fromCwd && !ec)
+		{
+			return NormalizePath(*fromCwd);
+		}
+
+		return std::nullopt;
 	}
 
 }  // namespace Engine::FileSystem

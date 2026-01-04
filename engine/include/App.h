@@ -9,7 +9,7 @@ class App
 	App() = default;
 	~App() = default;
 
-	// Entry point to run the application (only public API needed by users)
+	// Entry point to run the application.
 	void Run();
 
   protected:

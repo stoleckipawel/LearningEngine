@@ -18,8 +18,7 @@ class ExampleD3D12 : public App
 	void PostShutdown() override {}
 };
 
-// Entry point for the application
-// Application entry point: construct app and hand control to engine.
+// Application entry point.
 int main()
 {
 	ExampleD3D12 app;
