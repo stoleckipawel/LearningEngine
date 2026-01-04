@@ -6,7 +6,11 @@
 #include "EngineConfig.h"
 #include <string>
 
-Window GWindow;
+Window& Window::Get() noexcept
+{
+	static Window instance;
+	return instance;
+}
 
 RECT Window::GetRect() const noexcept
 {

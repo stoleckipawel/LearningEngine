@@ -10,14 +10,15 @@ using Microsoft::WRL::ComPtr;
 // Purpose: enable/disable SDK validation, configure the ID3D12InfoQueue filters,
 // and report live objects at shutdown to catch leaks. This class is only
 // available when `ENGINE_GPU_VALIDATION` is enabled (typically debug builds).
-class D3D12DebugLayer
+class D3D12DebugLayer final
 {
   public:
-	D3D12DebugLayer() = default;
-	~D3D12DebugLayer() = default;
+	[[nodiscard]] static D3D12DebugLayer& Get() noexcept;
 
 	D3D12DebugLayer(const D3D12DebugLayer&) = delete;
 	D3D12DebugLayer& operator=(const D3D12DebugLayer&) = delete;
+	D3D12DebugLayer(D3D12DebugLayer&&) = delete;
+	D3D12DebugLayer& operator=(D3D12DebugLayer&&) = delete;
 
 	// Initialize debug layers. Safe to call multiple times (idempotent).
 	void Initialize();
@@ -33,17 +34,18 @@ class D3D12DebugLayer
 	void ReportLiveDXGIObjects();
 
   private:
+	D3D12DebugLayer() = default;
+	~D3D12DebugLayer() = default;
+
 	void InitD3D12Debug();
 	void InitDXGIDebug();
 	void ConfigureInfoQueue();
 	void ApplyInfoQueueFilters();
 
-  private:
 	ComPtr<ID3D12Debug> m_d3d12Debug;  // D3D12 debug interface
 	ComPtr<IDXGIDebug1> m_dxgiDebug;   // DXGI debug interface
 	bool m_bInitialized = false;       // guard to make Initialize/Shutdown idempotent
 };
 
-// Global debug layer instance
-extern D3D12DebugLayer GD3D12DebugLayer;
+inline D3D12DebugLayer& GD3D12DebugLayer = D3D12DebugLayer::Get();
 #endif

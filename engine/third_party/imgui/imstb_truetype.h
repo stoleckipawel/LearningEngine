@@ -576,8 +576,13 @@ extern "C"
 	//
 	// It's inefficient; you might want to c&p it and optimize it.
 
-	STBTT_DEF void
-	stbtt_GetScaledFontVMetrics(const unsigned char* fontdata, int index, float size, float* ascent, float* descent, float* lineGap);
+	STBTT_DEF void stbtt_GetScaledFontVMetrics(
+	    const unsigned char* fontdata,
+	    int index,
+	    float size,
+	    float* ascent,
+	    float* descent,
+	    float* lineGap);
 	// Query the font vertical metrics without having to create a font first.
 
 
@@ -655,8 +660,12 @@ extern "C"
 		unsigned char h_oversample, v_oversample;  // don't set these, they're used internally
 	} stbtt_pack_range;
 
-	STBTT_DEF int
-	stbtt_PackFontRanges(stbtt_pack_context* spc, const unsigned char* fontdata, int font_index, stbtt_pack_range* ranges, int num_ranges);
+	STBTT_DEF int stbtt_PackFontRanges(
+	    stbtt_pack_context* spc,
+	    const unsigned char* fontdata,
+	    int font_index,
+	    stbtt_pack_range* ranges,
+	    int num_ranges);
 	// Creates character bitmaps from multiple ranges of characters stored in
 	// ranges. This will usually create a better-packed bitmap than multiple
 	// calls to stbtt_PackFontRange. Note that you can call this multiple
@@ -1080,8 +1089,15 @@ extern "C"
 	    float* sub_x,
 	    float* sub_y,
 	    int glyph);
-	STBTT_DEF void
-	stbtt_GetGlyphBitmapBox(const stbtt_fontinfo* font, int glyph, float scale_x, float scale_y, int* ix0, int* iy0, int* ix1, int* iy1);
+	STBTT_DEF void stbtt_GetGlyphBitmapBox(
+	    const stbtt_fontinfo* font,
+	    int glyph,
+	    float scale_x,
+	    float scale_y,
+	    int* ix0,
+	    int* iy0,
+	    int* ix1,
+	    int* iy1);
 	STBTT_DEF void stbtt_GetGlyphBitmapBoxSubpixel(
 	    const stbtt_fontinfo* font,
 	    int glyph,
@@ -1232,8 +1248,13 @@ extern "C"
 	// returns 1/0 whether the first string interpreted as utf8 is identical to
 	// the second string interpreted as big-endian utf16... useful for strings from next func
 
-	STBTT_DEF const char*
-	stbtt_GetFontNameString(const stbtt_fontinfo* font, int* length, int platformID, int encodingID, int languageID, int nameID);
+	STBTT_DEF const char* stbtt_GetFontNameString(
+	    const stbtt_fontinfo* font,
+	    int* length,
+	    int platformID,
+	    int encodingID,
+	    int languageID,
+	    int nameID);
 	// returns the string (which may be big-endian double byte, e.g. for unicode)
 	// and puts the length in bytes in *length.
 	//
@@ -3258,8 +3279,15 @@ STBTT_DEF void stbtt_GetGlyphBitmapBoxSubpixel(
 	}
 }
 
-STBTT_DEF void
-stbtt_GetGlyphBitmapBox(const stbtt_fontinfo* font, int glyph, float scale_x, float scale_y, int* ix0, int* iy0, int* ix1, int* iy1)
+STBTT_DEF void stbtt_GetGlyphBitmapBox(
+    const stbtt_fontinfo* font,
+    int glyph,
+    float scale_x,
+    float scale_y,
+    int* ix0,
+    int* iy0,
+    int* ix1,
+    int* iy1)
 {
 	stbtt_GetGlyphBitmapBoxSubpixel(font, glyph, scale_x, scale_y, 0.0f, 0.0f, ix0, iy0, ix1, iy1);
 }
@@ -3279,8 +3307,15 @@ STBTT_DEF void stbtt_GetCodepointBitmapBoxSubpixel(
 	stbtt_GetGlyphBitmapBoxSubpixel(font, stbtt_FindGlyphIndex(font, codepoint), scale_x, scale_y, shift_x, shift_y, ix0, iy0, ix1, iy1);
 }
 
-STBTT_DEF void
-stbtt_GetCodepointBitmapBox(const stbtt_fontinfo* font, int codepoint, float scale_x, float scale_y, int* ix0, int* iy0, int* ix1, int* iy1)
+STBTT_DEF void stbtt_GetCodepointBitmapBox(
+    const stbtt_fontinfo* font,
+    int codepoint,
+    float scale_x,
+    float scale_y,
+    int* ix0,
+    int* iy0,
+    int* ix1,
+    int* iy1)
 {
 	stbtt_GetCodepointBitmapBoxSubpixel(font, codepoint, scale_x, scale_y, 0.0f, 0.0f, ix0, iy0, ix1, iy1);
 }
@@ -3474,8 +3509,14 @@ static void stbtt__fill_active_edges(unsigned char* scanline, int len, stbtt__ac
 	}
 }
 
-static void
-stbtt__rasterize_sorted_edges(stbtt__bitmap* result, stbtt__edge* e, int n, int vsubsample, int off_x, int off_y, void* userdata)
+static void stbtt__rasterize_sorted_edges(
+    stbtt__bitmap* result,
+    stbtt__edge* e,
+    int n,
+    int vsubsample,
+    int off_x,
+    int off_y,
+    void* userdata)
 {
 	stbtt__hheap hh = {0, 0, 0};
 	stbtt__active_edge* active = NULL;
@@ -3911,8 +3952,14 @@ static void stbtt__fill_active_edges_new(float* scanline, float* scanline_fill, 
 }
 
 // directly AA rasterize edges w/o supersampling
-static void
-stbtt__rasterize_sorted_edges(stbtt__bitmap* result, stbtt__edge* e, int n, int vsubsample, int off_x, int off_y, void* userdata)
+static void stbtt__rasterize_sorted_edges(
+    stbtt__bitmap* result,
+    stbtt__edge* e,
+    int n,
+    int vsubsample,
+    int off_x,
+    int off_y,
+    void* userdata)
 {
 	stbtt__hheap hh = {0, 0, 0};
 	stbtt__active_edge* active = NULL;
@@ -4513,8 +4560,15 @@ STBTT_DEF unsigned char* stbtt_GetGlyphBitmapSubpixel(
 	return gbm.pixels;
 }
 
-STBTT_DEF unsigned char*
-stbtt_GetGlyphBitmap(const stbtt_fontinfo* info, float scale_x, float scale_y, int glyph, int* width, int* height, int* xoff, int* yoff)
+STBTT_DEF unsigned char* stbtt_GetGlyphBitmap(
+    const stbtt_fontinfo* info,
+    float scale_x,
+    float scale_y,
+    int glyph,
+    int* width,
+    int* height,
+    int* xoff,
+    int* yoff)
 {
 	return stbtt_GetGlyphBitmapSubpixel(info, scale_x, scale_y, 0.0f, 0.0f, glyph, width, height, xoff, yoff);
 }
@@ -4836,8 +4890,14 @@ static void stbrp_pack_rects(stbrp_context* con, stbrp_rect* rects, int num_rect
 // This is SUPER-AWESOME (tm Ryan Gordon) packing using stb_rect_pack.h. If
 // stb_rect_pack.h isn't available, it uses the BakeFontBitmap strategy.
 
-STBTT_DEF int
-stbtt_PackBegin(stbtt_pack_context* spc, unsigned char* pixels, int pw, int ph, int stride_in_bytes, int padding, void* alloc_context)
+STBTT_DEF int stbtt_PackBegin(
+    stbtt_pack_context* spc,
+    unsigned char* pixels,
+    int pw,
+    int ph,
+    int stride_in_bytes,
+    int padding,
+    void* alloc_context)
 {
 	stbrp_context* context = (stbrp_context*) STBTT_malloc(sizeof(*context), alloc_context);
 	int num_nodes = pw - padding;
@@ -5253,8 +5313,12 @@ STBTT_DEF void stbtt_PackFontRangesPackRects(stbtt_pack_context* spc, stbrp_rect
 	stbrp_pack_rects((stbrp_context*) spc->pack_info, rects, num_rects);
 }
 
-STBTT_DEF int
-stbtt_PackFontRanges(stbtt_pack_context* spc, const unsigned char* fontdata, int font_index, stbtt_pack_range* ranges, int num_ranges)
+STBTT_DEF int stbtt_PackFontRanges(
+    stbtt_pack_context* spc,
+    const unsigned char* fontdata,
+    int font_index,
+    stbtt_pack_range* ranges,
+    int num_ranges)
 {
 	stbtt_fontinfo info;
 	int i, j, n, return_value;  // [DEAR IMGUI] removed = 1;
@@ -5306,8 +5370,13 @@ STBTT_DEF int stbtt_PackFontRange(
 	return stbtt_PackFontRanges(spc, fontdata, font_index, &range, 1);
 }
 
-STBTT_DEF void
-stbtt_GetScaledFontVMetrics(const unsigned char* fontdata, int index, float size, float* ascent, float* descent, float* lineGap)
+STBTT_DEF void stbtt_GetScaledFontVMetrics(
+    const unsigned char* fontdata,
+    int index,
+    float size,
+    float* ascent,
+    float* descent,
+    float* lineGap)
 {
 	int i_ascent, i_descent, i_lineGap;
 	float scale;
@@ -5899,8 +5968,13 @@ static int stbtt_CompareUTF8toUTF16_bigendian_internal(char* s1, int len1, char*
 
 // returns results in whatever encoding you request... but note that 2-byte encodings
 // will be BIG-ENDIAN... use stbtt_CompareUTF8toUTF16_bigendian() to compare
-STBTT_DEF const char*
-stbtt_GetFontNameString(const stbtt_fontinfo* font, int* length, int platformID, int encodingID, int languageID, int nameID)
+STBTT_DEF const char* stbtt_GetFontNameString(
+    const stbtt_fontinfo* font,
+    int* length,
+    int platformID,
+    int encodingID,
+    int languageID,
+    int nameID)
 {
 	stbtt_int32 i, count, stringOffset;
 	stbtt_uint8* fc = font->data;
@@ -5924,8 +5998,13 @@ stbtt_GetFontNameString(const stbtt_fontinfo* font, int* length, int platformID,
 	return NULL;
 }
 
-static int
-stbtt__matchpair(stbtt_uint8* fc, stbtt_uint32 nm, stbtt_uint8* name, stbtt_int32 nlen, stbtt_int32 target_id, stbtt_int32 next_id)
+static int stbtt__matchpair(
+    stbtt_uint8* fc,
+    stbtt_uint32 nm,
+    stbtt_uint8* name,
+    stbtt_int32 nlen,
+    stbtt_int32 target_id,
+    stbtt_int32 next_id)
 {
 	stbtt_int32 i;
 	stbtt_int32 count = ttUSHORT(fc + nm + 2);

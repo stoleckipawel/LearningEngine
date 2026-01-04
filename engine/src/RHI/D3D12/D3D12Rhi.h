@@ -11,9 +11,16 @@ using Microsoft::WRL::ComPtr;
 // queues, fences, and synchronization. API is designed to be lightweight and
 // avoid unnecessary COM refcount churn: getters return const references to
 // internal ComPtr members where callers only need temporary access.
-class D3D12Rhi
+class D3D12Rhi final
 {
   public:
+	[[nodiscard]] static D3D12Rhi& Get() noexcept;
+
+	D3D12Rhi(const D3D12Rhi&) = delete;
+	D3D12Rhi& operator=(const D3D12Rhi&) = delete;
+	D3D12Rhi(D3D12Rhi&&) = delete;
+	D3D12Rhi& operator=(D3D12Rhi&&) = delete;
+
 	// Initialize the RHI and all required resources
 	void Initialize(bool RequireDXRSupport = false) noexcept;
 
@@ -41,7 +48,27 @@ class D3D12Rhi
 
 	void CheckShaderModel6Support() const noexcept;
 
+	[[nodiscard]] const ComPtr<IDXGIFactory7>& GetDxgiFactory() const noexcept { return m_DxgiFactory; }
+	[[nodiscard]] const ComPtr<IDXGIAdapter1>& GetAdapter() const noexcept { return m_Adapter; }
+	[[nodiscard]] const ComPtr<ID3D12Device10>& GetDevice() const noexcept { return m_Device; }
+	[[nodiscard]] const ComPtr<ID3D12CommandQueue>& GetCommandQueue() const noexcept { return m_CmdQueue; }
+	[[nodiscard]] const ComPtr<ID3D12CommandAllocator>& GetCommandAllocatorScene(UINT FrameInFlightIndex) const noexcept
+	{
+		return m_CmdAllocatorScene[FrameInFlightIndex];
+	}
+	[[nodiscard]] const ComPtr<ID3D12GraphicsCommandList7>& GetCommandList() const noexcept { return m_CmdListScene; }
+	[[nodiscard]] const ComPtr<ID3D12Fence1>& GetFence() const noexcept { return m_Fence; }
+
+	[[nodiscard]] UINT64 GetFenceValueForFrame(UINT FrameInFlightIndex) const noexcept { return m_FenceValues[FrameInFlightIndex]; }
+	void SetFenceValueForFrame(UINT FrameInFlightIndex, UINT64 value) noexcept { m_FenceValues[FrameInFlightIndex] = value; }
+	[[nodiscard]] HANDLE GetFenceEvent() const noexcept { return m_FenceEvent; }
+	[[nodiscard]] UINT64 GetNextFenceValue() const noexcept { return m_NextFenceValue; }
+	void SetNextFenceValue(UINT64 value) noexcept { m_NextFenceValue = value; }
+
   private:
+	D3D12Rhi() = default;
+	~D3D12Rhi() = default;
+
 	void SelectAdapter() noexcept;
 	void CreateFactory();
 	void CreateDevice(bool requireDXRSupport);
@@ -50,25 +77,6 @@ class D3D12Rhi
 	void CreateCommandLists();
 	void CreateFenceAndEvent();
 
-  public:
-	const ComPtr<IDXGIFactory7>& GetDxgiFactory() const noexcept { return m_DxgiFactory; }
-	const ComPtr<IDXGIAdapter1>& GetAdapter() const noexcept { return m_Adapter; }
-	const ComPtr<ID3D12Device10>& GetDevice() const noexcept { return m_Device; }
-	const ComPtr<ID3D12CommandQueue>& GetCommandQueue() const noexcept { return m_CmdQueue; }
-	const ComPtr<ID3D12CommandAllocator>& GetCommandAllocatorScene(UINT FrameInFlightIndex) const noexcept
-	{
-		return m_CmdAllocatorScene[FrameInFlightIndex];
-	}
-	const ComPtr<ID3D12GraphicsCommandList7>& GetCommandList() const noexcept { return m_CmdListScene; }
-	const ComPtr<ID3D12Fence1>& GetFence() const noexcept { return m_Fence; }
-
-	UINT64 GetFenceValueForFrame(UINT FrameInFlightIndex) const noexcept { return m_FenceValues[FrameInFlightIndex]; }
-	void SetFenceValueForFrame(UINT FrameInFlightIndex, UINT64 value) noexcept { m_FenceValues[FrameInFlightIndex] = value; }
-	HANDLE GetFenceEvent() const noexcept { return m_FenceEvent; }
-	UINT64 GetNextFenceValue() const noexcept { return m_NextFenceValue; }
-	void SetNextFenceValue(UINT64 value) noexcept { m_NextFenceValue = value; }
-
-  private:
 	ComPtr<IDXGIFactory7> m_DxgiFactory = nullptr;
 	ComPtr<IDXGIAdapter1> m_Adapter = nullptr;
 	ComPtr<ID3D12Device10> m_Device = nullptr;
@@ -83,5 +91,4 @@ class D3D12Rhi
 	D3D_FEATURE_LEVEL m_DesiredD3DFeatureLevel = D3D_FEATURE_LEVEL_12_1;
 };
 
-// Global D3D12 RHI instance
-extern D3D12Rhi GD3D12Rhi;
+inline D3D12Rhi& GD3D12Rhi = D3D12Rhi::Get();

@@ -794,8 +794,9 @@ struct CD3DX12_ROOT_DESCRIPTOR_TABLE : public D3D12_ROOT_DESCRIPTOR_TABLE
 		Init(numDescriptorRanges, _pDescriptorRanges);
 	}
 
-	inline void
-	Init(UINT numDescriptorRanges, _In_reads_opt_(numDescriptorRanges) const D3D12_DESCRIPTOR_RANGE* _pDescriptorRanges) noexcept
+	inline void Init(
+	    UINT numDescriptorRanges,
+	    _In_reads_opt_(numDescriptorRanges) const D3D12_DESCRIPTOR_RANGE* _pDescriptorRanges) noexcept
 	{
 		Init(*this, numDescriptorRanges, _pDescriptorRanges);
 	}
@@ -825,8 +826,11 @@ struct CD3DX12_ROOT_CONSTANTS : public D3D12_ROOT_CONSTANTS
 		Init(*this, num32BitValues, shaderRegister, registerSpace);
 	}
 
-	static inline void
-	Init(_Out_ D3D12_ROOT_CONSTANTS& rootConstants, UINT num32BitValues, UINT shaderRegister, UINT registerSpace = 0) noexcept
+	static inline void Init(
+	    _Out_ D3D12_ROOT_CONSTANTS& rootConstants,
+	    UINT num32BitValues,
+	    UINT shaderRegister,
+	    UINT registerSpace = 0) noexcept
 	{
 		rootConstants.Num32BitValues = num32BitValues;
 		rootConstants.ShaderRegister = shaderRegister;
@@ -1152,8 +1156,9 @@ struct CD3DX12_ROOT_DESCRIPTOR_TABLE1 : public D3D12_ROOT_DESCRIPTOR_TABLE1
 		Init(numDescriptorRanges, _pDescriptorRanges);
 	}
 
-	inline void
-	Init(UINT numDescriptorRanges, _In_reads_opt_(numDescriptorRanges) const D3D12_DESCRIPTOR_RANGE1* _pDescriptorRanges) noexcept
+	inline void Init(
+	    UINT numDescriptorRanges,
+	    _In_reads_opt_(numDescriptorRanges) const D3D12_DESCRIPTOR_RANGE1* _pDescriptorRanges) noexcept
 	{
 		Init(*this, numDescriptorRanges, _pDescriptorRanges);
 	}
@@ -1181,8 +1186,10 @@ struct CD3DX12_ROOT_DESCRIPTOR1 : public D3D12_ROOT_DESCRIPTOR1
 		Init(shaderRegister, registerSpace, flags);
 	}
 
-	inline void
-	Init(UINT shaderRegister, UINT registerSpace = 0, D3D12_ROOT_DESCRIPTOR_FLAGS flags = D3D12_ROOT_DESCRIPTOR_FLAG_NONE) noexcept
+	inline void Init(
+	    UINT shaderRegister,
+	    UINT registerSpace = 0,
+	    D3D12_ROOT_DESCRIPTOR_FLAGS flags = D3D12_ROOT_DESCRIPTOR_FLAG_NONE) noexcept
 	{
 		Init(*this, shaderRegister, registerSpace, flags);
 	}
@@ -1588,8 +1595,9 @@ struct CD3DX12_RESOURCE_DESC : public D3D12_RESOURCE_DESC
 		Layout = layout;
 		Flags = flags;
 	}
-	static inline CD3DX12_RESOURCE_DESC
-	Buffer(const D3D12_RESOURCE_ALLOCATION_INFO& resAllocInfo, D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE) noexcept
+	static inline CD3DX12_RESOURCE_DESC Buffer(
+	    const D3D12_RESOURCE_ALLOCATION_INFO& resAllocInfo,
+	    D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE) noexcept
 	{
 		return CD3DX12_RESOURCE_DESC(
 		    D3D12_RESOURCE_DIMENSION_BUFFER,
@@ -1604,8 +1612,10 @@ struct CD3DX12_RESOURCE_DESC : public D3D12_RESOURCE_DESC
 		    D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
 		    flags);
 	}
-	static inline CD3DX12_RESOURCE_DESC
-	Buffer(UINT64 width, D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE, UINT64 alignment = 0) noexcept
+	static inline CD3DX12_RESOURCE_DESC Buffer(
+	    UINT64 width,
+	    D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE,
+	    UINT64 alignment = 0) noexcept
 	{
 		return CD3DX12_RESOURCE_DESC(
 		    D3D12_RESOURCE_DIMENSION_BUFFER,
@@ -1747,8 +1757,9 @@ struct CD3DX12_RESOURCE_DESC1 : public D3D12_RESOURCE_DESC1
 		SamplerFeedbackMipRegion.Height = samplerFeedbackMipRegionHeight;
 		SamplerFeedbackMipRegion.Depth = samplerFeedbackMipRegionDepth;
 	}
-	static inline CD3DX12_RESOURCE_DESC1
-	Buffer(const D3D12_RESOURCE_ALLOCATION_INFO& resAllocInfo, D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE) noexcept
+	static inline CD3DX12_RESOURCE_DESC1 Buffer(
+	    const D3D12_RESOURCE_ALLOCATION_INFO& resAllocInfo,
+	    D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE) noexcept
 	{
 		return CD3DX12_RESOURCE_DESC1(
 		    D3D12_RESOURCE_DIMENSION_BUFFER,
@@ -1766,8 +1777,10 @@ struct CD3DX12_RESOURCE_DESC1 : public D3D12_RESOURCE_DESC1
 		    0,
 		    0);
 	}
-	static inline CD3DX12_RESOURCE_DESC1
-	Buffer(UINT64 width, D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE, UINT64 alignment = 0) noexcept
+	static inline CD3DX12_RESOURCE_DESC1 Buffer(
+	    UINT64 width,
+	    D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE,
+	    UINT64 alignment = 0) noexcept
 	{
 		return CD3DX12_RESOURCE_DESC1(
 		    D3D12_RESOURCE_DIMENSION_BUFFER,

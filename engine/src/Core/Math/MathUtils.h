@@ -34,8 +34,10 @@ namespace MathUtils
 		return {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
 	}
 
-	inline DirectX::XMFLOAT3
-	Normalize3(const DirectX::XMFLOAT3& v, const DirectX::XMFLOAT3& fallback = {0.0f, 1.0f, 0.0f}, float epsilon = 1e-8f)
+	inline DirectX::XMFLOAT3 Normalize3(
+	    const DirectX::XMFLOAT3& v,
+	    const DirectX::XMFLOAT3& fallback = {0.0f, 1.0f, 0.0f},
+	    float epsilon = 1e-8f)
 	{
 		float len2 = v.x * v.x + v.y * v.y + v.z * v.z;
 		if (len2 < epsilon)

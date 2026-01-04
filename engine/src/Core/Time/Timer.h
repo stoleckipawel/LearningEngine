@@ -49,10 +49,8 @@ namespace Engine
 	class Timer final
 	{
 	  public:
-		Timer() = default;
-		~Timer() = default;
+		[[nodiscard]] static Timer& Get() noexcept;
 
-		// Non-copyable, non-movable (singleton pattern).
 		Timer(const Timer&) = delete;
 		Timer& operator=(const Timer&) = delete;
 		Timer(Timer&&) = delete;
@@ -93,9 +91,11 @@ namespace Engine
 		};
 
 	  private:
+		Timer() = default;
+		~Timer() = default;
+
 		[[nodiscard]] static double ToUnit(Duration d, TimeUnit u) noexcept;
 
-	  private:
 		TimePoint m_start{};
 		TimePoint m_last{};
 		Duration m_unscaledDelta{1.0 / 60.0};
@@ -110,5 +110,4 @@ namespace Engine
 
 }  // namespace Engine
 
-// Global singleton instance. Prefer accessing via `GTimer`.
-extern Engine::Timer GTimer;
+inline Engine::Timer& GTimer = Engine::Timer::Get();

@@ -17,15 +17,25 @@ class D3D12DepthStencil;
 class Mesh;
 
 // Renderer orchestrates the graphics pipeline.
-class Renderer
+class Renderer final
 {
   public:
+	[[nodiscard]] static Renderer& Get() noexcept;
+
+	Renderer(const Renderer&) = delete;
+	Renderer& operator=(const Renderer&) = delete;
+	Renderer(Renderer&&) = delete;
+	Renderer& operator=(Renderer&&) = delete;
+
 	void Initialize() noexcept;
 	void Shutdown() noexcept;
 	void OnRender() noexcept;
 	void OnResize() noexcept;
 
   private:
+	Renderer() = default;
+	~Renderer() = default;
+
 	void PostLoad() noexcept;
 	void CreateDepthStencilBuffer();
 	void CreatePSO();
@@ -43,7 +53,6 @@ class Renderer
 	void BindPerFrameResources() noexcept;
 	void BindPerObjectResources(const Mesh& mesh) noexcept;
 
-  private:
 	// Textures
 	std::unique_ptr<Texture> m_checkerTexture;
 	std::unique_ptr<Texture> m_skyCubemapTexture;
@@ -66,4 +75,4 @@ class Renderer
 	EventHandle m_depthModeChangedHandle;
 };
 
-extern Renderer GRenderer;
+inline Renderer& GRenderer = Renderer::Get();

@@ -146,8 +146,10 @@ struct VERTEX_CONSTANT_BUFFER_DX12
 };
 
 // Functions
-static void
-ImGui_ImplDX12_SetupRenderState(ImDrawData* draw_data, ID3D12GraphicsCommandList* command_list, ImGui_ImplDX12_RenderBuffers* fr)
+static void ImGui_ImplDX12_SetupRenderState(
+    ImDrawData* draw_data,
+    ID3D12GraphicsCommandList* command_list,
+    ImGui_ImplDX12_RenderBuffers* fr)
 {
 	ImGui_ImplDX12_Data* bd = ImGui_ImplDX12_GetBackendData();
 

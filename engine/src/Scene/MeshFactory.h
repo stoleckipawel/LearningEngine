@@ -36,7 +36,12 @@ class MeshFactory
 
 	// Clears all meshes and spawns 'count' instances of 'shape' spread randomly
 	// around 'center' within 'extents'. Uploads geometry to the GPU.
-	void Rebuild(Shape shape, std::uint32_t count, const DirectX::XMFLOAT3& center, const DirectX::XMFLOAT3& extents, std::uint32_t seed = 0);
+	void Rebuild(
+	    Shape shape,
+	    std::uint32_t count,
+	    const DirectX::XMFLOAT3& center,
+	    const DirectX::XMFLOAT3& extents,
+	    std::uint32_t seed = 0);
 
 	// Append a single mesh by shape enum.
 	void AppendShape(

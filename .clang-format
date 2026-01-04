@@ -142,4 +142,4 @@ MaxEmptyLinesToKeep: 2
 
 PenaltyBreakComment: 1000
 PenaltyBreakString: 1000
-PenaltyReturnTypeOnItsOwnLine: 0
+PenaltyReturnTypeOnItsOwnLine: 1000

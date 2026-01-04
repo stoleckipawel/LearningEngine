@@ -16,8 +16,12 @@
 #include <imgui.h>
 #include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_dx12.h>
-// Global UI instance used by the engine
-UI GUI;
+
+UI& UI::Get() noexcept
+{
+	static UI instance;
+	return instance;
+}
 
 UI::~UI() noexcept = default;
 

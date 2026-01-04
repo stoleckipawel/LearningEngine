@@ -7,11 +7,11 @@
 class CameraSection final : public UIRendererSection
 {
   public:
-    CameraSection() noexcept = default;
-    ~CameraSection() override = default;
+	CameraSection() noexcept = default;
+	~CameraSection() override = default;
 
-    UIRendererSectionId GetId() const noexcept override { return UIRendererSectionId::Camera; }
-    const char* GetTitle() const noexcept override { return "Camera"; }
+	UIRendererSectionId GetId() const noexcept override { return UIRendererSectionId::Camera; }
+	const char* GetTitle() const noexcept override { return "Camera"; }
 
-    void BuildUI() override;
+	void BuildUI() override;
 };

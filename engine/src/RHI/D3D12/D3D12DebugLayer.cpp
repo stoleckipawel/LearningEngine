@@ -4,8 +4,12 @@
 #include "D3D12Rhi.h"
 
 #if ENGINE_GPU_VALIDATION
-// Global debug layer instance
-D3D12DebugLayer GD3D12DebugLayer;
+
+D3D12DebugLayer& D3D12DebugLayer::Get() noexcept
+{
+	static D3D12DebugLayer instance;
+	return instance;
+}
 
 // Initializes the Direct3D 12 and DXGI debug layers
 void D3D12DebugLayer::Initialize()

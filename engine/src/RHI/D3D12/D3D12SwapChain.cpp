@@ -5,7 +5,11 @@
 #include "D3D12DescriptorHeapManager.h"
 #include "DebugUtils.h"
 
-D3D12SwapChain GD3D12SwapChain;
+D3D12SwapChain& D3D12SwapChain::Get() noexcept
+{
+	static D3D12SwapChain instance;
+	return instance;
+}
 
 // Initializes the swap chain and creates render target views
 void D3D12SwapChain::Initialize()

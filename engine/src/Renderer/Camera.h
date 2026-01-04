@@ -7,14 +7,15 @@
 #include <cstdint>
 #include "D3D12ConstantBufferData.h"
 
-class Camera
+class Camera final
 {
   public:
-	Camera() noexcept;
-	~Camera() noexcept;
+	[[nodiscard]] static Camera& Get() noexcept;
 
 	Camera(const Camera&) = delete;
 	Camera& operator=(const Camera&) = delete;
+	Camera(Camera&&) = delete;
+	Camera& operator=(Camera&&) = delete;
 
 	// Configuration
 	void SetFovYDegrees(float fovDegrees) noexcept;
@@ -34,27 +35,30 @@ class Camera
 	void MoveUp(float distance) noexcept;
 
 	// Queries
-	DirectX::XMFLOAT3 GetPosition() const noexcept;
-	DirectX::XMFLOAT4 GetRotationQuaternion() const noexcept;
-	DirectX::XMFLOAT3 GetDirection() const noexcept;  // normalized forward (local +Z)
-	DirectX::XMFLOAT3 GetRight() const noexcept;
-	DirectX::XMFLOAT3 GetUp() const noexcept;
-	float GetFovYDegrees() const noexcept { return m_fovYDegrees; }
-	float GetNearZ() const noexcept { return m_nearZ; }
-	float GetFarZ() const noexcept { return m_farZ; }
+	[[nodiscard]] DirectX::XMFLOAT3 GetPosition() const noexcept;
+	[[nodiscard]] DirectX::XMFLOAT4 GetRotationQuaternion() const noexcept;
+	[[nodiscard]] DirectX::XMFLOAT3 GetDirection() const noexcept;  // normalized forward (local +Z)
+	[[nodiscard]] DirectX::XMFLOAT3 GetRight() const noexcept;
+	[[nodiscard]] DirectX::XMFLOAT3 GetUp() const noexcept;
+	[[nodiscard]] float GetFovYDegrees() const noexcept { return m_fovYDegrees; }
+	[[nodiscard]] float GetNearZ() const noexcept { return m_nearZ; }
+	[[nodiscard]] float GetFarZ() const noexcept { return m_farZ; }
 
 	// Matrix accessors (cached)
-	DirectX::XMMATRIX GetViewMatrix() const noexcept;
-	DirectX::XMMATRIX GetProjectionMatrix() const noexcept;
+	[[nodiscard]] DirectX::XMMATRIX GetViewMatrix() const noexcept;
+	[[nodiscard]] DirectX::XMMATRIX GetProjectionMatrix() const noexcept;
 
 	// Get View Constant Buffer Data
-	PerViewConstantBufferData GetViewConstantBufferData() const noexcept;
+	[[nodiscard]] PerViewConstantBufferData GetViewConstantBufferData() const noexcept;
 
 	// Zero-copy helper: fill caller-provided POD with view constants.
 	// Useful for avoiding an extra copy when uploading to a GPU upload buffer.
 	void FillViewCB(PerViewConstantBufferData& out) const noexcept;
 
   private:
+	Camera() noexcept;
+	~Camera() noexcept;
+
 	void InvalidateMatrices() noexcept;
 	void InvalidateProjection() noexcept;
 	void RebuildViewIfNeeded() const noexcept;
@@ -81,5 +85,4 @@ class Camera
 	EventHandle m_depthModeChangedHandle;
 };
 
-// Global camera instance
-extern Camera GCamera;
+inline Camera& GCamera = Camera::Get();

@@ -67,18 +67,18 @@ struct D3D12FrameResource
 //   For very large scenes, increase to 8-16MB or implement dynamic growth.
 //------------------------------------------------------------------------------
 
-class D3D12FrameResourceManager
+class D3D12FrameResourceManager final
 {
   public:
 	// Default capacity: 4MB per frame (16384 draws × 256 bytes)
 	static constexpr uint64_t DefaultCapacityPerFrame = 4 * 1024 * 1024;
 
-	D3D12FrameResourceManager() = default;
-	~D3D12FrameResourceManager() { Shutdown(); }
+	[[nodiscard]] static D3D12FrameResourceManager& Get() noexcept;
 
-	// Non-copyable
 	D3D12FrameResourceManager(const D3D12FrameResourceManager&) = delete;
 	D3D12FrameResourceManager& operator=(const D3D12FrameResourceManager&) = delete;
+	D3D12FrameResourceManager(D3D12FrameResourceManager&&) = delete;
+	D3D12FrameResourceManager& operator=(D3D12FrameResourceManager&&) = delete;
 
 	//--------------------------------------------------------------------------
 	// Initialization
@@ -190,11 +190,13 @@ class D3D12FrameResourceManager
 	[[nodiscard]] bool IsInitialized() const { return m_bInitialized; }
 
   private:
+	D3D12FrameResourceManager() = default;
+	~D3D12FrameResourceManager() { Shutdown(); }
+
 	std::array<D3D12FrameResource, EngineSettings::FramesInFlight> m_FrameResources;
 	uint64_t m_CapacityPerFrame = DefaultCapacityPerFrame;
 	uint32_t m_CurrentFrameIndex = 0;
 	bool m_bInitialized = false;
 };
 
-// Global frame resource manager
-extern D3D12FrameResourceManager GD3D12FrameResourceManager;
+inline D3D12FrameResourceManager& GD3D12FrameResourceManager = D3D12FrameResourceManager::Get();

@@ -12,9 +12,6 @@ using namespace DirectX;
 DepthMode DepthConvention::s_mode = DepthMode::ReversedZ;
 DepthConvention::OnModeChangedEvent DepthConvention::OnModeChanged;
 
-// Global instance (stateless - all static, exists for namespace convenience)
-DepthConvention GDepthConvention;
-
 //------------------------------------------------------------------------------
 // Configuration
 //------------------------------------------------------------------------------
@@ -89,11 +86,7 @@ XMMATRIX DepthConvention::CreatePerspectiveFovLH(float fovY, float aspect, float
 		const float a = nearZ / (nearZ - farZ);
 		const float b = (nearZ * farZ) / (farZ - nearZ);
 
-		return XMMATRIX(
-		    w,    0.0f, 0.0f, 0.0f,
-		    0.0f, h,    0.0f, 0.0f,
-		    0.0f, 0.0f, a,    1.0f,
-		    0.0f, 0.0f, b,    0.0f);
+		return XMMATRIX(w, 0.0f, 0.0f, 0.0f, 0.0f, h, 0.0f, 0.0f, 0.0f, 0.0f, a, 1.0f, 0.0f, 0.0f, b, 0.0f);
 	}
 	else
 	{

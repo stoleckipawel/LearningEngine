@@ -21,7 +21,11 @@
 #include "Camera.h"
 #include "Log.h"
 
-Renderer GRenderer;
+Renderer& Renderer::Get() noexcept
+{
+	static Renderer instance;
+	return instance;
+}
 
 void Renderer::Initialize() noexcept
 {
@@ -268,5 +272,5 @@ void Renderer::OnDepthModeChanged([[maybe_unused]] DepthMode mode) noexcept
 	// and depth stencil buffer with new optimized clear value
 	GD3D12Rhi.Flush();
 	CreatePSO();
-	CreateDepthStencilBuffer(); 
+	CreateDepthStencilBuffer();
 }

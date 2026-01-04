@@ -1,8 +1,11 @@
 #include "PCH.h"
 #include "D3D12DescriptorHeapManager.h"
 
-// Global instance of D3D12DescriptorHeapManager for engine-wide access
-D3D12DescriptorHeapManager GD3D12DescriptorHeapManager;
+D3D12DescriptorHeapManager& D3D12DescriptorHeapManager::Get() noexcept
+{
+	static D3D12DescriptorHeapManager instance;
+	return instance;
+}
 
 // Initializes all descriptor heaps required by the engine.
 void D3D12DescriptorHeapManager::Initialize()

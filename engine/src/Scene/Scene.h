@@ -9,11 +9,10 @@
 class Mesh;
 
 // Scene manages all renderable objects and scene state.
-class Scene
+class Scene final
 {
   public:
-	Scene() = default;
-	~Scene() noexcept;
+	[[nodiscard]] static Scene& Get() noexcept;
 
 	Scene(const Scene&) = delete;
 	Scene& operator=(const Scene&) = delete;
@@ -40,15 +39,18 @@ class Scene
 	void SetPrimitives(MeshFactory::Shape shape, std::uint32_t count);
 
 	// Accessors for current configuration
-	const PrimitiveConfig& GetPrimitiveConfig() const noexcept { return m_primitiveConfig; }
-	MeshFactory::Shape GetCurrentShape() const noexcept { return m_primitiveConfig.shape; }
-	std::uint32_t GetCurrentCount() const noexcept { return m_primitiveConfig.count; }
+	[[nodiscard]] const PrimitiveConfig& GetPrimitiveConfig() const noexcept { return m_primitiveConfig; }
+	[[nodiscard]] MeshFactory::Shape GetCurrentShape() const noexcept { return m_primitiveConfig.shape; }
+	[[nodiscard]] std::uint32_t GetCurrentCount() const noexcept { return m_primitiveConfig.count; }
 
 	// Read-only access to meshes for rendering
-	const std::vector<std::unique_ptr<Mesh>>& GetMeshes() const noexcept;
-	bool HasMeshes() const noexcept;
+	[[nodiscard]] const std::vector<std::unique_ptr<Mesh>>& GetMeshes() const noexcept;
+	[[nodiscard]] bool HasMeshes() const noexcept;
 
   private:
+	Scene() = default;
+	~Scene() noexcept;
+
 	void RebuildGeometry();
 
 	PrimitiveConfig m_primitiveConfig;
@@ -56,4 +58,4 @@ class Scene
 	bool m_initialized = false;
 };
 
-extern Scene GScene;
+inline Scene& GScene = Scene::Get();

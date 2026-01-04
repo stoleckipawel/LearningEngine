@@ -545,8 +545,11 @@ IMGUI_API int ImParseFormatPrecision(const char* format, int default_value);
 
 // Helpers: UTF-8 <> wchar conversions
 IMGUI_API int ImTextCharToUtf8(char out_buf[5], unsigned int c);  // return output UTF-8 bytes count
-IMGUI_API int
-ImTextStrToUtf8(char* out_buf, int out_buf_size, const ImWchar* in_text, const ImWchar* in_text_end);  // return output UTF-8 bytes count
+IMGUI_API int ImTextStrToUtf8(
+    char* out_buf,
+    int out_buf_size,
+    const ImWchar* in_text,
+    const ImWchar* in_text_end);  // return output UTF-8 bytes count
 IMGUI_API int ImTextCharFromUtf8(
     unsigned int* out_char,
     const char* in_text,
@@ -557,12 +560,15 @@ IMGUI_API int ImTextStrFromUtf8(
     const char* in_text,
     const char* in_text_end,
     const char** in_remaining = NULL);  // return input UTF-8 bytes count
-IMGUI_API int
-ImTextCountCharsFromUtf8(const char* in_text, const char* in_text_end);  // return number of UTF-8 code-points (NOT bytes count)
-IMGUI_API int
-ImTextCountUtf8BytesFromChar(const char* in_text, const char* in_text_end);  // return number of bytes to express one char in UTF-8
-IMGUI_API int
-ImTextCountUtf8BytesFromStr(const ImWchar* in_text, const ImWchar* in_text_end);  // return number of bytes to express string in UTF-8
+IMGUI_API int ImTextCountCharsFromUtf8(
+    const char* in_text,
+    const char* in_text_end);  // return number of UTF-8 code-points (NOT bytes count)
+IMGUI_API int ImTextCountUtf8BytesFromChar(
+    const char* in_text,
+    const char* in_text_end);  // return number of bytes to express one char in UTF-8
+IMGUI_API int ImTextCountUtf8BytesFromStr(
+    const ImWchar* in_text,
+    const ImWchar* in_text_end);  // return number of bytes to express string in UTF-8
 IMGUI_API const char* ImTextFindPreviousUtf8Codepoint(const char* in_text_start, const char* in_p);  // return previous UTF-8 code-point.
 IMGUI_API const char* ImTextFindValidUtf8CodepointEnd(
     const char* in_text_start,
@@ -591,8 +597,13 @@ IMGUI_API ImVec2 ImFontCalcTextSizeEx(
     const char** out_remaining,
     ImVec2* out_offset,
     ImDrawTextFlags flags);
-IMGUI_API const char*
-ImFontCalcWordWrapPositionEx(ImFont* font, float size, const char* text, const char* text_end, float wrap_width, ImDrawTextFlags flags = 0);
+IMGUI_API const char* ImFontCalcWordWrapPositionEx(
+    ImFont* font,
+    float size,
+    const char* text,
+    const char* text_end,
+    float wrap_width,
+    ImDrawTextFlags flags = 0);
 IMGUI_API const char* ImTextCalcWordWrapNextLineStart(
     const char* text,
     const char* text_end,
@@ -868,8 +879,14 @@ IMGUI_API ImVec2 ImBezierQuadraticCalc(const ImVec2& p1, const ImVec2& p2, const
 IMGUI_API ImVec2 ImLineClosestPoint(const ImVec2& a, const ImVec2& b, const ImVec2& p);
 IMGUI_API bool ImTriangleContainsPoint(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& p);
 IMGUI_API ImVec2 ImTriangleClosestPoint(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& p);
-IMGUI_API void
-ImTriangleBarycentricCoords(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& p, float& out_u, float& out_v, float& out_w);
+IMGUI_API void ImTriangleBarycentricCoords(
+    const ImVec2& a,
+    const ImVec2& b,
+    const ImVec2& c,
+    const ImVec2& p,
+    float& out_u,
+    float& out_v,
+    float& out_w);
 inline float ImTriangleArea(const ImVec2& a, const ImVec2& b, const ImVec2& c)
 {
 	return ImFabs((a.x * (b.y - c.y)) + (b.x * (c.y - a.y)) + (c.x * (a.y - b.y))) * 0.5f;
@@ -4311,12 +4328,12 @@ namespace ImGui
 		IM_UNUSED(window);
 		return GetForegroundDrawList();
 	}  // This seemingly unnecessary wrapper simplifies compatibility between the 'master' and 'docking' branches.
-	IMGUI_API ImDrawList*
-	GetBackgroundDrawList(ImGuiViewport* viewport);  // get background draw list for the given viewport. this draw list will be the first
-	                                                 // rendering one. Useful to quickly draw shapes/text behind dear imgui contents.
-	IMGUI_API ImDrawList*
-	GetForegroundDrawList(ImGuiViewport* viewport);  // get foreground draw list for the given viewport. this draw list will be the last
-	                                                 // rendered one. Useful to quickly draw shapes/text over dear imgui contents.
+	IMGUI_API ImDrawList* GetBackgroundDrawList(
+	    ImGuiViewport* viewport);  // get background draw list for the given viewport. this draw list will be the first
+	                               // rendering one. Useful to quickly draw shapes/text behind dear imgui contents.
+	IMGUI_API ImDrawList* GetForegroundDrawList(
+	    ImGuiViewport* viewport);  // get foreground draw list for the given viewport. this draw list will be the last
+	                               // rendered one. Useful to quickly draw shapes/text over dear imgui contents.
 	IMGUI_API void AddDrawListToDrawDataEx(ImDrawData* draw_data, ImVector<ImDrawList*>* out_list, ImDrawList* draw_list);
 
 	// Init
@@ -4413,10 +4430,10 @@ namespace ImGui
 	IMGUI_API ImGuiID GetHoveredID();
 	IMGUI_API void SetHoveredID(ImGuiID id);
 	IMGUI_API void KeepAliveID(ImGuiID id);
-	IMGUI_API void
-	MarkItemEdited(ImGuiID id);  // Mark data associated to given item as "edited", used by IsItemDeactivatedAfterEdit() function.
-	IMGUI_API void
-	PushOverrideID(ImGuiID id);  // Push given value as-is at the top of the ID stack (whereas PushID combines old and new hashes)
+	IMGUI_API void MarkItemEdited(
+	    ImGuiID id);  // Mark data associated to given item as "edited", used by IsItemDeactivatedAfterEdit() function.
+	IMGUI_API void PushOverrideID(
+	    ImGuiID id);  // Push given value as-is at the top of the ID stack (whereas PushID combines old and new hashes)
 	IMGUI_API ImGuiID GetIDWithSeed(const char* str_id_begin, const char* str_id_end, ImGuiID seed);
 	IMGUI_API ImGuiID GetIDWithSeed(int n, ImGuiID seed);
 
@@ -4435,8 +4452,12 @@ namespace ImGui
 	IMGUI_API float CalcWrapWidthForPos(const ImVec2& pos, float wrap_pos_x);
 	IMGUI_API void PushMultiItemsWidths(int components, float width_full);
 	IMGUI_API void ShrinkWidths(ImGuiShrinkWidthItem* items, int count, float width_excess, float width_min);
-	IMGUI_API void
-	CalcClipRectVisibleItemsY(const ImRect& clip_rect, const ImVec2& pos, float items_height, int* out_visible_start, int* out_visible_end);
+	IMGUI_API void CalcClipRectVisibleItemsY(
+	    const ImRect& clip_rect,
+	    const ImVec2& pos,
+	    float items_height,
+	    int* out_visible_start,
+	    int* out_visible_end);
 
 	// Parameter stacks (shared)
 	IMGUI_API const ImGuiStyleVarInfo* GetStyleVarInfo(ImGuiStyleVar idx);
@@ -4452,8 +4473,12 @@ namespace ImGui
 	IMGUI_API void LogSetNextTextDecoration(const char* prefix, const char* suffix);
 
 	// Childs
-	IMGUI_API bool
-	BeginChildEx(const char* name, ImGuiID id, const ImVec2& size_arg, ImGuiChildFlags child_flags, ImGuiWindowFlags window_flags);
+	IMGUI_API bool BeginChildEx(
+	    const char* name,
+	    ImGuiID id,
+	    const ImVec2& size_arg,
+	    ImGuiChildFlags child_flags,
+	    ImGuiWindowFlags window_flags);
 
 	// Popups, Modals
 	IMGUI_API bool BeginPopupEx(ImGuiID id, ImGuiWindowFlags extra_window_flags);
@@ -4514,9 +4539,9 @@ namespace ImGui
 	// ActivateItemByID(id) etc. which are much harder to design and implement than expected. I have a couple of private branches on this
 	// matter but it's not simple. For now implementing the easy ones.
 	IMGUI_API void FocusItem();  // Focus last item (no selection/activation).
-	IMGUI_API void
-	ActivateItemByID(ImGuiID id);  // Activate an item by ID (button, checkbox, tree node etc.). Activation is queued and processed on the
-	                               // next frame when the item is encountered again. Was called 'ActivateItem()' before 1.89.7.
+	IMGUI_API void ActivateItemByID(
+	    ImGuiID id);  // Activate an item by ID (button, checkbox, tree node etc.). Activation is queued and processed on the
+	                  // next frame when the item is encountered again. Was called 'ActivateItem()' before 1.89.7.
 
 	// Inputs
 	// FIXME: Eventually we should aim to move e.g. IsActiveIdUsingKey() into IsKeyXXX functions.
@@ -4664,8 +4689,10 @@ namespace ImGui
 	// - You can chain two unrelated windows in the focus stack using SetWindowParentWindowForFocusRoute()
 	//   e.g. if you have a tool window associated to a document, and you want document shortcuts to run when the tool is focused.
 	IMGUI_API bool Shortcut(ImGuiKeyChord key_chord, ImGuiInputFlags flags, ImGuiID owner_id);
-	IMGUI_API bool
-	SetShortcutRouting(ImGuiKeyChord key_chord, ImGuiInputFlags flags, ImGuiID owner_id);  // owner_id needs to be explicit and cannot be 0
+	IMGUI_API bool SetShortcutRouting(
+	    ImGuiKeyChord key_chord,
+	    ImGuiInputFlags flags,
+	    ImGuiID owner_id);  // owner_id needs to be explicit and cannot be 0
 	IMGUI_API bool TestShortcutRouting(ImGuiKeyChord key_chord, ImGuiID owner_id);
 	IMGUI_API ImGuiKeyRoutingData* GetShortcutRoutingData(ImGuiKeyChord key_chord);
 
@@ -4770,8 +4797,12 @@ namespace ImGui
 	IMGUI_API void TablePopBackgroundChannel();
 	IMGUI_API void TablePushColumnChannel(int column_n);
 	IMGUI_API void TablePopColumnChannel();
-	IMGUI_API void
-	TableAngledHeadersRowEx(ImGuiID row_id, float angle, float max_label_width, const ImGuiTableHeaderData* data, int data_count);
+	IMGUI_API void TableAngledHeadersRowEx(
+	    ImGuiID row_id,
+	    float angle,
+	    float max_label_width,
+	    const ImGuiTableHeaderData* data,
+	    int data_count);
 
 	// Tables: Internals
 	inline ImGuiTable* GetCurrentTable()
@@ -4929,18 +4960,29 @@ namespace ImGui
 		RenderNavCursor(bb, id, flags);
 	}  // Renamed in 1.91.4
 	#endif
-	IMGUI_API const char*
-	FindRenderedTextEnd(const char* text, const char* text_end = NULL);  // Find the optional ## from which we stop displaying text.
-	IMGUI_API void
-	RenderMouseCursor(ImVec2 pos, float scale, ImGuiMouseCursor mouse_cursor, ImU32 col_fill, ImU32 col_border, ImU32 col_shadow);
+	IMGUI_API const char* FindRenderedTextEnd(
+	    const char* text,
+	    const char* text_end = NULL);  // Find the optional ## from which we stop displaying text.
+	IMGUI_API void RenderMouseCursor(
+	    ImVec2 pos,
+	    float scale,
+	    ImGuiMouseCursor mouse_cursor,
+	    ImU32 col_fill,
+	    ImU32 col_border,
+	    ImU32 col_shadow);
 
 	// Render helpers (those functions don't access any ImGui state!)
 	IMGUI_API void RenderArrow(ImDrawList* draw_list, ImVec2 pos, ImU32 col, ImGuiDir dir, float scale = 1.0f);
 	IMGUI_API void RenderBullet(ImDrawList* draw_list, ImVec2 pos, ImU32 col);
 	IMGUI_API void RenderCheckMark(ImDrawList* draw_list, ImVec2 pos, ImU32 col, float sz);
 	IMGUI_API void RenderArrowPointingAt(ImDrawList* draw_list, ImVec2 pos, ImVec2 half_sz, ImGuiDir direction, ImU32 col);
-	IMGUI_API void
-	RenderRectFilledRangeH(ImDrawList* draw_list, const ImRect& rect, ImU32 col, float x_start_norm, float x_end_norm, float rounding);
+	IMGUI_API void RenderRectFilledRangeH(
+	    ImDrawList* draw_list,
+	    const ImRect& rect,
+	    ImU32 col,
+	    float x_start_norm,
+	    float x_end_norm,
+	    float rounding);
 	IMGUI_API void RenderRectFilledWithHole(ImDrawList* draw_list, const ImRect& outer, const ImRect& inner, ImU32 col, float rounding);
 
 	// Widgets: Text
@@ -5053,8 +5095,14 @@ namespace ImGui
 	    float logarithmic_zero_epsilon,
 	    float zero_deadzone_size);
 	template <typename T, typename SIGNED_T, typename FLOAT_T>
-	IMGUI_API bool
-	DragBehaviorT(ImGuiDataType data_type, T* v, float v_speed, T v_min, T v_max, const char* format, ImGuiSliderFlags flags);
+	IMGUI_API bool DragBehaviorT(
+	    ImGuiDataType data_type,
+	    T* v,
+	    float v_speed,
+	    T v_min,
+	    T v_max,
+	    const char* format,
+	    ImGuiSliderFlags flags);
 	template <typename T, typename SIGNED_T, typename FLOAT_T>
 	IMGUI_API bool SliderBehaviorT(
 	    const ImRect& bb,
@@ -5073,8 +5121,12 @@ namespace ImGui
 	IMGUI_API const ImGuiDataTypeInfo* DataTypeGetInfo(ImGuiDataType data_type);
 	IMGUI_API int DataTypeFormatString(char* buf, int buf_size, ImGuiDataType data_type, const void* p_data, const char* format);
 	IMGUI_API void DataTypeApplyOp(ImGuiDataType data_type, int op, void* output, const void* arg_1, const void* arg_2);
-	IMGUI_API bool
-	DataTypeApplyFromText(const char* buf, ImGuiDataType data_type, void* p_data, const char* format, void* p_data_when_empty = NULL);
+	IMGUI_API bool DataTypeApplyFromText(
+	    const char* buf,
+	    ImGuiDataType data_type,
+	    void* p_data,
+	    const char* format,
+	    void* p_data_when_empty = NULL);
 	IMGUI_API int DataTypeCompare(ImGuiDataType data_type, const void* arg_1, const void* arg_2);
 	IMGUI_API bool DataTypeClamp(ImGuiDataType data_type, void* p_data, const void* p_min, const void* p_max);
 	IMGUI_API bool DataTypeIsZero(ImGuiDataType data_type, const void* p_data);
@@ -5178,8 +5230,11 @@ namespace ImGui
 	IMGUI_API void EndErrorTooltip();
 
 	// Debug Tools
-	IMGUI_API void
-	DebugAllocHook(ImGuiDebugAllocInfo* info, int frame_count, void* ptr, size_t size);  // size >= 0 : alloc, size = -1 : free
+	IMGUI_API void DebugAllocHook(
+	    ImGuiDebugAllocInfo* info,
+	    int frame_count,
+	    void* ptr,
+	    size_t size);  // size >= 0 : alloc, size = -1 : free
 	IMGUI_API void DebugDrawCursorPos(ImU32 col = IM_COL32(255, 0, 0, 255));
 	IMGUI_API void DebugDrawLineExtents(ImU32 col = IM_COL32(255, 0, 0, 255));
 	IMGUI_API void DebugDrawItemRect(ImU32 col = IM_COL32(255, 0, 0, 255));
@@ -5413,8 +5468,14 @@ IMGUI_API void ImFontAtlasBuildMain(ImFontAtlas* atlas);
 IMGUI_API void ImFontAtlasBuildSetupFontLoader(ImFontAtlas* atlas, const ImFontLoader* font_loader);
 IMGUI_API void ImFontAtlasBuildNotifySetFont(ImFontAtlas* atlas, ImFont* old_font, ImFont* new_font);
 IMGUI_API void ImFontAtlasBuildUpdatePointers(ImFontAtlas* atlas);
-IMGUI_API void
-ImFontAtlasBuildRenderBitmapFromString(ImFontAtlas* atlas, int x, int y, int w, int h, const char* in_str, char in_marker_char);
+IMGUI_API void ImFontAtlasBuildRenderBitmapFromString(
+    ImFontAtlas* atlas,
+    int x,
+    int y,
+    int w,
+    int h,
+    const char* in_str,
+    char in_marker_char);
 IMGUI_API void ImFontAtlasBuildClear(ImFontAtlas* atlas);  // Clear output and custom rects
 
 IMGUI_API ImTextureData* ImFontAtlasTextureAdd(ImFontAtlas* atlas, int w, int h);
@@ -5441,12 +5502,20 @@ IMGUI_API void ImFontAtlasFontDiscardBakes(ImFontAtlas* atlas, ImFont* font, int
 IMGUI_API ImGuiID ImFontAtlasBakedGetId(ImGuiID font_id, float baked_size, float rasterizer_density);
 IMGUI_API ImFontBaked* ImFontAtlasBakedGetOrAdd(ImFontAtlas* atlas, ImFont* font, float font_size, float font_rasterizer_density);
 IMGUI_API ImFontBaked* ImFontAtlasBakedGetClosestMatch(ImFontAtlas* atlas, ImFont* font, float font_size, float font_rasterizer_density);
-IMGUI_API ImFontBaked*
-ImFontAtlasBakedAdd(ImFontAtlas* atlas, ImFont* font, float font_size, float font_rasterizer_density, ImGuiID baked_id);
+IMGUI_API ImFontBaked* ImFontAtlasBakedAdd(
+    ImFontAtlas* atlas,
+    ImFont* font,
+    float font_size,
+    float font_rasterizer_density,
+    ImGuiID baked_id);
 IMGUI_API void ImFontAtlasBakedDiscard(ImFontAtlas* atlas, ImFont* font, ImFontBaked* baked);
 IMGUI_API ImFontGlyph* ImFontAtlasBakedAddFontGlyph(ImFontAtlas* atlas, ImFontBaked* baked, ImFontConfig* src, const ImFontGlyph* in_glyph);
-IMGUI_API void
-ImFontAtlasBakedAddFontGlyphAdvancedX(ImFontAtlas* atlas, ImFontBaked* baked, ImFontConfig* src, ImWchar codepoint, float advance_x);
+IMGUI_API void ImFontAtlasBakedAddFontGlyphAdvancedX(
+    ImFontAtlas* atlas,
+    ImFontBaked* baked,
+    ImFontConfig* src,
+    ImWchar codepoint,
+    float advance_x);
 IMGUI_API void ImFontAtlasBakedDiscardFontGlyph(ImFontAtlas* atlas, ImFont* font, ImFontBaked* baked, ImFontGlyph* glyph);
 IMGUI_API void ImFontAtlasBakedSetFontGlyphBitmap(
     ImFontAtlas* atlas,
@@ -5482,8 +5551,15 @@ IMGUI_API void ImFontAtlasTextureBlockConvert(
 IMGUI_API void ImFontAtlasTextureBlockPostProcess(ImFontAtlasPostProcessData* data);
 IMGUI_API void ImFontAtlasTextureBlockPostProcessMultiply(ImFontAtlasPostProcessData* data, float multiply_factor);
 IMGUI_API void ImFontAtlasTextureBlockFill(ImTextureData* dst_tex, int dst_x, int dst_y, int w, int h, ImU32 col);
-IMGUI_API void
-ImFontAtlasTextureBlockCopy(ImTextureData* src_tex, int src_x, int src_y, ImTextureData* dst_tex, int dst_x, int dst_y, int w, int h);
+IMGUI_API void ImFontAtlasTextureBlockCopy(
+    ImTextureData* src_tex,
+    int src_x,
+    int src_y,
+    ImTextureData* dst_tex,
+    int dst_x,
+    int dst_y,
+    int w,
+    int h);
 IMGUI_API void ImFontAtlasTextureBlockQueueUpload(ImFontAtlas* atlas, ImTextureData* tex, int x, int y, int w, int h);
 
 IMGUI_API int ImTextureDataGetFormatBytesPerPixel(ImTextureFormat format);
@@ -5507,8 +5583,11 @@ IMGUI_API bool ImFontAtlasGetMouseCursorTexData(
 //-----------------------------------------------------------------------------
 
 	#ifdef IMGUI_ENABLE_TEST_ENGINE
-extern void
-ImGuiTestEngineHook_ItemAdd(ImGuiContext* ctx, ImGuiID id, const ImRect& bb, const ImGuiLastItemData* item_data);  // item_data may be NULL
+extern void ImGuiTestEngineHook_ItemAdd(
+    ImGuiContext* ctx,
+    ImGuiID id,
+    const ImRect& bb,
+    const ImGuiLastItemData* item_data);  // item_data may be NULL
 extern void ImGuiTestEngineHook_ItemInfo(ImGuiContext* ctx, ImGuiID id, const char* label, ImGuiItemStatusFlags flags);
 extern void ImGuiTestEngineHook_Log(ImGuiContext* ctx, const char* fmt, ...);
 extern const char* ImGuiTestEngine_FindItemDebugLabel(ImGuiContext* ctx, ImGuiID id);

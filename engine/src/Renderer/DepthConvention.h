@@ -38,7 +38,7 @@ constexpr const char* DepthModeToString(DepthMode mode) noexcept
 	{
 		case DepthMode::Standard:
 			return "Standard (Near=0, Far=1)";
-		case DepthMode::ReversedZ: 
+		case DepthMode::ReversedZ:
 			return "Reversed-Z (Near=1, Far=0)";
 		default:
 			return "Unknown";
@@ -95,7 +95,8 @@ class DepthConvention
 
   private:
 	static DepthMode s_mode;
-};
 
-// Global accessor for convenience
-extern DepthConvention GDepthConvention;
+	// Static utility class - no instantiation needed
+	DepthConvention() = delete;
+	~DepthConvention() = delete;
+};

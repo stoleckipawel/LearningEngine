@@ -1,5 +1,8 @@
 #include "PCH.h"
 #include "D3D12FrameResource.h"
 
-// Global frame resource manager instance
-D3D12FrameResourceManager GD3D12FrameResourceManager;
+D3D12FrameResourceManager& D3D12FrameResourceManager::Get() noexcept
+{
+	static D3D12FrameResourceManager instance;
+	return instance;
+}

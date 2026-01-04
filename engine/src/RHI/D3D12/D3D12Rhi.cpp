@@ -3,7 +3,11 @@
 #include "D3D12DebugLayer.h"
 #include "Window.h"
 
-D3D12Rhi GD3D12Rhi;
+D3D12Rhi& D3D12Rhi::Get() noexcept
+{
+	static D3D12Rhi instance;
+	return instance;
+}
 
 // Selects the best available adapter (GPU) that supports Direct3D 12
 void D3D12Rhi::SelectAdapter() noexcept

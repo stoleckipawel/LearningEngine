@@ -3,6 +3,7 @@
 #include "UI.h"
 #include "Window.h"
 #include "Renderer.h"
+#include "Assets/AssetSystem.h"
 
 void App::Run()
 {
@@ -33,6 +34,9 @@ void App::Initialize()
 {
 	// User can inject work before engine init
 	PreInitialize();
+
+	// Initialize asset system
+	GAssetSystem.Initialize();
 
 	// Engine base init
 	GWindow.Initialize();
@@ -73,6 +77,9 @@ void App::Shutdown()
 
 	// Engine shutdown
 	GRenderer.Shutdown();
+
+	// Shutdown asset system
+	GAssetSystem.Shutdown();
 
 	// User hook after engine shutdown
 	PostShutdown();

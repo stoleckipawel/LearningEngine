@@ -22,18 +22,21 @@ add_library(SparkleEngine STATIC
 add_subdirectory(third_party/imgui)
 
 # Include directories
-# Public: exposed to consumers (samples, games)
+# Public: exposed to consumers (projects, games)
 # Private: internal engine modules organized by responsibility
 target_include_directories(SparkleEngine 
   PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
   PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Assets"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Core"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Diagnostics"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Events"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Hash"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Math"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Memory"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Strings"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Time"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Platform"
     # RHI abstraction layer

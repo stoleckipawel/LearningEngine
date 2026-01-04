@@ -1,6 +1,6 @@
 #include "PCH.h"
 #include "TextureLoader.h"
-#include "AssetPathResolver.h"
+#include "Assets/AssetSystem.h"
 #include "Log.h"
 #include <cstring>
 #include <limits>
@@ -12,11 +12,7 @@ const std::vector<TextureLoader::GUID_to_DXGI> TextureLoader::s_lookupTable = {
 // Loads an image from disk and populates m_data
 TextureLoader::TextureLoader(const std::filesystem::path& fileName)
 {
-	const std::filesystem::path resolvedPath = ResolveAssetPath(fileName, AssetType::Texture);
-	if (!std::filesystem::exists(resolvedPath))
-	{
-		LOG_FATAL(std::string("Texture file not found: ") + resolvedPath.string());
-	}
+	const auto resolvedPath = GAssetSystem.ResolvePathValidated(fileName, AssetType::Texture);
 
 	// Create WIC Imaging Factory
 	ComPtr<IWICImagingFactory> wicFactory;

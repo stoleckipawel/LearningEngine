@@ -3,9 +3,13 @@
 using namespace Engine;
 
 // -----------------------------------------------------------------------------
-// Global singleton instance
+// Meyer's Singleton
 // -----------------------------------------------------------------------------
-Engine::Timer GTimer;
+Timer& Timer::Get() noexcept
+{
+	static Timer instance;
+	return instance;
+}
 
 // -----------------------------------------------------------------------------
 // Initialization
@@ -22,7 +26,7 @@ void Timer::Initialize() noexcept
 // -----------------------------------------------------------------------------
 void Timer::Tick() noexcept
 {
-	// Sample current time and compute raw delta.
+	// Read current time and compute raw delta.
 	const TimePoint now = Clock::now();
 	m_unscaledDelta = std::chrono::duration_cast<Duration>(now - m_last);
 	m_last = now;

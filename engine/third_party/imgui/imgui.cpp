@@ -2527,8 +2527,13 @@ static void ImBezierCubicClosestPointCasteljauStep(
 
 // tess_tol is generally the same value you would find in ImGui::GetStyle().CurveTessellationTol
 // Because those ImXXX functions are lower-level than ImGui:: we cannot access this value automatically.
-ImVec2
-ImBezierCubicClosestPointCasteljau(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& p, float tess_tol)
+ImVec2 ImBezierCubicClosestPointCasteljau(
+    const ImVec2& p1,
+    const ImVec2& p2,
+    const ImVec2& p3,
+    const ImVec2& p4,
+    const ImVec2& p,
+    float tess_tol)
 {
 	IM_ASSERT(tess_tol > 0.0f);
 	ImVec2 p_last = p1;

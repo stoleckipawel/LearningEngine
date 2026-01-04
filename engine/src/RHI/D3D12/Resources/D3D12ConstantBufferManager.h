@@ -28,9 +28,16 @@
 //   - Per-frame/per-view updates should be called from main thread
 //------------------------------------------------------------------------------
 
-class D3D12ConstantBufferManager
+class D3D12ConstantBufferManager final
 {
   public:
+	[[nodiscard]] static D3D12ConstantBufferManager& Get() noexcept;
+
+	D3D12ConstantBufferManager(const D3D12ConstantBufferManager&) = delete;
+	D3D12ConstantBufferManager& operator=(const D3D12ConstantBufferManager&) = delete;
+	D3D12ConstantBufferManager(D3D12ConstantBufferManager&&) = delete;
+	D3D12ConstantBufferManager& operator=(D3D12ConstantBufferManager&&) = delete;
+
 	// Initialize all constant buffers.
 	void Initialize();
 
@@ -65,6 +72,9 @@ class D3D12ConstantBufferManager
 	[[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS UpdatePerObjectPS();
 
   private:
+	D3D12ConstantBufferManager() = default;
+	~D3D12ConstantBufferManager() = default;
+
 	// Per-Frame constant buffers (persistent, one per frame-in-flight)
 	std::unique_ptr<D3D12ConstantBuffer<PerFrameConstantBufferData>> m_PerFrameCB[EngineSettings::FramesInFlight];
 
@@ -72,4 +82,4 @@ class D3D12ConstantBufferManager
 	std::unique_ptr<D3D12ConstantBuffer<PerViewConstantBufferData>> m_PerViewCB[EngineSettings::FramesInFlight];
 };
 
-extern D3D12ConstantBufferManager GD3D12ConstantBufferManager;
+inline D3D12ConstantBufferManager& GD3D12ConstantBufferManager = D3D12ConstantBufferManager::Get();

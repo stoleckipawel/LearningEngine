@@ -3598,8 +3598,11 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
 	#endif  // #ifndef IMGUI_DISABLE_DEFAULT_FONT
 }
 
-ImFont*
-ImFontAtlas::AddFontFromFileTTF(const char* filename, float size_pixels, const ImFontConfig* font_cfg_template, const ImWchar* glyph_ranges)
+ImFont* ImFontAtlas::AddFontFromFileTTF(
+    const char* filename,
+    float size_pixels,
+    const ImFontConfig* font_cfg_template,
+    const ImWchar* glyph_ranges)
 {
 	IM_ASSERT(!Locked && "Cannot modify a locked ImFontAtlas!");
 	size_t data_size = 0;
@@ -3773,8 +3776,13 @@ void ImFontAtlas::RemoveCustomRect(ImFontAtlasRectId id)
 //     ImFont* myfont = io.Fonts->AddFontFromFileTTF(....);
 //     myfont->GetFontBaked(16.0f);
 //     myfont->Flags |= ImFontFlags_LockBakedSizes;
-ImFontAtlasRectId
-ImFontAtlas::AddCustomRectFontGlyph(ImFont* font, ImWchar codepoint, int width, int height, float advance_x, const ImVec2& offset)
+ImFontAtlasRectId ImFontAtlas::AddCustomRectFontGlyph(
+    ImFont* font,
+    ImWchar codepoint,
+    int width,
+    int height,
+    float advance_x,
+    const ImVec2& offset)
 {
 	float font_size = font->LegacySize;
 	return AddCustomRectFontGlyphForSize(font, font_size, codepoint, width, height, advance_x, offset);
@@ -6138,8 +6146,13 @@ const char* ImTextCalcWordWrapNextLineStart(const char* text, const char* text_e
 // This will return the next location to wrap from. If no wrapping if necessary, this will fast-forward to e.g. text_end.
 // FIXME: Much possible improvements (don't cut things like "word !", "word!!!" but cut within "word,,,,", more sensible support for
 // punctuations, support for Unicode punctuations, etc.)
-const char*
-ImFontCalcWordWrapPositionEx(ImFont* font, float size, const char* text, const char* text_end, float wrap_width, ImDrawTextFlags flags)
+const char* ImFontCalcWordWrapPositionEx(
+    ImFont* font,
+    float size,
+    const char* text,
+    const char* text_end,
+    float wrap_width,
+    ImDrawTextFlags flags)
 {
 	// For references, possible wrap point marked with ^
 	//  "aaa bbb, ccc,ddd. eee   fff. ggg!"

@@ -8,7 +8,11 @@
 #include "D3D12SwapChain.h"
 #include <cmath>
 
-D3D12ConstantBufferManager GD3D12ConstantBufferManager;
+D3D12ConstantBufferManager& D3D12ConstantBufferManager::Get() noexcept
+{
+	static D3D12ConstantBufferManager instance;
+	return instance;
+}
 
 //------------------------------------------------------------------------------
 // Initialization

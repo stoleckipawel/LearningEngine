@@ -13,11 +13,15 @@ class StatsOverlay;
 // UI manages ImGui integration (Win32 + DX12 backends).
 // Threading: All ImGui calls must be made from the main thread where the
 // device/command list are used. This class is not thread-safe.
-class UI
+class UI final
 {
   public:
-	UI() = default;
-	~UI() noexcept;
+	[[nodiscard]] static UI& Get() noexcept;
+
+	UI(const UI&) = delete;
+	UI& operator=(const UI&) = delete;
+	UI(UI&&) = delete;
+	UI& operator=(UI&&) = delete;
 
 	// Creates ImGui context and initializes Win32/DX12 backends.
 	// May log/abort on failure via engine error helpers.
@@ -35,9 +39,12 @@ class UI
 	// Submits ImGui draw data to the current DX12 command list.
 	void Render() noexcept;
 
-	ViewMode::Type GetViewMode() noexcept;
+	[[nodiscard]] ViewMode::Type GetViewMode() noexcept;
 
   private:
+	UI() = default;
+	~UI() noexcept;
+
 	// Begins an ImGui frame. Updates delta time and display size.
 	void NewFrame();
 
@@ -49,5 +56,4 @@ class UI
 	std::unique_ptr<RendererPanel> m_rendererPanel;
 };
 
-// Global UI instance used by the engine.
-extern UI GUI;
+inline UI& GUI = UI::Get();

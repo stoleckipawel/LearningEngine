@@ -4,7 +4,11 @@
 #include "Camera.h"
 #include "Scene/Mesh.h"
 
-Scene GScene;
+Scene& Scene::Get() noexcept
+{
+	static Scene instance;
+	return instance;
+}
 
 Scene::~Scene() noexcept = default;
 
@@ -16,7 +20,7 @@ void Scene::Initialize()
 	m_meshFactory = std::make_unique<MeshFactory>();
 
 	// Build initial geometry
-	RebuildGeometry();	
+	RebuildGeometry();
 
 	m_initialized = true;
 }
@@ -61,7 +65,7 @@ void Scene::RebuildGeometry()
 	    m_primitiveConfig.extents,
 	    m_primitiveConfig.seed);
 
-	//To Do: remove this rendering code from scene.cpp the scene should be decoupled
+	// To Do: remove this rendering code from scene.cpp the scene should be decoupled
 
 	// Execute upload commands
 	GD3D12Rhi.CloseCommandListScene();

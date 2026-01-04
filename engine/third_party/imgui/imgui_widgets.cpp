@@ -5560,8 +5560,12 @@ static bool InputTextFilterCharacter(
 // Note that this doesn't directly alter state->TextA, state->TextLen. They are expected to be made valid separately.
 // FIXME: Ideally we should transition toward (1) making InsertChars()/DeleteChars() update undo-stack (2) discourage (and keep reconcile)
 // or obsolete (and remove reconcile) accessing buffer directly.
-static void
-InputTextReconcileUndoState(ImGuiInputTextState* state, const char* old_buf, int old_length, const char* new_buf, int new_length)
+static void InputTextReconcileUndoState(
+    ImGuiInputTextState* state,
+    const char* old_buf,
+    int old_length,
+    const char* new_buf,
+    int new_length)
 {
 	const int shorter_length = ImMin(old_length, new_length);
 	int first_diff;

@@ -5,8 +5,11 @@
 
 using namespace DirectX;
 
-// Global camera instance
-Camera GCamera;
+Camera& Camera::Get() noexcept
+{
+	static Camera instance;
+	return instance;
+}
 
 Camera::Camera() noexcept
 {
