@@ -117,11 +117,14 @@ goto :EOF
 :: ---------------------------------------------------------------------------
 :SUMMARY
 echo.
-echo ========================================
-echo  Scanned:  !IDX! files
-echo  Modified: !MODIFIED! files
-echo ========================================
+echo ============================================================
+echo   ClangFormat Summary
+echo ============================================================
 echo.
+echo   Scanned:  !IDX! files
+echo   Modified: !MODIFIED! files
+echo.
+echo ============================================================
 
 echo [LOG] Summary: Scanned=!IDX! Modified=!MODIFIED! >> "%LOGFILE%"
 echo [LOG] ClangFormat finished: %DATE% %TIME% >> "%LOGFILE%"

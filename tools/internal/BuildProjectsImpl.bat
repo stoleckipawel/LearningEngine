@@ -1,12 +1,13 @@
 @echo off
 :: ============================================================================
-:: BuildSamplesImpl.bat - Internal sample build implementation
+:: BuildProjectsImpl.bat - Internal project build implementation
 :: ============================================================================
-:: Builds all sample projects under samples/ for a specified configuration.
-:: Invoked by configuration wrappers or the root BuildSamples.bat dispatcher.
+:: Builds projects under projects/ for a specified configuration.
+:: Can build all projects or a specific project.
 ::
-:: Usage: BuildSamplesImpl.bat <Configuration> [extra_args]
+:: Usage: BuildProjectsImpl.bat <Configuration> [ProjectName]
 ::   Configuration: Debug | Release | RelWithDebInfo
+::   ProjectName: Optional - specific project name or "ALL" for all projects
 ::
 :: Environment:
 ::   PARENT_BATCH  - When set, suppresses pause on completion
@@ -24,7 +25,7 @@ set "SCRIPT_DIR=%~dp0"
 :: Script resides in tools\internal; repository root is two levels up
 for %%I in ("%SCRIPT_DIR%..\..\") do set "SRC_DIR=%%~fI"
 set "BUILD_DIR=!SRC_DIR!build"
-set "SAMPLES_DIR=!SRC_DIR!samples"
+set "PROJECTS_DIR=!SRC_DIR!projects"
 
 :: ---------------------------------------------------------------------------
 :: Logging bootstrap (if not already captured by parent)
@@ -35,10 +36,13 @@ if not defined LOG_CAPTURED (
 )
 
 :: ---------------------------------------------------------------------------
-:: Parse configuration argument
+:: Parse arguments
 :: ---------------------------------------------------------------------------
 set "CONFIG=%~1"
 if "%CONFIG%"=="" set "CONFIG=Debug"
+
+set "TARGET_PROJECT=%~2"
+if "%TARGET_PROJECT%"=="" set "TARGET_PROJECT=ALL"
 
 :: MSBuild properties for RelWithDebInfo: preserve full debug symbols
 set "MSBUILD_EXTRA="
@@ -70,32 +74,66 @@ if not exist "!SOLUTION_FILE!" (
 )
 
 :: ---------------------------------------------------------------------------
-:: Build all sample projects
+:: Build project(s)
 :: ---------------------------------------------------------------------------
 set "BUILD_FAILED=0"
-for /D %%S in ("!SAMPLES_DIR!\*") do (
-    set "SAMPLE_NAME=%%~nxS"
-    set "SAMPLE_VCXPROJ=!BUILD_DIR!\samples\!SAMPLE_NAME!\!SAMPLE_NAME!.vcxproj"
+set "BUILD_COUNT=0"
+
+if /I "!TARGET_PROJECT!"=="ALL" (
+    :: Build all projects
+    for /D %%S in ("!PROJECTS_DIR!\*") do (
+        set "PROJ_NAME=%%~nxS"
+        :: Skip TemplateProject
+        if /I "!PROJ_NAME!" NEQ "TemplateProject" (
+            set "PROJECT_VCXPROJ=!BUILD_DIR!\projects\!PROJ_NAME!\!PROJ_NAME!.vcxproj"
+            
+            if exist "!PROJECT_VCXPROJ!" (
+                set /A "BUILD_COUNT+=1"
+                echo [LOG] Building: !PROJ_NAME! [!CONFIG!]
+                msbuild "!PROJECT_VCXPROJ!" /p:Configuration=!CONFIG! /p:Platform=!ARCH! !MSBUILD_EXTRA! /nologo /v:minimal
+                if errorlevel 1 (
+                    echo [ERROR] Build failed: !PROJ_NAME! [!CONFIG!]
+                    set "BUILD_FAILED=1"
+                ) else (
+                    echo [SUCCESS] !PROJ_NAME! [!CONFIG!] - Output: bin\!CONFIG!
+                )
+            )
+        )
+    )
+) else (
+    :: Build specific project
+    set "PROJECT_VCXPROJ=!BUILD_DIR!\projects\!TARGET_PROJECT!\!TARGET_PROJECT!.vcxproj"
     
-    if exist "!SAMPLE_VCXPROJ!" (
-        echo [LOG] Building: !SAMPLE_NAME! [!CONFIG!]
-        msbuild "!SAMPLE_VCXPROJ!" /p:Configuration=!CONFIG! /p:Platform=!ARCH! !MSBUILD_EXTRA! /nologo /v:minimal
+    if exist "!PROJECT_VCXPROJ!" (
+        set /A "BUILD_COUNT+=1"
+        echo [LOG] Building: !TARGET_PROJECT! [!CONFIG!]
+        msbuild "!PROJECT_VCXPROJ!" /p:Configuration=!CONFIG! /p:Platform=!ARCH! !MSBUILD_EXTRA! /nologo /v:minimal
         if errorlevel 1 (
-            echo [ERROR] Build failed: !SAMPLE_NAME! [!CONFIG!]
+            echo [ERROR] Build failed: !TARGET_PROJECT! [!CONFIG!]
             set "BUILD_FAILED=1"
         ) else (
-            echo [SUCCESS] !SAMPLE_NAME! [!CONFIG!] - Output: bin\!CONFIG!
+            echo [SUCCESS] !TARGET_PROJECT! [!CONFIG!] - Output: bin\!CONFIG!
         )
     ) else (
-        echo [WARN] No project found: !SAMPLE_NAME! - Skipping.
+        echo [ERROR] Project not found: !TARGET_PROJECT!
+        echo         Expected: !PROJECT_VCXPROJ!
+        set "BUILD_FAILED=1"
     )
+)
+
+if "!BUILD_COUNT!"=="0" (
+    echo [WARN] No projects were built. Ensure solution is generated.
 )
 
 if "!BUILD_FAILED!"=="1" (
     call :FINISH 1
 )
 
-echo [LOG] All samples built successfully for !CONFIG!.
+if /I "!TARGET_PROJECT!"=="ALL" (
+    echo [LOG] All projects built successfully for !CONFIG!.
+) else (
+    echo [LOG] !TARGET_PROJECT! built successfully for !CONFIG!.
+)
 call :FINISH 0
 
 :: ---------------------------------------------------------------------------
@@ -104,18 +142,22 @@ call :FINISH 0
 :FINISH
 set "EXIT_RC=%~1"
 set "_TMP_LOGFILE=%LOGFILE%"
-endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "EXIT_RC=%EXIT_RC%"
+set "_TMP_PARENT=%PARENT_BATCH%"
+endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "EXIT_RC=%EXIT_RC%" & set "PARENT_BATCH=%_TMP_PARENT%"
 
 if defined PARENT_BATCH (
     exit /B %EXIT_RC%
 )
 
 echo.
+echo ============================================================
 if "%EXIT_RC%"=="0" (
-    echo [SUCCESS] Sample build completed.
+    echo   [SUCCESS] Project build completed.
 ) else (
-    echo [ERROR] Sample build failed.
+    echo   [ERROR] Project build failed.
 )
+echo ============================================================
+echo.
 echo [LOG] Logs: %LOGFILE%
 pause
 exit /B %EXIT_RC%

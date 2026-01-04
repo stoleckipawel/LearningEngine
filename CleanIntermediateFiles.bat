@@ -45,7 +45,9 @@ set "OBJ_DIR=%SRC_DIR%obj"
 set "VS_DIR=%SRC_DIR%.vs"
 
 echo.
-echo [LOG] Cleaning build artifacts...
+echo ============================================================
+echo   Cleaning Build Artifacts
+echo ============================================================
 echo.
 
 :: ---------------------------------------------------------------------------
@@ -108,7 +110,9 @@ del /F /Q "%BUILD_DIR%.ninja_deps" 2>nul
 :: Summary
 :: ---------------------------------------------------------------------------
 echo.
-echo [SUCCESS] Clean complete.
+echo ============================================================
+echo   [SUCCESS] Clean complete.
+echo ============================================================
 echo.
 
 :: Preserve LOGFILE across endlocal

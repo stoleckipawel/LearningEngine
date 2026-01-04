@@ -18,8 +18,9 @@
 
 - **Modern D3D12** — Direct GPU control with explicit resource management  
 - **DXC Shader Compiler** — HLSL to DXIL with Shader Model 6.0+ features  
-- **Clean RHI Abstraction** — Backend-agnostic design
-- **Real-time Debug UI** — Integrated ImGui with GPU stats overlay  
+- **Asset System** — Marker-based path discovery with compile-time asset IDs  
+- **Project Generator** — One-click project scaffolding like professional engines  
+- **Real-time Debug UI** — Integrated ImGui with renderer panels  
 - **Zero-friction Build** — Single-click CMake + MSBuild workflow  
 
 </td>
@@ -31,8 +32,11 @@
 :: 1. Generate Visual Studio solution
 BuildSolution.bat
 
-:: 2. Build & run sample
-BuildSamples.bat Release
+:: 2. Build & run projects
+BuildProjects.bat Release
+
+:: 3. Create your own project!
+CreateNewProject.bat MyGame
 ```
 
 </td>
@@ -41,28 +45,29 @@ BuildSamples.bat Release
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                              APPLICATION LAYER                              │
-│                         samples/ExampleD3D12/main.cpp                       │
+│                        projects/<YourProject>/src/main.cpp                  │
 └─────────────────────────────────────────────────────────────────────────────┘
                                       │
                                       ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                               ENGINE PUBLIC API                             │
-│                    App.h  ·  EngineConfig.h  ·  Log.h                       │
+│                      App.h  ·  EngineConfig.h  ·  Log.h                     │
 └─────────────────────────────────────────────────────────────────────────────┘
                                       │
         ┌─────────────┬───────────────┼───────────────┬─────────────┐
         ▼             ▼               ▼               ▼             ▼
    ┌─────────┐  ┌──────────┐   ┌───────────┐   ┌──────────┐   ┌─────────┐
-   │  Core   │  │ Platform │   │  Renderer │   │ Resources│   │   UI    │
+   │  Core   │  │ Platform │   │  Renderer │   │  Assets  │   │   UI    │
    │─────────│  │──────────│   │───────────│   │──────────│   │─────────│
-   │ Timer   │  │ Window   │   │ Camera    │   │ Texture  │   │ ImGui   │
-   │ Log     │  │ Input    │   │ Passes    │   │ Loader   │   │ Panels  │
-   │ Memory  │  │ Events   │   │ Pipeline  │   │ Assets   │   │ Overlay │
+   │ Timer   │  │ Window   │   │ Camera    │   │ AssetId  │   │ ImGui   │
+   │ Log     │  │ Input    │   │ Depth     │   │ System   │   │ Panels  │
+   │ Memory  │  │ Events   │   │ Pipeline  │   │ Types    │   │ Overlay │
+   │ Hash    │  │          │   │           │   │          │   │         │
    └─────────┘  └──────────┘   └───────────┘   └──────────┘   └─────────┘
         │             │               │               │             │
         └─────────────┴───────────────┼───────────────┴─────────────┘
@@ -70,19 +75,94 @@ BuildSamples.bat Release
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                        RENDER HARDWARE INTERFACE (RHI)                      │
 │─────────────────────────────────────────────────────────────────────────────│
-│  ┌─────────────────────────────────┐    ┌─────────────────────────────────┐ │
-│  │         D3D12 Backend           │    │      Vulkan Backend (Future)    │ │
-│  │─────────────────────────────────│    │─────────────────────────────────│ │
-│  │ • Device & Command Queues       │    │ •                               │ │
-│  │ • Descriptor Heap Management    │    │ •                               │ │
-│  │ • Pipeline State Objects        │    │ •                               │ │
-│  │ • Root Signatures               │    │ •                               │ │
-│  │ • Swap Chain (DXGI)             │    │ •                               │ │
-│  │ • DXC Shader Compilation        │    │ •                               │ │
-│  │ • GPU Debug Layer               │    │ •                               │ │
-│  └─────────────────────────────────┘    └─────────────────────────────────┘ │
+│                           DirectX 12 Backend                                │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
+│  │   Device &   │  │ Descriptors  │  │   Pipeline   │  │   Shaders    │    │
+│  │   Queues     │  │   & Heaps    │  │   States     │  │   (DXC)      │    │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘    │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
+│  │  Swap Chain  │  │  Resources   │  │   Samplers   │  │ Debug Layer  │    │
+│  │   (DXGI)     │  │  & Buffers   │  │   Library    │  │ & Validation │    │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘    │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## 🆕 Asset System
+
+The engine features a **marker-based asset discovery system**.
+
+### 📍 Marker Hierarchy
+
+| Marker File | Location | Purpose |
+|-------------|----------|---------|
+| `.sparkle` | Repository root | Workspace identification |
+| `.sparkle-engine` | `engine/` | Engine root discovery |
+| `.sparkle-project` | `projects/<Name>/` | Project root discovery |
+
+### 🏷️ Compile-Time Asset IDs
+
+```cpp
+// Zero runtime cost - hash computed at compile time
+constexpr AssetId diffuseId = "textures/brick_diffuse.png"_asset;
+
+// Use as map keys for O(1) lookups
+std::unordered_map<AssetId, TextureHandle> textureCache;
+textureCache[diffuseId] = LoadTexture(diffuseId);
+```
+
+### 📁 Asset Types
+
+| Type | Directory |
+|------|-----------|
+| `Shader` | `shaders/` |
+| `ShaderSymbols` | `shaders/ShaderSymbols/` |
+| `Texture` | `textures/` |
+| `Mesh` | `meshes/` |
+| `Material` | `materials/` |
+| `Scene` | `scenes/` |
+| `Audio` | `audio/` |
+| `Font` | `fonts/` |
+
+---
+
+## 🎮 Project Generation
+
+Create new projects instantly with a single command — no manual setup required!
+
+```batch
+:: Interactive mode
+CreateNewProject.bat
+
+:: Or specify the name directly
+CreateNewProject.bat MyAwesomeGame
+```
+
+### What Gets Created
+
+```
+projects/MyAwesomeGame/
+├── .sparkle-project          # Project marker (auto-discovered by CMake)
+├── CMakeLists.txt            # Pre-configured build setup
+├── src/
+│   └── main.cpp              # App subclass with lifecycle hooks
+└── assets/
+    ├── audio/
+    ├── fonts/
+    ├── materials/
+    ├── meshes/
+    ├── scenes/
+    ├── shaders/
+    └── textures/
+```
+
+### 🔄 How It Works
+
+1. **Template Copy** — Copies `projects/TemplateProject/` to your new project
+2. **Name Substitution** — Replaces `__PROJECT_NAME__` placeholders
+3. **Marker Creation** — Creates `.sparkle-project` for CMake discovery
+4. **Auto-Rebuild** — Optionally regenerates VS solution
 
 ---
 
@@ -92,42 +172,59 @@ BuildSamples.bat Release
 <tr>
 <td width="50%">
 
-### DirectX 12 Implementation
+### 🖥️ DirectX 12 Implementation
 
 | Feature | Implementation |
 |---------|----------------|
-| **Descriptor Handling** | Staged CPU→GPU descriptor copies |
+| **Descriptor Heaps** | Managed allocation with CPU→GPU staging |
 | **Synchronization** | Fence-based CPU/GPU coordination |
-| **Swap Chain** | Triple-buffered with DXGI flip model |
-| **Debug Layer** | Full GPU validation + ID3D12InfoQueue |
+| **Swap Chain** | Triple-buffered DXGI flip model |
+| **Debug Layer** | Full GPU validation + InfoQueue |
+| **Constant Buffers** | Type-safe upload buffer management |
+| **Depth/Stencil** | Configurable depth conventions |
 
 </td>
 <td width="50%">
 
-### Shader Pipeline
+### ⚡ Shader Pipeline
 
 | Feature | Implementation |
 |---------|----------------|
 | **Compiler** | DirectX Shader Compiler (DXC) |
 | **Target** | Shader Model 6.0+ (DXIL) |
-| **Language** | HLSL with modern features |
+| **Debug Symbols** | Full PDB support for debugging |
+| **Includes** | BRDF, Lighting, Material libraries |
+| **Passes** | GBuffer, Forward, Shadow, Debug |
 
 </td>
 </tr>
 <tr>
 <td width="50%">
 
+### 🎨 Rendering Features
+
+| Feature | Status |
+|---------|--------|
+| **Camera System** | ✅ View/Projection matrices |
+| **Depth Conventions** | ✅ Configurable near/far planes |
+| **Texture Loading** | ✅ WIC-based with format support |
+| **Sampler Library** | ✅ Pre-built sampler states |
+| **Mesh Factory** | ✅ Procedural geometry |
+| **Scene Graph** | ✅ Basic scene management |
+
 </td>
 <td width="50%">
 
-### Code Quality
+### 🛡️ Code Quality
 
-- **C++20 Standard** — Concepts, ranges, designated initializers  
-- **Precompiled Headers** — Fast incremental builds  
-- **ClangFormat** — Consistent code style enforcement  
-- **Modular Design** — Clear separation of concerns  
-- **RAII Patterns** — Automatic resource cleanup  
-- **Debug Utilities** — Comprehensive logging system  
+| Practice | Implementation |
+|----------|----------------|
+| **C++20 Standard** | Concepts, ranges, constexpr |
+| **Precompiled Headers** | Fast incremental builds |
+| **ClangFormat** | Enforced code style |
+| **RAII Patterns** | Automatic resource cleanup |
+| **NVI Pattern** | Clean App lifecycle hooks |
+| **Compile-Time Hashing** | Zero-cost asset IDs |
 
 </td>
 </tr>
@@ -140,90 +237,99 @@ BuildSamples.bat Release
 ```
 Sparkle/
 │
-├── 📦 engine/                        # SparkleEngine static library
+├── 🔧 Build Scripts
+│   ├── BuildSolution.bat         # Generate VS solution
+│   ├── BuildProjects.bat         # Build all projects
+│   ├── CreateNewProject.bat      # 🆕 Project generator
+│   ├── CheckDependencies.bat     # Verify toolchain
+│   └── CleanIntermediateFiles.bat
+│
+├── 📦 engine/                    # SparkleEngine static library
 │   │
-│   ├── include/                      #   PUBLIC API (exposed to consumers)
-│   │   ├── App.h                     #   Application lifecycle interface
-│   │   ├── EngineConfig.h            #   Build-time configuration
-│   │   └── Log.h                     #   Logging facade
+│   ├── include/                  # 🌐 PUBLIC API
+│   │   ├── App.h                 #   Application lifecycle (NVI pattern)
+│   │   ├── EngineConfig.h        #   Build configuration
+│   │   └── Log.h                 #   Logging facade
 │   │
-│   ├── src/                          # ๐Ÿ"' PRIVATE IMPLEMENTATION
+│   ├── src/                      # 🔒 PRIVATE IMPLEMENTATION
 │   │   │
-│   │   ├── Core/                     #   Foundation layer
-│   │   │   ├── Timer.cpp/h           #     High-precision timing
-│   │   │   ├── Log.cpp               #     Logging implementation
-│   │   │   ├── LinearAllocator.h     #     Fast frame allocator
-│   │   │   └── PCH.h                 #     Precompiled header
+│   │   ├── Assets/               # 🆕 Asset management system
+│   │   │   ├── AssetSystem.*     #   Marker-based path discovery
+│   │   │   ├── AssetId.h         #   Compile-time asset hashing
+│   │   │   ├── AssetTypes.h      #   Asset classification enum
+│   │   │   └── AssetSource.h     #   Engine vs Project assets
 │   │   │
-│   │   ├── Platform/                 #   OS abstraction
-│   │   │   └── Window.cpp/h          #     Win32 window management
+│   │   ├── Core/                 # Foundation utilities
+│   │   │   ├── Time/Timer.*      #   High-precision timing
+│   │   │   ├── Memory/           #   Linear allocator
+│   │   │   ├── Hash/HashUtils.h  #   FNV-1a compile-time hashing
+│   │   │   ├── Strings/          #   String utilities
+│   │   │   ├── Diagnostics/      #   Debug utilities & logging
+│   │   │   ├── FileSystemUtils.* #   Path discovery & normalization
+│   │   │   └── PCH.h             #   Precompiled header
 │   │   │
-│   │   ├── RHI/                      #   Render Hardware Interface
+│   │   ├── Platform/             # OS abstraction
+│   │   │   └── Window.*          #   Win32 window management
+│   │   │
+│   │   ├── Renderer/             # High-level rendering
+│   │   │   ├── Renderer.*        #   Render loop orchestration
+│   │   │   ├── Camera.*          #   View/projection matrices
+│   │   │   └── DepthConvention.* #   Depth buffer configuration
+│   │   │
+│   │   ├── RHI/D3D12/            # ◤ DirectX 12 Backend ◢
+│   │   │   ├── D3D12Rhi.*        #   Device, queues, fences
+│   │   │   ├── D3D12SwapChain.*  #   Present chain + RTVs
+│   │   │   ├── D3D12DebugLayer.* #   GPU validation
 │   │   │   │
-│   │   │   └── D3D12/                #   ◤ DirectX 12 Backend ◢
-│   │   │       ├── D3D12Rhi.cpp/h              # Device, queues, fences
-│   │   │       ├── D3D12SwapChain.cpp/h        # Present chain + RTVs
-│   │   │       ├── D3D12DebugLayer.cpp/h       # GPU validation
-│   │   │       │
-│   │   │       ├── Descriptors/                # Descriptor management
-│   │   │       │   ├── D3D12DescriptorHeap.*       # Heap wrapper
-│   │   │       │   ├── D3D12DescriptorHandle.*     # CPU/GPU handles
-│   │   │       │   └── D3D12DescriptorAllocator.*  # Dynamic allocation
-│   │   │       │
-│   │   │       ├── Pipeline/                   # PSO & root signatures
-│   │   │       │   ├── D3D12PipelineState.*        # Graphics PSO
-│   │   │       │   ├── D3D12RootSignature.*        # Parameter binding
-│   │   │       │   └── D3D12Samplers.*             # Texture sampling
-│   │   │       │
-│   │   │       ├── Resources/                  # GPU resources
-│   │   │       │   ├── D3D12ConstantBuffer.*       # Typed uploads
-│   │   │       │   ├── D3D12DepthBuffer.*          # Depth/stencil
-│   │   │       │   ├── D3D12UploadBuffer.*         # CPU→GPU staging
-│   │   │       │   └── D3D12FrameResources.*       # Per-frame data
-│   │   │       │
-│   │   │       └── Shaders/                    # Shader compilation
-│   │   │           └── DxcShaderCompiler.*         # HLSL → DXIL
+│   │   │   ├── Descriptors/      #   Heap & handle management
+│   │   │   ├── Pipeline/         #   PSO & root signatures
+│   │   │   ├── Resources/        #   Buffers & frame resources
+│   │   │   ├── Samplers/         #   Sampler state library
+│   │   │   └── Shaders/          #   DXC compiler integration
 │   │   │
-│   │   ├── Renderer/                 #   High-level rendering
-│   │   │   ├── Renderer.cpp/h        #     Render loop orchestration
-│   │   │   └── Camera.cpp/h          #     View/projection matrices
+│   │   ├── Resources/            # Asset loading
+│   │   │   ├── Texture.*         #   Texture resource wrapper
+│   │   │   └── TextureLoader.*   #   WIC-based image loading
 │   │   │
-│   │   ├── Resources/                #   Asset management
-│   │   │   ├── Texture.cpp/h         #     Texture resource wrapper
-│   │   │   └── TextureLoader.cpp/h   #     WIC-based loading
+│   │   ├── Scene/                # Scene management
+│   │   │   ├── Scene.*           #   Scene container
+│   │   │   ├── Mesh.*            #   Mesh data structures
+│   │   │   ├── MeshFactory.*     #   Procedural generation
+│   │   │   └── Primitives/       #   Basic & polyhedra shapes
 │   │   │
-│   │   ├── Scene/                    #   Geometry & primitives
-│   │   │   └── Primitives/           #     Procedural geometry
-│   │   │
-│   │   └── UI/                       #   Debug interface
-│   │       ├── UI.cpp/h              #     ImGui integration
-│   │       └── Panels/               #     Modular UI components
+│   │   └── UI/                   # Debug interface
+│   │       ├── UI.*              #   ImGui integration
+│   │       ├── Panels/           #   Renderer debug panel
+│   │       ├── Sections/         #   UI section components
+│   │       └── Framework/        #   UI utilities
 │   │
-│   ├── assets/
-│   │   └── shaders/                  # ⚡ HLSL shaders
-│   │       ├── SimpleVS.hlsl         #     Vertex shader
-│   │       ├── SimplePS.hlsl         #     Pixel shader
-│   │       ├── ConstantBufferData.hlsli  # CB definitions (mirrors C++)
-│   │       ├── Transform.hlsli       #     Matrix operations
-│   │       └── Lighting.hlsli        #     Lighting calculations
+│   ├── assets/shaders/           # ⚡ HLSL Shader Library
+│   │   ├── Common/               #   Shared utilities
+│   │   ├── BRDF/                 #   PBR lighting models
+│   │   ├── Lighting/             #   Light evaluation
+│   │   ├── Material/             #   Material sampling
+│   │   ├── Geometry/             #   Vertex processing
+│   │   ├── Passes/               #   Render passes
+│   │   │   ├── GBuffer/          #     Deferred geometry
+│   │   │   ├── Forward/          #     Forward rendering
+│   │   │   ├── Shadow/           #     Shadow mapping
+│   │   │   ├── DeferredLighting/ #     Light accumulation
+│   │   │   └── Debug/            #     Visualization
+│   │   └── Raytracing/           #   RT shader stubs
 │   │
-│   └── third_party/
-│       ├── d3dx12.h                  #   D3D12 helper library
-│       └── imgui/                    #   Dear ImGui (docking branch)
+│   └── third_party/              # External dependencies
+│       ├── d3dx12.h              #   D3D12 helper library
+│       └── imgui/                #   Dear ImGui
 │
-├── 📂 samples/                       # Example applications
-│   └── ExampleD3D12/
-│       └── src/main.cpp              #   Minimal D3D12 sample
+├── 📂 projects/                  # 🆕 Game projects (auto-discovered)
+│   ├── TemplateProject/          #   Project template (not built)
+│   ├── HelloWorld/               #   Example: minimal app
+│   └── Sponza/                   #   Example: Sponza scene
 │
-├── 📂 tools/                         # Build utilities
-│   ├── BuildSamplesDebug.bat
-│   ├── BuildSamplesRelease.bat
-│   └── RunClangFormat.bat
-│
-├── 📄 CMakeLists.txt                 # Root CMake configuration
-├── 📄 BuildSolution.bat              # Generate VS solution
-├── 📄 BuildSamples.bat               # Build all samples
-└── 📄 CheckDependencies.bat          # Verify toolchain
+└── 📂 tools/                     # Build utilities
+    ├── BuildProjectsDebug.bat
+    ├── BuildProjectsRelease.bat
+    └── RunClangFormat.bat
 ```
 
 ---
@@ -234,12 +340,12 @@ Sparkle/
 
 | Tool | Version | Required | Purpose |
 |------|---------|:--------:|---------|
-| **Visual Studio 2022** | 17.0+ | ✅ | C++ compiler & IDE |
-| **Windows 10/11 SDK** | 10.0.19041+ | ✅ | DirectX 12 headers & libs |
+| **Visual Studio 2022** | 17.0+ | ✅ | C++20 compiler & IDE |
+| **Windows SDK** | 10.0.19041+ | ✅ | DirectX 12 headers & libs |
 | **CMake** | 3.20+ | ✅ | Build system generation |
 | **Clang/LLVM** | 15.0+ | ⚪ | ClangCL toolset (optional) |
 
-### Build Instructions
+### 🏃 Build & Run
 
 <table>
 <tr>
@@ -248,16 +354,14 @@ Sparkle/
 #### Option A: Batch Scripts (Recommended)
 
 ```batch
-:: Verify toolchain is installed
+:: 1. Verify toolchain
 CheckDependencies.bat
 
-:: Generate Visual Studio 2022 solution
+:: 2. Generate VS solution
 BuildSolution.bat
 
-:: Build all samples (choose configuration)
-BuildSamples.bat Debug
-BuildSamples.bat Release
-BuildSamples.bat RelWithDebInfo
+:: 3. Build projects
+BuildProjects.bat Debug
 ```
 
 </td>
@@ -271,9 +375,8 @@ BuildSolution.bat
 ```
 
 1. Open `build/Sparkle.sln`  
-2. Set **ExampleD3D12** as startup project  
-3. Select **Debug** or **Release**  
-4. Press **F5** to build and run  
+2. Right-click project → **Set as Startup**  
+3. Press **F5** to build and run  
 
 </td>
 </tr>
@@ -282,36 +385,19 @@ BuildSolution.bat
 #### Option C: CMake CLI
 
 ```bash
-# Configure with Visual Studio 2022 generator
-cmake -B build -G "Visual Studio 17 2022" -A x64 -T ClangCL
-
-# Build Release configuration
+cmake -B build -G "Visual Studio 17 2022" -A x64
 cmake --build build --config Release
-
-# Run sample
-.\bin\Release\ExampleD3D12.exe
+.\bin\Release\HelloWorld.exe
 ```
 
-### Output Directories
+### 📂 Output Directories
 
 | Directory | Contents |
 |-----------|----------|
 | `build/` | CMake cache, VS solution, project files |
 | `bin/Debug/` | Debug executables + PDBs |
-| `bin/Release/` | Optimized release executables |
+| `bin/Release/` | Optimized release builds |
 | `bin/RelWithDebInfo/` | Optimized with debug symbols |
-
----
-
-## 🛠️ Build Scripts Reference
-
-| Script | Description |
-|--------|-------------|
-| `CheckDependencies.bat` | Verify CMake, MSBuild, Clang availability |
-| `BuildSolution.bat` | Generate VS solution via CMake |
-| `BuildSamples.bat [Config]` | Build samples (interactive or specify config) |
-| `CleanIntermediateFiles.bat` | Remove all generated files |
-| `tools/RunClangFormat.bat` | Format all source files |
 
 ---
 
@@ -319,13 +405,27 @@ cmake --build build --config Release
 
 | Module | Layer | Responsibility |
 |--------|-------|----------------|
-| **Core** | Foundation | Timing, logging, memory utilities — zero graphics dependencies |
-| **Platform** | Foundation | Win32 window creation, message pump, input handling |
-| **RHI/D3D12** | Backend | Complete D3D12 abstraction: device, queues, heaps, PSOs, shaders |
-| **Renderer** | High-Level | Camera matrices, render pass orchestration, frame management |
-| **Resources** | High-Level | Texture loading (WIC), asset path resolution |
-| **Scene** | High-Level | Procedural geometry generation (box, plane, polyhedra) |
-| **UI** | High-Level | ImGui integration, debug overlays, parameter tweaking |
+| **Assets** | Foundation | Marker-based discovery, compile-time asset IDs, path resolution |
+| **Core** | Foundation | Timing, logging, hashing, memory utilities |
+| **Platform** | Foundation | Win32 window creation, message pump |
+| **RHI/D3D12** | Backend | Complete D3D12 abstraction: device, heaps, PSOs, shaders |
+| **Renderer** | High-Level | Camera, depth handling, render orchestration |
+| **Resources** | High-Level | Texture loading (WIC), asset management |
+| **Scene** | High-Level | Mesh factory, procedural geometry, scene graph |
+| **UI** | High-Level | ImGui integration, debug panels |
+
+---
+
+## 🛠️ Build Scripts Reference
+
+| Script | Description |
+|--------|-------------|
+| `BuildSolution.bat` | Generate VS solution via CMake |
+| `BuildProjects.bat` | Build all discovered projects |
+| `CreateNewProject.bat` | 🆕 Create new project from template |
+| `CheckDependencies.bat` | Verify CMake, MSBuild availability |
+| `CleanIntermediateFiles.bat` | Remove all generated files |
+| `tools/RunClangFormat.bat` | Format all source files |
 
 ---
 
@@ -333,11 +433,12 @@ cmake --build build --config Release
 
 | Issue | Solution |
 |-------|----------|
-| **Missing SDK** | Install Windows 10/11 SDK via Visual Studio Installer |
+| **Project not discovered** | Ensure `.sparkle-project` marker exists in project root |
+| **Missing SDK** | Install Windows SDK via Visual Studio Installer |
 | **CMake not found** | Add CMake to PATH or install via VS Installer |
 | **Build errors after pull** | Run `CleanIntermediateFiles.bat` then rebuild |
-| **D3D12 device creation fails** | Update GPU drivers; ensure D3D12 compatible hardware |
-| **Shader compilation errors** | Check DXC is accessible; verify HLSL syntax |
+| **D3D12 device fails** | Update GPU drivers; verify D3D12 hardware support |
+| **Shader errors** | Check DXC availability; verify HLSL syntax |
 
 ---
 
@@ -348,5 +449,5 @@ MIT License — See [LICENSE.txt](LICENSE.txt) for details.
 ---
 
 <p align="center">
-  <sub>Built with ❤️ for learning and experimentation</sub>
+  <sub>Built with ❤️ using modern C++ and DirectX 12</sub>
 </p>

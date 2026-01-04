@@ -1,11 +1,11 @@
 @echo off
 :: ============================================================================
-:: BuildSamplesRelWithDebInfo.bat - RelWithDebInfo configuration build wrapper
+:: BuildProjectsDebug.bat - Debug configuration build wrapper
 :: ============================================================================
-:: Convenience wrapper for building samples in RelWithDebInfo configuration.
-:: Delegates to the internal BuildSamplesImpl.bat implementation.
+:: Convenience wrapper for building projects in Debug configuration.
+:: Delegates to the internal BuildProjectsImpl.bat implementation.
 ::
-:: Usage: BuildSamplesRelWithDebInfo.bat
+:: Usage: BuildProjectsDebug.bat
 :: ============================================================================
 
 setlocal
@@ -16,13 +16,13 @@ if not defined LOG_CAPTURED (
     exit /B %ERRORLEVEL%
 )
 
-:: Delegate to implementation with RelWithDebInfo config
+:: Delegate to implementation with Debug config
 set "PARENT_BATCH=1"
-call "%~dp0internal\BuildSamplesImpl.bat" RelWithDebInfo
+call "%~dp0internal\BuildProjectsImpl.bat" Debug
 set "RC=%ERRORLEVEL%"
 set "PARENT_BATCH="
 
-echo [LOG] BuildSamplesRelWithDebInfo.bat completed.
+echo [LOG] BuildProjectsDebug.bat completed.
 
 :: Preserve LOGFILE across endlocal
 set "_TMP_LOGFILE=%LOGFILE%"

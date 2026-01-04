@@ -34,7 +34,9 @@ if not defined LOG_CAPTURED (
 set "RC=0"
 
 echo.
-echo [LOG] Validating build dependencies...
+echo ============================================================
+echo   Validating Build Dependencies
+echo ============================================================
 echo.
 
 :: ---------------------------------------------------------------------------
@@ -93,11 +95,13 @@ if errorlevel 1 (
 :: Summary
 :: ---------------------------------------------------------------------------
 echo.
+echo ============================================================
 if %RC%==0 (
-    echo [SUCCESS] All required dependencies found.
+    echo   [SUCCESS] All required dependencies found.
 ) else (
-    echo [ERROR] Missing required dependencies. Build will fail.
+    echo   [ERROR] Missing required dependencies. Build will fail.
 )
+echo ============================================================
 
 :: Preserve LOGFILE across endlocal
 set "_TMP_LOGFILE=%LOGFILE%"

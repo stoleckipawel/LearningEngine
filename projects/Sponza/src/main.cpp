@@ -1,8 +1,8 @@
 #include "App.h"
 
-// Example D3D12 app demonstrating engine lifecycle hooks.
+// Sponza app demonstrating engine lifecycle hooks.
 // Override Pre/Post hooks to extend behavior without replacing engine steps.
-class ExampleD3D12 : public App
+class Sponza : public App
 {
   protected:
 	// Startup: load content, register systems, etc.
@@ -21,7 +21,7 @@ class ExampleD3D12 : public App
 // Application entry point.
 int main()
 {
-	ExampleD3D12 app;
+	Sponza app;
 	app.Run();
 	return 0;
 }

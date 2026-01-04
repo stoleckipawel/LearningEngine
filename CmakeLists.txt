@@ -75,7 +75,39 @@ endif()
 # Add subdirectories
 # ---------------------------
 add_subdirectory(engine)
-add_subdirectory(samples/ExampleD3D12)
+
+# ---------------------------
+# Auto-discover projects via .sparkle-project marker
+# ---------------------------
+# Scans projects/ directory for project markers
+set(PROJECT_SEARCH_DIRS
+    "${CMAKE_SOURCE_DIR}/projects"
+)
+
+set(DISCOVERED_PROJECTS "")
+foreach(SEARCH_DIR ${PROJECT_SEARCH_DIRS})
+    if(EXISTS "${SEARCH_DIR}")
+        file(GLOB PROJECT_CANDIDATES "${SEARCH_DIR}/*")
+        foreach(CANDIDATE ${PROJECT_CANDIDATES})
+            if(IS_DIRECTORY "${CANDIDATE}")
+                get_filename_component(PROJECT_NAME "${CANDIDATE}" NAME)
+                # Skip TemplateProject - it's only used for project generation
+                if(PROJECT_NAME STREQUAL "TemplateProject")
+                    continue()
+                endif()
+                if(EXISTS "${CANDIDATE}/.sparkle-project")
+                    message(STATUS "Discovered project: ${PROJECT_NAME}")
+                    add_subdirectory("${CANDIDATE}")
+                    list(APPEND DISCOVERED_PROJECTS "${PROJECT_NAME}")
+                endif()
+            endif()
+        endforeach()
+    endif()
+endforeach()
+
+if(NOT DISCOVERED_PROJECTS)
+    message(WARNING "No projects discovered. Create a project using CreateNewProject.bat")
+endif()
 
 # ---------------------------
 # Clang-Format integration
@@ -88,8 +120,8 @@ if(CLANG_FORMAT_EXE)
     file(GLOB_RECURSE ALL_CPP
         "${CMAKE_SOURCE_DIR}/engine/*.cpp"
         "${CMAKE_SOURCE_DIR}/engine/*.h"
-        "${CMAKE_SOURCE_DIR}/samples/*.cpp"
-        "${CMAKE_SOURCE_DIR}/samples/*.h"
+        "${CMAKE_SOURCE_DIR}/projects/*.cpp"
+        "${CMAKE_SOURCE_DIR}/projects/*.h"
     )
 
     foreach(f ${ALL_CPP})
@@ -122,4 +154,11 @@ endif()
 # ---------------------------
 # Default startup project for VS
 # ---------------------------
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ExampleD3D12)
+# Use first discovered project as startup, or fall back to SparkleEngine
+if(DISCOVERED_PROJECTS)
+    list(GET DISCOVERED_PROJECTS 0 STARTUP_PROJECT)
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${STARTUP_PROJECT})
+    message(STATUS "VS startup project: ${STARTUP_PROJECT}")
+else()
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT SparkleEngine)
+endif()

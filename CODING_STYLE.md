@@ -73,13 +73,6 @@ If you need a quick reference, open `.clang-format` at the repo root — that fi
   - Members: `m_bSomething`
 - **Global singletons**: `GName`
 
-## Comments
-
-- Comments should describe intent, invariants, constraints, and non-obvious tradeoffs.
-- Prefer concise section separators for large functions:
-  - `// -----------------------------------------------------------------------------`
-- Avoid redundant comments that merely restate the identifier.
-
 ## Error handling
 
 - Use `CHECK(hr)` / `LOG_FATAL(...)` for unrecoverable initialization failures.
@@ -90,6 +83,224 @@ If you need a quick reference, open `.clang-format` at the repo root — that fi
 - Avoid per-frame heap allocations in hot paths.
 - Prefer value types and stack allocations for transient data.
 - Use RAII for resource lifetime; avoid shared ownership by default.
+
+---
+
+## Comments
+
+High-quality comments explain **why** and **what** — not just **how**. They enable future maintainers (and your future self) to understand intent, constraints, and non-obvious decisions without reverse-engineering the code.
+
+### Comment Philosophy
+
+1. **Code should be self-documenting first** — use clear naming, small functions, and logical structure
+2. **Comments fill the gaps** — explain intent, constraints, and "why" that code cannot express
+3. **Avoid noise** — don't comment obvious code; don't paraphrase what the code already says
+4. **Keep comments accurate** — outdated comments are worse than no comments
+
+### File Headers
+
+Use decorated block comments for public headers that define major subsystems:
+
+```cpp
+// =============================================================================
+// ComponentName.h — Brief One-Line Description
+// =============================================================================
+//
+// Detailed explanation of the component's purpose, responsibilities, and
+// usage patterns. Include:
+//
+// USAGE:
+//   ClassName::DoSomething();
+//   auto result = ClassName::Query(...);
+//
+// NOTES:
+//   - Thread safety guarantees
+//   - Performance characteristics
+//   - Dependencies or initialization order
+//
+// =============================================================================
+```
+
+**When to use:** Public headers defining major subsystems (AssetSystem, Log, Renderer).
+**When to skip:** Internal implementation headers, trivial utility classes.
+
+### Section Dividers
+
+Group related code within a file using section comments:
+
+```cpp
+// =============================================================================
+// Lifecycle
+// =============================================================================
+
+void Initialize();
+void Shutdown();
+
+// =============================================================================
+// Public API
+// =============================================================================
+
+void DoWork();
+
+// -----------------------------------------------------------------------------
+// Internal Helpers (private section divider - lighter weight)
+// -----------------------------------------------------------------------------
+```
+
+Use `=` for major public sections, `-` for internal/private groupings.
+
+### Function Comments (Declaration)
+
+Document public functions at declaration site in headers:
+
+```cpp
+// Compiles a shader with the given options.
+// Returns a result containing bytecode on success, or error message on failure.
+static ShaderCompileResult Compile(const ShaderCompileOptions& options);
+
+// Convenience overload: resolves the shader path and builds options automatically.
+// sourcePath: relative path from shader root (e.g., "Passes/Forward/ForwardLitVS.hlsl")
+static ShaderCompileResult CompileFromAsset(
+    const std::filesystem::path& sourcePath,
+    ShaderStage stage,
+    const std::string& entryPoint = "main");
+```
+
+**Guidelines:**
+- First line: **what** the function does (verb phrase)
+- Additional lines: parameters, return value, preconditions, side effects
+- Document non-obvious behavior, not obvious signatures
+
+### Function Comments (Definition)
+
+At implementation site, use a brief one-liner for context:
+
+```cpp
+// Selects the best available adapter (GPU) that supports Direct3D 12
+void D3D12Rhi::SelectAdapter() noexcept
+{
+    // ...
+}
+
+// Initializes the window and registers its class
+void Window::Initialize()
+{
+    // ...
+}
+```
+
+### Inline Comments
+
+Use sparingly for non-obvious logic. Focus on **why**, not **what**:
+
+```cpp
+// Try adapter-by-preference first. Use a local temporary adapter to avoid
+// repeatedly replacing the member until a suitable one is found.
+for (UINT i = 0;; ++i)
+{
+    // ...
+}
+
+// Lightweight feature probe: does this adapter support D3D12 at the
+// desired feature level? We don't create a device here, just test.
+if (SUCCEEDED(D3D12CreateDevice(candidate.Get(), m_DesiredD3DFeatureLevel, ...)))
+```
+
+**Bad (noise):**
+```cpp
+// Increment the counter
+++counter;
+
+// Check if null
+if (ptr == nullptr)
+```
+
+**Good (explains why):**
+```cpp
+// Guard against pathological allocations from malformed image headers
+if (slicePitch64 > std::numeric_limits<size_t>::max())
+
+// Fixed stack capacity chosen to comfortably hold typical log lines
+// (file:line + level tag + message). Keeping this on the stack makes
+// logging cheap and avoids heap churn during bursts.
+static constexpr std::size_t kCapacity = 2048;
+```
+
+### Enum and Constant Documentation
+
+Document enum values inline when meaning isn't obvious from the name:
+
+```cpp
+enum class LogLevel : std::uint8_t
+{
+    Trace = 0,    // Frame-by-frame diagnostics: hot-path traces. High volume; disabled in release.
+    Debug = 1,    // Developer-focused flow/state info for debugging.
+    Info = 2,     // High-level runtime events (startup, shutdown). Non-noisy normal ops.
+    Warning = 3,  // Unexpected but recoverable conditions (fallbacks, missing optionals).
+    Error = 4,    // Failures preventing operation completion; process may continue degraded.
+    Fatal = 5     // Unrecoverable: log, flush, break if debugger attached, terminate.
+};
+```
+
+### Class Member Documentation
+
+Group members logically and document non-obvious ones:
+
+```cpp
+private:
+    // Fixed stack capacity chosen to comfortably hold typical log lines
+    static constexpr std::size_t kCapacity = 2048;  // tuned for typical messages
+    
+    char m_data[kCapacity]{};  // zero-initialized for clarity when printed
+    std::size_t m_pos = 0;     // current write position
+```
+
+### TODO/FIXME Comments
+
+Use standardized tags for actionable items:
+
+```cpp
+// TODO: Add support for cubemap arrays
+// FIXME: Memory leak when reloading textures
+// PERF: Consider caching this computation per-frame
+// HACK: Workaround for driver bug on AMD RX 6000 series
+```
+
+### What NOT to Comment
+
+| Anti-Pattern | Example |
+|--------------|---------|
+| Paraphrasing code | `// Set x to 5` above `x = 5;` |
+| Trivial getters/setters | `// Returns the width` above `GetWidth()` |
+| Commented-out code | Delete it; version control has history |
+| Journal entries | `// Modified by John on 2024-01-15` — use git |
+| ASCII art dividers | `///////////////////////////` |
+
+### Comment Formatting
+
+- Use `//` for single-line and short multi-line comments
+- Use `/* */` sparingly, primarily for disabling code blocks temporarily
+- Maintain consistent capitalization (sentence case, start with capital)
+- End complete sentences with periods; fragments can omit punctuation
+- Align trailing comments when they form a logical group:
+
+```cpp
+m_data[kCapacity]{};   // zero-initialized for clarity
+std::size_t m_pos = 0; // current write position
+```
+
+### Relationship to Logging
+
+Comments document **static intent** in code; logging captures **runtime behavior**.
+
+| Use Comments For | Use Logging For |
+|------------------|-----------------|
+| Algorithm explanation | Runtime diagnostics |
+| API contracts | State transitions |
+| Design decisions | Error conditions |
+| Performance notes | Debugging flow |
+
+See [LOGGING_STYLE.md](LOGGING_STYLE.md) for runtime logging conventions.
 
 ---
 

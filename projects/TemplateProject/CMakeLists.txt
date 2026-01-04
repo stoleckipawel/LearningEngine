@@ -1,26 +1,26 @@
-# ExampleD3D12 sample CMake configuration
+# __PROJECT_NAME__ project CMake configuration
 
 # Add executable target
-add_executable(ExampleD3D12
+add_executable(__PROJECT_NAME__
     src/main.cpp
 )
 
 # Include engine public headers and third-party (if needed)
-target_include_directories(ExampleD3D12 PRIVATE
+target_include_directories(__PROJECT_NAME__ PRIVATE
     ${CMAKE_SOURCE_DIR}/engine/include
     ${CMAKE_SOURCE_DIR}/engine/third_party
 )
 
 # Require C++20
-target_compile_features(ExampleD3D12 PRIVATE cxx_std_20)
+target_compile_features(__PROJECT_NAME__ PRIVATE cxx_std_20)
 
 # Link against engine static library
-target_link_libraries(ExampleD3D12 PRIVATE SparkleEngine)
+target_link_libraries(__PROJECT_NAME__ PRIVATE SparkleEngine)
 
 # Configure Visual Studio debugger to launch from project directory.
 # Path discovery uses marker files, so we just need the working directory set correctly.
 if(MSVC)
-    set_target_properties(ExampleD3D12 PROPERTIES
+    set_target_properties(__PROJECT_NAME__ PROPERTIES
         VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     )
 endif()

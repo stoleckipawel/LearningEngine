@@ -20,6 +20,12 @@
 setlocal enabledelayedexpansion
 
 :: ---------------------------------------------------------------------------
+:: Check if running from parent script (CONTINUE argument)
+:: ---------------------------------------------------------------------------
+set "CALLED_FROM_PARENT=0"
+if /I "%~1"=="CONTINUE" set "CALLED_FROM_PARENT=1"
+
+:: ---------------------------------------------------------------------------
 :: Logging bootstrap
 :: ---------------------------------------------------------------------------
 if not defined LOG_CAPTURED (
@@ -130,18 +136,37 @@ if not exist "!SOLUTION_FILE!" (
 :: Optional: Open solution after generation
 :: ---------------------------------------------------------------------------
 if "!SOLUTION_GENERATED!"=="1" (
-    if not defined PARENT_BATCH (
-        echo.
-        <nul set /P "=Open solution in Visual Studio? [y/N]: " >CON
-        set "OPEN_VS="
-        set /P "OPEN_VS=" <CON
-        
-        if /I "!OPEN_VS:~0,1!"=="y" (
-            echo [LOG] Opening: !SOLUTION_FILE!
-            start "" "!SOLUTION_FILE!"
+    if "!CALLED_FROM_PARENT!"=="0" (
+        if not defined PARENT_BATCH (
+            echo.
+            echo ============================================================
+            echo   Open Visual Studio?
+            echo ============================================================
+            echo.
+            echo   Y^) Yes - Open the generated solution
+            echo   N^) No  - Continue without opening
+            echo.
+            echo ============================================================
+            
+            :OPEN_VS_PROMPT
+            set "OPEN_VS="
+            set /P "OPEN_VS=Enter choice [Y/N]: "
+            
+            if /I "!OPEN_VS!"=="Y" (
+                echo.
+                echo [LOG] Opening: !SOLUTION_FILE!
+                start "" "!SOLUTION_FILE!"
+                goto :AFTER_VS_PROMPT
+            )
+            if /I "!OPEN_VS!"=="N" goto :AFTER_VS_PROMPT
+            if "!OPEN_VS!"=="" goto :AFTER_VS_PROMPT
+            
+            echo [ERROR] Please enter Y or N.
+            goto :OPEN_VS_PROMPT
         )
     )
 )
+:AFTER_VS_PROMPT
 
 echo.
 echo [LOG] BuildSolution.bat completed.
@@ -153,18 +178,30 @@ call :FINISH 0
 :FINISH
 set "EXIT_RC=%~1"
 set "_TMP_LOGFILE=%LOGFILE%"
-endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "EXIT_RC=%EXIT_RC%"
+set "_TMP_CALLED_FROM_PARENT=%CALLED_FROM_PARENT%"
+endlocal & set "LOGFILE=%_TMP_LOGFILE%" & set "EXIT_RC=%EXIT_RC%" & set "CALLED_FROM_PARENT=%_TMP_CALLED_FROM_PARENT%"
 
 if defined PARENT_BATCH (
     exit /B %EXIT_RC%
 )
 
+if "%CALLED_FROM_PARENT%"=="1" (
+    exit /B %EXIT_RC%
+)
+
 echo.
 if "%EXIT_RC%"=="0" (
-    echo [SUCCESS] Solution generation completed.
+    echo.
+    echo ============================================================
+    echo   [SUCCESS] Solution generation completed.
+    echo ============================================================
 ) else (
-    echo [ERROR] Solution generation failed.
+    echo.
+    echo ============================================================
+    echo   [ERROR] Solution generation failed.
+    echo ============================================================
 )
+echo.
 echo [LOG] Logs: %LOGFILE%
 pause
 exit /B %EXIT_RC%
