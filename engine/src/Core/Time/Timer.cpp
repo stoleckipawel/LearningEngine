@@ -66,7 +66,7 @@ double Timer::ToUnit(Duration d, TimeUnit u) noexcept
 		case TimeUnit::Nanoseconds:
 			return d.count() * 1e9;
 	}
-	return d.count();  // fallback (should never reach)
+	return d.count();
 }
 
 // -----------------------------------------------------------------------------

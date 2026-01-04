@@ -1,6 +1,7 @@
 #include "PCH.h"
 #include "Camera.h"
 #include "D3D12SwapChain.h"
+#include "DepthConvention.h"
 
 using namespace DirectX;
 
@@ -11,6 +12,18 @@ Camera::Camera() noexcept
 {
 	XMStoreFloat4x4(&m_viewMat, XMMatrixIdentity());
 	XMStoreFloat4x4(&m_projMat, XMMatrixIdentity());
+
+	// Add listener for depth mode changes
+	m_depthModeChangedHandle = DepthConvention::OnModeChanged.Add(
+	    [this](DepthMode)
+	    {
+		    OnDepthModeChanged(DepthMode{});
+	    });
+}
+
+Camera::~Camera() noexcept
+{
+	DepthConvention::OnModeChanged.Remove(m_depthModeChangedHandle);
 }
 
 void Camera::SetFovYDegrees(float fovDegrees) noexcept
@@ -176,8 +189,17 @@ XMMATRIX Camera::GetProjectionMatrix() const noexcept
 
 void Camera::InvalidateMatrices() noexcept
 {
-	// Invalidate both the view matrix
 	m_bViewDirty = true;
+}
+
+void Camera::InvalidateProjection() noexcept
+{
+	m_bProjDirty = true;
+}
+
+void Camera::OnDepthModeChanged([[maybe_unused]] DepthMode mode) noexcept
+{
+	InvalidateProjection();
 }
 
 void Camera::RebuildViewIfNeeded() const noexcept
@@ -198,8 +220,9 @@ void Camera::RebuildProjectionIfNeeded() const noexcept
 {
 	if (!m_bProjDirty)
 		return;
+
 	const float fovRadians = XMConvertToRadians(m_fovYDegrees);
-	XMMATRIX projMatrix = XMMatrixPerspectiveFovLH(fovRadians, m_aspect, m_nearZ, m_farZ);
+	XMMATRIX projMatrix = DepthConvention::CreatePerspectiveFovLH(fovRadians, m_aspect, m_nearZ, m_farZ);
 	XMStoreFloat4x4(&m_projMat, projMatrix);
 	m_bProjDirty = false;
 }

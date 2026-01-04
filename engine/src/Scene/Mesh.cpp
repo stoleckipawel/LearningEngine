@@ -68,8 +68,7 @@ DirectX::XMMATRIX Mesh::GetWorldInverseTransposeMatrix() const noexcept
 {
 	RebuildWorldIfNeeded();
 	DirectX::XMMATRIX world = DirectX::XMLoadFloat4x4(&m_worldMatrixCache);
-	DirectX::XMMATRIX invWorld = DirectX::XMMatrixInverse(nullptr, world);
-	return DirectX::XMMatrixTranspose(invWorld);
+	return DirectX::XMMatrixInverse(nullptr, world);
 }
 
 PerObjectVSConstantBufferData Mesh::GetPerObjectVSConstants() const noexcept

@@ -10,6 +10,7 @@ enum class UIRendererSectionId : std::uint8_t
 	ViewMode,
 	Time,
 	Scene,
+	Camera,
 	Count
 };
 

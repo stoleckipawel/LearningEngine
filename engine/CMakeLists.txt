@@ -30,6 +30,11 @@ target_include_directories(SparkleEngine
   PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Core"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Diagnostics"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Events"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Math"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Memory"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Time"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Platform"
     # RHI abstraction layer
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI"

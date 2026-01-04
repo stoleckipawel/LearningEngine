@@ -1,8 +1,12 @@
 
 #pragma once
 
+#include "Event.h"
 #include "ShaderCompileResult.h"
+#include <cstdint>
 #include <memory>
+
+enum class DepthMode : std::uint8_t;
 
 // Forward declarations
 class Texture;
@@ -23,7 +27,9 @@ class Renderer
 
   private:
 	void PostLoad() noexcept;
-	void CreateFrameBuffers();
+	void CreateDepthStencilBuffer();
+	void CreatePSO();
+	void OnDepthModeChanged(DepthMode mode) noexcept;
 
 	void PopulateCommandList();
 	void BeginFrame() noexcept;
@@ -55,6 +61,9 @@ class Renderer
 	// Compiled shaders (owned bytecode)
 	ShaderCompileResult m_vertexShader;
 	ShaderCompileResult m_pixelShader;
+
+	// Event subscriptions
+	EventHandle m_depthModeChangedHandle;
 };
 
 extern Renderer GRenderer;

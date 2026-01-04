@@ -1,10 +1,10 @@
 #include "Log.h"
 
+#include <algorithm>
 #include <atomic>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <algorithm>
 
 #if defined(_WIN32)
 	#define WIN32_LEAN_AND_MEAN

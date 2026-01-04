@@ -15,6 +15,7 @@
 #include "D3D12FrameResource.h"
 #include "Samplers/D3D12SamplerLibrary.h"
 #include "D3D12DepthStencil.h"
+#include "DepthConvention.h"
 #include "UI.h"
 #include "Timer.h"
 #include "Camera.h"
@@ -48,15 +49,17 @@ void Renderer::Initialize() noexcept
 	// Initialize scene (geometry is built when UI triggers SetPrimitives)
 	GScene.Initialize();
 
-	// Create pipeline state object
-	m_pso = std::make_unique<D3D12PipelineState>(
-	    Mesh::GetStaticVertexLayout(),
-	    *m_rootSignature,
-	    m_vertexShader.GetBytecode(),
-	    m_pixelShader.GetBytecode());
+	// Add listener for depth mode changes
+	m_depthModeChangedHandle = DepthConvention::OnModeChanged.Add(
+	    [this](DepthMode mode)
+	    {
+		    OnDepthModeChanged(mode);
+	    });
 
-	// Create depth stencil and other frame buffers
-	CreateFrameBuffers();
+	// Create pipeline state object
+	CreatePSO();
+
+	CreateDepthStencilBuffer();
 
 	GUI.Initialize();
 
@@ -164,7 +167,7 @@ void Renderer::PopulateCommandList()
 	GD3D12SwapChain.SetPresentState();
 }
 
-void Renderer::CreateFrameBuffers()
+void Renderer::CreateDepthStencilBuffer()
 {
 	m_depthStencil = std::make_unique<D3D12DepthStencil>();
 }
@@ -173,7 +176,7 @@ void Renderer::OnResize() noexcept
 {
 	GD3D12Rhi.Flush();
 	GD3D12SwapChain.Resize();
-	CreateFrameBuffers();
+	CreateDepthStencilBuffer();
 }
 
 void Renderer::OnRender() noexcept
@@ -229,6 +232,9 @@ void Renderer::Shutdown() noexcept
 {
 	GD3D12Rhi.Flush();
 
+	// Remove event listeners
+	DepthConvention::OnModeChanged.Remove(m_depthModeChangedHandle);
+
 	GUI.Shutdown();
 
 	m_pso.reset();
@@ -245,4 +251,22 @@ void Renderer::Shutdown() noexcept
 	GWindow.Shutdown();
 	GD3D12DescriptorHeapManager.Shutdown();
 	GD3D12Rhi.Shutdown();
+}
+
+void Renderer::CreatePSO()
+{
+	m_pso = std::make_unique<D3D12PipelineState>(
+	    Mesh::GetStaticVertexLayout(),
+	    *m_rootSignature,
+	    m_vertexShader.GetBytecode(),
+	    m_pixelShader.GetBytecode());
+}
+
+void Renderer::OnDepthModeChanged([[maybe_unused]] DepthMode mode) noexcept
+{
+	// Depth convention changed - must recreate PSO with new depth comparison
+	// and depth stencil buffer with new optimized clear value
+	GD3D12Rhi.Flush();
+	CreatePSO();
+	CreateDepthStencilBuffer(); 
 }

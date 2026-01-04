@@ -1,8 +1,8 @@
 #pragma once
 
 // Debug utilities: helper to set D3D12 debug names on objects in debug builds.
-#include <wrl/client.h>
 #include <d3d12.h>
+#include <wrl/client.h>
 
 using Microsoft::WRL::ComPtr;
 

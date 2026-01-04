@@ -1,13 +1,14 @@
 #pragma once
 
-#include <d3d12.h>
-#include <wrl/client.h>
-#include <cstdint>
-#include <atomic>
-#include <cassert>
-#include <stdexcept>
 #include "DebugUtils.h"
 #include "D3D12Rhi.h"
+
+#include <atomic>
+#include <cassert>
+#include <cstdint>
+#include <d3d12.h>
+#include <stdexcept>
+#include <wrl/client.h>
 
 using Microsoft::WRL::ComPtr;
 
@@ -22,21 +23,6 @@ using Microsoft::WRL::ComPtr;
 //   - 256-byte alignment for D3D12 constant buffer views
 //   - Reset at frame boundary when GPU has finished (no per-alloc overhead)
 //   - Returns both CPU pointer (for memcpy) and GPU VA (for binding)
-//
-// Memory Model:
-//   - One LinearAllocator per frame-in-flight
-//   - Each frame's allocator is reset only after its fence is signaled
-//   - This guarantees GPU has finished reading before CPU overwrites
-//
-// Usage Pattern:
-//   1. BeginFrame() - Reset allocator when fence confirms GPU completion
-//   2. Allocate() - Get CPU ptr + GPU VA, write data directly
-//   3. Bind GPU VA via SetGraphicsRootConstantBufferView()
-//   4. EndFrame() - Signal fence, advance to next frame's allocator
-//
-// Thread Safety:
-//   - Allocate() is fully thread-safe via atomic offset advancement
-//   - BeginFrame()/Reset() must be called from main thread only
 //------------------------------------------------------------------------------
 
 struct LinearAllocation
@@ -59,28 +45,14 @@ class LinearAllocator
 	LinearAllocator(LinearAllocator&&) = delete;
 	LinearAllocator& operator=(LinearAllocator&&) = delete;
 
-	//--------------------------------------------------------------------------
-	// Initialization
-	//--------------------------------------------------------------------------
-
 	// Creates the upload buffer with specified capacity.
 	void Initialize(uint64_t capacity, const wchar_t* debugName = L"LinearAllocator");
 
 	// Releases all resources. Called automatically by destructor.
 	void Shutdown();
 
-	//--------------------------------------------------------------------------
-	// Frame Lifecycle
-	//--------------------------------------------------------------------------
-
 	// Resets the allocator for a new frame.
-	// MUST only be called after confirming GPU has finished with this frame's data.
-	// This is typically done via fence synchronization in the frame resource manager.
 	void Reset() noexcept;
-
-	//--------------------------------------------------------------------------
-	// Allocation (Thread-Safe)
-	//--------------------------------------------------------------------------
 
 	// Allocates aligned memory from the linear buffer.
 	[[nodiscard]] LinearAllocation Allocate(uint64_t size, uint64_t alignment = 256);
@@ -94,10 +66,6 @@ class LinearAllocator
 		std::memcpy(alloc.CpuPtr, &data, sizeof(T));
 		return alloc.GpuAddress;
 	}
-
-	//--------------------------------------------------------------------------
-	// Diagnostics
-	//--------------------------------------------------------------------------
 
 	// Returns current allocation offset (bytes used this frame).
 	[[nodiscard]] uint64_t GetCurrentOffset() const noexcept { return m_Offset.load(std::memory_order_relaxed); }

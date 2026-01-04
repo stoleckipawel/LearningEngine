@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "Event.h"
+#include "DepthConvention.h"
 #include <DirectXMath.h>
 #include <cstdint>
 #include "D3D12ConstantBufferData.h"
@@ -9,7 +11,7 @@ class Camera
 {
   public:
 	Camera() noexcept;
-	~Camera() = default;
+	~Camera() noexcept;
 
 	Camera(const Camera&) = delete;
 	Camera& operator=(const Camera&) = delete;
@@ -37,6 +39,7 @@ class Camera
 	DirectX::XMFLOAT3 GetDirection() const noexcept;  // normalized forward (local +Z)
 	DirectX::XMFLOAT3 GetRight() const noexcept;
 	DirectX::XMFLOAT3 GetUp() const noexcept;
+	float GetFovYDegrees() const noexcept { return m_fovYDegrees; }
 	float GetNearZ() const noexcept { return m_nearZ; }
 	float GetFarZ() const noexcept { return m_farZ; }
 
@@ -53,8 +56,10 @@ class Camera
 
   private:
 	void InvalidateMatrices() noexcept;
+	void InvalidateProjection() noexcept;
 	void RebuildViewIfNeeded() const noexcept;
 	void RebuildProjectionIfNeeded() const noexcept;
+	void OnDepthModeChanged(DepthMode mode) noexcept;
 
 	// mutable cache for lazy updates
 	mutable DirectX::XMFLOAT4X4 m_viewMat;  // cached view
@@ -71,6 +76,9 @@ class Camera
 	float m_aspect = 16.0f / 9.0f;
 	float m_nearZ = 0.01f;
 	float m_farZ = 10000.0f;
+
+	// Event subscription
+	EventHandle m_depthModeChangedHandle;
 };
 
 // Global camera instance

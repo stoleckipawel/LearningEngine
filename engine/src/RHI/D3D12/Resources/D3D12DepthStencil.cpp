@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "D3D12DescriptorHeapManager.h"
 #include "DebugUtils.h"
+#include "DepthConvention.h"
 
 // Constructs and initializes the depth stencil resource and view
 D3D12DepthStencil::D3D12DepthStencil() : m_dsvHandle(GD3D12DescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_DSV))
@@ -22,8 +23,7 @@ void D3D12DepthStencil::CreateResource()
 	// Set optimized clear value for depth and stencil
 	D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
 	depthOptimizedClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	// Reversed-Z: clear depth to 0.0 (far) for maximum precision
-	depthOptimizedClearValue.DepthStencil.Depth = 0.0f;
+	depthOptimizedClearValue.DepthStencil.Depth = DepthConvention::GetClearDepth();
 	depthOptimizedClearValue.DepthStencil.Stencil = 0;
 
 	// Heap properties for default heap
@@ -70,9 +70,10 @@ void D3D12DepthStencil::CreateDepthStencilView()
 
 void D3D12DepthStencil::Clear() noexcept
 {
-	// Clear both depth and stencil. Reversed-Z convention clears depth to 0.0f.
+	// Clear depth to convention-appropriate value (0.0 for reversed-Z, 1.0 for standard)
+	const float clearDepth = DepthConvention::GetClearDepth();
 	GD3D12Rhi.GetCommandList()
-	    ->ClearDepthStencilView(GetCPUHandle(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 0.0f, 0, 0, nullptr);
+	    ->ClearDepthStencilView(GetCPUHandle(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, clearDepth, 0, 0, nullptr);
 }
 
 // Transition depth buffer to write state before rendering

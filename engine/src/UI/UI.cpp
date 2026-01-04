@@ -11,6 +11,7 @@
 #include "Sections/ViewMode.h"
 #include "Sections/TimeControls.h"
 #include "Sections/SceneSection.h"
+#include "Sections/CameraSection.h"
 
 #include <imgui.h>
 #include <backends/imgui_impl_win32.h>
@@ -98,6 +99,9 @@ void UI::Initialize()
 
 	if (!m_rendererPanel->HasSection(UIRendererSectionId::Scene))
 		m_rendererPanel->SetSection(std::make_unique<SceneSection>());
+
+	if (!m_rendererPanel->HasSection(UIRendererSectionId::Camera))
+		m_rendererPanel->SetSection(std::make_unique<CameraSection>());
 }
 
 

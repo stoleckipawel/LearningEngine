@@ -1,6 +1,7 @@
 #include "PCH.h"
 #include "D3D12PipelineState.h"
 #include "DebugUtils.h"
+#include "DepthConvention.h"
 #include "Log.h"
 
 #include <cstdio>
@@ -119,11 +120,11 @@ D3D12PipelineState::D3D12PipelineState(
 	rtBlend.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 	SetRenderTargetBlendState(psoDesc, rtBlend);
 
-	// Depth state (reversed-Z)
+	// Depth state
 	DepthTestDesc depthTestDesc = {};
 	depthTestDesc.DepthEnable = true;
 	depthTestDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	depthTestDesc.DepthFunc = D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+	depthTestDesc.DepthFunc = DepthConvention::GetDepthComparisonFuncEqual();
 	SetDepthTestState(psoDesc, depthTestDesc);
 
 	// Stencil state

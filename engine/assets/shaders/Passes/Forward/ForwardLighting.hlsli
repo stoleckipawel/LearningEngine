@@ -16,7 +16,7 @@ namespace Forward
 
 		Lighting::CalculateDirect(viewDir, matProps, outDirectDiffuse, outDirectSpecular, outDirectSubsurface);
 
-		const float3 fakeAmbient = float3(0.02f, 0.02f, 0.02f);
+		const float3 fakeAmbient = float3(0.05f, 0.05f, 0.05f);
 		Lighting::CalculateIndirectIBL(viewDir, matProps, fakeAmbient, fakeAmbient, outIndirectDiffuse, outIndirectSpecular);
 
 		return (outDirectDiffuse + outIndirectDiffuse) + (outDirectSpecular + outIndirectSpecular) + outDirectSubsurface +

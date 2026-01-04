@@ -14,6 +14,10 @@ void Scene::Initialize()
 		return;
 
 	m_meshFactory = std::make_unique<MeshFactory>();
+
+	// Build initial geometry
+	RebuildGeometry();	
+
 	m_initialized = true;
 }
 
@@ -37,10 +41,7 @@ void Scene::SetPrimitives(MeshFactory::Shape shape, std::uint32_t count)
 
 	m_primitiveConfig.shape = shape;
 	m_primitiveConfig.count = count;
-	m_primitiveConfig.center = {
-	    camPos.x + camDir.x * 10.0f,
-	    camPos.y + camDir.y * 10.0f,
-	    camPos.z + camDir.z * 10.0f};
+	m_primitiveConfig.center = {camPos.x + camDir.x * 10.0f, camPos.y + camDir.y * 10.0f, camPos.z + camDir.z * 10.0f};
 
 	RebuildGeometry();
 }
@@ -59,6 +60,8 @@ void Scene::RebuildGeometry()
 	    m_primitiveConfig.center,
 	    m_primitiveConfig.extents,
 	    m_primitiveConfig.seed);
+
+	//To Do: remove this rendering code from scene.cpp the scene should be decoupled
 
 	// Execute upload commands
 	GD3D12Rhi.CloseCommandListScene();

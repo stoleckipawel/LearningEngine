@@ -1,6 +1,7 @@
 #pragma once
-#include <chrono>
+
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 
 namespace Engine
@@ -44,19 +45,6 @@ namespace Engine
 
 	// -------------------------------------------------------------------------
 	// Timer: authoritative frame-timing service for the engine.
-	//
-	// Responsibilities:
-	//   - Maintain a monotonic high-precision clock.
-	//   - Provide per-frame TimeInfo snapshot for subsystems.
-	//   - Offer unit-aware accessors (ms, s, µs, ns) for UI/profiling.
-	//
-	// Usage:
-	//   Call Tick() once per frame from the main loop before update/render.
-	//   Query GetTimeInfo() or GetDelta() from any subsystem that needs timing.
-	//
-	// Thread-safety:
-	//   Tick() must be called from the main thread only.
-	//   Pause/Resume use relaxed atomics; safe to call from other threads.
 	// -------------------------------------------------------------------------
 	class Timer final
 	{
@@ -76,26 +64,14 @@ namespace Engine
 		// Advance clocks. Call once per rendered frame.
 		void Tick() noexcept;
 
-		// -------------------------------------------------------------------------
-		// Queries
-		// -------------------------------------------------------------------------
-
 		// Immutable snapshot of current frame timing.
 		[[nodiscard]] TimeInfo GetTimeInfo() const noexcept { return m_timeInfo; }
 
 		// Frame counter (1-based, incremented each Tick).
 		[[nodiscard]] uint64_t GetFrameCount() const noexcept { return m_frameCount; }
 
-		// -------------------------------------------------------------------------
-		// Unit-aware accessors (default: Milliseconds)
-		// -------------------------------------------------------------------------
-
 		[[nodiscard]] double GetDelta(TimeDomain domain, TimeUnit unit = TimeUnit::Milliseconds) const noexcept;
 		[[nodiscard]] double GetTotalTime(TimeDomain domain, TimeUnit unit = TimeUnit::Milliseconds) const noexcept;
-
-		// -------------------------------------------------------------------------
-		// Time-scale controls
-		// -------------------------------------------------------------------------
 
 		void SetTimeScale(double scale) noexcept { m_timeScale = scale; }
 		[[nodiscard]] double GetTimeScale() const noexcept { return m_timeScale; }
@@ -103,10 +79,6 @@ namespace Engine
 		void Pause() noexcept { m_bPaused.store(true, std::memory_order_relaxed); }
 		void Resume() noexcept { m_bPaused.store(false, std::memory_order_relaxed); }
 		[[nodiscard]] bool IsPaused() const noexcept { return m_bPaused.load(std::memory_order_relaxed); }
-
-		// -------------------------------------------------------------------------
-		// Stopwatch: lightweight RAII timer for profiling code sections.
-		// -------------------------------------------------------------------------
 
 		struct Stopwatch
 		{
@@ -121,13 +93,12 @@ namespace Engine
 		};
 
 	  private:
-		// Convert Duration to double in requested unit.
 		[[nodiscard]] static double ToUnit(Duration d, TimeUnit u) noexcept;
 
 	  private:
 		TimePoint m_start{};
 		TimePoint m_last{};
-		Duration m_unscaledDelta{1.0 / 60.0};  // sensible default until first Tick
+		Duration m_unscaledDelta{1.0 / 60.0};
 		Duration m_unscaledTotal{Duration::zero()};
 		Duration m_scaledTotal{Duration::zero()};
 		double m_timeScale{1.0};

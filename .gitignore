@@ -82,6 +82,8 @@ Makefile
 *.db-wal
 .ilk
 .pdb
+.pdb/
+**/*.pdb
 .log
 .LOG
 .tmp
