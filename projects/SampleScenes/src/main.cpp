@@ -1,8 +1,8 @@
 #include "App.h"
 
-// Sponza app demonstrating engine lifecycle hooks.
+// SampleScenes app demonstrating engine lifecycle hooks.
 // Override Pre/Post hooks to extend behavior without replacing engine steps.
-class Sponza : public App
+class SampleScenes : public App
 {
   protected:
 	// Startup: load content, register systems, etc.
@@ -21,7 +21,7 @@ class Sponza : public App
 // Application entry point.
 int main()
 {
-	Sponza app;
+	SampleScenes app;
 	app.Run();
 	return 0;
 }
