@@ -1,8 +1,13 @@
+// ============================================================================
+// PrimitiveDodecahedron.h
+// ----------------------------------------------------------------------------
+// 12-faced polyhedron primitive mesh.
+// ============================================================================
+
 #pragma once
 
 #include "Scene/Mesh.h"
 
-// PrimitiveDodecahedron — regular dodecahedron (12 pentagonal faces, triangulated).
 class PrimitiveDodecahedron : public Mesh
 {
   public:

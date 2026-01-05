@@ -1,3 +1,21 @@
+// ============================================================================
+// AssetSystem.h
+// Unified asset path resolution service with marker-based discovery.
+// ----------------------------------------------------------------------------
+// USAGE:
+//   GAssetSystem.Initialize();
+//   const auto& shaderDir = GAssetSystem.GetShaderPath();
+//   auto fullPath = GAssetSystem.ResolvePath(AssetType::Texture, "diffuse.png");
+//
+// DESIGN:
+//   Marker Hierarchy (files that identify directory roles):
+//     .sparkle         - Workspace root (repository level)
+//     .sparkle-engine  - Engine root (engine/ subdirectory)
+//     .sparkle-project - Project root (each game/sample project)
+//
+//   Discovery walks up from executable/working directory for markers.
+//   If workspace root is found, engine is at <workspace>/engine/.
+// ============================================================================
 #pragma once
 
 #include "Assets/AssetSource.h"
@@ -6,26 +24,6 @@
 #include <array>
 #include <filesystem>
 #include <optional>
-
-// =============================================================================
-// AssetSystem: Unified Asset Path Resolution Service
-// =============================================================================
-//
-// Central service for asset path management with marker-based discovery.
-//
-// MARKER HIERARCHY:
-//   .sparkle         - Workspace root (repository level)
-//   .sparkle-engine  - Engine root (engine/ subdirectory)
-//   .sparkle-project - Project root (each game/sample project)
-//
-// DISCOVERY:
-//   1. Walk up from executable/working directory for markers
-//   2. If workspace root found, engine is at <workspace>/engine/
-//
-// USAGE:
-//   GAssetSystem.Initialize();
-//   const auto& shaderDir = GAssetSystem.GetShaderPath();
-//
 
 class AssetSystem final
 {
@@ -39,7 +37,7 @@ class AssetSystem final
 
 	// =========================================================================
 	// Lifecycle
-	// =========================================================================
+	// ===================================
 
 	// Initializes with automatic marker-based path discovery.
 	void Initialize();

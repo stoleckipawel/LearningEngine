@@ -1,3 +1,19 @@
+// ============================================================================
+// App.h
+// Application base class with Non-Virtual Interface (NVI) pattern.
+// ----------------------------------------------------------------------------
+// USAGE:
+//   class MyGame : public App {
+//       void PostInitialize() override { /* load game resources */ }
+//       void PreRender() override { /* update game logic */ }
+//   };
+//   MyGame game; game.Run();
+//
+// DESIGN:
+//   - Engine controls the lifecycle (Initialize, Render, Resize, Shutdown)
+//   - Users extend via Pre/Post hooks without replacing engine behavior
+//   - All hooks are optional; override only what you need
+// ============================================================================
 #pragma once
 
 // Application base using the Non-Virtual Interface (NVI) pattern.

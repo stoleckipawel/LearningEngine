@@ -1,11 +1,27 @@
+// ============================================================================
+// SceneSection.h
+// ----------------------------------------------------------------------------
+// UI section for scene primitive spawning configuration.
+//
+// USAGE:
+//   SceneSection sceneUI;
+//   sceneUI.BuildUI();  // Called each frame in ImGui context
+//
+// DESIGN:
+//   - Implements UIRendererSection interface for panel integration
+//   - Directly modifies GScene when user changes configuration
+//   - Local copies of shape/count for ImGui interaction
+//
+// NOTES:
+//   - Changes trigger Scene::SetPrimitives() immediately
+// ============================================================================
+
 #pragma once
 
 #include <cstdint>
 
 #include "Framework/UIRendererSection.h"
 
-// SceneSection provides UI controls for scene primitive spawning.
-// Directly modifies the Scene when user changes configuration.
 class SceneSection final : public UIRendererSection
 {
   public:

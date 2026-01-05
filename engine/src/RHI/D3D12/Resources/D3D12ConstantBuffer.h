@@ -1,3 +1,27 @@
+// ============================================================================
+// D3D12ConstantBuffer.h
+// ----------------------------------------------------------------------------
+// Template class for managing typed GPU constant buffers.
+//
+// USAGE:
+//   D3D12ConstantBuffer<PerFrameData> frameCB;
+//   frameCB.Update(frameData);
+//   cmdList->SetGraphicsRootConstantBufferView(0, frameCB.GetGPUVirtualAddress());
+//
+// DESIGN:
+//   - Creates persistently-mapped upload buffer (256-byte aligned)
+//   - Allocates CBV descriptor from heap manager
+//   - Supports both root CBV and descriptor table binding
+//
+// BINDING METHODS:
+//   - GetGPUVirtualAddress(): For SetGraphicsRootConstantBufferView (preferred)
+//   - GetGPUHandle(): For descriptor table binding
+//
+// NOTES:
+//   - Non-copyable/non-movable (owns GPU resource and descriptor)
+//   - Update() writes directly to mapped memory
+// ============================================================================
+
 #pragma once
 
 #include "D3D12DescriptorHeap.h"
@@ -8,7 +32,6 @@
 
 using Microsoft::WRL::ComPtr;
 
-// ConstantBuffer manages a GPU constant buffer for type T, including creation, mapping, updating, and descriptor views.
 template <typename T> class D3D12ConstantBuffer
 {
   public:

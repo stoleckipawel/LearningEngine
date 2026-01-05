@@ -1,3 +1,27 @@
+// ============================================================================
+// LinearAllocator.h
+// ----------------------------------------------------------------------------
+// High-performance per-frame linear (bump) allocator for GPU upload memory.
+//
+// USAGE:
+//   LinearAllocator alloc;
+//   alloc.Initialize(1024 * 1024, L"FrameAllocator");
+//   auto result = alloc.Allocate(256);
+//   memcpy(result.CpuPtr, &data, sizeof(data));
+//   // Bind result.GpuAddress to shader
+//   alloc.Reset();  // At frame boundary after GPU completion
+//
+// DESIGN:
+//   - Single large UPLOAD heap, mapped once at creation
+//   - O(1) allocation via atomic fetch_add (lock-free, thread-safe)
+//   - 256-byte alignment for D3D12 constant buffer views
+//   - Reset at frame boundary (no per-allocation overhead)
+//
+// NOTES:
+//   - Returns both CPU pointer (memcpy) and GPU VA (binding)
+//   - Only reset after GPU has finished processing allocations
+// ============================================================================
+
 #pragma once
 
 #include "DebugUtils.h"
@@ -12,18 +36,9 @@
 
 using Microsoft::WRL::ComPtr;
 
-//------------------------------------------------------------------------------
-// LinearAllocator
-//------------------------------------------------------------------------------
-// A high-performance per-frame linear (bump) allocator for GPU upload memory.
-//
-// Design Features:
-//   - Single large UPLOAD heap per-frame, mapped once at creation
-//   - O(1) allocation via atomic fetch_add (lock-free, thread-safe)
-//   - 256-byte alignment for D3D12 constant buffer views
-//   - Reset at frame boundary when GPU has finished (no per-alloc overhead)
-//   - Returns both CPU pointer (for memcpy) and GPU VA (for binding)
-//------------------------------------------------------------------------------
+// ============================================================================
+// LinearAllocation Result
+// ============================================================================
 
 struct LinearAllocation
 {

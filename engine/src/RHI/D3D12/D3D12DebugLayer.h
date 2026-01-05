@@ -1,3 +1,27 @@
+// ============================================================================
+// D3D12DebugLayer.h
+// ----------------------------------------------------------------------------
+// Manages D3D12 and DXGI debug/validation layers.
+//
+// USAGE:
+//   #ifdef ENGINE_GPU_VALIDATION
+//   GD3D12DebugLayer.Initialize();        // Before device creation
+//   GD3D12DebugLayer.InitializeInfoQueue(); // After device creation
+//   // ... application runs ...
+//   GD3D12DebugLayer.Shutdown();          // Reports live objects
+//   #endif
+//
+// DESIGN:
+//   - Only available when ENGINE_GPU_VALIDATION is defined (debug builds)
+//   - Enables SDK validation layers for catching API misuse
+//   - Configures ID3D12InfoQueue filters to control message severity
+//   - Reports live D3D12/DXGI objects at shutdown for leak detection
+//
+// NOTES:
+//   - Singleton accessed via GD3D12DebugLayer global reference
+//   - Initialize/Shutdown are idempotent (safe to call multiple times)
+// ============================================================================
+
 #pragma once
 
 #ifdef ENGINE_GPU_VALIDATION
@@ -6,10 +30,6 @@
 
 using Microsoft::WRL::ComPtr;
 
-// DebugLayer manages Direct3D12 / DXGI debug helpers.
-// Purpose: enable/disable SDK validation, configure the ID3D12InfoQueue filters,
-// and report live objects at shutdown to catch leaks. This class is only
-// available when `ENGINE_GPU_VALIDATION` is enabled (typically debug builds).
 class D3D12DebugLayer final
 {
   public:

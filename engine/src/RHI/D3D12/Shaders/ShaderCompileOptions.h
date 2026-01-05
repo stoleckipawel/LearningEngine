@@ -1,3 +1,20 @@
+// ============================================================================
+// ShaderCompileOptions.h
+// ----------------------------------------------------------------------------
+// Configuration structures for DXC shader compilation.
+//
+// USAGE:
+//   ShaderCompileOptions opts;
+//   opts.SourcePath = "shaders/MyShader.hlsl";
+//   opts.Stage = ShaderStage::Vertex;
+//   opts.EntryPoint = "VSMain";
+//   auto profile = opts.BuildTargetProfile();  // "vs_6_0"
+//
+// NOTES:
+//   - Target profile is built from engine's configured shader model version
+//   - Supports additional include dirs and preprocessor defines
+// ============================================================================
+
 #pragma once
 
 #include "EngineConfig.h"
@@ -5,19 +22,23 @@
 #include <vector>
 #include <string>
 
-// Shader compilation stage identifiers.
+// ============================================================================
+// Shader Stage Enumeration
+// ============================================================================
+
+/// Identifies the programmable shader stage in the graphics pipeline.
 enum class ShaderStage : uint8_t
 {
-	Vertex,
-	Pixel,
-	Geometry,
-	Hull,
-	Domain,
-	Compute,
-	Count
+	Vertex,    ///< Vertex shader - transforms vertices
+	Pixel,     ///< Pixel shader - computes fragment colors
+	Geometry,  ///< Geometry shader - processes primitives
+	Hull,      ///< Hull shader - tessellation control
+	Domain,    ///< Domain shader - tessellation evaluation
+	Compute,   ///< Compute shader - general-purpose GPU compute
+	Count      ///< Number of shader stages (for array sizing)
 };
 
-// Returns the DXC target prefix for a shader stage (e.g., "vs" for Vertex).
+/// Returns the DXC target prefix for a shader stage (e.g., "vs" for Vertex).
 inline const char* GetShaderStagePrefix(ShaderStage stage)
 {
 	static constexpr const char* kPrefixes[] = {"vs", "ps", "gs", "hs", "ds", "cs"};
@@ -25,28 +46,32 @@ inline const char* GetShaderStagePrefix(ShaderStage stage)
 	return kPrefixes[static_cast<size_t>(stage)];
 }
 
-// Configuration for a single shader compilation request.
+// ============================================================================
+// Shader Compile Options
+// ============================================================================
+
+/// Configuration for a single shader compilation request.
 struct ShaderCompileOptions
 {
-	std::filesystem::path SourcePath;  // Absolute path to the .hlsl file
-	std::filesystem::path IncludeDir;  // Root directory for #include resolution
-	std::string EntryPoint = "main";   // Entry function name
-	ShaderStage Stage = ShaderStage::Pixel;
+	std::filesystem::path SourcePath;  ///< Absolute path to the .hlsl file
+	std::filesystem::path IncludeDir;  ///< Root directory for #include resolution
+	std::string EntryPoint = "main";   ///< Entry function name
+	ShaderStage Stage = ShaderStage::Pixel;  ///< Target shader stage
 
 	// Feature flags
-	bool EnableDebugInfo = false;
-	bool EnableOptimizations = true;
-	bool TreatWarningsAsErrors = true;
-	bool StripReflection = true;
-	bool StripDebugInfo = true;
+	bool EnableDebugInfo = false;         ///< Include debug symbols
+	bool EnableOptimizations = true;      ///< Enable compiler optimizations
+	bool TreatWarningsAsErrors = true;    ///< Promote warnings to errors
+	bool StripReflection = true;          ///< Remove reflection data from output
+	bool StripDebugInfo = true;           ///< Remove debug info from output
 
-	// Additional include directories beyond the primary IncludeDir
+	/// Additional include directories beyond the primary IncludeDir.
 	std::vector<std::filesystem::path> AdditionalIncludeDirs;
 
-	// Additional preprocessor defines (format: "NAME" or "NAME=VALUE")
+	/// Additional preprocessor defines (format: "NAME" or "NAME=VALUE").
 	std::vector<std::string> Defines;
 
-	// Builds the shader model target string (e.g., "vs_6_0").
+	/// Builds the shader model target string (e.g., "vs_6_0").
 	std::string BuildTargetProfile() const
 	{
 		std::string profile;

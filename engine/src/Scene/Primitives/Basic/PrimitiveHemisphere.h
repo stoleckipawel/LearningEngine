@@ -1,8 +1,13 @@
+// ============================================================================
+// PrimitiveHemisphere.h
+// ----------------------------------------------------------------------------
+// Hemisphere (half sphere) primitive mesh.
+// ============================================================================
+
 #pragma once
 
 #include "Scene/Mesh.h"
 
-// PrimitiveHemisphere — upper hemisphere (y >= 0) with a flat base cap.
 class PrimitiveHemisphere : public Mesh
 {
   public:

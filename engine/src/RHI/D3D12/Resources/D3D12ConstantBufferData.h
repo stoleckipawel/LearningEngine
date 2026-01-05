@@ -1,25 +1,32 @@
+// ============================================================================
+// D3D12ConstantBufferData.h
+// ----------------------------------------------------------------------------
+// POD structures for GPU constant buffers, mirrored in HLSL (Common.hlsli).
+//
+// DESIGN:
+//   - All CBV-bound types use alignas(256) per D3D12 requirements
+//   - Types are trivially copyable for safe memcpy to GPU memory
+//   - CBV_CHECK macro validates layout constraints at compile time
+//
+// HLSL REGISTER CONVENTIONS:
+//   b0 -> PerFrameConstantBufferData   (once per CPU frame)
+//   b1 -> PerViewConstantBufferData    (per camera/view)
+//   b2 -> PerObjectVSConstantBufferData (per draw call, transforms)
+//   b3 -> PerObjectPSConstantBufferData (per draw call, materials)
+//
+// NOTES:
+//   - Keep parity with Common.hlsli when modifying
+//   - Structured buffers (SRV) follow 16-byte HLSL packing, not 256-byte
+// ============================================================================
+
 #pragma once
 #include <DirectXMath.h>
 #include <cstdint>
 #include <type_traits>
 
-
-//------------------------------------------------------------------------------
-// Constant Buffer Data (C++ ↔ HLSL)
-//
-// Notes:
-//  - These types are mirrored in HLSL (`Common.hlsli` keep parity).
-//  - Constant buffers (CBV) in D3D12 expect views and offsets to be 256-byte
-//    aligned; therefore types bound as CBVs are defined with alignas(256).
-//  - Structured buffers (SRV) used for instance data do not require 256-byte
-//    per-element alignment — they follow HLSL packing (16-byte / float4 lanes).
-//
-// HLSL register conventions (example):
-//   b0 -> PerFrameConstantBufferData
-//   b1 -> PerViewConstantBufferData
-//   b2 -> PerObjectVSConstantBufferData
-//   b3 -> PerObjectPSConstantBufferData
-//------------------------------------------------------------------------------
+// ============================================================================
+// CBV Validation Macro
+// ============================================================================
 
 // Helper macro to validate CBV layout/size for all constant-buffer structs.
 // Usage: CBV_CHECK(MyCbStruct);

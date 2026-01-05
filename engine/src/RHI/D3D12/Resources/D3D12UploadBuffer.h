@@ -1,3 +1,21 @@
+// ============================================================================
+// D3D12UploadBuffer.h
+// ----------------------------------------------------------------------------
+// Utility for uploading small data blobs to GPU memory.
+//
+// USAGE:
+//   auto resource = D3D12UploadBuffer::Upload(data, dataSize);
+//
+// DESIGN:
+//   - Creates committed upload-heap resources for each upload
+//   - Suitable for small, infrequent uploads (textures, initial buffers)
+//
+// PERFORMANCE NOTE:
+//   For large or frequent uploads, prefer:
+//   - LinearAllocator for per-frame constant buffers
+//   - Staging to default heap with explicit copy commands
+// ============================================================================
+
 #pragma once
 
 #include "D3D12Rhi.h"
@@ -6,10 +24,6 @@
 
 using Microsoft::WRL::ComPtr;
 
-// UploadBuffer provides utilities for uploading small blobs to GPU memory using
-// committed upload-heap resources. For large or frequent uploads prefer a
-// ring/linear upload allocator or staging to a default heap and an explicit
-// copy command (see engine design notes).
 class D3D12UploadBuffer
 {
   public:

@@ -1,19 +1,19 @@
-#pragma once
-
-// =============================================================================
-// Log.h — Public Logging API
-// =============================================================================
-//
-// Usage:
+// ============================================================================
+// Log.h
+// Public logging API for engine and client code.
+// ----------------------------------------------------------------------------
+// USAGE:
 //   LOG_INFO("Engine initialized");
-//   LOG_WARNING("Resource not found");
+//   LOG_WARNING("Resource not found: %s", path.c_str());
 //   LOG_ERROR("Failed to load texture");
 //   LOG_FATAL("Unrecoverable error");
-//
 //   CHECK(device->CreateBuffer(...));
 //
-// Adjust runtime verbosity with `Logger::SetLevel`.
-// =============================================================================
+// NOTES:
+//   - Adjust runtime verbosity with Logger::SetLevel()
+//   - Fatal logs flush synchronously, break to debugger, then terminate
+// ============================================================================
+#pragma once
 
 #include <cstdint>
 #include <string_view>

@@ -1,3 +1,26 @@
+// ============================================================================
+// AssetId.h
+// Compile-time and runtime asset identification using FNV-1a 64-bit hashes.
+// ----------------------------------------------------------------------------
+// USAGE:
+//   // Compile-time (zero runtime cost):
+//   constexpr AssetId diffuseId = "textures/brick_diffuse.png"_asset;
+//
+//   // Runtime:
+//   AssetId dynamicId(userProvidedPath);
+//
+//   // As map key:
+//   std::unordered_map<AssetId, TextureHandle> textureCache;
+//
+// DESIGN:
+//   - 8-byte hash provides O(1) lookups instead of string comparisons
+//   - constexpr construction enables compile-time hash computation
+//   - Debug builds store original path string to detect collisions
+//
+// NOTES:
+//   - FNV-1a 64-bit has ~1 in 10^14 collision probability for <100k assets
+//   - Use with asset registries, caches, hot-reload, dependency tracking
+// ============================================================================
 #pragma once
 
 #include "Core/Hash/HashUtils.h"
@@ -5,46 +28,6 @@
 #include <cstdint>
 #include <functional>
 #include <string_view>
-
-// =============================================================================
-// AssetId: Compile-Time Asset Identification System
-// =============================================================================
-//
-// PURPOSE:
-//   AssetId provides a fast, type-safe way to identify assets (textures, shaders,
-//   meshes, etc.) at both compile-time and runtime. Instead of passing around
-//   expensive std::string paths everywhere, you pass a lightweight 8-byte hash.
-
-// HASH COLLISION RISK:
-//   FNV-1a 64-bit has excellent distribution. For a typical game with <100,000
-//   unique asset paths, the probability of collision is astronomically low
-//   (~1 in 10^14). The debug build stores the original string to catch any
-//   collisions during development.
-//
-// TYPICAL USAGE:
-//   // Compile-time: zero runtime cost, hash computed at compile time
-//   constexpr AssetId diffuseId = "textures/brick_diffuse.png"_asset;
-//
-//   // Runtime: hash computed once at string creation
-//   AssetId dynamicId(userProvidedPath);
-//
-//   // Use as map key for O(1) lookups
-//   std::unordered_map<AssetId, TextureHandle> textureCache;
-//   textureCache[diffuseId] = LoadTexture(diffuseId);
-//
-//   // Use in switch statements (requires constexpr IDs)
-//   switch (id.GetHash()) {
-//       case "shaders/pbr.hlsl"_asset.GetHash(): ...
-//   }
-//
-// WHERE TO USE:
-//   - Asset registries and caches (key for lookup)
-//   - Resource handles referencing loaded assets
-//   - Serialization (store hash, reconstruct path from registry if needed)
-//   - Dependency tracking between assets
-//   - Hot-reload systems detecting which asset changed
-//
-// =============================================================================
 
 // Strongly-typed 64-bit asset identifier.
 // Immutable after construction. Trivially copyable. Safe to pass by value.

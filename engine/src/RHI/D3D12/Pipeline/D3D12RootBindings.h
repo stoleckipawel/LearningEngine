@@ -1,20 +1,38 @@
+// ============================================================================
+// D3D12RootBindings.h
+// ----------------------------------------------------------------------------
+// Single source of truth for shader resource binding layout.
+//
+// USAGE:
+//   cmdList->SetGraphicsRootConstantBufferView(
+//       RootBindings::RootParam::PerFrame, gpuAddress);
+//
+// SYNC WITH:
+//   - D3D12RootSignature.cpp (root signature creation)
+//   - ConstantBuffers.hlsli (HLSL register declarations)
+//   - Samplers.hlsli (sampler register declarations)
+//
+// LAYOUT:
+//   Root Param 0: PerFrame CBV (b0)
+//   Root Param 1: PerView CBV (b1)
+//   Root Param 2: PerObjectVS CBV (b2)
+//   Root Param 3: PerObjectPS CBV (b3)
+//   Root Param 4: Texture SRV table (t0)
+//   Root Param 5: Sampler table (s0-s26)
+// ============================================================================
+
 #pragma once
 
 #include <cstdint>
 #include <d3d12.h>
 
-// =============================================================================
-// Root Bindings
-// =============================================================================
-// Single source of truth for shader resource binding layout.
-// Sync with: D3D12RootSignature.cpp, ConstantBuffers.hlsli, Samplers.hlsli
-
 namespace RootBindings
 {
 
-	// -----------------------------------------------------------------------------
+	// ========================================================================
 	// Root Parameter Indices
-	// -----------------------------------------------------------------------------
+	// ========================================================================
+
 	namespace RootParam
 	{
 		constexpr uint32_t PerFrame = 0;

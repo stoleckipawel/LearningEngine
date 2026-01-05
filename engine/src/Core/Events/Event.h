@@ -1,3 +1,32 @@
+// ============================================================================
+// Event.h
+// ----------------------------------------------------------------------------
+// Multicast event dispatcher for decoupled notification broadcasting.
+//
+// USAGE:
+//   Event<void(int, float)> OnValueChanged;
+//   auto handle = OnValueChanged.Add([](int a, float b) { ... });
+//   OnValueChanged.Broadcast(42, 3.14f);
+//   OnValueChanged.Remove(handle);
+//
+//   // RAII auto-unsubscribe:
+//   ScopedEventHandle scoped(OnValueChanged, handle);
+//
+// DESIGN:
+//   - Fixed capacity (template parameter) avoids runtime heap allocations
+//   - Stable handles for safe removal from any context
+//   - No RTTI or exceptions
+//   - ScopedEventHandle provides RAII unsubscription
+//
+// INTENDED USE:
+//   Suitable for low-frequency events (settings changes, resize, etc.),
+//   not intended for per-frame high-frequency hot paths.
+//
+// NOTES:
+//   - Default capacity is 8 listeners per event
+//   - Asserts on capacity overflow in debug builds
+// ============================================================================
+
 #pragma once
 
 #include <array>
@@ -6,31 +35,19 @@
 #include <functional>
 #include <utility>
 
-//------------------------------------------------------------------------------
-// Event System
-//------------------------------------------------------------------------------
-// Multicast event dispatcher for decoupled notification broadcasting.
-// Suitable for low-frequency events (settings changes, resize, etc.),
-// not intended for per-frame high-frequency hot paths.
-//
-// Usage:
-//   Event<void(int, float)> OnValueChanged;
-//   auto handle = OnValueChanged.Add([](int a, float b) { ... });
-//   OnValueChanged.Broadcast(42, 3.14f);
-//   OnValueChanged.Remove(handle);
-//
-// Design:
-//   - Fixed capacity to avoid runtime heap allocations
-//   - Stable handles for safe removal from any context
-//   - No RTTI or exceptions
-//------------------------------------------------------------------------------
+// ============================================================================
+// EventHandle
+// ============================================================================
 
-// Opaque handle returned by Add(), used for Remove()
+/// Opaque handle returned by Event::Add(), used for Event::Remove().
 struct EventHandle
 {
-	std::uint32_t Id = 0;
+	std::uint32_t Id = 0;  ///< Unique identifier (0 = invalid)
 
+	/// Returns true if handle points to a valid subscription.
 	bool IsValid() const noexcept { return Id != 0; }
+
+	/// Marks this handle as invalid.
 	void Invalidate() noexcept { Id = 0; }
 
 	bool operator==(const EventHandle& Other) const noexcept { return Id == Other.Id; }
@@ -40,9 +57,11 @@ struct EventHandle
 // Forward declaration
 template <typename Signature, std::size_t Capacity = 8> class Event;
 
-//------------------------------------------------------------------------------
+// ============================================================================
 // Event<void(Args...), Capacity>
-//------------------------------------------------------------------------------
+// ============================================================================
+
+/// Multicast event with fixed-capacity listener storage.
 template <typename... Args, std::size_t Capacity> class Event<void(Args...), Capacity>
 {
   public:
@@ -57,7 +76,12 @@ template <typename... Args, std::size_t Capacity> class Event<void(Args...), Cap
 	Event(Event&&) = delete;
 	Event& operator=(Event&&) = delete;
 
-	// Add a listener. Returns handle for later removal.
+	// ========================================================================
+	// Subscription Management
+	// ========================================================================
+
+	/// Adds a listener callback. Returns handle for later removal.
+	/// @return Valid handle, or invalid handle if capacity exceeded.
 	[[nodiscard]] EventHandle Add(CallbackType Callback) noexcept
 	{
 		for (std::size_t i = 0; i < Capacity; ++i)
@@ -75,7 +99,7 @@ template <typename... Args, std::size_t Capacity> class Event<void(Args...), Cap
 		return EventHandle{};
 	}
 
-	// Remove a listener by handle
+	/// Removes a listener by handle. No-op if handle is invalid.
 	void Remove(EventHandle Handle) noexcept
 	{
 		if (!Handle.IsValid())
@@ -92,7 +116,21 @@ template <typename... Args, std::size_t Capacity> class Event<void(Args...), Cap
 		}
 	}
 
-	// Invoke all registered listeners
+	/// Removes all listeners.
+	void Clear() noexcept
+	{
+		for (std::size_t i = 0; i < Capacity; ++i)
+		{
+			m_Entries[i].Handle.Invalidate();
+			m_Entries[i].Callback = nullptr;
+		}
+	}
+
+	// ========================================================================
+	// Broadcasting
+	// ========================================================================
+
+	/// Invokes all registered listeners with the given arguments.
 	void Broadcast(Args... InArgs) const
 	{
 		for (std::size_t i = 0; i < Capacity; ++i)
@@ -104,7 +142,11 @@ template <typename... Args, std::size_t Capacity> class Event<void(Args...), Cap
 		}
 	}
 
-	// Check if any listeners are registered
+	// ========================================================================
+	// Queries
+	// ========================================================================
+
+	/// Returns true if any listeners are registered.
 	[[nodiscard]] bool IsBound() const noexcept
 	{
 		for (std::size_t i = 0; i < Capacity; ++i)
@@ -115,17 +157,7 @@ template <typename... Args, std::size_t Capacity> class Event<void(Args...), Cap
 		return false;
 	}
 
-	// Remove all listeners
-	void Clear() noexcept
-	{
-		for (std::size_t i = 0; i < Capacity; ++i)
-		{
-			m_Entries[i].Handle.Invalidate();
-			m_Entries[i].Callback = nullptr;
-		}
-	}
-
-	// Debug: number of active subscriptions
+	/// Returns the number of active subscriptions.
 	[[nodiscard]] std::size_t GetBoundCount() const noexcept
 	{
 		std::size_t Count = 0;
@@ -138,27 +170,32 @@ template <typename... Args, std::size_t Capacity> class Event<void(Args...), Cap
 	}
 
   private:
+	// ------------------------------------------------------------------------
+	// Internal Storage
+	// ------------------------------------------------------------------------
+
 	struct Entry
 	{
-		EventHandle Handle;
-		CallbackType Callback;
+		EventHandle Handle;      ///< Subscription identifier
+		CallbackType Callback;   ///< Listener function
 	};
 
-	std::array<Entry, Capacity> m_Entries{};
-	std::uint32_t m_NextId = 0;
+	std::array<Entry, Capacity> m_Entries{};  ///< Fixed-size listener storage
+	std::uint32_t m_NextId = 0;               ///< Counter for unique handle IDs
 };
 
-//------------------------------------------------------------------------------
+// ============================================================================
 // ScopedEventHandle
-//------------------------------------------------------------------------------
-// RAII guard that automatically removes subscription on destruction.
-// Stores a type-erased cleanup function to avoid template parameter coupling.
-//------------------------------------------------------------------------------
+// ============================================================================
+
+/// RAII guard that automatically removes subscription on destruction.
+/// Stores a type-erased cleanup function to avoid template parameter coupling.
 class ScopedEventHandle
 {
   public:
 	ScopedEventHandle() noexcept = default;
 
+	/// Constructs a scoped handle that will unsubscribe on destruction.
 	template <typename Signature, std::size_t Capacity>
 	ScopedEventHandle(Event<Signature, Capacity>& InEvent, EventHandle InHandle) noexcept :
 	    m_Handle(InHandle),
@@ -195,6 +232,7 @@ class ScopedEventHandle
 	ScopedEventHandle(const ScopedEventHandle&) = delete;
 	ScopedEventHandle& operator=(const ScopedEventHandle&) = delete;
 
+	/// Unsubscribes and invalidates this handle.
 	void Reset() noexcept
 	{
 		if (m_Handle.IsValid() && m_RemoveFn)
@@ -205,10 +243,13 @@ class ScopedEventHandle
 		m_RemoveFn = nullptr;
 	}
 
+	/// Returns true if this scoped handle is active.
 	[[nodiscard]] bool IsValid() const noexcept { return m_Handle.IsValid(); }
+
+	/// Returns the underlying event handle.
 	[[nodiscard]] EventHandle GetHandle() const noexcept { return m_Handle; }
 
   private:
-	EventHandle m_Handle;
-	std::function<void()> m_RemoveFn;
+	EventHandle m_Handle;              ///< Wrapped subscription handle
+	std::function<void()> m_RemoveFn;  ///< Type-erased unsubscribe function
 };

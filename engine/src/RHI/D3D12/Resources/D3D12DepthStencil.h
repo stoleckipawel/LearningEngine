@@ -1,3 +1,25 @@
+// ============================================================================
+// D3D12DepthStencil.h
+// ----------------------------------------------------------------------------
+// Manages a GPU depth-stencil resource and its DSV descriptor.
+//
+// USAGE:
+//   D3D12DepthStencil depthStencil;
+//   depthStencil.SetWriteState();
+//   depthStencil.Clear();
+//   // ... render with depth testing ...
+//   depthStencil.SetReadState();
+//
+// DESIGN:
+//   - Uses committed default-heap resource with optimized clear value
+//   - Owns the DSV descriptor handle and GPU resource exclusively
+//   - All public accessors are const noexcept and non-mutating
+//
+// NOTES:
+//   - Copy/move deleted to enforce unique ownership semantics
+//   - Resize requires creating a new instance
+// ============================================================================
+
 #pragma once
 
 #include "D3D12Rhi.h"
@@ -5,14 +27,6 @@
 
 using Microsoft::WRL::ComPtr;
 
-// DepthStencil manages a GPU depth-stencil resource and its DSV descriptor.
-// Design notes:
-// - Uses a committed default-heap resource with an optimized clear value.
-// - The class owns the DSV descriptor handle and the GPU resource exclusively.
-// - All public accessors are `const noexcept` and non-mutating.
-// - Copy/move are deleted to enforce unique ownership semantics.
-
-// DepthStencil manages a depth-stencil buffer resource and its view for Direct3D 12 rendering.
 class D3D12DepthStencil
 {
   public:

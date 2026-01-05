@@ -1,8 +1,13 @@
+// ============================================================================
+// PrimitivePlane.h
+// ----------------------------------------------------------------------------
+// Flat quad on XZ plane primitive mesh.
+// ============================================================================
+
 #pragma once
 
 #include "Scene/Mesh.h"
 
-// PrimitivePlane — a simple 2D plane primitive for rendering (XZ plane). Inherits from Primitive.
 class PrimitivePlane : public Mesh
 {
   public:

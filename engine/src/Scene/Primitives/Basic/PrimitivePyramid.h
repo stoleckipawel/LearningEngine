@@ -1,8 +1,13 @@
+// ============================================================================
+// PrimitivePyramid.h
+// ----------------------------------------------------------------------------
+// Four-sided pyramid primitive mesh.
+// ============================================================================
+
 #pragma once
 
 #include "Scene/Mesh.h"
 
-// PrimitivePyramid — square pyramid with a flat base.
 class PrimitivePyramid : public Mesh
 {
   public:

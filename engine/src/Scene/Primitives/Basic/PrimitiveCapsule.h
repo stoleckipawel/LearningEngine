@@ -1,9 +1,13 @@
+// ============================================================================
+// PrimitiveCapsule.h
+// ----------------------------------------------------------------------------
+// Capsule primitive mesh (cylinder with hemispherical caps).
+// ============================================================================
+
 #pragma once
 
 #include "Scene/Mesh.h"
 
-// PrimitiveCapsule — capsule aligned to Y axis.
-// Default capsule fits within y in [-1, 1] with radius 0.5 and cylinder half-height 0.5.
 class PrimitiveCapsule : public Mesh
 {
   public:

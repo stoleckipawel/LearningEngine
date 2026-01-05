@@ -1,8 +1,13 @@
+// ============================================================================
+// PrimitiveDisk.h
+// ----------------------------------------------------------------------------
+// Flat circular disk primitive mesh.
+// ============================================================================
+
 #pragma once
 
 #include "Scene/Mesh.h"
 
-// PrimitiveDisk — a flat disk in XZ plane (filled circle).
 class PrimitiveDisk : public Mesh
 {
   public:

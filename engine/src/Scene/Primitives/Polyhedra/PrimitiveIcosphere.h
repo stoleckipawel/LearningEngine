@@ -1,8 +1,13 @@
+// ============================================================================
+// PrimitiveIcosphere.h
+// ----------------------------------------------------------------------------
+// Subdivided icosahedron with uniform triangles.
+// ============================================================================
+
 #pragma once
 
 #include "Scene/Mesh.h"
 
-// PrimitiveIcosphere — subdivided icosahedron sphere (smooth triangulation).
 class PrimitiveIcosphere : public Mesh
 {
   public:

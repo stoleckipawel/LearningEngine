@@ -1,3 +1,31 @@
+// ============================================================================
+// DepthConvention.h
+// ----------------------------------------------------------------------------
+// Centralized authority for depth buffer configuration and projection matrices.
+//
+// USAGE:
+//   auto mode = GDepthConvention.GetMode();
+//   auto clearVal = GDepthConvention.GetClearDepth();
+//   auto compFunc = GDepthConvention.GetComparisonFunc();
+//   // Subscribe to mode changes:
+//   auto handle = DepthConvention::OnModeChanged.Add([](DepthMode m) { ... });
+//
+// DESIGN:
+//   - Single source of truth for depth range, comparison, and clear values
+//   - Event broadcast when mode changes (Camera, DepthStencil listen)
+//   - Supports Standard (0-1) and ReversedZ (1-0) modes
+//
+// CONSISTENCY:
+//   - Projection matrix generation (Camera)
+//   - Depth buffer creation and clearing (D3D12DepthStencil)
+//   - Pipeline state depth comparison (D3D12PipelineState)
+//   - Shader depth reconstruction
+//
+// NOTES:
+//   - ReversedZ recommended for better precision distribution
+//   - Singleton accessed via GDepthConvention global reference
+// ============================================================================
+
 #pragma once
 
 #include "Event.h"
@@ -5,25 +33,11 @@
 #include <d3d12.h>
 #include <cstdint>
 
-//------------------------------------------------------------------------------
-// Depth Convention
-//------------------------------------------------------------------------------
-// Centralized authority for all depth buffer configuration and projection
-// matrix generation. All depth-related code queries this class rather than
-// making local assumptions about depth range, comparison functions, or
-// clear values.
-//
-// This design ensures consistency across:
-//   - Projection matrix generation (Camera)
-//   - Depth buffer creation and clearing (D3D12DepthStencil)
-//   - Pipeline state depth comparison (D3D12PipelineState)
-//   - Shader depth reconstruction
-//
-// Supported Modes:
-//   Standard  - Near → 0, Far → 1, LESS_EQUAL comparison
-//   ReversedZ - Near → 1, Far → 0, GREATER_EQUAL comparison (recommended)
-//------------------------------------------------------------------------------
+// ============================================================================
+// Depth Mode Enumeration
+// ============================================================================
 
+/// Depth buffer mode selection.
 enum class DepthMode : std::uint8_t
 {
 	Standard,   // Traditional depth: near=0, far=1

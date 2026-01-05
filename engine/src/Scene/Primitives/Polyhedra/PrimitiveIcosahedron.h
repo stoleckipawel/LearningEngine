@@ -1,8 +1,13 @@
+// ============================================================================
+// PrimitiveIcosahedron.h
+// ----------------------------------------------------------------------------
+// 20-faced polyhedron primitive mesh.
+// ============================================================================
+
 #pragma once
 
 #include "Scene/Mesh.h"
 
-// PrimitiveIcosahedron — regular icosahedron (20 triangles).
 class PrimitiveIcosahedron : public Mesh
 {
   public:

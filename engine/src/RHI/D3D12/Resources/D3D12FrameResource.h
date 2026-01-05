@@ -1,3 +1,27 @@
+// ============================================================================
+// D3D12FrameResource.h
+// ----------------------------------------------------------------------------
+// Per-frame GPU resource management for multi-buffered rendering.
+//
+// USAGE:
+//   GFrameResourceManager.Initialize();
+//   // Each frame:
+//   GFrameResourceManager.BeginFrame();  // Wait for fence, reset allocator
+//   auto alloc = GFrameResourceManager.AllocateCB<MyData>(data);
+//   GFrameResourceManager.EndFrame();    // Signal fence
+//
+// DESIGN:
+//   - FrameResource: per-frame allocator and fence value
+//   - FrameResourceManager: ring of FrameResource instances
+//   - Prevents CPU/GPU race conditions via fence synchronization
+//
+// SYNCHRONIZATION MODEL:
+//   1. BeginFrame(): Wait for oldest frame's fence, reset allocator
+//   2. AllocateXXX(): Allocate from current frame's linear allocator
+//   3. EndFrame(): Signal fence with current frame's value
+//   4. Advance frame index (wraps around)
+// ============================================================================
+
 #pragma once
 
 #include <d3d12.h>
@@ -9,21 +33,9 @@
 #include "EngineConfig.h"
 #include "D3D12Rhi.h"
 
-//------------------------------------------------------------------------------
+// ============================================================================
 // FrameResource
-//------------------------------------------------------------------------------
-// Represents all GPU resources associated with a single frame-in-flight.
-// This includes the linear allocator for dynamic constant buffers and the
-// fence value used to track when the GPU has finished processing this frame.
-//
-// The frame resource pattern is fundamental to D3D12 programming:
-//   - Each frame has its own set of mutable resources
-//   - We track fence values per-frame to know when GPU is done
-//   - Only reset/reuse a frame's resources after its fence is signaled
-//
-// This prevents the classic CPU/GPU race condition where CPU overwrites
-// data that GPU is still reading.
-//------------------------------------------------------------------------------
+// ============================================================================
 
 struct D3D12FrameResource
 {

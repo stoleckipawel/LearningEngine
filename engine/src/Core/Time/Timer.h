@@ -1,3 +1,26 @@
+// ============================================================================
+// Timer.h
+// ----------------------------------------------------------------------------
+// Authoritative frame-timing service for the engine.
+//
+// USAGE:
+//   Engine::GTimer.Initialize();
+//   // Each frame:
+//   Engine::GTimer.Tick();
+//   auto info = Engine::GTimer.GetTimeInfo();
+//   double dt = Engine::GTimer.GetDelta(TimeDomain::Scaled);
+//
+// DESIGN:
+//   - Provides both unscaled (wall) and scaled (game) time domains
+//   - TimeInfo struct gives immutable snapshot of frame timing
+//   - Supports pause/resume and time scaling for slow-mo effects
+//
+// NOTES:
+//   - Singleton accessed via Engine::GTimer global reference
+//   - Initialize() called automatically on first Tick() if omitted
+//   - Frame counter is 1-based
+// ============================================================================
+
 #pragma once
 
 #include <atomic>
@@ -6,12 +29,13 @@
 
 namespace Engine
 {
-	// -------------------------------------------------------------------------
-	// Clock types (internal). Kept inside namespace to avoid global pollution.
-	// -------------------------------------------------------------------------
+	// ========================================================================
+	// Internal Clock Types
+	// ========================================================================
+
 	using Clock = std::chrono::steady_clock;
 	using TimePoint = Clock::time_point;
-	using Duration = std::chrono::duration<double>;  // seconds, double-precision
+	using Duration = std::chrono::duration<double>;  ///< Seconds, double-precision
 
 	// Supported time display units. Default is Milliseconds (convenient for UI).
 	enum class TimeUnit : uint8_t

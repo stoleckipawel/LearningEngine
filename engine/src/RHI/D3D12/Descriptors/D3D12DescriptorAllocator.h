@@ -1,14 +1,30 @@
-#pragma once
+// ============================================================================
+// D3D12DescriptorAllocator.h
+// ----------------------------------------------------------------------------
+// Free-list based allocator for D3D12 descriptor heap slots.
+//
+// USAGE:
+//   D3D12DescriptorAllocator allocator(&heap);
+//   auto handle = allocator.Allocate();
+//   // ... use descriptor ...
+//   allocator.Free(handle);
+//
+// DESIGN:
+//   - Fast Allocate/Free of individual descriptor slots by index
+//   - Supports contiguous block allocation for descriptor tables
+//   - Thread-safe via internal mutex
+//
+// NOTES:
+//   - Does not own the heap; heap must outlive allocator
+//   - Freed slots are reused on subsequent allocations
+// ============================================================================
 
-// D3D12DescriptorAllocator: Free-list based allocator for D3D12 descriptor heaps.
-// Provides fast Allocate/Free of individual descriptor slots by index.
-// Thread-safe via internal mutex.
+#pragma once
 
 #include <vector>
 #include <mutex>
 #include "D3D12DescriptorHeap.h"
 
-// Manages allocation of descriptor indices within a single descriptor heap.
 class D3D12DescriptorAllocator
 {
   public:

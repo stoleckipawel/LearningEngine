@@ -1,18 +1,19 @@
+// ============================================================================
+// AssetSource.h
+// Identifies the origin of engine assets (Project vs Engine).
+// ----------------------------------------------------------------------------
+// USAGE:
+//   auto path = GAssetSystem.GetShaderPath(AssetSource::Engine);
+//   auto name = GetAssetSourceName(AssetSource::Project);  // "Project"
+//
+// DESIGN:
+//   - Project assets can override engine defaults
+//   - AssetSource::Any checks Project first, then Engine
+// ============================================================================
 #pragma once
 
 #include <cstdint>
 #include <string_view>
-
-// =============================================================================
-// AssetSource: Identifies Where an Asset Originates
-// =============================================================================
-//
-// Assets come from two locations:
-//   - Project: Game-specific assets that can override engine defaults
-//   - Engine:  Built-in engine assets (shaders, default textures, etc.)
-//
-// When using AssetSource::Any, Project assets take precedence over Engine.
-//
 
 enum class AssetSource : uint8_t
 {

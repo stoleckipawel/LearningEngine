@@ -1,17 +1,13 @@
-#pragma once
-
-#include <cstdint>
-#include <string_view>
-
-// =============================================================================
-// AssetType: Classification of Engine Assets
-// =============================================================================
+// ============================================================================
+// AssetTypes.h
+// Classification of engine asset types with directory mapping.
+// ----------------------------------------------------------------------------
+// USAGE:
+//   auto subdir = GetAssetSubdirectory(AssetType::Texture);  // "textures"
 //
-// Each asset type maps to a canonical subdirectory under the asset root.
-// This enables:
-//   - Automatic path resolution (e.g., "diffuse.png" -> "textures/diffuse.png")
-//   - Type-specific loading strategies (shaders compiled differently than textures)
-//   - Organized asset folder structure that mirrors the enum
+// DESIGN:
+//   Each asset type maps to a canonical subdirectory under the asset root.
+//   This enables automatic path resolution and type-specific loading.
 //
 // DIRECTORY STRUCTURE:
 //   assets/
@@ -22,9 +18,12 @@
 //   ├── materials/         <- AssetType::Material
 //   ├── scenes/            <- AssetType::Scene
 //   ├── audio/             <- AssetType::Audio
-//   ├── fonts/             <- AssetType::Font
-//
-//
+//   └── fonts/             <- AssetType::Font
+// ============================================================================
+#pragma once
+
+#include <cstdint>
+#include <string_view>
 
 enum class AssetType : uint8_t
 {

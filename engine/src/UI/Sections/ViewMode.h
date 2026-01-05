@@ -1,10 +1,28 @@
+// ============================================================================
+// ViewMode.h
+// ----------------------------------------------------------------------------
+// UI section for selecting debug visualization modes.
+//
+// USAGE:
+//   ViewMode viewMode;
+//   auto currentMode = viewMode.Get();
+//   viewMode.BuildUI();  // Called each frame in ImGui context
+//
+// DESIGN:
+//   - Implements UIRendererSection interface for panel integration
+//   - Type enum maps to ViewModes.hlsli shader defines
+//   - Renders radio buttons for each view mode option
+//
+// SYNC WITH:
+//   Debug/ViewModes.hlsli (shader view mode indices)
+// ============================================================================
+
 #pragma once
 
 #include <cstdint>
 
 #include "Framework/UIRendererSection.h"
 
-// ViewMode holds the user-selected debug view for the renderer.
 class ViewMode final : public UIRendererSection
 {
   public:

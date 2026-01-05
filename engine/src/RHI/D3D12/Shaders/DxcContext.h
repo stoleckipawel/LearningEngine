@@ -1,3 +1,25 @@
+// ============================================================================
+// DxcContext.h
+// ----------------------------------------------------------------------------
+// Manages the lifetime of DXC COM interfaces for shader compilation.
+//
+// USAGE:
+//   DxcContext& ctx = GetDxcContext();  // Thread-safe singleton
+//   if (ctx.IsValid()) {
+//       auto* compiler = ctx.GetCompiler();
+//       auto includeHandler = ctx.CreateIncludeHandler();
+//   }
+//
+// DESIGN:
+//   - Creating DXC instances is expensive; this allows reuse
+//   - Singleton pattern via GetDxcContext() for shared access
+//   - Non-copyable/non-movable to prevent COM interface issues
+//
+// NOTES:
+//   - IsValid() should be checked before using compiler interfaces
+//   - Include handler is created fresh per compilation
+// ============================================================================
+
 #pragma once
 
 #include <dxcapi.h>
@@ -5,8 +27,6 @@
 
 using Microsoft::WRL::ComPtr;
 
-// Manages the lifetime of DXC COM interfaces.
-// Creating DXC instances is expensive; this class allows reuse across compilations.
 class DxcContext
 {
   public:

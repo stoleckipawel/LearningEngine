@@ -1,8 +1,13 @@
+// ============================================================================
+// PrimitiveSphere.h
+// ----------------------------------------------------------------------------
+// UV sphere primitive mesh with configurable tessellation.
+// ============================================================================
+
 #pragma once
 
 #include "Scene/Mesh.h"
 
-// PrimitiveSphere — a UV sphere primitive for rendering. Inherits from Mesh.
 class PrimitiveSphere : public Mesh
 {
   public:

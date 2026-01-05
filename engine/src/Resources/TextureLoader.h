@@ -1,9 +1,29 @@
+// ============================================================================
+// TextureLoader.h
+// ----------------------------------------------------------------------------
+// Loads image files from disk using Windows Imaging Component (WIC).
+//
+// USAGE:
+//   TextureLoader loader("textures/diffuse.png");
+//   const auto& data = loader.GetData();
+//   // data.data, data.width, data.height, data.dxgiPixelFormat, etc.
+//
+// SUPPORTED FORMATS:
+//   - Common image formats (PNG, JPEG, BMP, etc.) via WIC
+//   - Limited DXGI format conversion (expand s_lookupTable as needed)
+//
+// DESIGN:
+//   - Returns raw pixel data as uint8_t vector for unambiguous byte storage
+//   - Data struct includes dimensions, stride, and DXGI format
+//   - Conversion from WIC to DXGI format via lookup table
+//
+// NOTES:
+//   - Throws on unsupported formats or load failures
+//   - Pixel data is in CPU memory; caller uploads to GPU
+// ============================================================================
+
 #pragma once
 
-// TextureLoader provides methods for loading images from disk using WIC.
-// Notes:
-// - The returned pixel buffer uses `uint8_t` for unambiguous byte-sized storage.
-// - The loader only supports a small set of WIC pixel formats (expand as needed).
 class TextureLoader
 {
   public:

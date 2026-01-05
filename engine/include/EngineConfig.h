@@ -1,58 +1,90 @@
-#pragma once
+// ============================================================================
+// EngineConfig.h
+// ----------------------------------------------------------------------------
+// Engine-wide configuration constants and compile-time toggles.
+//
+// DESIGN:
+//   - Header-only with minimal dependencies for cheap inclusion everywhere
+//   - Compile-time macros for feature toggles (GUI, validation, etc.)
+//   - Runtime-configurable settings in EngineSettings namespace
+//
+// NOTES:
+//   - Modify EngineSettings values at runtime for app-specific behavior
+//   - FramesInFlight affects resource allocation and latency
+// ============================================================================
 
-// Engine-wide configuration constants.
-// Keep very small and header-only so they are cheap to include everywhere.
+#pragma once
 
 #include <string>
 #include <dxgi1_6.h>
 
-// Compile-time toggle to completely exclude GUI from builds when set to 0.
+// ============================================================================
+// Compile-Time Feature Toggles
+// ============================================================================
+
+/// Set to 0 to completely exclude GUI from builds.
 #define USE_GUI 1
 // #define USE_IMGUI_DEMO_WINDOW 1
 
-// Shader compilation helpers. These are enabled by default for debug builds
-// to include extra debug info and to ease shader debugging.
+/// Shader compilation flags (enabled by default in debug builds).
 #if defined(_DEBUG)
-	#define ENGINE_SHADERS_OPTIMIZED 1
-	#define ENGINE_SHADERS_DEBUG 1
+	#define ENGINE_SHADERS_OPTIMIZED 1  ///< Enable shader optimizations
+	#define ENGINE_SHADERS_DEBUG 1      ///< Include shader debug info
 #endif
 
-// Enable GPU validation (D3D12/DXGI SDK layers). On in debug builds by default.
+/// GPU validation layers (D3D12/DXGI SDK layers).
 #if defined(_DEBUG)
 	#define ENGINE_GPU_VALIDATION 1
 #endif
 
-// Report live D3D/DXGI objects at shutdown (useful for leak detection).
+/// Report live D3D/DXGI objects at shutdown for leak detection.
 #if defined(_DEBUG)
 	#define ENGINE_REPORT_LIVE_OBJECTS 1
 #endif
 
+// ============================================================================
+// Runtime Configuration
+// ============================================================================
+
 namespace EngineSettings
 {
-	// Number of frames that can be processed simultaneously (frames in flight).
-	// Increasing this reduces CPU-GPU synchronization but increases latency and
-	// memory usage because more per-frame resources are required.
+	// ------------------------------------------------------------------------
+	// Rendering
+	// ------------------------------------------------------------------------
+
+	/// Number of frames that can be processed simultaneously.
+	/// Higher values reduce CPU-GPU sync but increase latency and memory.
 	inline constexpr unsigned FramesInFlight = 2u;
 
-	// Back buffer format
+	/// Back buffer pixel format.
 	inline constexpr DXGI_FORMAT BackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-	// Presentation: when true, `SwapChain::Present` uses
-	// vertical-sync. Setting to false allows uncapped presents (or tearing
-	// if supported) and can reduce latency for benchmarking.
+	/// Enable vertical sync. False allows uncapped presents or tearing.
 	inline bool VSync = true;
 
-	// Start the application fullscreen when true.
+	// ------------------------------------------------------------------------
+	// Window
+	// ------------------------------------------------------------------------
+
+	/// Start in fullscreen mode when true.
 	inline bool StartFullscreen = false;
-	// Initial window title; application code may modify at runtime.
+
+	/// Initial window title (modifiable at runtime).
 	inline std::string WindowTitle = "Sparkle Engine";
 
-	// Prefer high-performance adapter when enumerating GPUs. When true, queries
-	// adapters by GPU preference; otherwise falls back to power-saving preference.
+	// ------------------------------------------------------------------------
+	// Hardware
+	// ------------------------------------------------------------------------
+
+	/// Prefer high-performance GPU when enumerating adapters.
 	inline bool PreferHighPerformanceAdapter = true;
 
-	// Global shader model level (major/minor) used by shader compiler.
-	// Change these to target a different shader model for the whole engine.
+	// ------------------------------------------------------------------------
+	// Shaders
+	// ------------------------------------------------------------------------
+
+	/// Target shader model version (e.g., 6.0 for SM 6.0).
 	inline constexpr int ShaderModelMajor = 6;
 	inline constexpr int ShaderModelMinor = 0;
+
 }  // namespace EngineSettings

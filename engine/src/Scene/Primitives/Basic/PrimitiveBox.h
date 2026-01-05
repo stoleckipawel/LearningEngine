@@ -1,9 +1,13 @@
+// ============================================================================
+// PrimitiveBox.h
+// ----------------------------------------------------------------------------
+// Unit cube primitive mesh centered at origin.
+// ============================================================================
+
 #pragma once
 
 #include "Scene/Mesh.h"
 
-// PrimitiveBox — a 3D cube/box primitive for rendering. Inherits from Mesh.
-// Provides mesh data for a unit cube centered at the origin.
 class PrimitiveBox : public Mesh
 {
   public:

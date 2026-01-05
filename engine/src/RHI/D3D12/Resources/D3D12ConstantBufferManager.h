@@ -1,3 +1,25 @@
+// ============================================================================
+// D3D12ConstantBufferManager.h
+// Centralized constant buffer management with GPU/CPU synchronization.
+// ----------------------------------------------------------------------------
+// USAGE:
+//   D3D12ConstantBufferManager::Get().Initialize();
+//   auto gpuAddr = D3D12ConstantBufferManager::Get().GetPerFrameGpuAddress();
+//   D3D12ConstantBufferManager::Get().UpdatePerFrame(frameData);
+//
+// DESIGN:
+//   Per-Frame/Per-View CBs:
+//     Use persistent ConstantBuffer<T> instances (one per frame-in-flight).
+//     Updated once per frame, bound to root CBV slots.
+//
+//   Per-Object CBs:
+//     Use FrameResourceManager's linear allocator for suballocation per-draw.
+//     UpdatePerObjectXXX() returns a unique GPU VA per call.
+//
+// NOTES:
+//   - Per-object allocations are thread-safe (atomic linear allocator)
+//   - Per-frame/per-view updates should be called from main thread
+// ============================================================================
 #pragma once
 #include <d3d12.h>
 #include <wrl/client.h>
@@ -5,28 +27,6 @@
 #include <array>
 #include "D3D12ConstantBufferData.h"
 #include "D3D12ConstantBuffer.h"
-
-//------------------------------------------------------------------------------
-// ConstantBufferManager
-//------------------------------------------------------------------------------
-// Manages constant buffer updates with proper GPU/CPU synchronization.
-//
-// Architecture:
-//   - Per-Frame/Per-View CBs: Use persistent ConstantBuffer<T> instances
-//     (one per frame-in-flight). These are updated once per frame and bound
-//     to root CBV slots. Simple and efficient for low-frequency updates.
-//
-//   - Per-Object CBs: Use FrameResourceManager's linear allocator to
-//     suballocate per-draw.
-//
-// Binding Pattern:
-//   - Per-Frame/Per-View: Bound once per frame via GetXXXGpuAddress()
-//   - Per-Object: UpdatePerObjectXXX() returns a unique GPU VA per call
-//
-// Thread Safety:
-//   - Per-object allocations are thread-safe (atomic linear allocator)
-//   - Per-frame/per-view updates should be called from main thread
-//------------------------------------------------------------------------------
 
 class D3D12ConstantBufferManager final
 {
