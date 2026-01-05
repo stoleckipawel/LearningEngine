@@ -4,6 +4,12 @@
 // Override Pre/Post hooks to extend behavior without replacing engine steps.
 class __PROJECT_NAME__ : public App
 {
+  public:
+	__PROJECT_NAME__()
+		: App("__PROJECT_NAME__")
+	{
+	}
+
   protected:
 	// Startup: load content, register systems, etc.
 	void PreInitialize() override {}

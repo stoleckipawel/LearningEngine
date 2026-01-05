@@ -16,13 +16,15 @@
 // ============================================================================
 #pragma once
 
+#include <string>
+
 // Application base using the Non-Virtual Interface (NVI) pattern.
 // Engine-owned public methods enforce sequencing and call user hooks
 // before and after the engine's main work, enabling extension without replacement.
 class App
 {
   public:
-	App() = default;
+	explicit App(std::string windowTitle);
 	~App() = default;
 
 	// Entry point to run the application.
@@ -50,10 +52,14 @@ class App
 	// Encapsulated per-frame main loop; called by Run().
 	void RenderLoop();
 
+	[[nodiscard]] const std::string& GetWindowTitle() const noexcept { return m_windowTitle; }
+
   private:
 	// Engine-controlled lifecycle
 	void Initialize();
 	void Render();
 	void Resize();
 	void Shutdown();
+
+	std::string m_windowTitle;
 };

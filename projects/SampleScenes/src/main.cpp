@@ -4,6 +4,12 @@
 // Override Pre/Post hooks to extend behavior without replacing engine steps.
 class SampleScenes : public App
 {
+  public:
+	SampleScenes()
+		: App("SampleScenes")
+	{
+	}
+
   protected:
 	// Startup: load content, register systems, etc.
 	void PreInitialize() override {}

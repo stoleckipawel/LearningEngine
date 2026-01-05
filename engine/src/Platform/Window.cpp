@@ -46,7 +46,7 @@ DirectX::XMFLOAT2 Window::GetViewportSizeInv() const noexcept
 }
 
 // Initializes the window and registers its class
-void Window::Initialize()
+void Window::Initialize(std::string_view windowTitle)
 {
 	// Create window class description
 	WNDCLASSEXW windowClass{0};
@@ -66,8 +66,8 @@ void Window::Initialize()
 		LOG_FATAL("Failed to register window class");
 	}
 
-	// Convert configured window title to wide string
-	std::wstring wtitle(EngineSettings::WindowTitle.begin(), EngineSettings::WindowTitle.end());
+	// Convert app-provided window title to wide string
+	std::wstring wtitle(windowTitle.begin(), windowTitle.end());
 
 	// Create the window with configured initial size
 	m_windowHWND = CreateWindowExW(

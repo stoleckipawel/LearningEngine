@@ -4,6 +4,12 @@
 // Override Pre/Post hooks to extend behavior without replacing engine steps.
 class HelloWorld : public App
 {
+  public:
+	HelloWorld()
+		: App("HelloWorld")
+	{
+	}
+
   protected:
 	// Startup: load content, register systems, etc.
 	void PreInitialize() override {}

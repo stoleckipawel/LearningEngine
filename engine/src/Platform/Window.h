@@ -26,6 +26,7 @@
 
 #include <Windows.h>
 #include <DirectXMath.h>
+#include <string_view>
 
 // =============================================================================
 // Window
@@ -45,8 +46,8 @@ class Window final
 	// Lifecycle
 	// =========================================================================
 
-	// Creates the application window using settings from EngineConfig.
-	void Initialize();
+	// Creates the application window using app-provided parameters and EngineSettings.
+	void Initialize(std::string_view windowTitle);
 
 	// Destroys the window and unregisters the window class.
 	void Shutdown();

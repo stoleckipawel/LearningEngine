@@ -69,9 +69,6 @@ namespace EngineSettings
 	/// Start in fullscreen mode when true.
 	inline bool StartFullscreen = false;
 
-	/// Initial window title (modifiable at runtime).
-	inline std::string WindowTitle = "Sparkle Engine";
-
 	// ------------------------------------------------------------------------
 	// Hardware
 	// ------------------------------------------------------------------------

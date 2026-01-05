@@ -5,6 +5,13 @@
 #include "Renderer.h"
 #include "Assets/AssetSystem.h"
 
+#include <utility>
+
+App::App(std::string windowTitle)
+	: m_windowTitle(std::move(windowTitle))
+{
+}
+
 void App::Run()
 {
 	// Initialize platform window + renderer
@@ -39,7 +46,7 @@ void App::Initialize()
 	GAssetSystem.Initialize();
 
 	// Engine base init
-	GWindow.Initialize();
+	GWindow.Initialize(GetWindowTitle());
 	GRenderer.Initialize();
 
 	// User can extend after engine init
