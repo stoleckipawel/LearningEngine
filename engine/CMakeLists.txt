@@ -18,8 +18,9 @@ add_library(SparkleEngine STATIC
   ${ENGINE_HEADERS}
 )
 
-# Add ImGui third-party library
+# Add third-party libraries
 add_subdirectory(third_party/imgui)
+add_subdirectory(third_party/cgltf)
 
 # Include directories
 # Public: exposed to consumers (projects, games)
@@ -70,6 +71,7 @@ target_link_libraries(SparkleEngine PUBLIC
   dxguid
   dxcompiler
   imgui
+  cgltf
 )
 
 # Set compiler flags for debug builds.
