@@ -23,15 +23,15 @@
 //   ├── Dispatch/
 //   │   ├── InputLayer.h      ← Priority layers
 //   │   └── DispatchMode.h    ← Event dispatch timing
-//   ├── Events/
-//   │   ├── InputEvent.h      ← Convenience header for all events
-//   │   ├── KeyboardEvent.h   ← Keyboard key press/release
-//   │   ├── MouseButtonEvent.h← Mouse button press/release
-//   │   ├── MouseMoveEvent.h  ← Mouse cursor movement
-//   │   └── MouseWheelEvent.h ← Mouse wheel scroll
-//   └── Callback/
-//       ├── InputCallbackHandle.h ← RAII subscription handle
-//       └── InputCallbackScope.h  ← Container for multiple handles
+//   └── Events/
+//       ├── InputEvent.h      ← Convenience header for all events
+//       ├── KeyboardEvent.h   ← Keyboard key press/release
+//       ├── MouseButtonEvent.h← Mouse button press/release
+//       ├── MouseMoveEvent.h  ← Mouse cursor movement
+//       └── MouseWheelEvent.h ← Mouse wheel scroll
+//
+// NOTE: For event subscription/RAII handles, use Core/Events/Event.h
+//       which provides Event<>, EventHandle, and ScopedEventHandle.
 //
 // =============================================================================
 
@@ -58,8 +58,4 @@
 
 // Events
 #include "Events/InputEvent.h"
-
-// Callback
-#include "Callback/InputCallbackHandle.h"
-#include "Callback/InputCallbackScope.h"
 

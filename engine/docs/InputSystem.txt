@@ -149,8 +149,11 @@ engine/src/
 │   │   │   ├── MouseButtonEvent.h    // Mouse button press/release
 │   │   │   ├── MouseMoveEvent.h      // Mouse cursor movement
 │   │   │   └── MouseWheelEvent.h     // Mouse wheel scroll
-│   │   ├── InputState.h              // Thread-safe pollable state
-│   │   └── InputCallbackHandle.h     // RAII subscription handle
+│   │   └── InputState.h              // Thread-safe pollable state
+│   │
+│   └── Events/
+│       └── Event.h                   // Generic multicast event (SHARED)
+│                                     // Provides EventHandle, ScopedEventHandle
 │
 ├── Platform/
 │   ├── Input/
@@ -451,49 +454,51 @@ private:
 
 ---
 
-### 4. Core/Input/InputCallbackHandle.h
+### 4. (UNIFIED) Core/Events/Event.h — Shared Event Infrastructure
 
-**Purpose**: RAII handle for automatic callback unsubscription.
+**Purpose**: Generic multicast event system used across the entire engine.
+
+**DESIGN DECISION**: Instead of creating duplicate callback infrastructure for input,
+InputSystem uses the existing Event<> template from Core/Events/Event.h.
 
 ```cpp
-class InputCallbackHandle
-{
-public:
-    InputCallbackHandle() = default;
-    ~InputCallbackHandle();
-    
-    // Move-only
-    InputCallbackHandle(InputCallbackHandle&& other) noexcept;
-    InputCallbackHandle& operator=(InputCallbackHandle&& other) noexcept;
-    
-    InputCallbackHandle(const InputCallbackHandle&) = delete;
-    InputCallbackHandle& operator=(const InputCallbackHandle&) = delete;
-    
-    // Manual control
-    void Unsubscribe() noexcept;
-    [[nodiscard]] bool IsValid() const noexcept;
-    [[nodiscard]] explicit operator bool() const noexcept;
+// Already exists in Core/Events/Event.h:
 
-private:
-    friend class InputSystem;
-    
-    using UnsubscribeFn = std::function<void()>;
-    
-    explicit InputCallbackHandle(UnsubscribeFn&& unsubscribe);
-    
-    UnsubscribeFn m_unsubscribe;
+// Opaque handle for subscription management
+struct EventHandle
+{
+    uint32_t Id = 0;
+    bool IsValid() const noexcept { return Id != 0; }
 };
 
-// Convenience container for multiple handles
-class InputCallbackScope
-{
-public:
-    void Add(InputCallbackHandle&& handle);
-    void Clear();  // Unsubscribe all
-    
-private:
-    std::vector<InputCallbackHandle> m_handles;
-};
+// Generic multicast event with fixed-capacity storage
+template <typename Signature, std::size_t Capacity = 8>
+class Event;  // Specialization for void(Args...)
+
+// RAII auto-unsubscribe wrapper
+class ScopedEventHandle;
+```
+
+**Benefits of Unification**:
+- Single event system across entire engine
+- Reuse existing EventHandle and ScopedEventHandle
+- Fixed-capacity storage (no heap allocations per subscription)
+- Already battle-tested code
+
+**Usage in InputSystem**:
+```cpp
+// InputSystem exposes public events:
+Event<void(const KeyboardEvent&)>    OnKeyPressed;
+Event<void(const MouseMoveEvent&)>   OnMouseMove;
+// etc.
+
+// Subscription:
+auto handle = inputSystem.OnKeyPressed.Add([](const KeyboardEvent& e) {
+    // Handle key press
+});
+
+// RAII auto-unsubscribe:
+ScopedEventHandle scoped(inputSystem.OnKeyPressed, handle);
 ```
 
 ---
@@ -607,44 +612,15 @@ public:
     [[nodiscard]] InputLayer GetActiveLayer() const noexcept;
     
     //-------------------------------------------------------------------------
-    // Event subscription with RAII handles
+    // Public Events (subscribe via Event<>::Add, use ScopedEventHandle for RAII)
     //-------------------------------------------------------------------------
     
-    [[nodiscard]] InputCallbackHandle SubscribeKeyPressed(
-        std::function<void(const KeyboardEvent&)> callback,
-        InputLayer layer = InputLayer::Gameplay,
-        DispatchMode mode = DispatchMode::Immediate
-    );
-    
-    [[nodiscard]] InputCallbackHandle SubscribeKeyReleased(
-        std::function<void(const KeyboardEvent&)> callback,
-        InputLayer layer = InputLayer::Gameplay,
-        DispatchMode mode = DispatchMode::Immediate
-    );
-    
-    [[nodiscard]] InputCallbackHandle SubscribeMouseButtonPressed(
-        std::function<void(const MouseButtonEvent&)> callback,
-        InputLayer layer = InputLayer::Gameplay,
-        DispatchMode mode = DispatchMode::Immediate
-    );
-    
-    [[nodiscard]] InputCallbackHandle SubscribeMouseButtonReleased(
-        std::function<void(const MouseButtonEvent&)> callback,
-        InputLayer layer = InputLayer::Gameplay,
-        DispatchMode mode = DispatchMode::Immediate
-    );
-    
-    [[nodiscard]] InputCallbackHandle SubscribeMouseMoved(
-        std::function<void(const MouseMoveEvent&)> callback,
-        InputLayer layer = InputLayer::Gameplay,
-        DispatchMode mode = DispatchMode::Deferred  // High frequency, default deferred
-    );
-    
-    [[nodiscard]] InputCallbackHandle SubscribeMouseWheel(
-        std::function<void(const MouseWheelEvent&)> callback,
-        InputLayer layer = InputLayer::Gameplay,
-        DispatchMode mode = DispatchMode::Immediate
-    );
+    Event<void(const KeyboardEvent&)>    OnKeyPressed;
+    Event<void(const KeyboardEvent&)>    OnKeyReleased;
+    Event<void(const MouseButtonEvent&)> OnMouseButtonPressed;
+    Event<void(const MouseButtonEvent&)> OnMouseButtonReleased;
+    Event<void(const MouseMoveEvent&)>   OnMouseMove;
+    Event<void(const MouseWheelEvent&)>  OnMouseWheel;
     
     //-------------------------------------------------------------------------
     // Mouse capture control
@@ -658,42 +634,8 @@ public:
     void SetCursorConfined(void* windowHandle, bool confined);
 
 private:
-    // Typed callback entries (one per event type)
-    template<typename TEvent>
-    struct CallbackEntry
-    {
-        uint64_t id;
-        InputLayer layer;
-        DispatchMode mode;
-        std::function<void(const TEvent&)> callback;
-    };
-    
-    template<typename TEvent>
-    void DispatchTypedEvent(const TEvent& event, 
-                            const std::vector<CallbackEntry<TEvent>>& callbacks,
-                            bool immediate);
-    void UnsubscribeCallback(uint64_t id);
-    
     std::unique_ptr<IInputBackend> m_backend;
     InputState m_state;
-    
-    // Callback storage (separate typed vectors - no std::variant)
-    std::mutex m_callbackMutex;
-    std::vector<CallbackEntry<KeyboardEvent>> m_keyPressedCallbacks;
-    std::vector<CallbackEntry<KeyboardEvent>> m_keyReleasedCallbacks;
-    std::vector<CallbackEntry<MouseButtonEvent>> m_mouseButtonPressedCallbacks;
-    std::vector<CallbackEntry<MouseButtonEvent>> m_mouseButtonReleasedCallbacks;
-    std::vector<CallbackEntry<MouseMoveEvent>> m_mouseMovedCallbacks;
-    std::vector<CallbackEntry<MouseWheelEvent>> m_mouseWheelCallbacks;
-    
-    std::atomic<uint64_t> m_nextCallbackId{1};
-    
-    // Deferred event queues (separate typed vectors - no std::variant)
-    std::mutex m_eventQueueMutex;
-    std::vector<KeyboardEvent> m_deferredKeyboardEvents;
-    std::vector<MouseButtonEvent> m_deferredMouseButtonEvents;
-    std::vector<MouseMoveEvent> m_deferredMouseMoveEvents;
-    std::vector<MouseWheelEvent> m_deferredMouseWheelEvents;
     
     // Layer state
     std::array<std::atomic<bool>, static_cast<size_t>(InputLayer::Count)> m_layerEnabled;
