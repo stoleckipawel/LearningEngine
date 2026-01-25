@@ -1,10 +1,4 @@
 
-Step 3: (UNIFIED) Use Existing Core/Events/Event.h
-Goal: Leverage existing event infrastructure for input callbacks.
-
-Files: ALREADY EXISTS
-
-engine/src/Core/Events/Event.h (no changes needed)
 
 Design Decision: Instead of creating duplicate callback infrastructure,
 InputSystem will use the existing Event<> template:
