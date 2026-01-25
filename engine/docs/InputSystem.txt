@@ -1,0 +1,1044 @@
+# Input System Architecture — Complete Design Document
+
+## Executive Summary
+
+A **platform-agnostic, thread-safe, multi-layered input system** with:
+- Portable key abstraction (no platform-specific values in public API)
+- Immediate + deferred event dispatch with priority layers
+- Callback registration with RAII handle-based lifetime management
+- Camera system split: **RenderCamera** (renderer-owned) ↔ **CameraController** (gameplay-owned)
+- Designed for multi-threaded execution from day one
+
+---
+
+## Layer Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                                    APP LAYER                                         │
+│                                                                                      │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐   │
+│  │   Window    │    │  Renderer   │    │InputSystem  │    │   GameplayModule    │   │
+│  │  (Platform) │    │   (RHI)     │    │ (Platform)  │    │                     │   │
+│  └──────┬──────┘    └──────┬──────┘    └──────┬──────┘    └──────────┬──────────┘   │
+│         │                  │                  │                      │              │
+│         │                  │ owns             │ owns                 │ owns         │
+│         │                  ▼                  ▼                      ▼              │
+│         │           ┌────────────┐    ┌─────────────┐    ┌──────────────────────┐   │
+│         │           │RenderCamera│◄───│ InputState  │    │  CameraController    │   │
+│         │           │ (thread-   │    │ (atomic,    │    │  (reads InputState,  │   │
+│         │           │  safe)     │    │  lock-free) │    │   writes to          │   │
+│         │           └────────────┘    └─────────────┘    │   RenderCamera)      │   │
+│         │                  ▲                             └──────────────────────┘   │
+│         │                  │                                                        │
+│         │                  └── Thread Boundary ──────────────────────┘              │
+│         │                      (atomic operations)                                  │
+│         │                                                                           │
+└─────────┼───────────────────────────────────────────────────────────────────────────┘
+          │
+          │ WM_* messages (Win32)
+          ▼
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                              PLATFORM LAYER                                          │
+│                                                                                      │
+│  ┌──────────────────────────────────────────────────────────────────────────────┐   │
+│  │                        Platform Input Backend                                 │   │
+│  │                                                                               │   │
+│  │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐           │   │
+│  │  │ Win32Backend    │    │ (Future)        │    │ (Future)        │           │   │
+│  │  │                 │    │ LinuxBackend    │    │ GamepadBackend  │           │   │
+│  │  │ • Translates    │    │                 │    │                 │           │   │
+│  │  │   VK_* → Key    │    │ • XKB → Key     │    │ • XInput → Key  │           │   │
+│  │  │ • WM_MOUSE* →   │    │                 │    │                 │           │   │
+│  │  │   MouseEvent    │    │                 │    │                 │           │   │
+│  │  └─────────────────┘    └─────────────────┘    └─────────────────┘           │   │
+│  │                                                                               │   │
+│  └──────────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                      │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Module Dependency Graph
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Dependency Flow                           │
+│                     (arrows = "depends on")                      │
+└─────────────────────────────────────────────────────────────────┘
+
+                         ┌─────────┐
+                         │   App   │
+                         └────┬────┘
+                              │ owns all modules
+           ┌──────────────────┼──────────────────┐
+           │                  │                  │
+           ▼                  ▼                  ▼
+    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+    │   Window    │    │  Renderer   │    │  Gameplay   │
+    │  (Platform) │    │   (RHI)     │    │  (Logic)    │
+    └──────┬──────┘    └──────┬──────┘    └──────┬──────┘
+           │                  │                  │
+           │                  │ owns             │ owns
+           │                  ▼                  ▼
+           │           ┌────────────┐    ┌──────────────┐
+           │           │RenderCamera│    │CameraControl-│
+           │           └────────────┘    │    ler       │
+           │                  ▲          └──────┬───────┘
+           │                  │                 │
+           │                  └─────────────────┘
+           │                    writes transform
+           │
+           │ delivers raw OS input
+           ▼
+    ┌─────────────┐
+    │ InputSystem │◄───────────────────────────┐
+    └──────┬──────┘                            │
+           │                                   │ reads state
+           │ owns                              │
+           ▼                                   │
+    ┌─────────────┐                     ┌──────┴───────┐
+    │ InputState  │─────────────────────│CameraControl-│
+    │ (lock-free) │     shared read     │    ler       │
+    └─────────────┘                     └──────────────┘
+
+
+    ┌─────────────────────────────────────────────────────┐
+    │                    Core/Input/                       │
+    │  (No dependencies - pure types)                      │
+    │                                                      │
+    │  InputTypes.h ◄── InputEvent.h ◄── InputState.h     │
+    │                                                      │
+    └─────────────────────────────────────────────────────┘
+                         ▲
+                         │ used by all layers
+           ┌─────────────┼─────────────┐
+           │             │             │
+    ┌──────┴──────┐ ┌────┴────┐ ┌──────┴──────┐
+    │ InputSystem │ │Renderer │ │  Gameplay   │
+    └─────────────┘ └─────────┘ └─────────────┘
+```
+
+---
+
+## File Structure
+
+```
+engine/src/
+├── Core/
+│   ├── Input/
+│   │   ├── InputTypes.h              // Key, MouseButton, InputDevice, ModifierFlags
+│   │   ├── InputEvent.h              // KeyboardEvent, MouseEvent, InputEventVariant
+│   │   ├── InputState.h              // Thread-safe pollable state
+│   │   └── InputCallbackHandle.h     // RAII subscription handle
+│   └── Math/
+│       └── ScreenCoordinates.h       // ScreenPosition (int + normalized float)
+│
+├── Platform/
+│   ├── Input/
+│   │   ├── InputSystem.h             // Public API, event dispatch, priority layers
+│   │   ├── InputSystem.cpp
+│   │   ├── IInputBackend.h           // Abstract backend interface
+│   │   └── Win32/
+│   │       ├── Win32InputBackend.h   // Win32-specific translation
+│   │       └── Win32InputBackend.cpp
+│   └── Window.h / .cpp               // Modified to forward raw messages
+│
+├── Renderer/
+│   ├── Camera/
+│   │   ├── RenderCamera.h            // Thread-safe camera for renderer
+│   │   └── RenderCamera.cpp
+│   └── Renderer.h / .cpp             // Owns RenderCamera
+│
+├── Gameplay/
+│   └── Camera/
+│       ├── CameraController.h        // Consumes input, writes to RenderCamera
+│       └── CameraController.cpp
+│
+└── App.h / .cpp                      // Owns Window, Renderer, InputSystem, Gameplay
+```
+
+---
+
+## Component Specifications
+
+### 1. Core/Input/InputTypes.h
+
+**Purpose**: Platform-agnostic input enumerations and flags.
+
+```cpp
+// Portable key codes - abstract values, mapped from platform-specific codes
+enum class Key : uint16_t
+{
+    Unknown = 0,
+    
+    // Alphabet (1-26)
+    A = 1, B, C, D, E, F, G, H, I, J, K, L, M,
+    N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
+    
+    // Numbers (27-36)
+    Num0 = 27, Num1, Num2, Num3, Num4, Num5, Num6, Num7, Num8, Num9,
+    
+    // Function keys (37-48)
+    F1 = 37, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
+    
+    // Navigation
+    Up = 49, Down, Left, Right,
+    Home, End, PageUp, PageDown,
+    Insert, Delete,
+    
+    // Modifiers
+    LeftShift = 60, RightShift, LeftCtrl, RightCtrl,
+    LeftAlt, RightAlt, LeftSuper, RightSuper,
+    
+    // Common
+    Space = 70, Enter, Escape, Tab, Backspace,
+    CapsLock, NumLock, ScrollLock, PrintScreen, Pause,
+    
+    // Punctuation / symbols
+    Comma = 85, Period, Slash, Semicolon, Apostrophe,
+    LeftBracket, RightBracket, Backslash, Grave, Minus, Equals,
+    
+    // Numpad
+    Numpad0 = 100, Numpad1, Numpad2, Numpad3, Numpad4,
+    Numpad5, Numpad6, Numpad7, Numpad8, Numpad9,
+    NumpadDecimal, NumpadEnter, NumpadAdd, NumpadSubtract,
+    NumpadMultiply, NumpadDivide,
+    
+    Count
+};
+
+enum class MouseButton : uint8_t
+{
+    Left = 0,
+    Right = 1,
+    Middle = 2,
+    Button4 = 3,    // XButton1
+    Button5 = 4,    // XButton2
+    Count = 5
+};
+
+enum class InputDevice : uint8_t
+{
+    Keyboard,
+    Mouse,
+    Gamepad,        // Future
+    Touch,          // Future
+    Count
+};
+
+enum class KeyState : uint8_t
+{
+    Released = 0,   // Not pressed
+    Pressed,        // Just pressed this frame
+    Held,           // Held down (after first frame)
+};
+
+// Bitmask for modifier keys
+enum class ModifierFlags : uint8_t
+{
+    None  = 0,
+    Shift = 1 << 0,
+    Ctrl  = 1 << 1,
+    Alt   = 1 << 2,
+    Super = 1 << 3, // Windows key / Command
+};
+
+// Enable bitwise operations
+constexpr ModifierFlags operator|(ModifierFlags a, ModifierFlags b);
+constexpr ModifierFlags operator&(ModifierFlags a, ModifierFlags b);
+constexpr bool HasFlag(ModifierFlags flags, ModifierFlags test);
+
+// Priority layer for input consumption
+enum class InputLayer : uint8_t
+{
+    Debug = 0,      // Highest priority (console, debug tools)
+    UI = 1,         // ImGui, menus
+    Gameplay = 2,   // Camera, player control
+    Count
+};
+
+// Event dispatch mode
+enum class DispatchMode : uint8_t
+{
+    Immediate,      // Fire synchronously in WndProc context
+    Deferred,       // Queue for processing in BeginFrame
+};
+```
+
+**Key Design Decisions**:
+- Zero-based portable enum — translation happens in platform backend
+- `uint16_t` for Key allows future expansion (gamepad buttons, touch gestures)
+- `KeyState` is tri-state for precise frame-accurate queries
+- `DispatchMode` lets caller choose immediate vs deferred
+
+---
+
+### 2. Core/Input/InputEvent.h
+
+**Purpose**: Strongly-typed event structures for all input types.
+
+```cpp
+struct KeyboardEvent
+{
+    Key key = Key::Unknown;
+    KeyState state = KeyState::Released;
+    ModifierFlags modifiers = ModifierFlags::None;
+    bool isRepeat = false;  // OS auto-repeat
+    
+    [[nodiscard]] constexpr InputDevice GetDevice() const noexcept 
+    { 
+        return InputDevice::Keyboard; 
+    }
+};
+
+struct MousePosition
+{
+    int32_t x = 0;              // Screen pixels
+    int32_t y = 0;
+    float normalizedX = 0.0f;   // 0.0 to 1.0 (left to right)
+    float normalizedY = 0.0f;   // 0.0 to 1.0 (top to bottom)
+    
+    [[nodiscard]] DirectX::XMINT2 AsInt() const noexcept;
+    [[nodiscard]] DirectX::XMFLOAT2 AsFloat() const noexcept;
+    [[nodiscard]] DirectX::XMFLOAT2 AsNormalized() const noexcept;
+};
+
+struct MouseButtonEvent
+{
+    MouseButton button = MouseButton::Left;
+    KeyState state = KeyState::Released;
+    MousePosition position;
+    ModifierFlags modifiers = ModifierFlags::None;
+    
+    [[nodiscard]] constexpr InputDevice GetDevice() const noexcept 
+    { 
+        return InputDevice::Mouse; 
+    }
+};
+
+struct MouseMoveEvent
+{
+    MousePosition position;
+    DirectX::XMFLOAT2 delta;    // Movement since last event (pixels)
+    ModifierFlags modifiers = ModifierFlags::None;
+    
+    [[nodiscard]] constexpr InputDevice GetDevice() const noexcept 
+    { 
+        return InputDevice::Mouse; 
+    }
+};
+
+struct MouseWheelEvent
+{
+    float delta = 0.0f;         // Positive = scroll up/forward
+    MousePosition position;
+    ModifierFlags modifiers = ModifierFlags::None;
+    bool isHorizontal = false;  // Horizontal scroll wheel
+    
+    [[nodiscard]] constexpr InputDevice GetDevice() const noexcept 
+    { 
+        return InputDevice::Mouse; 
+    }
+};
+
+// Type-safe variant for queued/deferred events
+using InputEventVariant = std::variant<
+    KeyboardEvent,
+    MouseButtonEvent,
+    MouseMoveEvent,
+    MouseWheelEvent
+>;
+```
+
+---
+
+### 3. Core/Input/InputState.h
+
+**Purpose**: Thread-safe, lock-free pollable snapshot of current input state.
+
+```cpp
+class InputState
+{
+public:
+    // Keyboard queries (lock-free atomic reads)
+    [[nodiscard]] KeyState GetKeyState(Key key) const noexcept;
+    [[nodiscard]] bool IsKeyDown(Key key) const noexcept;       // Pressed or Held
+    [[nodiscard]] bool IsKeyPressed(Key key) const noexcept;    // Just pressed this frame
+    [[nodiscard]] bool IsKeyReleased(Key key) const noexcept;   // Just released this frame
+    [[nodiscard]] bool IsKeyHeld(Key key) const noexcept;       // Held (not first frame)
+    
+    // Mouse button queries
+    [[nodiscard]] KeyState GetMouseButtonState(MouseButton button) const noexcept;
+    [[nodiscard]] bool IsMouseButtonDown(MouseButton button) const noexcept;
+    [[nodiscard]] bool IsMouseButtonPressed(MouseButton button) const noexcept;
+    [[nodiscard]] bool IsMouseButtonReleased(MouseButton button) const noexcept;
+    
+    // Mouse position
+    [[nodiscard]] MousePosition GetMousePosition() const noexcept;
+    [[nodiscard]] DirectX::XMFLOAT2 GetMouseDelta() const noexcept;
+    [[nodiscard]] float GetMouseWheelDelta() const noexcept;
+    
+    // Modifier state
+    [[nodiscard]] ModifierFlags GetModifiers() const noexcept;
+    [[nodiscard]] bool HasModifier(ModifierFlags flag) const noexcept;
+    
+    // Mouse capture state
+    [[nodiscard]] bool IsMouseCaptured() const noexcept;
+
+private:
+    friend class InputSystem;
+    
+    // Called by InputSystem from platform thread
+    void SetKeyState(Key key, KeyState state) noexcept;
+    void SetMouseButtonState(MouseButton button, KeyState state) noexcept;
+    void SetMousePosition(const MousePosition& pos) noexcept;
+    void AccumulateMouseDelta(float dx, float dy) noexcept;
+    void AccumulateWheelDelta(float delta) noexcept;
+    void SetModifiers(ModifierFlags mods) noexcept;
+    void SetMouseCaptured(bool captured) noexcept;
+    
+    // Called at frame boundaries
+    void BeginFrame() noexcept;  // Transition Pressed→Held, clear deltas
+    void EndFrame() noexcept;
+    
+    // Atomic storage for thread safety
+    std::array<std::atomic<uint8_t>, static_cast<size_t>(Key::Count)> m_keyStates{};
+    std::array<std::atomic<uint8_t>, static_cast<size_t>(MouseButton::Count)> m_mouseButtonStates{};
+    
+    std::atomic<int32_t> m_mouseX{0};
+    std::atomic<int32_t> m_mouseY{0};
+    std::atomic<float> m_mouseNormX{0.0f};
+    std::atomic<float> m_mouseNormY{0.0f};
+    
+    std::atomic<float> m_mouseDeltaX{0.0f};
+    std::atomic<float> m_mouseDeltaY{0.0f};
+    std::atomic<float> m_wheelDelta{0.0f};
+    
+    std::atomic<uint8_t> m_modifiers{0};
+    std::atomic<bool> m_mouseCaptured{false};
+};
+```
+
+**Thread Safety Notes**:
+- All members are `std::atomic` for lock-free access
+- Reads from gameplay thread, writes from platform/input thread
+- Delta accumulation uses atomic fetch_add for safe concurrent updates
+- `BeginFrame()` called from main thread before processing input
+
+---
+
+### 4. Core/Input/InputCallbackHandle.h
+
+**Purpose**: RAII handle for automatic callback unsubscription.
+
+```cpp
+class InputCallbackHandle
+{
+public:
+    InputCallbackHandle() = default;
+    ~InputCallbackHandle();
+    
+    // Move-only
+    InputCallbackHandle(InputCallbackHandle&& other) noexcept;
+    InputCallbackHandle& operator=(InputCallbackHandle&& other) noexcept;
+    
+    InputCallbackHandle(const InputCallbackHandle&) = delete;
+    InputCallbackHandle& operator=(const InputCallbackHandle&) = delete;
+    
+    // Manual control
+    void Unsubscribe() noexcept;
+    [[nodiscard]] bool IsValid() const noexcept;
+    [[nodiscard]] explicit operator bool() const noexcept;
+
+private:
+    friend class InputSystem;
+    
+    using UnsubscribeFn = std::function<void()>;
+    
+    explicit InputCallbackHandle(UnsubscribeFn&& unsubscribe);
+    
+    UnsubscribeFn m_unsubscribe;
+};
+
+// Convenience container for multiple handles
+class InputCallbackScope
+{
+public:
+    void Add(InputCallbackHandle&& handle);
+    void Clear();  // Unsubscribe all
+    
+private:
+    std::vector<InputCallbackHandle> m_handles;
+};
+```
+
+---
+
+### 5. Platform/Input/IInputBackend.h
+
+**Purpose**: Abstract interface for platform-specific input translation.
+
+```cpp
+class IInputBackend
+{
+public:
+    virtual ~IInputBackend() = default;
+    
+    // Called for each raw platform message
+    // Returns true if message was handled
+    virtual bool ProcessMessage(
+        void* platformHandle,       // HWND on Windows
+        uint32_t message,           // WM_* on Windows
+        uintptr_t wParam,
+        intptr_t lParam,
+        InputState& outState,
+        std::vector<InputEventVariant>& outEvents
+    ) = 0;
+    
+    // Platform-specific key translation
+    [[nodiscard]] virtual Key TranslateKey(uint32_t platformKeyCode) const = 0;
+    
+    // Mouse capture control
+    virtual void SetMouseCapture(void* windowHandle, bool capture) = 0;
+    [[nodiscard]] virtual bool IsMouseCaptured() const = 0;
+    
+    // Cursor visibility
+    virtual void SetCursorVisible(bool visible) = 0;
+    [[nodiscard]] virtual bool IsCursorVisible() const = 0;
+    
+    // Cursor confinement to window
+    virtual void SetCursorConfined(void* windowHandle, bool confined) = 0;
+    [[nodiscard]] virtual bool IsCursorConfined() const = 0;
+};
+```
+
+---
+
+### 6. Platform/Input/InputSystem.h
+
+**Purpose**: Central input hub — owns state, manages callbacks, dispatches events.
+
+```cpp
+class InputSystem
+{
+public:
+    explicit InputSystem(std::unique_ptr<IInputBackend> backend);
+    ~InputSystem();
+    
+    // Non-copyable, non-movable (owned by App)
+    InputSystem(const InputSystem&) = delete;
+    InputSystem& operator=(const InputSystem&) = delete;
+    
+    //-------------------------------------------------------------------------
+    // Frame lifecycle
+    //-------------------------------------------------------------------------
+    
+    void BeginFrame();
+    void ProcessDeferredEvents();
+    void EndFrame();
+    
+    //-------------------------------------------------------------------------
+    // Message processing (called from Window's WndProc)
+    //-------------------------------------------------------------------------
+    
+    void OnWindowMessage(
+        void* windowHandle,
+        uint32_t message,
+        uintptr_t wParam,
+        intptr_t lParam
+    );
+    
+    // Window size for normalized coordinates
+    void SetWindowSize(uint32_t width, uint32_t height) noexcept;
+    
+    //-------------------------------------------------------------------------
+    // State access (thread-safe)
+    //-------------------------------------------------------------------------
+    
+    [[nodiscard]] const InputState& GetState() const noexcept;
+    
+    //-------------------------------------------------------------------------
+    // Priority layers
+    //-------------------------------------------------------------------------
+    
+    void SetLayerEnabled(InputLayer layer, bool enabled) noexcept;
+    [[nodiscard]] bool IsLayerEnabled(InputLayer layer) const noexcept;
+    
+    // Returns the highest priority layer that should receive input
+    [[nodiscard]] InputLayer GetActiveLayer() const noexcept;
+    
+    //-------------------------------------------------------------------------
+    // Event subscription with RAII handles
+    //-------------------------------------------------------------------------
+    
+    [[nodiscard]] InputCallbackHandle SubscribeKeyPressed(
+        std::function<void(const KeyboardEvent&)> callback,
+        InputLayer layer = InputLayer::Gameplay,
+        DispatchMode mode = DispatchMode::Immediate
+    );
+    
+    [[nodiscard]] InputCallbackHandle SubscribeKeyReleased(
+        std::function<void(const KeyboardEvent&)> callback,
+        InputLayer layer = InputLayer::Gameplay,
+        DispatchMode mode = DispatchMode::Immediate
+    );
+    
+    [[nodiscard]] InputCallbackHandle SubscribeMouseButtonPressed(
+        std::function<void(const MouseButtonEvent&)> callback,
+        InputLayer layer = InputLayer::Gameplay,
+        DispatchMode mode = DispatchMode::Immediate
+    );
+    
+    [[nodiscard]] InputCallbackHandle SubscribeMouseButtonReleased(
+        std::function<void(const MouseButtonEvent&)> callback,
+        InputLayer layer = InputLayer::Gameplay,
+        DispatchMode mode = DispatchMode::Immediate
+    );
+    
+    [[nodiscard]] InputCallbackHandle SubscribeMouseMoved(
+        std::function<void(const MouseMoveEvent&)> callback,
+        InputLayer layer = InputLayer::Gameplay,
+        DispatchMode mode = DispatchMode::Deferred  // High frequency, default deferred
+    );
+    
+    [[nodiscard]] InputCallbackHandle SubscribeMouseWheel(
+        std::function<void(const MouseWheelEvent&)> callback,
+        InputLayer layer = InputLayer::Gameplay,
+        DispatchMode mode = DispatchMode::Immediate
+    );
+    
+    //-------------------------------------------------------------------------
+    // Mouse capture control
+    //-------------------------------------------------------------------------
+    
+    void CaptureMouse(void* windowHandle);
+    void ReleaseMouse();
+    [[nodiscard]] bool IsMouseCaptured() const noexcept;
+    
+    void SetCursorVisible(bool visible);
+    void SetCursorConfined(void* windowHandle, bool confined);
+
+private:
+    struct CallbackEntry
+    {
+        uint64_t id;
+        InputLayer layer;
+        DispatchMode mode;
+        std::function<void(const InputEventVariant&)> callback;
+    };
+    
+    void DispatchEvent(const InputEventVariant& event, bool immediate);
+    void UnsubscribeCallback(uint64_t id);
+    
+    std::unique_ptr<IInputBackend> m_backend;
+    InputState m_state;
+    
+    // Callback storage
+    std::mutex m_callbackMutex;
+    std::vector<CallbackEntry> m_keyPressedCallbacks;
+    std::vector<CallbackEntry> m_keyReleasedCallbacks;
+    std::vector<CallbackEntry> m_mouseButtonPressedCallbacks;
+    std::vector<CallbackEntry> m_mouseButtonReleasedCallbacks;
+    std::vector<CallbackEntry> m_mouseMovedCallbacks;
+    std::vector<CallbackEntry> m_mouseWheelCallbacks;
+    
+    std::atomic<uint64_t> m_nextCallbackId{1};
+    
+    // Deferred event queue
+    std::mutex m_eventQueueMutex;
+    std::vector<InputEventVariant> m_deferredEvents;
+    
+    // Layer state
+    std::array<std::atomic<bool>, static_cast<size_t>(InputLayer::Count)> m_layerEnabled;
+    
+    // Window dimensions for normalization
+    std::atomic<uint32_t> m_windowWidth{1};
+    std::atomic<uint32_t> m_windowHeight{1};
+};
+```
+
+---
+
+### 7. Renderer/Camera/RenderCamera.h
+
+**Purpose**: Thread-safe camera representation for the renderer.
+
+```cpp
+class RenderCamera
+{
+public:
+    RenderCamera();
+    
+    //-------------------------------------------------------------------------
+    // Thread-safe setters (called from gameplay thread)
+    //-------------------------------------------------------------------------
+    
+    void SetWorldPosition(const DirectX::XMFLOAT3& position) noexcept;
+    void SetWorldPosition(float x, float y, float z) noexcept;
+    
+    void SetViewDirection(const DirectX::XMFLOAT3& direction) noexcept;
+    void SetUpVector(const DirectX::XMFLOAT3& up) noexcept;
+    
+    // Combined set for atomic update
+    void SetTransform(
+        const DirectX::XMFLOAT3& position,
+        const DirectX::XMFLOAT3& viewDirection,
+        const DirectX::XMFLOAT3& upVector
+    ) noexcept;
+    
+    // Euler angles (degrees)
+    void SetRotation(float pitch, float yaw, float roll) noexcept;
+    
+    //-------------------------------------------------------------------------
+    // Projection parameters
+    //-------------------------------------------------------------------------
+    
+    void SetPerspective(
+        float fovYRadians,
+        float aspectRatio,
+        float nearPlane,
+        float farPlane
+    ) noexcept;
+    
+    void SetAspectRatio(float aspectRatio) noexcept;
+    
+    //-------------------------------------------------------------------------
+    // Thread-safe getters (called from render thread)
+    //-------------------------------------------------------------------------
+    
+    [[nodiscard]] DirectX::XMFLOAT3 GetWorldPosition() const noexcept;
+    [[nodiscard]] DirectX::XMFLOAT3 GetViewDirection() const noexcept;
+    [[nodiscard]] DirectX::XMFLOAT3 GetUpVector() const noexcept;
+    [[nodiscard]] DirectX::XMFLOAT3 GetRightVector() const noexcept;
+    
+    [[nodiscard]] float GetPitch() const noexcept;
+    [[nodiscard]] float GetYaw() const noexcept;
+    
+    //-------------------------------------------------------------------------
+    // Matrix access (computed on demand, cached)
+    //-------------------------------------------------------------------------
+    
+    [[nodiscard]] DirectX::XMMATRIX GetViewMatrix() const noexcept;
+    [[nodiscard]] DirectX::XMMATRIX GetProjectionMatrix() const noexcept;
+    [[nodiscard]] DirectX::XMMATRIX GetViewProjectionMatrix() const noexcept;
+    
+    // For uploading to GPU constant buffer
+    [[nodiscard]] DirectX::XMFLOAT4X4 GetViewMatrixFloat4x4() const noexcept;
+    [[nodiscard]] DirectX::XMFLOAT4X4 GetProjectionMatrixFloat4x4() const noexcept;
+
+private:
+    void InvalidateMatrices() noexcept;
+    void UpdateMatricesIfNeeded() const noexcept;
+    void UpdateVectorsFromRotation() noexcept;
+    
+    // Transform (atomic via spinlock for coherent multi-field updates)
+    mutable std::atomic_flag m_transformLock = ATOMIC_FLAG_INIT;
+    
+    DirectX::XMFLOAT3 m_position{0.0f, 0.0f, 0.0f};
+    DirectX::XMFLOAT3 m_viewDirection{0.0f, 0.0f, 1.0f};
+    DirectX::XMFLOAT3 m_upVector{0.0f, 1.0f, 0.0f};
+    
+    float m_pitch{0.0f};    // Degrees
+    float m_yaw{0.0f};      // Degrees
+    
+    // Projection parameters
+    float m_fovY{DirectX::XM_PIDIV4};
+    float m_aspectRatio{16.0f / 9.0f};
+    float m_nearPlane{0.1f};
+    float m_farPlane{1000.0f};
+    
+    // Cached matrices
+    mutable std::atomic<bool> m_matricesDirty{true};
+    mutable DirectX::XMFLOAT4X4 m_viewMatrix;
+    mutable DirectX::XMFLOAT4X4 m_projectionMatrix;
+};
+```
+
+**Thread Safety Strategy**:
+- Spinlock (`atomic_flag`) for transform updates — short critical section
+- Projection rarely changes, can use simple atomic dirty flag
+- Matrices computed lazily, cached until invalidated
+
+---
+
+### 8. Gameplay/Camera/CameraController.h
+
+**Purpose**: Consumes input, drives RenderCamera. Lives on gameplay thread.
+
+```cpp
+class CameraController
+{
+public:
+    explicit CameraController(RenderCamera& targetCamera, InputSystem& inputSystem);
+    ~CameraController();
+    
+    // Non-copyable, movable
+    CameraController(const CameraController&) = delete;
+    CameraController& operator=(const CameraController&) = delete;
+    CameraController(CameraController&&) noexcept;
+    CameraController& operator=(CameraController&&) noexcept;
+    
+    //-------------------------------------------------------------------------
+    // Frame update (called from gameplay thread)
+    //-------------------------------------------------------------------------
+    
+    void Update(float deltaTimeSeconds);
+    
+    //-------------------------------------------------------------------------
+    // Enable/disable
+    //-------------------------------------------------------------------------
+    
+    void SetEnabled(bool enabled) noexcept;
+    [[nodiscard]] bool IsEnabled() const noexcept;
+    
+    //-------------------------------------------------------------------------
+    // Configuration
+    //-------------------------------------------------------------------------
+    
+    void SetMoveSpeed(float unitsPerSecond) noexcept;
+    [[nodiscard]] float GetMoveSpeed() const noexcept;
+    
+    void SetSprintMultiplier(float multiplier) noexcept;
+    [[nodiscard]] float GetSprintMultiplier() const noexcept;
+    
+    void SetLookSensitivity(float degreesPerPixel) noexcept;
+    [[nodiscard]] float GetLookSensitivity() const noexcept;
+    
+    void SetInvertY(bool invert) noexcept;
+    [[nodiscard]] bool IsYInverted() const noexcept;
+    
+    //-------------------------------------------------------------------------
+    // State queries
+    //-------------------------------------------------------------------------
+    
+    [[nodiscard]] bool IsLooking() const noexcept;  // Middle mouse held
+
+private:
+    void OnMouseButtonPressed(const MouseButtonEvent& event);
+    void OnMouseButtonReleased(const MouseButtonEvent& event);
+    
+    void ProcessMovement(float deltaTime);
+    void ProcessMouseLook(float deltaTime);
+    
+    void BeginLook();
+    void EndLook();
+    
+    RenderCamera& m_camera;
+    InputSystem& m_inputSystem;
+    
+    InputCallbackScope m_inputCallbacks;
+    
+    // Configuration
+    float m_moveSpeed{10.0f};
+    float m_sprintMultiplier{2.5f};
+    float m_lookSensitivity{0.15f};
+    bool m_invertY{false};
+    bool m_enabled{true};
+    
+    // Look state
+    std::atomic<bool> m_isLooking{false};
+    
+    // Accumulated rotation (applied in Update)
+    float m_pendingYaw{0.0f};
+    float m_pendingPitch{0.0f};
+};
+```
+
+---
+
+### 9. App.h Integration
+
+```cpp
+class App
+{
+public:
+    App();
+    ~App();
+    
+    void Initialize(HINSTANCE hInstance);
+    void Run();
+    void Shutdown();
+    
+    // Subsystem access
+    [[nodiscard]] Window& GetWindow() noexcept;
+    [[nodiscard]] Renderer& GetRenderer() noexcept;
+    [[nodiscard]] InputSystem& GetInputSystem() noexcept;
+
+private:
+    void InitializeInput();
+    void UpdateFrame(float deltaTime);
+    
+    std::unique_ptr<Window> m_window;
+    std::unique_ptr<Renderer> m_renderer;
+    std::unique_ptr<InputSystem> m_inputSystem;
+    std::unique_ptr<CameraController> m_cameraController;
+    
+    // Frame timing
+    std::chrono::high_resolution_clock::time_point m_lastFrameTime;
+};
+```
+
+---
+
+## Frame Execution Order
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Frame Execution Timeline                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ╔═══════════════════════════════════════════════════════════════════════╗  │
+│  ║  ASYNC: WndProc (Windows message pump)                                ║  │
+│  ║  ├── WM_KEYDOWN/UP ────► InputSystem.OnWindowMessage()                ║  │
+│  ║  │                       ├── Backend translates VK_* → Key            ║  │
+│  ║  │                       ├── InputState updated (atomic)              ║  │
+│  ║  │                       └── Immediate callbacks fired OR queued      ║  │
+│  ║  ├── WM_MOUSEMOVE ─────► InputSystem.OnWindowMessage()                ║  │
+│  ║  ├── WM_MOUSEWHEEL ────► InputSystem.OnWindowMessage()                ║  │
+│  ║  └── WM_*BUTTON* ──────► InputSystem.OnWindowMessage()                ║  │
+│  ╚═══════════════════════════════════════════════════════════════════════╝  │
+│                                                                              │
+│  ╔═══════════════════════════════════════════════════════════════════════╗  │
+│  ║  FRAME START                                                          ║  │
+│  ║                                                                       ║  │
+│  ║  1. InputSystem.BeginFrame()                                          ║  │
+│  ║     ├── Transition KeyState::Pressed → KeyState::Held                 ║  │
+│  ║     ├── Transition KeyState::Released → (remove from tracking)        ║  │
+│  ║     └── Clear per-frame deltas (mouse delta, wheel delta)             ║  │
+│  ║                                                                       ║  │
+│  ║  2. Window.PumpMessages()                                             ║  │
+│  ║     └── Triggers WndProc → InputSystem updates                        ║  │
+│  ║                                                                       ║  │
+│  ║  3. InputSystem.ProcessDeferredEvents()                               ║  │
+│  ║     └── Fire queued deferred callbacks                                ║  │
+│  ║                                                                       ║  │
+│  ╠═══════════════════════════════════════════════════════════════════════╣  │
+│  ║  GAMEPLAY UPDATE (potentially separate thread)                        ║  │
+│  ║                                                                       ║  │
+│  ║  4. Update UI layer state                                             ║  │
+│  ║     └── InputSystem.SetLayerEnabled(UI, ImGui.WantsKeyboard())        ║  │
+│  ║                                                                       ║  │
+│  ║  5. CameraController.Update(deltaTime)                                ║  │
+│  ║     ├── Check if Gameplay layer is active                             ║  │
+│  ║     ├── Poll InputState for WASD/Arrow keys                           ║  │
+│  ║     ├── Poll InputState for mouse delta (if looking)                  ║  │
+│  ║     └── Write to RenderCamera (atomic)                                ║  │
+│  ║                                                                       ║  │
+│  ╠═══════════════════════════════════════════════════════════════════════╣  │
+│  ║  RENDER (separate thread in future)                                   ║  │
+│  ║                                                                       ║  │
+│  ║  6. Renderer reads RenderCamera matrices (atomic)                     ║  │
+│  ║  7. Submit draw calls                                                 ║  │
+│  ║  8. Present                                                           ║  │
+│  ║                                                                       ║  │
+│  ╠═══════════════════════════════════════════════════════════════════════╣  │
+│  ║  FRAME END                                                            ║  │
+│  ║                                                                       ║  │
+│  ║  9. InputSystem.EndFrame()                                            ║  │
+│  ║     └── (Optional cleanup)                                            ║  │
+│  ║                                                                       ║  │
+│  ╚═══════════════════════════════════════════════════════════════════════╝  │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Thread Model
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            Thread Architecture                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                        MAIN THREAD                                   │    │
+│  │                                                                      │    │
+│  │  • Window message pump                                               │    │
+│  │  • InputSystem.OnWindowMessage() - updates InputState atomically     │    │
+│  │  • InputSystem.BeginFrame() / EndFrame()                             │    │
+│  │  • Immediate callback dispatch                                       │    │
+│  │                                                                      │    │
+│  └───────────────────────────────┬─────────────────────────────────────┘    │
+│                                  │                                          │
+│                                  │ atomic reads/writes                      │
+│                                  │                                          │
+│  ┌───────────────────────────────┼─────────────────────────────────────┐    │
+│  │                        SHARED STATE                                 │    │
+│  │                                                                      │    │
+│  │  ┌─────────────┐         ┌─────────────┐                            │    │
+│  │  │ InputState  │         │RenderCamera │                            │    │
+│  │  │ (atomics)   │         │ (spinlock)  │                            │    │
+│  │  └─────────────┘         └─────────────┘                            │    │
+│  │                                                                      │    │
+│  └───────────────────────────────┼─────────────────────────────────────┘    │
+│                                  │                                          │
+│                                  │ atomic reads/writes                      │
+│                                  │                                          │
+│  ┌───────────────────────────────┴─────────────────────────────────────┐    │
+│  │                      GAMEPLAY THREAD (future)                        │    │
+│  │                                                                      │    │
+│  │  • CameraController.Update()                                         │    │
+│  │    - Reads InputState (atomic)                                       │    │
+│  │    - Writes RenderCamera (spinlock)                                  │    │
+│  │  • Game logic                                                        │    │
+│  │                                                                      │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                       RENDER THREAD (future)                         │    │
+│  │                                                                      │    │
+│  │  • Reads RenderCamera matrices (spinlock)                            │    │
+│  │  • D3D12 command list recording                                      │    │
+│  │  • Present                                                           │    │
+│  │                                                                      │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Implementation Priority Order
+
+| Phase | Components | Description |
+|-------|------------|-------------|
+| **1** | `InputTypes.h`, `InputEvent.h` | Core types, no dependencies |
+| **2** | `InputState.h/.cpp` | Thread-safe state container |
+| **3** | `InputCallbackHandle.h/.cpp` | RAII subscription handles |
+| **4** | `IInputBackend.h`, `Win32InputBackend.h/.cpp` | Platform abstraction |
+| **5** | `InputSystem.h/.cpp` | Central hub, ties everything together |
+| **6** | `RenderCamera.h/.cpp` | Thread-safe camera for renderer |
+| **7** | `CameraController.h/.cpp` | Input consumer |
+| **8** | Integration | Wire into `App`, `Window`, retire `GCamera` |
+
+---
+
+## Design Decisions Summary
+
+| Question | Decision |
+|----------|----------|
+| Key enum strategy | Zero-based portable enum, translation in platform backend |
+| Key state granularity | Tri-state: `Pressed`, `Held`, `Released` |
+| Mouse position type | Both `int32_t` pixels and `float` normalized |
+| Thread safety | Full atomic/lock-free for `InputState`, spinlock for `RenderCamera` |
+| Ownership model | App owns all subsystems, no global singletons |
+| Event dispatch | Both immediate and deferred, user selects via `DispatchMode` |
+| Input backend | Abstracted via `IInputBackend` interface |
+| Mouse capture | Flexible API, CameraController uses middle-click |
+| Mouse look activation | Middle mouse button hold |
+| Movement mode | Flying (6DOF) |
+| Movement keys | WASD + Arrow keys |
+| UI priority | Priority layers with `InputLayer` enum |
+| Callback lifetime | RAII handles via `InputCallbackHandle` |
+
+---
+
+## Questions Resolved
+
+1. **Key mapping table location**: `Win32InputBackend.cpp` (private implementation detail)
+2. **Mouse delta accumulation**: Reset each frame in `BeginFrame()`
+3. **Renderer integration**: Create new `RenderCamera`, migrate gradually, delete old `Camera`
+4. **Gameplay folder**: Create `engine/src/Gameplay/` as new top-level module
