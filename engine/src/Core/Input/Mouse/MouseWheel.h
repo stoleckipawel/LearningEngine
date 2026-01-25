@@ -23,9 +23,6 @@
 
 #include <cstdint>
 
-namespace Input
-{
-
 // =============================================================================
 // MouseWheelAxis — Identifies vertical vs horizontal wheel
 // =============================================================================
@@ -111,5 +108,3 @@ struct MouseWheel
 		return axis == MouseWheelAxis::Horizontal ? Horizontal : Vertical;
 	}
 };
-
-}  // namespace Input

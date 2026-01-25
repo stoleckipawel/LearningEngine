@@ -48,9 +48,6 @@
 #include <array>
 #include <cstdint>
 
-namespace Sparkle
-{
-
 // Forward declaration for friend access
 class InputSystem;
 
@@ -238,5 +235,3 @@ private:
 	bool m_bMouseCaptured = false;
 	bool m_bCursorHidden = false;
 };
-
-} // namespace Sparkle

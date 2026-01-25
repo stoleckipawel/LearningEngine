@@ -10,11 +10,7 @@
 
 #include "../Keyboard/Key.h"
 #include "../Keyboard/ModifierFlags.h"
-#include "../State/ButtonState.h"
 #include "../Device/InputDevice.h"
-
-namespace Input
-{
 
 // =============================================================================
 // KeyboardEvent
@@ -23,10 +19,10 @@ namespace Input
 /// Event data for keyboard key press/release.
 struct KeyboardEvent
 {
-	Key KeyCode = Key::Unknown;              ///< Which key was pressed/released
-	ButtonState State = ButtonState::Up;     ///< Press or release
-	ModifierFlags Modifiers = ModifierFlags::None;  ///< Active modifiers (Ctrl, Shift, etc.)
-	bool bIsRepeat = false;                  ///< True if this is an OS auto-repeat
+	Key KeyCode = Key::Unknown;                     ///< Which key was pressed/released
+	ModifierFlags Modifiers = ModifierFlags::None;  ///< Active modifiers at time of event
+	bool bPressed = false;                          ///< True = press, False = release
+	bool bRepeat = false;                           ///< True if OS auto-repeat
 
 	/// Returns the device type (always Keyboard).
 	[[nodiscard]] constexpr InputDevice GetDevice() const noexcept
@@ -37,13 +33,13 @@ struct KeyboardEvent
 	/// Returns true if this is a key press event.
 	[[nodiscard]] constexpr bool IsPressed() const noexcept
 	{
-		return State == ButtonState::Pressed;
+		return bPressed;
 	}
 
 	/// Returns true if this is a key release event.
 	[[nodiscard]] constexpr bool IsReleased() const noexcept
 	{
-		return State == ButtonState::Released;
+		return !bPressed;
 	}
 
 	/// Returns true if the specified modifier is active.
@@ -52,5 +48,3 @@ struct KeyboardEvent
 		return HasAnyFlag(Modifiers, flag);
 	}
 };
-
-}  // namespace Input

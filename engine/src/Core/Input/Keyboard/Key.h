@@ -11,9 +11,6 @@
 
 #include <cstdint>
 
-namespace Input
-{
-
 // =============================================================================
 // Key — Platform-Agnostic Key Codes
 // =============================================================================
@@ -202,5 +199,3 @@ enum class Key : std::uint16_t
 {
 	return key >= Key::Up && key <= Key::Delete;
 }
-
-}  // namespace Input

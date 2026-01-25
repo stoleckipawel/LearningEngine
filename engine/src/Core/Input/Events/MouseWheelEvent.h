@@ -9,12 +9,7 @@
 #pragma once
 
 #include "../Mouse/MousePosition.h"
-#include "../Mouse/MouseWheel.h"
-#include "../Keyboard/ModifierFlags.h"
 #include "../Device/InputDevice.h"
-
-namespace Input
-{
 
 // =============================================================================
 // MouseWheelEvent
@@ -24,9 +19,8 @@ namespace Input
 struct MouseWheelEvent
 {
 	float Delta = 0.0f;          ///< Scroll amount (+1.0 = one notch up/right)
-	MouseWheelAxis Axis = MouseWheelAxis::Vertical;  ///< Vertical or horizontal wheel
 	MousePosition Position;      ///< Cursor position at time of scroll
-	ModifierFlags Modifiers = ModifierFlags::None;   ///< Active keyboard modifiers
+	bool bHorizontal = false;    ///< True = horizontal (tilt), False = vertical
 
 	/// Returns the device type (always Mouse).
 	[[nodiscard]] constexpr InputDevice GetDevice() const noexcept
@@ -37,13 +31,13 @@ struct MouseWheelEvent
 	/// Returns true if this is a vertical wheel event.
 	[[nodiscard]] constexpr bool IsVertical() const noexcept
 	{
-		return Axis == MouseWheelAxis::Vertical;
+		return !bHorizontal;
 	}
 
 	/// Returns true if this is a horizontal wheel event.
 	[[nodiscard]] constexpr bool IsHorizontal() const noexcept
 	{
-		return Axis == MouseWheelAxis::Horizontal;
+		return bHorizontal;
 	}
 
 	/// Returns true if scrolling up/right (positive direction).
@@ -57,12 +51,4 @@ struct MouseWheelEvent
 	{
 		return Delta < 0.0f;
 	}
-
-	/// Returns true if the specified modifier is active.
-	[[nodiscard]] constexpr bool HasModifier(ModifierFlags flag) const noexcept
-	{
-		return HasAnyFlag(Modifiers, flag);
-	}
 };
-
-}  // namespace Input

@@ -21,9 +21,6 @@
 
 #include <cstdint>
 
-namespace Input
-{
-
 // =============================================================================
 // ButtonState — Four-State Button Status
 // =============================================================================
@@ -63,5 +60,3 @@ enum class ButtonState : std::uint8_t
 {
 	return state == ButtonState::Up || state == ButtonState::Held;
 }
-
-}  // namespace Input

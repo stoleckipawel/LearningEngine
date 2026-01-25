@@ -11,11 +11,7 @@
 #include "../Mouse/MouseButton.h"
 #include "../Mouse/MousePosition.h"
 #include "../Keyboard/ModifierFlags.h"
-#include "../State/ButtonState.h"
 #include "../Device/InputDevice.h"
-
-namespace Input
-{
 
 // =============================================================================
 // MouseButtonEvent
@@ -24,10 +20,10 @@ namespace Input
 /// Event data for mouse button press/release.
 struct MouseButtonEvent
 {
-	MouseButton Button = MouseButton::Left;       ///< Which button was pressed/released
-	ButtonState State = ButtonState::Up;          ///< Press or release
-	MousePosition Position;                       ///< Cursor position at time of event
+	MouseButton Button = MouseButton::Left;         ///< Which button was pressed/released
+	MousePosition Position;                         ///< Cursor position at time of event
 	ModifierFlags Modifiers = ModifierFlags::None;  ///< Active keyboard modifiers
+	bool bPressed = false;                          ///< True = press, False = release
 
 	/// Returns the device type (always Mouse).
 	[[nodiscard]] constexpr InputDevice GetDevice() const noexcept
@@ -38,13 +34,13 @@ struct MouseButtonEvent
 	/// Returns true if this is a button press event.
 	[[nodiscard]] constexpr bool IsPressed() const noexcept
 	{
-		return State == ButtonState::Pressed;
+		return bPressed;
 	}
 
 	/// Returns true if this is a button release event.
 	[[nodiscard]] constexpr bool IsReleased() const noexcept
 	{
-		return State == ButtonState::Released;
+		return !bPressed;
 	}
 
 	/// Returns true if the specified modifier is active.
@@ -71,5 +67,3 @@ struct MouseButtonEvent
 		return Button == MouseButton::Middle;
 	}
 };
-
-}  // namespace Input

@@ -23,9 +23,6 @@
 
 #include <cstdint>
 
-namespace Input
-{
-
 // =============================================================================
 // InputLayer — Input Consumption Priority Layers
 // =============================================================================
@@ -40,5 +37,3 @@ enum class InputLayer : std::uint8_t
 
 	Count
 };
-
-}  // namespace Input

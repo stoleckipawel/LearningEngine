@@ -12,9 +12,6 @@
 #include <cstdint>
 #include <DirectXMath.h>
 
-namespace Input
-{
-
 // =============================================================================
 // MousePosition — Multi-Format Position Data
 // =============================================================================
@@ -125,5 +122,3 @@ struct MouseDelta
 		Y = 0.0f;
 	}
 };
-
-}  // namespace Input

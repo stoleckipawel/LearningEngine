@@ -12,8 +12,6 @@
 #include "../Keyboard/ModifierFlags.h"
 #include "../Device/InputDevice.h"
 
-namespace Input
-{
 
 // =============================================================================
 // MouseMoveEvent
@@ -38,5 +36,3 @@ struct MouseMoveEvent
 		return HasAnyFlag(Modifiers, flag);
 	}
 };
-
-}  // namespace Input

@@ -11,9 +11,6 @@
 
 #include <cstdint>
 
-namespace Input
-{
-
 // =============================================================================
 // InputDevice — Device Type Identifiers
 // =============================================================================
@@ -27,5 +24,3 @@ enum class InputDevice : std::uint8_t
 
 	Count
 };
-
-}  // namespace Input

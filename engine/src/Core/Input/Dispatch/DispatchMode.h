@@ -17,9 +17,6 @@
 
 #include <cstdint>
 
-namespace Input
-{
-
 // =============================================================================
 // DispatchMode — Event Dispatch Timing
 // =============================================================================
@@ -29,5 +26,3 @@ enum class DispatchMode : std::uint8_t
 	Immediate,  // Fire synchronously in WndProc context
 	Deferred,   // Queue for processing in BeginFrame
 };
-
-}  // namespace Input

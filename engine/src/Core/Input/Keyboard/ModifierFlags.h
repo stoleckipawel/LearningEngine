@@ -2,8 +2,8 @@
 // ModifierFlags.h — Keyboard Modifier Bitmask
 // =============================================================================
 //
-// Bitmask flags for modifier key state. Queryable alongside any input event
-// to check for key combinations.
+// Bitmask flags for modifier key state. Supports both combined (Shift) and
+// individual (LeftShift/RightShift) checking.
 //
 // =============================================================================
 
@@ -12,26 +12,39 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace Input
-{
-
 // =============================================================================
 // ModifierFlags — Keyboard Modifier Bitmask
 // =============================================================================
 
-enum class ModifierFlags : std::uint8_t
+enum class ModifierFlags : std::uint16_t
 {
 	None = 0,
-	Shift = 1 << 0,
-	Ctrl = 1 << 1,
-	Alt = 1 << 2,
-	Super = 1 << 3,  // Windows key / Command
+
+	// Individual keys
+	LeftShift = 1 << 0,
+	RightShift = 1 << 1,
+	LeftCtrl = 1 << 2,
+	RightCtrl = 1 << 3,
+	LeftAlt = 1 << 4,
+	RightAlt = 1 << 5,
+	LeftSuper = 1 << 6,
+	RightSuper = 1 << 7,
+
+	// Toggle states
+	CapsLock = 1 << 8,
+	NumLock = 1 << 9,
+	ScrollLock = 1 << 10,
+
+	// Combined (either left or right)
+	Shift = LeftShift | RightShift,
+	Ctrl = LeftCtrl | RightCtrl,
+	Alt = LeftAlt | RightAlt,
+	Super = LeftSuper | RightSuper,
 
 	// Common combinations
 	CtrlShift = Ctrl | Shift,
 	CtrlAlt = Ctrl | Alt,
 	ShiftAlt = Shift | Alt,
-	All = Shift | Ctrl | Alt | Super
 };
 
 // =============================================================================
@@ -97,5 +110,3 @@ constexpr ModifierFlags& operator^=(ModifierFlags& lhs, ModifierFlags rhs) noexc
 {
 	return (flags & test) != ModifierFlags::None;
 }
-
-}  // namespace Input
