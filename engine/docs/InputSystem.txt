@@ -128,12 +128,29 @@ A **platform-agnostic, thread-safe, multi-layered input system** with:
 engine/src/
 ├── Core/
 │   ├── Input/
-│   │   ├── InputTypes.h              // Key, MouseButton, InputDevice, ModifierFlags
-│   │   ├── InputEvent.h              // KeyboardEvent, MouseEvent, InputEventVariant
+│   │   ├── InputTypes.h              // Convenience header for all input types
+│   │   ├── Keyboard/
+│   │   │   ├── Key.h                 // Key enum + classification utilities
+│   │   │   └── ModifierFlags.h       // Modifier bitmask + operators
+│   │   ├── Mouse/
+│   │   │   ├── MouseButton.h         // Mouse button identifiers
+│   │   │   ├── MouseWheel.h          // Wheel state + delta tracking
+│   │   │   └── MousePosition.h       // Position + normalized coords
+│   │   ├── State/
+│   │   │   └── ButtonState.h         // Button state (Up/Pressed/Held/Released)
+│   │   ├── Device/
+│   │   │   └── InputDevice.h         // Device type identifiers
+│   │   ├── Dispatch/
+│   │   │   ├── InputLayer.h          // Priority layers
+│   │   │   └── DispatchMode.h        // Event dispatch timing
+│   │   ├── Events/
+│   │   │   ├── InputEvent.h          // Convenience header (NO std::variant)
+│   │   │   ├── KeyboardEvent.h       // Keyboard key press/release
+│   │   │   ├── MouseButtonEvent.h    // Mouse button press/release
+│   │   │   ├── MouseMoveEvent.h      // Mouse cursor movement
+│   │   │   └── MouseWheelEvent.h     // Mouse wheel scroll
 │   │   ├── InputState.h              // Thread-safe pollable state
 │   │   └── InputCallbackHandle.h     // RAII subscription handle
-│   └── Math/
-│       └── ScreenCoordinates.h       // ScreenPosition (int + normalized float)
 │
 ├── Platform/
 │   ├── Input/
@@ -343,13 +360,18 @@ struct MouseWheelEvent
     }
 };
 
-// Type-safe variant for queued/deferred events
-using InputEventVariant = std::variant<
-    KeyboardEvent,
-    MouseButtonEvent,
-    MouseMoveEvent,
-    MouseWheelEvent
->;
+// DESIGN DECISION: NO std::variant or polymorphic event container.
+// InputSystem uses separate typed arrays (Epic/Unreal style):
+//   - std::vector<KeyboardEvent>    m_deferredKeyboardEvents
+//   - std::vector<MouseButtonEvent> m_deferredMouseButtonEvents
+//   - std::vector<MouseMoveEvent>   m_deferredMouseMoveEvents
+//   - std::vector<MouseWheelEvent>  m_deferredMouseWheelEvents
+//
+// Benefits:
+//   - No visitor pattern complexity
+//   - Direct typed callbacks (simple function signatures)
+//   - Cache-friendly contiguous storage per type
+//   - No template metaprogramming for consumers
 ```
 
 ---
@@ -481,6 +503,21 @@ private:
 **Purpose**: Abstract interface for platform-specific input translation.
 
 ```cpp
+// Forward declarations
+struct KeyboardEvent;
+struct MouseButtonEvent;
+struct MouseMoveEvent;
+struct MouseWheelEvent;
+
+// Output container for generated events (separate typed vectors)
+struct InputEventOutput
+{
+    std::vector<KeyboardEvent>*    keyboardEvents = nullptr;
+    std::vector<MouseButtonEvent>* mouseButtonEvents = nullptr;
+    std::vector<MouseMoveEvent>*   mouseMoveEvents = nullptr;
+    std::vector<MouseWheelEvent>*  mouseWheelEvents = nullptr;
+};
+
 class IInputBackend
 {
 public:
@@ -494,7 +531,7 @@ public:
         uintptr_t wParam,
         intptr_t lParam,
         InputState& outState,
-        std::vector<InputEventVariant>& outEvents
+        InputEventOutput& outEvents // Separate typed vectors (no std::variant)
     ) = 0;
     
     // Platform-specific key translation
@@ -621,34 +658,42 @@ public:
     void SetCursorConfined(void* windowHandle, bool confined);
 
 private:
+    // Typed callback entries (one per event type)
+    template<typename TEvent>
     struct CallbackEntry
     {
         uint64_t id;
         InputLayer layer;
         DispatchMode mode;
-        std::function<void(const InputEventVariant&)> callback;
+        std::function<void(const TEvent&)> callback;
     };
     
-    void DispatchEvent(const InputEventVariant& event, bool immediate);
+    template<typename TEvent>
+    void DispatchTypedEvent(const TEvent& event, 
+                            const std::vector<CallbackEntry<TEvent>>& callbacks,
+                            bool immediate);
     void UnsubscribeCallback(uint64_t id);
     
     std::unique_ptr<IInputBackend> m_backend;
     InputState m_state;
     
-    // Callback storage
+    // Callback storage (separate typed vectors - no std::variant)
     std::mutex m_callbackMutex;
-    std::vector<CallbackEntry> m_keyPressedCallbacks;
-    std::vector<CallbackEntry> m_keyReleasedCallbacks;
-    std::vector<CallbackEntry> m_mouseButtonPressedCallbacks;
-    std::vector<CallbackEntry> m_mouseButtonReleasedCallbacks;
-    std::vector<CallbackEntry> m_mouseMovedCallbacks;
-    std::vector<CallbackEntry> m_mouseWheelCallbacks;
+    std::vector<CallbackEntry<KeyboardEvent>> m_keyPressedCallbacks;
+    std::vector<CallbackEntry<KeyboardEvent>> m_keyReleasedCallbacks;
+    std::vector<CallbackEntry<MouseButtonEvent>> m_mouseButtonPressedCallbacks;
+    std::vector<CallbackEntry<MouseButtonEvent>> m_mouseButtonReleasedCallbacks;
+    std::vector<CallbackEntry<MouseMoveEvent>> m_mouseMovedCallbacks;
+    std::vector<CallbackEntry<MouseWheelEvent>> m_mouseWheelCallbacks;
     
     std::atomic<uint64_t> m_nextCallbackId{1};
     
-    // Deferred event queue
+    // Deferred event queues (separate typed vectors - no std::variant)
     std::mutex m_eventQueueMutex;
-    std::vector<InputEventVariant> m_deferredEvents;
+    std::vector<KeyboardEvent> m_deferredKeyboardEvents;
+    std::vector<MouseButtonEvent> m_deferredMouseButtonEvents;
+    std::vector<MouseMoveEvent> m_deferredMouseMoveEvents;
+    std::vector<MouseWheelEvent> m_deferredMouseWheelEvents;
     
     // Layer state
     std::array<std::atomic<bool>, static_cast<size_t>(InputLayer::Count)> m_layerEnabled;

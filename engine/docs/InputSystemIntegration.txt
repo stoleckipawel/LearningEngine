@@ -25,17 +25,36 @@ Goal: Define strongly-typed event structures for all input types.
 
 Files to Create:
 
-engine/src/Core/Input/InputEvent.h
+engine/src/Core/Input/Events/InputEvent.h (convenience header)
+engine/src/Core/Input/Events/KeyboardEvent.h
+engine/src/Core/Input/Events/MouseButtonEvent.h
+engine/src/Core/Input/Events/MouseMoveEvent.h
+engine/src/Core/Input/Events/MouseWheelEvent.h
+engine/src/Core/Input/Mouse/MousePosition.h
 Dependencies: Step 1
 
 Deliverables:
 
-MousePosition struct (int pixels + normalized float)
-KeyboardEvent struct
-MouseButtonEvent struct
-MouseMoveEvent struct
-MouseWheelEvent struct
-InputEventVariant type alias (std::variant)
+MousePosition struct (int pixels + normalized float + NDC conversion)
+MouseDelta struct (movement tracking with accumulation)
+KeyboardEvent struct (Key, ButtonState, Modifiers, bIsRepeat)
+MouseButtonEvent struct (Button, State, Position, Modifiers)
+MouseMoveEvent struct (Position, Delta, Modifiers)
+MouseWheelEvent struct (Delta, Axis, Position, Modifiers)
+
+Design Decision: NO std::variant or polymorphic event container.
+InputSystem uses separate typed arrays (Epic/Unreal style):
+  - std::vector<KeyboardEvent>    m_keyboardEvents
+  - std::vector<MouseButtonEvent> m_mouseButtonEvents
+  - std::vector<MouseMoveEvent>   m_mouseMoveEvents
+  - std::vector<MouseWheelEvent>  m_mouseWheelEvents
+
+Benefits:
+  - No visitor pattern complexity
+  - Direct typed callbacks (simple function signatures)
+  - Cache-friendly contiguous storage per type
+  - No template metaprogramming for consumers
+
 Validation: All event structs instantiable, GetDevice() returns correct type.
 
 Step 3: InputCallbackHandle.h — RAII Subscription Handle
@@ -171,10 +190,18 @@ Dependencies: Step 9
 Deliverables:
 
 OnWindowMessage(): Delegate to backend, update state, fire immediate callbacks
-Callback registration with unique ID generation
+Callback registration with unique ID generation per event type:
+  - std::vector<CallbackEntry<KeyboardEvent>>    m_keyboardCallbacks
+  - std::vector<CallbackEntry<MouseButtonEvent>> m_mouseButtonCallbacks
+  - std::vector<CallbackEntry<MouseMoveEvent>>   m_mouseMoveCallbacks
+  - std::vector<CallbackEntry<MouseWheelEvent>>  m_mouseWheelCallbacks
 Callback unsubscription (thread-safe with mutex)
-Deferred event queue with separate mutex
-ProcessDeferredEvents(): Fire queued callbacks
+Separate typed deferred event queues (no std::variant):
+  - std::vector<KeyboardEvent>    m_deferredKeyboardEvents
+  - std::vector<MouseButtonEvent> m_deferredMouseButtonEvents
+  - std::vector<MouseMoveEvent>   m_deferredMouseMoveEvents
+  - std::vector<MouseWheelEvent>  m_deferredMouseWheelEvents
+ProcessDeferredEvents(): Iterate each typed queue, fire typed callbacks
 Layer priority filtering in dispatch
 SetWindowSize() for normalized coordinate calculation
 Validation: Subscribe to key press, simulate message, verify callback fires.
