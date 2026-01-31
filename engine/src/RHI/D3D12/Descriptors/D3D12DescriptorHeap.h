@@ -35,7 +35,7 @@ class D3D12DescriptorHeap
 	// ========================================================================
 
 	/// Constructs a heap with the given type and flags. Name is set on COM object.
-	explicit D3D12DescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name);
+	explicit D3D12DescriptorHeap(D3D12Rhi& rhi, D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_DESCRIPTOR_HEAP_FLAGS flags, LPCWSTR name);
 
 	D3D12DescriptorHeap(const D3D12DescriptorHeap&) = delete;
 	D3D12DescriptorHeap& operator=(const D3D12DescriptorHeap&) = delete;
@@ -67,6 +67,7 @@ class D3D12DescriptorHeap
 	// State
 	// ------------------------------------------------------------------------
 
+	D3D12Rhi* m_rhi = nullptr;               ///< Reference to RHI for device access
 	D3D12_DESCRIPTOR_HEAP_DESC m_desc = {};  ///< Heap description
 	ComPtr<ID3D12DescriptorHeap> m_heap;     ///< Underlying D3D12 heap
 };

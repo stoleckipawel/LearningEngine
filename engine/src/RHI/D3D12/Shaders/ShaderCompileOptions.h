@@ -53,17 +53,17 @@ inline const char* GetShaderStagePrefix(ShaderStage stage)
 /// Configuration for a single shader compilation request.
 struct ShaderCompileOptions
 {
-	std::filesystem::path SourcePath;  ///< Absolute path to the .hlsl file
-	std::filesystem::path IncludeDir;  ///< Root directory for #include resolution
-	std::string EntryPoint = "main";   ///< Entry function name
+	std::filesystem::path SourcePath;        ///< Absolute path to the .hlsl file
+	std::filesystem::path IncludeDir;        ///< Root directory for #include resolution
+	std::string EntryPoint = "main";         ///< Entry function name
 	ShaderStage Stage = ShaderStage::Pixel;  ///< Target shader stage
 
 	// Feature flags
-	bool EnableDebugInfo = false;         ///< Include debug symbols
-	bool EnableOptimizations = true;      ///< Enable compiler optimizations
-	bool TreatWarningsAsErrors = true;    ///< Promote warnings to errors
-	bool StripReflection = true;          ///< Remove reflection data from output
-	bool StripDebugInfo = true;           ///< Remove debug info from output
+	bool EnableDebugInfo = false;       ///< Include debug symbols
+	bool EnableOptimizations = true;    ///< Enable compiler optimizations
+	bool TreatWarningsAsErrors = true;  ///< Promote warnings to errors
+	bool StripReflection = true;        ///< Remove reflection data from output
+	bool StripDebugInfo = true;         ///< Remove debug info from output
 
 	/// Additional include directories beyond the primary IncludeDir.
 	std::vector<std::filesystem::path> AdditionalIncludeDirs;

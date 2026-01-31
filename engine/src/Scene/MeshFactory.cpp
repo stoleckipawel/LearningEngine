@@ -1,6 +1,7 @@
 #include "PCH.h"
 #include "MeshFactory.h"
 
+#include "D3D12Rhi.h"
 #include "Scene/Mesh.h"
 
 #include <cmath>
@@ -139,7 +140,7 @@ void MeshFactory::Rebuild(
 {
 	Clear();
 	AppendShapes(shape, count, center, extents, seed);
-	Upload();
+	// Note: Upload() must be called separately by the caller
 }
 
 const std::vector<std::unique_ptr<Mesh>>& MeshFactory::GetMeshes() const
@@ -147,13 +148,13 @@ const std::vector<std::unique_ptr<Mesh>>& MeshFactory::GetMeshes() const
 	return m_meshes;
 }
 
-void MeshFactory::Upload()
+void MeshFactory::Upload(D3D12Rhi& rhi)
 {
 	for (auto& mesh : m_meshes)
 	{
 		if (mesh)
 		{
-			mesh->Upload();
+			mesh->Upload(rhi);
 		}
 	}
 }

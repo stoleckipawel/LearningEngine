@@ -1,10 +1,13 @@
-#include "PCH.h"
+#include "Core/PCH.h"
 #include "Renderer.h"
+#include "Assets/AssetSystem.h"
 #include "D3D12DebugLayer.h"
 #include "D3D12Rhi.h"
-#include "Window.h"
+#include "D3D12SwapChain.h"
+#include "Platform/Window.h"
 #include "DxcShaderCompiler.h"
-#include "Texture.h"
+#include "D3D12Texture.h"
+#include "TextureManager.h"
 #include "Scene/Scene.h"
 #include "Scene/Mesh.h"
 #include "D3D12PipelineState.h"
@@ -16,105 +19,123 @@
 #include "Samplers/D3D12SamplerLibrary.h"
 #include "D3D12DepthStencil.h"
 #include "DepthConvention.h"
-#include "UI.h"
-#include "Timer.h"
-#include "Camera.h"
+#include "UI/UI.h"
+#include "Core/Time/Timer.h"
+#include "RenderCamera.h"
 #include "Log.h"
+#include "GameEngine/Camera/GameCamera.h"
 
-Renderer& Renderer::Get() noexcept
+Renderer::Renderer(Timer& timer, const AssetSystem& assetSystem, D3D12Rhi& rhi, Scene& scene, Window& window) noexcept :
+    m_timer(&timer), m_assetSystem(&assetSystem), m_rhi(&rhi), m_scene(&scene), m_window(&window)
 {
-	static Renderer instance;
-	return instance;
-}
+	// Open command list for initialization recording (starts closed after RHI creation)
+	constexpr UINT kInitFrameIndex = 0;
+	m_rhi->SetCurrentFrameIndex(kInitFrameIndex);
+	m_rhi->ResetCommandAllocator(kInitFrameIndex);
+	m_rhi->ResetCommandList(kInitFrameIndex);
 
-void Renderer::Initialize() noexcept
-{
-	GD3D12Rhi.Initialize();
-
-	m_rootSignature = std::make_unique<D3D12RootSignature>();
+	m_rootSignature = std::make_unique<D3D12RootSignature>(*m_rhi);
 
 	// Compile shaders
-	m_vertexShader = DxcShaderCompiler::CompileFromAsset("Passes/Forward/ForwardLitVS.hlsl", ShaderStage::Vertex, "main");
-	m_pixelShader = DxcShaderCompiler::CompileFromAsset("Passes/Forward/ForwardLitPS.hlsl", ShaderStage::Pixel, "main");
+	m_vertexShader = DxcShaderCompiler::CompileFromAsset(*m_assetSystem, "Passes/Forward/ForwardLitVS.hlsl", ShaderStage::Vertex, "main");
+	m_pixelShader = DxcShaderCompiler::CompileFromAsset(*m_assetSystem, "Passes/Forward/ForwardLitPS.hlsl", ShaderStage::Pixel, "main");
 
-	GD3D12DescriptorHeapManager.Initialize();
-	GD3D12SwapChain.Initialize();
-	GD3D12FrameResourceManager.Initialize(D3D12FrameResourceManager::DefaultCapacityPerFrame);
-	GD3D12ConstantBufferManager.Initialize();
+	m_descriptorHeapManager = std::make_unique<D3D12DescriptorHeapManager>(*m_rhi);
+	m_swapChain = std::make_unique<D3D12SwapChain>(*m_rhi, *m_window, *m_descriptorHeapManager);
+	m_frameResourceManager = std::make_unique<D3D12FrameResourceManager>(*m_rhi, D3D12FrameResourceManager::DefaultCapacityPerFrame);
+
+	// Create UI after descriptor heap manager is ready
+	// UI subscribes to Window's OnWindowMessage event automatically in its constructor
+	m_ui = std::make_unique<UI>(*m_timer, *m_rhi, *m_window, *m_descriptorHeapManager, *m_swapChain);
+
+	m_constantBufferManager = std::make_unique<D3D12ConstantBufferManager>(
+	    *m_timer,
+	    *m_rhi,
+	    *m_window,
+	    *m_descriptorHeapManager,
+	    *m_frameResourceManager,
+	    *m_swapChain,
+	    *m_ui);
 
 	// Initialize sampler library first (requires contiguous descriptor allocation)
-	m_samplerLibrary = std::make_unique<D3D12SamplerLibrary>();
-	m_samplerLibrary->Initialize();
+	m_samplerLibrary = std::make_unique<D3D12SamplerLibrary>(*m_rhi, *m_descriptorHeapManager);
 
-	// Load textures
-	m_checkerTexture = std::make_unique<Texture>(std::filesystem::path("ColorCheckerBoard.png"));
-	m_skyCubemapTexture = std::make_unique<Texture>(std::filesystem::path("SkyCubemap.png"));
+	// Create texture manager (auto-loads default textures)
+	m_textureManager = std::make_unique<TextureManager>(*m_assetSystem, *m_rhi, *m_descriptorHeapManager);
 
-	// Initialize scene (geometry is built when UI triggers SetPrimitives)
-	GScene.Initialize();
-
-	// Add listener for depth mode changes
-	m_depthModeChangedHandle = DepthConvention::OnModeChanged.Add(
+	// Add listener for depth mode changes 
+	auto depthHandle = DepthConvention::OnModeChanged.Add(
 	    [this](DepthMode mode)
 	    {
 		    OnDepthModeChanged(mode);
 	    });
+	m_depthModeChangedHandle = ScopedEventHandle(DepthConvention::OnModeChanged, depthHandle);
+
+	// Subscribe to window resize events
+	auto resizeHandle = m_window->OnResized.Add(
+	    [this]()
+	    {
+		    OnResize();
+	    });
+	m_resizeHandle = ScopedEventHandle(m_window->OnResized, resizeHandle);
 
 	// Create pipeline state object
 	CreatePSO();
 
 	CreateDepthStencilBuffer();
 
-	GUI.Initialize();
+	// Create render camera bound to scene's game camera
+	m_renderCamera = std::make_unique<RenderCamera>(m_scene->GetCamera());
 
 	PostLoad();
 }
 
 void Renderer::PostLoad() noexcept
 {
-	GD3D12Rhi.CloseCommandListScene();
-	GD3D12Rhi.ExecuteCommandList();
-	GD3D12Rhi.Flush();
+	// Execute initialization commands and sync with GPU
+	m_rhi->CloseCommandList();
+	m_rhi->ExecuteCommandList();
+	m_rhi->Flush();
 }
 
 void Renderer::SetViewport() noexcept
 {
-	D3D12_VIEWPORT viewport = GD3D12SwapChain.GetDefaultViewport();
-	GD3D12Rhi.GetCommandList()->RSSetViewports(1, &viewport);
+	D3D12_VIEWPORT viewport = m_swapChain->GetDefaultViewport();
+	m_rhi->GetCommandList()->RSSetViewports(1, &viewport);
 
-	D3D12_RECT scissorRect = GD3D12SwapChain.GetDefaultScissorRect();
-	GD3D12Rhi.GetCommandList()->RSSetScissorRects(1, &scissorRect);
+	D3D12_RECT scissorRect = m_swapChain->GetDefaultScissorRect();
+	m_rhi->GetCommandList()->RSSetScissorRects(1, &scissorRect);
 }
 
 void Renderer::SetBackBufferRTV() noexcept
 {
-	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = GD3D12SwapChain.GetCPUHandle();
+	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = m_swapChain->GetCPUHandle();
 	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle = m_depthStencil->GetCPUHandle();
-	GD3D12Rhi.GetCommandList()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &depthStencilHandle);
+	m_rhi->GetCommandList()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &depthStencilHandle);
 }
 
 void Renderer::BindPerFrameResources() noexcept
 {
 	// Per-frame constant buffer (b0)
-	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(
+	m_rhi->GetCommandList()->SetGraphicsRootConstantBufferView(
 	    RootBindings::RootParam::PerFrame,
-	    GD3D12ConstantBufferManager.GetPerFrameGpuAddress());
+	    m_constantBufferManager->GetPerFrameGpuAddress());
 
 	// Per-view constant buffer (b1)
-	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(
+	m_rhi->GetCommandList()->SetGraphicsRootConstantBufferView(
 	    RootBindings::RootParam::PerView,
-	    GD3D12ConstantBufferManager.GetPerViewGpuAddress());
+	    m_constantBufferManager->GetPerViewGpuAddress());
 
 	// Texture SRV descriptor table
-	if (m_checkerTexture)
+	if (const D3D12Texture* checkerTex = m_textureManager->GetTexture(TextureId::Checker))
 	{
-		GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(RootBindings::RootParam::TextureSRV, m_checkerTexture->GetGPUHandle());
+		m_rhi->GetCommandList()->SetGraphicsRootDescriptorTable(RootBindings::RootParam::TextureSRV, checkerTex->GetGPUHandle());
 	}
 
 	// Sampler table (all samplers bound once per frame)
 	if (m_samplerLibrary && m_samplerLibrary->IsInitialized())
 	{
-		GD3D12Rhi.GetCommandList()->SetGraphicsRootDescriptorTable(
+		m_rhi->GetCommandList()->SetGraphicsRootDescriptorTable(
 		    RootBindings::RootParam::SamplerTable,
 		    m_samplerLibrary->GetTableGPUHandle());
 	}
@@ -123,33 +144,33 @@ void Renderer::BindPerFrameResources() noexcept
 void Renderer::BindPerObjectResources(const Mesh& mesh) noexcept
 {
 	// Per-object VS constant buffer (b2) - world matrix
-	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(
+	m_rhi->GetCommandList()->SetGraphicsRootConstantBufferView(
 	    RootBindings::RootParam::PerObjectVS,
-	    GD3D12ConstantBufferManager.UpdatePerObjectVS(mesh.GetPerObjectVSConstants()));
+	    m_constantBufferManager->UpdatePerObjectVS(mesh.GetPerObjectVSConstants()));
 
 	// Per-object PS constant buffer (b3) - material properties
-	GD3D12Rhi.GetCommandList()->SetGraphicsRootConstantBufferView(
+	m_rhi->GetCommandList()->SetGraphicsRootConstantBufferView(
 	    RootBindings::RootParam::PerObjectPS,
-	    GD3D12ConstantBufferManager.UpdatePerObjectPS());
+	    m_constantBufferManager->UpdatePerObjectPS());
 }
 
 void Renderer::PopulateCommandList()
 {
 	// Prepare render target and depth buffer
-	GD3D12SwapChain.SetRenderTargetState();
+	m_swapChain->SetRenderTargetState();
 	m_depthStencil->SetWriteState();
 
 	// Set root signature and render state
-	GD3D12Rhi.GetCommandList()->SetGraphicsRootSignature(m_rootSignature->GetRaw());
+	m_rhi->GetCommandList()->SetGraphicsRootSignature(m_rootSignature->GetRaw());
 	SetViewport();
 	SetBackBufferRTV();
 
 	// Clear targets
-	GD3D12SwapChain.Clear();
+	m_swapChain->Clear();
 	m_depthStencil->Clear();
 
 	// Set shader-visible descriptor heaps
-	GD3D12DescriptorHeapManager.SetShaderVisibleHeaps();
+	m_descriptorHeapManager->SetShaderVisibleHeaps();
 
 	// Bind per-frame resources
 	BindPerFrameResources();
@@ -157,29 +178,29 @@ void Renderer::PopulateCommandList()
 	// Draw loop
 	m_pso->Set();
 
-	const auto& meshes = GScene.GetMeshes();
+	const auto& meshes = m_scene->GetMeshes();
 	for (const auto& mesh : meshes)
 	{
-		mesh->Bind(GD3D12Rhi.GetCommandList().Get());
+		mesh->Bind(m_rhi->GetCommandList().Get());
 		BindPerObjectResources(*mesh);
-		GD3D12Rhi.GetCommandList()->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
+		m_rhi->GetCommandList()->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
 	}
 
 	// Post-render
-	GUI.Render();
+	m_ui->Render();
 	m_depthStencil->SetReadState();
-	GD3D12SwapChain.SetPresentState();
+	m_swapChain->SetPresentState();
 }
 
 void Renderer::CreateDepthStencilBuffer()
 {
-	m_depthStencil = std::make_unique<D3D12DepthStencil>();
+	m_depthStencil = std::make_unique<D3D12DepthStencil>(*m_rhi, *m_window, *m_descriptorHeapManager);
 }
 
 void Renderer::OnResize() noexcept
 {
-	GD3D12Rhi.Flush();
-	GD3D12SwapChain.Resize();
+	m_rhi->Flush();
+	m_swapChain->Resize();
 	CreateDepthStencilBuffer();
 }
 
@@ -194,18 +215,22 @@ void Renderer::OnRender() noexcept
 
 void Renderer::BeginFrame() noexcept
 {
-	GD3D12FrameResourceManager.BeginFrame(GD3D12Rhi.GetFenceEvent(), GD3D12SwapChain.GetFrameInFlightIndex());
-	GD3D12Rhi.WaitForGPU();
-	GD3D12Rhi.ResetCommandAllocator();
-	GD3D12Rhi.ResetCommandList();
+	const UINT frameIndex = m_swapChain->GetFrameInFlightIndex();
+	m_rhi->SetCurrentFrameIndex(frameIndex);
+	m_frameResourceManager->BeginFrame(m_rhi->GetFence().Get(), m_rhi->GetFenceEvent(), frameIndex);
+	m_rhi->WaitForGPU(frameIndex);
+	m_rhi->ResetCommandAllocator(frameIndex);
+	m_rhi->ResetCommandList(frameIndex);
 }
 
 void Renderer::SetupFrame() noexcept
 {
-	GTimer.Tick();
-	GUI.Update();
-	GD3D12ConstantBufferManager.UpdatePerFrame();
-	GD3D12ConstantBufferManager.UpdatePerView();
+	m_renderCamera->Update();
+
+	m_timer->Tick();
+	m_ui->Update();
+	m_constantBufferManager->UpdatePerFrame();
+	m_constantBufferManager->UpdatePerView(*m_renderCamera);
 }
 
 void Renderer::RecordFrame() noexcept
@@ -215,51 +240,47 @@ void Renderer::RecordFrame() noexcept
 
 void Renderer::SubmitFrame() noexcept
 {
-	GD3D12Rhi.CloseCommandListScene();
-	GD3D12Rhi.ExecuteCommandList();
-	GD3D12Rhi.Signal();
+	m_rhi->CloseCommandList();
+	m_rhi->ExecuteCommandList();
+	m_rhi->Signal(m_swapChain->GetFrameInFlightIndex());
 
 	// Record fence value for ring buffer synchronization
-	GD3D12FrameResourceManager.EndFrame(GD3D12Rhi.GetNextFenceValue() - 1);
-	GD3D12SwapChain.Present();
+	m_frameResourceManager->EndFrame(m_rhi->GetNextFenceValue() - 1);
+	m_swapChain->Present();
 }
 
 void Renderer::EndFrame() noexcept
 {
-	GD3D12SwapChain.UpdateFrameInFlightIndex();
+	m_swapChain->UpdateFrameInFlightIndex();
 }
 
 // -----------------------------------------------------------------------------
 // Shuts down the renderer and all owned subsystems
 // -----------------------------------------------------------------------------
-void Renderer::Shutdown() noexcept
+Renderer::~Renderer() noexcept
 {
-	GD3D12Rhi.Flush();
+	m_rhi->Flush();
 
-	// Remove event listeners
-	DepthConvention::OnModeChanged.Remove(m_depthModeChangedHandle);
-
-	GUI.Shutdown();
+	m_renderCamera.reset();
 
 	m_pso.reset();
 	m_rootSignature.reset();
-	GScene.Shutdown();
+	m_scene = nullptr;
 	m_depthStencil.reset();
 	m_samplerLibrary.reset();
-	m_skyCubemapTexture.reset();
-	m_checkerTexture.reset();
+	m_textureManager.reset();
 
-	GD3D12ConstantBufferManager.Shutdown();
-	GD3D12FrameResourceManager.Shutdown();
-	GD3D12SwapChain.Shutdown();
-	GWindow.Shutdown();
-	GD3D12DescriptorHeapManager.Shutdown();
-	GD3D12Rhi.Shutdown();
+	m_constantBufferManager.reset();
+	m_frameResourceManager.reset();
+	m_swapChain.reset();
+	m_ui.reset();
+	m_descriptorHeapManager.reset();
 }
 
 void Renderer::CreatePSO()
 {
 	m_pso = std::make_unique<D3D12PipelineState>(
+	    *m_rhi,
 	    Mesh::GetStaticVertexLayout(),
 	    *m_rootSignature,
 	    m_vertexShader.GetBytecode(),
@@ -270,7 +291,7 @@ void Renderer::OnDepthModeChanged([[maybe_unused]] DepthMode mode) noexcept
 {
 	// Depth convention changed - must recreate PSO with new depth comparison
 	// and depth stencil buffer with new optimized clear value
-	GD3D12Rhi.Flush();
+	m_rhi->Flush();
 	CreatePSO();
 	CreateDepthStencilBuffer();
 }

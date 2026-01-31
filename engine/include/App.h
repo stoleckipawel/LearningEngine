@@ -1,65 +1,52 @@
 // ============================================================================
 // App.h
-// Application base class with Non-Virtual Interface (NVI) pattern.
+// Application base class.
 // ----------------------------------------------------------------------------
 // USAGE:
-//   class MyGame : public App {
-//       void PostInitialize() override { /* load game resources */ }
-//       void PreRender() override { /* update game logic */ }
-//   };
-//   MyGame game; game.Run();
-//
-// DESIGN:
-//   - Engine controls the lifecycle (Initialize, Render, Resize, Shutdown)
-//   - Users extend via Pre/Post hooks without replacing engine behavior
-//   - All hooks are optional; override only what you need
+//   App app("MyGame");
+//   app.Run();
 // ============================================================================
 #pragma once
 
 #include <string>
+#include <memory>
 
-// Application base using the Non-Virtual Interface (NVI) pattern.
-// Engine-owned public methods enforce sequencing and call user hooks
-// before and after the engine's main work, enabling extension without replacement.
+class Timer;
+class Window;
+class InputSystem;
+class Scene;
+class CameraController;
+class Renderer;
+class D3D12Rhi;
+class AssetSystem;
+
 class App
 {
   public:
 	explicit App(std::string windowTitle);
-	~App() = default;
+	~App();
 
-	// Entry point to run the application.
+	App(const App&) = delete;
+	App& operator=(const App&) = delete;
+	App(App&&) = delete;
+	App& operator=(App&&) = delete;
+
 	void Run();
 
-  protected:
-	// User extension points (override as needed). All are optional.
-
-	// Initialize: create gameplay state, load resources, etc.
-	virtual void PreInitialize() {}
-	virtual void PostInitialize() {}
-
-	// Render: additional scene recording or debug overlays.
-	virtual void PreRender() {}
-	virtual void PostRender() {}
-
-	// Resize: react to window size changes.
-	virtual void PreResize() {}
-	virtual void PostResize() {}
-
-	// Shutdown: cleanup gameplay resources.
-	virtual void PreShutdown() {}
-	virtual void PostShutdown() {}
-
-	// Encapsulated per-frame main loop; called by Run().
-	void RenderLoop();
-
-	[[nodiscard]] const std::string& GetWindowTitle() const noexcept { return m_windowTitle; }
-
   private:
-	// Engine-controlled lifecycle
 	void Initialize();
-	void Render();
-	void Resize();
+	void BeginFrame();
+	void EndFrame();
+	void RenderLoop();
 	void Shutdown();
 
 	std::string m_windowTitle;
+	std::unique_ptr<Timer> m_timer;
+	std::unique_ptr<AssetSystem> m_assetSystem;
+	std::unique_ptr<D3D12Rhi> m_rhi;
+	std::unique_ptr<Window> m_window;
+	std::unique_ptr<InputSystem> m_inputSystem;
+	std::unique_ptr<Scene> m_scene;
+	std::unique_ptr<CameraController> m_cameraController;
+	std::unique_ptr<Renderer> m_renderer;
 };

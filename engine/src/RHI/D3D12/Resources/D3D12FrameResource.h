@@ -29,7 +29,7 @@
 #include <cstdint>
 #include <array>
 #include <cassert>
-#include "LinearAllocator.h"
+#include "D3D12LinearAllocator.h"
 #include "EngineConfig.h"
 #include "D3D12Rhi.h"
 
@@ -39,18 +39,18 @@
 
 struct D3D12FrameResource
 {
-	LinearAllocator CbAllocator;  // Per-frame CB ring buffer
-	uint64_t FenceValue = 0;      // Fence value when this frame was submitted
-	uint32_t FrameIndex = 0;      // Debug: which frame index this represents
+	D3D12LinearAllocator CbAllocator;  // Per-frame CB ring buffer
+	uint64_t FenceValue = 0;           // Fence value when this frame was submitted
+	uint32_t FrameIndex = 0;           // Debug: which frame index this represents
 
-	void Initialize(uint64_t allocatorCapacity, uint32_t frameIdx)
+	void Initialize(D3D12Rhi& rhi, uint64_t allocatorCapacity, uint32_t frameIdx)
 	{
 		FrameIndex = frameIdx;
 		FenceValue = 0;
 
 		wchar_t name[64];
 		swprintf_s(name, L"FrameAllocator_%u", frameIdx);
-		CbAllocator.Initialize(allocatorCapacity, name);
+		CbAllocator.Initialize(rhi, allocatorCapacity, name);
 	}
 
 	void Shutdown() { CbAllocator.Shutdown(); }
@@ -85,7 +85,25 @@ class D3D12FrameResourceManager final
 	// Default capacity: 4MB per frame (16384 draws × 256 bytes)
 	static constexpr uint64_t DefaultCapacityPerFrame = 4 * 1024 * 1024;
 
-	[[nodiscard]] static D3D12FrameResourceManager& Get() noexcept;
+	// Construct and initialize all frame resources.
+	// @param rhi Reference to the D3D12Rhi for GPU resource creation.
+	// @param capacityPerFrame Allocator capacity per frame (default 4MB).
+	explicit D3D12FrameResourceManager(D3D12Rhi& rhi, uint64_t capacityPerFrame = DefaultCapacityPerFrame) :
+	    m_CapacityPerFrame(capacityPerFrame)
+	{
+		for (uint32_t i = 0; i < EngineSettings::FramesInFlight; ++i)
+		{
+			m_FrameResources[i].Initialize(rhi, capacityPerFrame, i);
+		}
+	}
+
+	~D3D12FrameResourceManager()
+	{
+		for (auto& frame : m_FrameResources)
+		{
+			frame.Shutdown();
+		}
+	}
 
 	D3D12FrameResourceManager(const D3D12FrameResourceManager&) = delete;
 	D3D12FrameResourceManager& operator=(const D3D12FrameResourceManager&) = delete;
@@ -93,57 +111,25 @@ class D3D12FrameResourceManager final
 	D3D12FrameResourceManager& operator=(D3D12FrameResourceManager&&) = delete;
 
 	//--------------------------------------------------------------------------
-	// Initialization
-	//--------------------------------------------------------------------------
-
-	// Initialize all frame resources.
-	// @param capacityPerFrame Allocator capacity per frame (default 4MB).
-	void Initialize(uint64_t capacityPerFrame = DefaultCapacityPerFrame)
-	{
-		m_CapacityPerFrame = capacityPerFrame;
-
-		for (uint32_t i = 0; i < EngineSettings::FramesInFlight; ++i)
-		{
-			m_FrameResources[i].Initialize(capacityPerFrame, i);
-		}
-
-		m_CurrentFrameIndex = 0;
-		m_bInitialized = true;
-	}
-
-	// Shutdown and release all resources.
-	void Shutdown()
-	{
-		if (!m_bInitialized)
-			return;
-
-		for (auto& frame : m_FrameResources)
-		{
-			frame.Shutdown();
-		}
-
-		m_bInitialized = false;
-	}
-
-	//--------------------------------------------------------------------------
 	// Frame Lifecycle
 	//--------------------------------------------------------------------------
 
 	// Begin a new frame. Waits for GPU if necessary, resets allocator.
-	void BeginFrame(HANDLE fenceEvent, uint32_t frameIndex)
+	// @param fence The D3D12 fence for GPU synchronization.
+	// @param fenceEvent Event handle for CPU wait.
+	// @param frameIndex Current frame-in-flight index.
+	void BeginFrame(ID3D12Fence* fence, HANDLE fenceEvent, uint32_t frameIndex)
 	{
-		assert(m_bInitialized);
-
 		m_CurrentFrameIndex = frameIndex;
 		D3D12FrameResource& frame = m_FrameResources[frameIndex];
 
 		// Wait for GPU to finish with this frame's resources before reusing
 		// This is the critical synchronization point that prevents races
-		const uint64_t completedFence = GD3D12Rhi.GetFence()->GetCompletedValue();
+		const uint64_t completedFence = fence->GetCompletedValue();
 		if (completedFence < frame.FenceValue)
 		{
 			// GPU hasn't finished with this frame yet - must wait
-			HRESULT hr = GD3D12Rhi.GetFence()->SetEventOnCompletion(frame.FenceValue, fenceEvent);
+			HRESULT hr = fence->SetEventOnCompletion(frame.FenceValue, fenceEvent);
 			if (SUCCEEDED(hr))
 			{
 				WaitForSingleObject(fenceEvent, INFINITE);
@@ -163,10 +149,10 @@ class D3D12FrameResourceManager final
 	//--------------------------------------------------------------------------
 
 	// Get the current frame's linear allocator.
-	[[nodiscard]] LinearAllocator& GetCurrentAllocator() { return m_FrameResources[m_CurrentFrameIndex].CbAllocator; }
+	[[nodiscard]] D3D12LinearAllocator& GetCurrentAllocator() { return m_FrameResources[m_CurrentFrameIndex].CbAllocator; }
 
 	// Allocate from current frame's allocator.
-	[[nodiscard]] LinearAllocation Allocate(uint64_t size, uint64_t alignment = 256)
+	[[nodiscard]] D3D12LinearAllocation Allocate(uint64_t size, uint64_t alignment = 256)
 	{
 		return GetCurrentAllocator().Allocate(size, alignment);
 	}
@@ -198,17 +184,8 @@ class D3D12FrameResourceManager final
 	// Get capacity per frame.
 	[[nodiscard]] uint64_t GetCapacityPerFrame() const { return m_CapacityPerFrame; }
 
-	// Check if initialized.
-	[[nodiscard]] bool IsInitialized() const { return m_bInitialized; }
-
   private:
-	D3D12FrameResourceManager() = default;
-	~D3D12FrameResourceManager() { Shutdown(); }
-
 	std::array<D3D12FrameResource, EngineSettings::FramesInFlight> m_FrameResources;
 	uint64_t m_CapacityPerFrame = DefaultCapacityPerFrame;
 	uint32_t m_CurrentFrameIndex = 0;
-	bool m_bInitialized = false;
 };
-
-inline D3D12FrameResourceManager& GD3D12FrameResourceManager = D3D12FrameResourceManager::Get();

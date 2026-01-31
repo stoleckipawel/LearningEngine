@@ -1,25 +1,9 @@
 #include "Timer.h"
 
-using namespace Engine;
-
 // -----------------------------------------------------------------------------
-// Meyer's Singleton
+// Constructor
 // -----------------------------------------------------------------------------
-Timer& Timer::Get() noexcept
-{
-	static Timer instance;
-	return instance;
-}
-
-// -----------------------------------------------------------------------------
-// Initialization
-// -----------------------------------------------------------------------------
-void Timer::Initialize() noexcept
-{
-	m_start = Clock::now();
-	m_last = m_start;
-	m_bInitialized = true;
-}
+Timer::Timer() noexcept : m_start{Clock::now()}, m_last{m_start} {}
 
 // -----------------------------------------------------------------------------
 // Tick — call once per frame from the main loop

@@ -1,14 +1,14 @@
 // ============================================================================
 // D3D12DescriptorHeapManager.h
 // ----------------------------------------------------------------------------
-// Singleton manager for all descriptor heaps required by the engine.
+// Manager for all descriptor heaps required by the engine.
 //
 // USAGE:
-//   GDescriptorHeapManager.Initialize();
-//   auto handle = GDescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-//   GDescriptorHeapManager.SetShaderVisibleHeaps();
-//   GDescriptorHeapManager.FreeHandle(type, handle);
-//   GDescriptorHeapManager.Shutdown();
+//   D3D12DescriptorHeapManager heapManager;  // Created by Renderer
+//   auto handle = heapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+//   heapManager.SetShaderVisibleHeaps();
+//   heapManager.FreeHandle(type, handle);
+//   // Destructor cleans up
 //
 // DESIGN:
 //   - Owns heaps for all four D3D12 heap types (SRV, Sampler, DSV, RTV)
@@ -16,8 +16,8 @@
 //   - Raw handle interface for external libraries (ImGui)
 //
 // NOTES:
-//   - Singleton accessed via Get() or global reference
-//   - Initialize() must be called after device creation
+//   - Owned by Renderer, passed by reference to dependent classes
+//   - Constructor initializes heaps after device creation
 // ============================================================================
 
 #pragma once
@@ -29,15 +29,13 @@
 class D3D12DescriptorHeapManager final
 {
   public:
-	[[nodiscard]] static D3D12DescriptorHeapManager& Get() noexcept;
+	explicit D3D12DescriptorHeapManager(D3D12Rhi& rhi);
+	~D3D12DescriptorHeapManager() noexcept;
 
 	D3D12DescriptorHeapManager(const D3D12DescriptorHeapManager&) = delete;
 	D3D12DescriptorHeapManager& operator=(const D3D12DescriptorHeapManager&) = delete;
 	D3D12DescriptorHeapManager(D3D12DescriptorHeapManager&&) = delete;
 	D3D12DescriptorHeapManager& operator=(D3D12DescriptorHeapManager&&) = delete;
-
-	void Initialize();
-	void Shutdown() noexcept;
 
 	// Binds shader-visible heaps (CBV/SRV/UAV and Sampler) to the command list.
 	void SetShaderVisibleHeaps() const;
@@ -64,8 +62,7 @@ class D3D12DescriptorHeapManager final
 	[[nodiscard]] D3D12DescriptorAllocator* GetAllocator(D3D12_DESCRIPTOR_HEAP_TYPE type) const noexcept;
 
   private:
-	D3D12DescriptorHeapManager() = default;
-	~D3D12DescriptorHeapManager() = default;
+	D3D12Rhi* m_rhi = nullptr;
 
 	std::unique_ptr<D3D12DescriptorHeap> m_HeapSRV;
 	std::unique_ptr<D3D12DescriptorAllocator> m_AllocatorSRV;
@@ -79,5 +76,3 @@ class D3D12DescriptorHeapManager final
 	std::unique_ptr<D3D12DescriptorHeap> m_HeapRenderTarget;
 	std::unique_ptr<D3D12DescriptorAllocator> m_AllocatorRenderTarget;
 };
-
-inline D3D12DescriptorHeapManager& GD3D12DescriptorHeapManager = D3D12DescriptorHeapManager::Get();

@@ -59,6 +59,9 @@ namespace EngineSettings
 	/// Back buffer pixel format.
 	inline constexpr DXGI_FORMAT BackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 
+	/// Depth stencil buffer format.
+	inline constexpr DXGI_FORMAT DepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
 	/// Enable vertical sync. False allows uncapped presents or tearing.
 	inline bool VSync = true;
 

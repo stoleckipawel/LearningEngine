@@ -19,8 +19,7 @@
 #include <utility>
 
 // Forward declaration of Event template
-template <typename Signature, std::size_t Capacity>
-class Event;
+template <typename Signature, std::size_t Capacity> class Event;
 
 // ============================================================================
 // ScopedEventHandle
@@ -30,14 +29,18 @@ class Event;
 /// Stores a type-erased cleanup function to avoid template parameter coupling.
 class ScopedEventHandle
 {
-public:
+  public:
 	ScopedEventHandle() noexcept = default;
 
 	/// Constructs a scoped handle that will unsubscribe on destruction.
 	template <typename Signature, std::size_t Capacity>
-	ScopedEventHandle(Event<Signature, Capacity>& InEvent, EventHandle InHandle) noexcept
-	    : m_Handle(InHandle)
-	    , m_RemoveFn([&InEvent, InHandle]() { InEvent.Remove(InHandle); })
+	ScopedEventHandle(Event<Signature, Capacity>& InEvent, EventHandle InHandle) noexcept :
+	    m_Handle(InHandle),
+	    m_RemoveFn(
+	        [&InEvent, InHandle]()
+	        {
+		        InEvent.Remove(InHandle);
+	        })
 	{
 	}
 
@@ -47,9 +50,7 @@ public:
 	// Move Semantics (Move-Only)
 	// -------------------------------------------------------------------------
 
-	ScopedEventHandle(ScopedEventHandle&& Other) noexcept
-	    : m_Handle(Other.m_Handle)
-	    , m_RemoveFn(std::move(Other.m_RemoveFn))
+	ScopedEventHandle(ScopedEventHandle&& Other) noexcept : m_Handle(Other.m_Handle), m_RemoveFn(std::move(Other.m_RemoveFn))
 	{
 		Other.m_Handle.Invalidate();
 		Other.m_RemoveFn = nullptr;
@@ -96,7 +97,7 @@ public:
 	/// Returns the underlying event handle.
 	[[nodiscard]] EventHandle GetHandle() const noexcept { return m_Handle; }
 
-private:
-	EventHandle m_Handle;               ///< Wrapped subscription handle
-	std::function<void()> m_RemoveFn;   ///< Type-erased unsubscribe function
+  private:
+	EventHandle m_Handle;              ///< Wrapped subscription handle
+	std::function<void()> m_RemoveFn;  ///< Type-erased unsubscribe function
 };

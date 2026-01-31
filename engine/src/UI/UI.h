@@ -4,16 +4,15 @@
 // ImGui integration layer for Win32 and D3D12 backends.
 //
 // USAGE:
-//   GUI.Initialize();      // During startup
-//   // In message loop:
-//   GUI.OnWindowMessage(hwnd, msg, wParam, lParam);
+//   UI ui(timer, rhi, window, heapManager, swapChain);
 //   // Each frame:
-//   GUI.Update();          // Build draw lists
-//   GUI.Render();          // Submit to GPU
-//   GUI.Shutdown();        // During teardown
+//   ui.Update();           // Build draw lists
+//   ui.Render();           // Submit to GPU
+//   // Destructor cleans up
 //
 // DESIGN:
 //   - Wraps ImGui context creation/destruction
+//   - Subscribes to Window's message events (decoupled via observer pattern)
 //   - Manages Win32 input forwarding and DX12 rendering
 //   - Owns UI panels (RendererPanel for settings)
 //
@@ -22,11 +21,13 @@
 //   device/command list are used. This class is not thread-safe.
 //
 // NOTES:
-//   - Singleton accessed via GUI global reference
+//   - Owned by Renderer, receives Timer and D3D12 references
 //   - DPI scaling is applied automatically during initialization
 // ============================================================================
 
 #pragma once
+
+#include "Core/Events/ScopedEventHandle.h"
 
 #include <Windows.h>
 
@@ -34,9 +35,15 @@
 
 #include "Sections/ViewMode.h"
 
+class Timer;
 class RendererPanel;
 class UIRendererSection;
 class StatsOverlay;
+class Window;
+class D3D12DescriptorHeapManager;
+class D3D12SwapChain;
+class D3D12Rhi;
+struct WindowMessageEvent;
 
 class UI final
 {
@@ -45,28 +52,28 @@ class UI final
 	// Lifecycle
 	// ========================================================================
 
-	/// Returns the singleton UI instance.
-	[[nodiscard]] static UI& Get() noexcept;
+	/// Creates ImGui context and initializes Win32/DX12 backends.
+	UI(Timer& timer, D3D12Rhi& rhi, Window& window, D3D12DescriptorHeapManager& descriptorHeapManager, D3D12SwapChain& swapChain);
+
+	/// Shuts down backends and destroys ImGui context.
+	~UI() noexcept;
 
 	UI(const UI&) = delete;
 	UI& operator=(const UI&) = delete;
 	UI(UI&&) = delete;
 	UI& operator=(UI&&) = delete;
 
-	/// Creates ImGui context and initializes Win32/DX12 backends.
-	/// May log/abort on failure via engine error helpers.
-	void Initialize();
-
-	/// Shuts down backends and destroys ImGui context.
-	void Shutdown() noexcept;
-
 	// ========================================================================
 	// Message Handling
 	// ========================================================================
 
-	/// Forwards Win32 messages to ImGui for input processing.
+	/// Handles window message events from the Window's event system.
+	/// @param event Window message event data
+	void HandleWindowMessage(WindowMessageEvent& event) noexcept;
+
+	/// Forwards Win32 messages to ImGui for input processing (internal use).
 	/// @return True if ImGui consumed the message and app should skip it.
-	bool OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
+	bool ProcessWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 
 	// ========================================================================
 	// Frame Operations
@@ -86,9 +93,6 @@ class UI final
 	[[nodiscard]] ViewMode::Type GetViewMode() noexcept;
 
   private:
-	UI() = default;
-	~UI() noexcept;
-
 	// ------------------------------------------------------------------------
 	// Frame Building
 	// ------------------------------------------------------------------------
@@ -103,6 +107,23 @@ class UI final
 	// Initialization Helpers
 	// ------------------------------------------------------------------------
 
+	/// Creates ImGui context and configures default settings.
+	void InitializeImGuiContext();
+
+	/// Initializes the Win32 platform backend.
+	/// @return True if successful, false on failure.
+	[[nodiscard]] bool InitializeWin32Backend();
+
+	/// Initializes the D3D12 rendering backend.
+	/// @return True if successful, false on failure.
+	[[nodiscard]] bool InitializeD3D12Backend();
+
+	/// Registers default UI panels and sections.
+	void InitializeDefaultPanels();
+
+	/// Subscribes to window message events for input handling.
+	void SubscribeToWindowEvents(Window& window);
+
 	/// Configures ImGui font and style for system DPI.
 	void SetupDPIScaling() noexcept;
 
@@ -110,8 +131,13 @@ class UI final
 	// Owned Panels
 	// ------------------------------------------------------------------------
 
-	std::unique_ptr<RendererPanel> m_rendererPanel;  ///< Settings panel for renderer options
-};
+	std::unique_ptr<RendererPanel> m_rendererPanel;                 ///< Settings panel for renderer options
+	Timer* m_timer = nullptr;                                       ///< Timer reference for frame timing
+	D3D12Rhi* m_rhi = nullptr;                                      ///< RHI reference for D3D12 operations
+	Window* m_window = nullptr;                                     ///< Window reference for dimensions
+	D3D12DescriptorHeapManager* m_descriptorHeapManager = nullptr;  ///< Descriptor heap manager reference
+	D3D12SwapChain* m_swapChain = nullptr;                          ///< Swap chain reference for back buffer format
 
-/// Global singleton reference for convenient access.
-inline UI& GUI = UI::Get();
+	/// Window message subscription (auto-cleanup via ScopedEventHandle).
+	ScopedEventHandle m_windowMessageHandle;
+};

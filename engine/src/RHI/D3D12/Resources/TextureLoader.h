@@ -24,6 +24,8 @@
 
 #pragma once
 
+class AssetSystem;
+
 class TextureLoader
 {
   public:
@@ -42,12 +44,25 @@ class TextureLoader
 		DXGI_FORMAT dxgiPixelFormat = DXGI_FORMAT_UNKNOWN;
 	};
 
-	explicit TextureLoader(const std::filesystem::path& fileName);
+	explicit TextureLoader(const AssetSystem& assetSystem, const std::filesystem::path& fileName);
 
-	// Return loaded data. noexcept: accessor only.
 	const Data& GetData() const noexcept { return m_data; }
 
   private:
+	// -------------------------------------------------------------------------
+	// Loading Helpers
+	// -------------------------------------------------------------------------
+
+	ComPtr<IWICBitmapFrameDecode> DecodeImageFile(IWICImagingFactory* wicFactory, const std::filesystem::path& resolvedPath);
+	void QueryPixelFormat(IWICImagingFactory* wicFactory, IWICBitmapFrameDecode* wicFrame);
+	void MapToDxgiFormat(const std::filesystem::path& resolvedPath);
+	void CalculateBufferLayout();
+	void CopyPixelData(IWICBitmapFrameDecode* wicFrame);
+
+	// -------------------------------------------------------------------------
+	// State
+	// -------------------------------------------------------------------------
+
 	Data m_data;
 
 	struct GUID_to_DXGI

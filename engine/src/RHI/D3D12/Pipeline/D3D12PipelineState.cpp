@@ -1,7 +1,9 @@
 #include "PCH.h"
 #include "D3D12PipelineState.h"
+#include "D3D12Rhi.h"
 #include "DebugUtils.h"
 #include "DepthConvention.h"
+#include "EngineConfig.h"
 #include "Log.h"
 
 #include <cstdio>
@@ -10,13 +12,11 @@
 
 // Implements graphics pipeline state setup and configuration for D3D12.
 
-// Configure stream output for the pipeline state (disabled by default).
 void D3D12PipelineState::SetStreamOutput(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc) noexcept
 {
 	psoDesc.StreamOutput = {};
 }
 
-// Configures rasterizer state for the pipeline.
 void D3D12PipelineState::SetRasterizerState(
     D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc,
     bool bRenderWireframe,
@@ -38,7 +38,6 @@ void D3D12PipelineState::SetRasterizerState(
 	rs.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 }
 
-// Configures blend state for the render target.
 void D3D12PipelineState::SetRenderTargetBlendState(
     D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc,
     D3D12_RENDER_TARGET_BLEND_DESC blendDesc) noexcept
@@ -47,7 +46,6 @@ void D3D12PipelineState::SetRenderTargetBlendState(
 	psoDesc.BlendState.RenderTarget[0] = blendDesc;
 }
 
-// Configures depth test state for the pipeline.
 void D3D12PipelineState::SetDepthTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, DepthTestDesc depthDesc) noexcept
 {
 	auto& ds = psoDesc.DepthStencilState;
@@ -57,7 +55,6 @@ void D3D12PipelineState::SetDepthTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& p
 	ds.DepthFunc = depthDesc.DepthFunc;
 }
 
-// Configures stencil test state for the pipeline.
 void D3D12PipelineState::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, StencilTestDesc stencilDesc) noexcept
 {
 	auto& ds = psoDesc.DepthStencilState;
@@ -77,10 +74,12 @@ void D3D12PipelineState::SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC&
 }
 
 D3D12PipelineState::D3D12PipelineState(
+    D3D12Rhi& rhi,
     std::span<const D3D12_INPUT_ELEMENT_DESC> vertexLayout,
     D3D12RootSignature& rootSignature,
     ShaderBytecode vertexShader,
-    ShaderBytecode pixelShader)
+    ShaderBytecode pixelShader) :
+    m_rhi(rhi)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
@@ -133,8 +132,8 @@ D3D12PipelineState::D3D12PipelineState(
 
 	// Render target formats
 	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = GD3D12SwapChain.GetBackBufferFormat();
-	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	psoDesc.RTVFormats[0] = EngineSettings::BackBufferFormat;
+	psoDesc.DSVFormat = EngineSettings::DepthStencilFormat;
 
 	// Multisampling
 	psoDesc.NodeMask = 0;
@@ -145,7 +144,7 @@ D3D12PipelineState::D3D12PipelineState(
 	psoDesc.SampleDesc.Quality = 0;
 
 	// Create PSO
-	HRESULT hr = GD3D12Rhi.GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(m_pso.ReleaseAndGetAddressOf()));
+	HRESULT hr = m_rhi.GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(m_pso.ReleaseAndGetAddressOf()));
 	if (FAILED(hr))
 	{
 		HandlePsoCreateFailure(hr);
@@ -158,7 +157,7 @@ void D3D12PipelineState::HandlePsoCreateFailure(HRESULT hr) const noexcept
 {
 #if defined(_DEBUG)
 	ComPtr<ID3D12InfoQueue> infoQueue;
-	if (SUCCEEDED(GD3D12Rhi.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf()))))
+	if (SUCCEEDED(m_rhi.GetDevice()->QueryInterface(IID_PPV_ARGS(infoQueue.ReleaseAndGetAddressOf()))))
 	{
 		const UINT64 numMessages = infoQueue->GetNumStoredMessagesAllowedByRetrievalFilter();
 		for (UINT64 i = 0; i < numMessages; ++i)
@@ -189,8 +188,7 @@ D3D12PipelineState::~D3D12PipelineState() noexcept
 	m_pso.Reset();
 }
 
-// Sets the pipeline state object for the current command list.
 void D3D12PipelineState::Set() const noexcept
 {
-	GD3D12Rhi.GetCommandList()->SetPipelineState(m_pso.Get());
+	m_rhi.GetCommandList()->SetPipelineState(m_pso.Get());
 }

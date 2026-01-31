@@ -23,8 +23,12 @@
 #include "D3D12RootSignature.h"
 
 #include <span>
+#include <d3d12.h>
+#include <wrl/client.h>
 
 using Microsoft::WRL::ComPtr;
+
+class D3D12Rhi;
 
 // ============================================================================
 // Configuration Structures
@@ -60,6 +64,7 @@ class D3D12PipelineState
   public:
 	// Constructs and creates the graphics pipeline state object.
 	D3D12PipelineState(
+	    D3D12Rhi& rhi,
 	    std::span<const D3D12_INPUT_ELEMENT_DESC> vertexLayout,
 	    D3D12RootSignature& rootSignature,
 	    ShaderBytecode vertexShader,
@@ -85,5 +90,6 @@ class D3D12PipelineState
 	void SetStencilTestState(D3D12_GRAPHICS_PIPELINE_STATE_DESC& psoDesc, StencilTestDesc stencilDesc) noexcept;
 
   private:
+	D3D12Rhi& m_rhi;
 	ComPtr<ID3D12PipelineState> m_pso = nullptr;
 };

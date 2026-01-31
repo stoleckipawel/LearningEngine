@@ -7,23 +7,24 @@
 // minimal COM reference counting overhead.
 //
 // USAGE:
-//   GD3D12Rhi.Initialize();              // Create device, queues, fences
-//   GD3D12Rhi.ResetCommandAllocator();   // Begin frame
-//   GD3D12Rhi.ResetCommandList();
+//   D3D12Rhi rhi;                        // Creates device, queues, fences
+//   rhi.ResetCommandAllocator();         // Begin frame
+//   rhi.ResetCommandList();
 //   // ... record commands ...
-//   GD3D12Rhi.CloseCommandListScene();
-//   GD3D12Rhi.ExecuteCommandList();
-//   GD3D12Rhi.Signal();                  // End frame
-//   GD3D12Rhi.WaitForGPU();              // Sync before shutdown
-//   GD3D12Rhi.Shutdown();
+//   rhi.CloseCommandList();
+//   rhi.ExecuteCommandList();
+//   rhi.Signal();                        // End frame
+//   rhi.WaitForGPU();                    // Sync before shutdown
+//   // destructor releases all resources
 //
 // DESIGN:
+//   - RAII: constructor initializes, destructor cleans up
 //   - Getters return const& to internal ComPtr to avoid refcount churn
 //   - Per-frame command allocators for FramesInFlight buffering
 //   - Fence-based GPU synchronization with per-frame tracking
 //
 // NOTES:
-//   - Singleton accessed via GD3D12Rhi global
+//   - Owned by Renderer, passed by reference to dependent classes
 //   - Requires D3D_FEATURE_LEVEL_12_1 and Shader Model 6.0
 //   - Debug layer enabled when ENGINE_GPU_VALIDATION is defined
 //
@@ -31,12 +32,17 @@
 
 #pragma once
 
-#include "D3D12SwapChain.h"
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl/client.h>
+#include <memory>
+#include "EngineConfig.h"
 
 using Microsoft::WRL::ComPtr;
+
+#ifdef ENGINE_GPU_VALIDATION
+class D3D12DebugLayer;
+#endif
 
 // =============================================================================
 // D3D12Rhi
@@ -45,7 +51,11 @@ using Microsoft::WRL::ComPtr;
 class D3D12Rhi final
 {
   public:
-	[[nodiscard]] static D3D12Rhi& Get() noexcept;
+	// Constructs and initializes device, command queue, allocators, and fences.
+	explicit D3D12Rhi(bool requireDXRSupport = false) noexcept;
+
+	// Releases all D3D12 resources.
+	~D3D12Rhi() noexcept;
 
 	D3D12Rhi(const D3D12Rhi&) = delete;
 	D3D12Rhi& operator=(const D3D12Rhi&) = delete;
@@ -53,43 +63,50 @@ class D3D12Rhi final
 	D3D12Rhi& operator=(D3D12Rhi&&) = delete;
 
 	// =========================================================================
-	// Lifecycle
-	// =========================================================================
-
-	// Initializes device, command queue, allocators, and fences.
-	void Initialize(bool RequireDXRSupport = false) noexcept;
-
-	// Releases all D3D12 resources. Call after final WaitForGPU().
-	void Shutdown() noexcept;
-
-	// =========================================================================
 	// Command Recording
 	// =========================================================================
 
-	// Resets the command allocator for the current frame. Call at frame start.
-	void ResetCommandAllocator() noexcept;
+	// Resets the command allocator for the specified frame. Call at frame start.
+	void ResetCommandAllocator(uint32_t frameInFlightIndex) noexcept;
 
 	// Resets and reopens the command list for recording.
-	void ResetCommandList() noexcept;
+	void ResetCommandList(uint32_t frameInFlightIndex) noexcept;
 
 	// Closes the command list. Must be called before ExecuteCommandList().
-	void CloseCommandListScene() noexcept;
+	void CloseCommandList(uint32_t frameInFlightIndex) noexcept;
 
 	// Submits the closed command list to the GPU queue.
-	void ExecuteCommandList() noexcept;
+	void ExecuteCommandList(uint32_t frameInFlightIndex) noexcept;
 
 	// Records a resource barrier for state transition.
-	void SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter) noexcept;
+	void SetBarrier(
+	    uint32_t frameInFlightIndex,
+	    ID3D12Resource* Resource,
+	    D3D12_RESOURCE_STATES StateBefore,
+	    D3D12_RESOURCE_STATES StateAfter) noexcept;
+
+	// Sets the current frame index for convenience methods.
+	void SetCurrentFrameIndex(uint32_t frameInFlightIndex) noexcept { m_CurrentFrameIndex = frameInFlightIndex; }
+	[[nodiscard]] uint32_t GetCurrentFrameIndex() const noexcept { return m_CurrentFrameIndex; }
+
+	// Convenience overloads using current frame index
+	void CloseCommandList() noexcept { CloseCommandList(m_CurrentFrameIndex); }
+	void ExecuteCommandList() noexcept { ExecuteCommandList(m_CurrentFrameIndex); }
+	void SetBarrier(ID3D12Resource* Resource, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter) noexcept
+	{
+		SetBarrier(m_CurrentFrameIndex, Resource, StateBefore, StateAfter);
+	}
+	[[nodiscard]] const ComPtr<ID3D12GraphicsCommandList7>& GetCommandList() const noexcept { return m_CmdList[m_CurrentFrameIndex]; }
 
 	// =========================================================================
 	// Synchronization
 	// =========================================================================
 
 	// Signals the fence with the next value. Call at end of frame.
-	void Signal() noexcept;
+	void Signal(uint32_t frameInFlightIndex) noexcept;
 
-	// Blocks CPU until GPU completes all pending work.
-	void WaitForGPU() noexcept;
+	// Blocks CPU until GPU completes work for specified frame.
+	void WaitForGPU(uint32_t frameInFlightIndex) noexcept;
 
 	// Signal and wait (convenience for shutdown/resize).
 	void Flush() noexcept;
@@ -102,34 +119,34 @@ class D3D12Rhi final
 	void CheckShaderModel6Support() const noexcept;
 
 	// =========================================================================
-	// Accessors
+	// D3D12-Specific Accessors
 	// =========================================================================
 
 	[[nodiscard]] const ComPtr<IDXGIFactory7>& GetDxgiFactory() const noexcept { return m_DxgiFactory; }
 	[[nodiscard]] const ComPtr<IDXGIAdapter1>& GetAdapter() const noexcept { return m_Adapter; }
 	[[nodiscard]] const ComPtr<ID3D12Device10>& GetDevice() const noexcept { return m_Device; }
 	[[nodiscard]] const ComPtr<ID3D12CommandQueue>& GetCommandQueue() const noexcept { return m_CmdQueue; }
-	[[nodiscard]] const ComPtr<ID3D12CommandAllocator>& GetCommandAllocatorScene(UINT FrameInFlightIndex) const noexcept
+	[[nodiscard]] const ComPtr<ID3D12CommandAllocator>& GetCommandAllocator(uint32_t FrameInFlightIndex) const noexcept
 	{
-		return m_CmdAllocatorScene[FrameInFlightIndex];
+		return m_CmdAllocator[FrameInFlightIndex];
 	}
-	[[nodiscard]] const ComPtr<ID3D12GraphicsCommandList7>& GetCommandList() const noexcept { return m_CmdListScene; }
+	[[nodiscard]] const ComPtr<ID3D12GraphicsCommandList7>& GetCommandList(uint32_t FrameInFlightIndex) const noexcept
+	{
+		return m_CmdList[FrameInFlightIndex];
+	}
 	[[nodiscard]] const ComPtr<ID3D12Fence1>& GetFence() const noexcept { return m_Fence; }
 
 	// =========================================================================
-	// Fence Management
+	// D3D12-Specific Fence Management
 	// =========================================================================
 
-	[[nodiscard]] UINT64 GetFenceValueForFrame(UINT FrameInFlightIndex) const noexcept { return m_FenceValues[FrameInFlightIndex]; }
-	void SetFenceValueForFrame(UINT FrameInFlightIndex, UINT64 value) noexcept { m_FenceValues[FrameInFlightIndex] = value; }
+	[[nodiscard]] uint64_t GetFenceValueForFrame(uint32_t FrameInFlightIndex) const noexcept { return m_FenceValues[FrameInFlightIndex]; }
+	void SetFenceValueForFrame(uint32_t FrameInFlightIndex, uint64_t value) noexcept { m_FenceValues[FrameInFlightIndex] = value; }
 	[[nodiscard]] HANDLE GetFenceEvent() const noexcept { return m_FenceEvent; }
-	[[nodiscard]] UINT64 GetNextFenceValue() const noexcept { return m_NextFenceValue; }
-	void SetNextFenceValue(UINT64 value) noexcept { m_NextFenceValue = value; }
+	[[nodiscard]] uint64_t GetNextFenceValue() const noexcept { return m_NextFenceValue; }
+	void SetNextFenceValue(uint64_t value) noexcept { m_NextFenceValue = value; }
 
   private:
-	D3D12Rhi() = default;
-	~D3D12Rhi() = default;
-
 	// -------------------------------------------------------------------------
 	// Initialization Helpers
 	// -------------------------------------------------------------------------
@@ -142,6 +159,10 @@ class D3D12Rhi final
 	void CreateCommandLists();
 	void CreateFenceAndEvent();
 
+#ifdef ENGINE_GPU_VALIDATION
+	std::unique_ptr<D3D12DebugLayer> m_debugLayer;
+#endif
+
 	// -------------------------------------------------------------------------
 	// D3D12 Resources
 	// -------------------------------------------------------------------------
@@ -150,18 +171,17 @@ class D3D12Rhi final
 	ComPtr<IDXGIAdapter1> m_Adapter = nullptr;
 	ComPtr<ID3D12Device10> m_Device = nullptr;
 	ComPtr<ID3D12CommandQueue> m_CmdQueue = nullptr;
-	ComPtr<ID3D12CommandAllocator> m_CmdAllocatorScene[EngineSettings::FramesInFlight] = {};
-	ComPtr<ID3D12GraphicsCommandList7> m_CmdListScene = nullptr;
+	ComPtr<ID3D12CommandAllocator> m_CmdAllocator[EngineSettings::FramesInFlight] = {};
+	ComPtr<ID3D12GraphicsCommandList7> m_CmdList[EngineSettings::FramesInFlight] = {};
+	uint32_t m_CurrentFrameIndex = 0;  // Tracks current frame for methods that don't take frame index
 
 	// -------------------------------------------------------------------------
 	// Synchronization State
 	// -------------------------------------------------------------------------
 
-	UINT64 m_FenceValues[EngineSettings::FramesInFlight] = {0};  // per-frame fence values
-	UINT64 m_NextFenceValue = 1;                                  // monotonically increasing
+	uint64_t m_FenceValues[EngineSettings::FramesInFlight] = {0};  // per-frame fence values
+	uint64_t m_NextFenceValue = 1;                                 // monotonically increasing
 	ComPtr<ID3D12Fence1> m_Fence = nullptr;
 	HANDLE m_FenceEvent = nullptr;
 	D3D_FEATURE_LEVEL m_DesiredD3DFeatureLevel = D3D_FEATURE_LEVEL_12_1;
 };
-
-inline D3D12Rhi& GD3D12Rhi = D3D12Rhi::Get();

@@ -5,30 +5,31 @@
 #include "Core/Strings/StringUtils.h"
 
 ShaderCompileResult DxcShaderCompiler::CompileFromAsset(
+    const AssetSystem& assetSystem,
     const std::filesystem::path& sourcePath,
     ShaderStage stage,
     const std::string& entryPoint)
 {
-	const auto resolvedPath = GAssetSystem.ResolvePathValidated(sourcePath, AssetType::Shader);
+	const auto resolvedPath = assetSystem.ResolvePathValidated(sourcePath, AssetType::Shader);
 
 	ShaderCompileOptions options;
 	options.SourcePath = resolvedPath;
 	options.EntryPoint = entryPoint;
 	options.Stage = stage;
 
-	ConfigureIncludePaths(options);
+	ConfigureIncludePaths(assetSystem, options);
 	ApplyBuildConfiguration(options);
 
 	LOG_INFO("Compiling shader: " + resolvedPath.string());
-	return Compile(options);
+	return Compile(assetSystem, options);
 }
 
-void DxcShaderCompiler::ConfigureIncludePaths(ShaderCompileOptions& options)
+void DxcShaderCompiler::ConfigureIncludePaths(const AssetSystem& assetSystem, ShaderCompileOptions& options)
 {
 	options.AdditionalIncludeDirs.clear();
 
-	const auto& projectShaders = GAssetSystem.GetTypedPath(AssetType::Shader, AssetSource::Project);
-	const auto& engineShaders = GAssetSystem.GetTypedPath(AssetType::Shader, AssetSource::Engine);
+	const auto& projectShaders = assetSystem.GetTypedPath(AssetType::Shader, AssetSource::Project);
+	const auto& engineShaders = assetSystem.GetTypedPath(AssetType::Shader, AssetSource::Engine);
 
 	// Primary include: project if available, otherwise engine.
 	options.IncludeDir = !projectShaders.empty() ? projectShaders : engineShaders;
@@ -53,7 +54,7 @@ void DxcShaderCompiler::ApplyBuildConfiguration(ShaderCompileOptions& options)
 #endif
 }
 
-ShaderCompileResult DxcShaderCompiler::Compile(const ShaderCompileOptions& options)
+ShaderCompileResult DxcShaderCompiler::Compile(const AssetSystem& assetSystem, const ShaderCompileOptions& options)
 {
 	DxcContext& ctx = GetDxcContext();
 	if (!ctx.IsValid())
@@ -76,8 +77,8 @@ ShaderCompileResult DxcShaderCompiler::Compile(const ShaderCompileOptions& optio
 
 	// Build compile arguments - store wide strings to keep pointers valid
 	std::wstring wSourcePath = Engine::Strings::ToWide(options.SourcePath);
-	std::wstring wEntryPoint = Engine::Strings::ToWide(std::string_view{ options.EntryPoint });
-	std::wstring wTargetProfile = Engine::Strings::ToWide(std::string_view{ options.BuildTargetProfile() });
+	std::wstring wEntryPoint = Engine::Strings::ToWide(std::string_view{options.EntryPoint});
+	std::wstring wTargetProfile = Engine::Strings::ToWide(std::string_view{options.BuildTargetProfile()});
 	std::vector<std::wstring> wIncludeDirs;
 	std::vector<std::wstring> wDefines;
 	std::vector<LPCWSTR> args;
@@ -127,7 +128,7 @@ ShaderCompileResult DxcShaderCompiler::Compile(const ShaderCompileOptions& optio
 	}
 
 	// Save debug symbols
-	SaveShaderSymbols(result.Get(), options.SourcePath);
+	SaveShaderSymbols(assetSystem, result.Get(), options.SourcePath);
 
 	LOG_INFO("Shader compiled successfully: " + options.SourcePath.filename().string());
 	return ShaderCompileResult::Success(std::move(bytecode));
@@ -177,7 +178,7 @@ void DxcShaderCompiler::BuildCompileArguments(
 	wDefines.clear();
 	for (const auto& def : options.Defines)
 	{
-		wDefines.push_back(Engine::Strings::ToWide(std::string_view{ def }));
+		wDefines.push_back(Engine::Strings::ToWide(std::string_view{def}));
 	}
 	for (const auto& def : wDefines)
 	{
@@ -246,7 +247,7 @@ std::string DxcShaderCompiler::ExtractErrorMessage(IDxcResult* result)
 	return {};
 }
 
-void DxcShaderCompiler::SaveShaderSymbols(IDxcResult* result, const std::filesystem::path& sourcePath)
+void DxcShaderCompiler::SaveShaderSymbols(const AssetSystem& assetSystem, IDxcResult* result, const std::filesystem::path& sourcePath)
 {
 	ComPtr<IDxcBlob> pdbBlob;
 	ComPtr<IDxcBlobUtf16> pdbNameBlob;
@@ -255,7 +256,7 @@ void DxcShaderCompiler::SaveShaderSymbols(IDxcResult* result, const std::filesys
 	if (!pdbBlob || !pdbNameBlob)
 		return;
 
-	const std::filesystem::path& symbolsDir = GAssetSystem.GetShaderSymbolsOutputPath();
+	const std::filesystem::path& symbolsDir = assetSystem.GetShaderSymbolsOutputPath();
 	std::wstring pdbName(pdbNameBlob->GetStringPointer());
 	const std::filesystem::path pdbFilename = std::filesystem::path(pdbName).filename();
 	const std::filesystem::path pdbPath = symbolsDir / pdbFilename;

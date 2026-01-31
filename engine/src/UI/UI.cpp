@@ -1,113 +1,143 @@
-
 #include "PCH.h"
 #include "UI.h"
 #include "Window.h"
 #include "D3D12Rhi.h"
 #include "D3D12DescriptorHeapManager.h"
+#include "D3D12SwapChain.h"
 #include "Timer.h"
+#include "Log.h"
 
 #include "Panels/RendererPanel.h"
 #include "Sections/StatsOverlay.h"
 #include "Sections/ViewMode.h"
 #include "Sections/TimeControls.h"
-#include "Sections/SceneSection.h"
-#include "Sections/CameraSection.h"
 
 #include <imgui.h>
 #include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_dx12.h>
 
-UI& UI::Get() noexcept
-{
-	static UI instance;
-	return instance;
-}
-
-UI::~UI() noexcept = default;
-
 // Forward declaration to ensure the Win32 backend handler is visible to this unit.
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-static void AllocSRV(ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle)
+static void AllocSRV(
+    ImGui_ImplDX12_InitInfo* info,
+    D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle,
+    D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle)
 {
-	GD3D12DescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, *out_cpu_handle, *out_gpu_handle);
+	auto* heapManager = static_cast<D3D12DescriptorHeapManager*>(info->UserData);
+	heapManager->AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, *out_cpu_handle, *out_gpu_handle);
 }
 
-static void FreeSRV(ImGui_ImplDX12_InitInfo*, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle)
+static void FreeSRV(ImGui_ImplDX12_InitInfo* info, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle, D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle)
 {
-	GD3D12DescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, cpu_handle, gpu_handle);
+	auto* heapManager = static_cast<D3D12DescriptorHeapManager*>(info->UserData);
+	heapManager->FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, cpu_handle, gpu_handle);
 }
 
-bool UI::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept
+void UI::HandleWindowMessage(WindowMessageEvent& event) noexcept
+{
+	// UI gets first chance to handle messages (for ImGui input capture)
+	if (ProcessWindowMessage(event.hWnd, event.msg, event.wParam, event.lParam))
+	{
+		event.handled = true;
+	}
+}
+
+bool UI::ProcessWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept
 {
 	return ImGui_ImplWin32_WndProcHandler(wnd, msg, wParam, lParam);
 }
 
-// Creates ImGui context and initializes Win32/DX12 backends.
-void UI::Initialize()
+UI::UI(Timer& timer, D3D12Rhi& rhi, Window& window, D3D12DescriptorHeapManager& descriptorHeapManager, D3D12SwapChain& swapChain) :
+    m_timer(&timer), m_rhi(&rhi), m_window(&window), m_descriptorHeapManager(&descriptorHeapManager), m_swapChain(&swapChain)
 {
-	if (!m_rendererPanel)
-		m_rendererPanel = std::make_unique<RendererPanel>();
+	InitializeImGuiContext();
 
-	// Create ImGui context and set a default style.
+	if (!InitializeWin32Backend())
+		return;
+
+	if (!InitializeD3D12Backend())
+		return;
+
+	SetupDPIScaling();
+	InitializeDefaultPanels();
+	SubscribeToWindowEvents(window);
+}
+
+void UI::InitializeImGuiContext()
+{
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 
 	ImGuiIO& io = ImGui::GetIO();
-	(void) io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable keyboard controls.
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable gamepad controls.
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
 	ImGui::StyleColorsDark();
+}
 
-	// Initialize platform backend with the window handle. Guard against missing HWND.
-	if (!GWindow.GetHWND())
+bool UI::InitializeWin32Backend()
+{
+	if (!m_window->GetHWND())
 	{
-		LOG_FATAL("UI::Initialize: invalid window handle");
-		return;
+		LOG_FATAL("UI::InitializeWin32Backend: invalid window handle");
+		return false;
 	}
 
-	ImGui_ImplWin32_Init(GWindow.GetHWND());
+	ImGui_ImplWin32_Init(m_window->GetHWND());
+	return true;
+}
 
-	ImGui_ImplDX12_InitInfo init_info = {};
-	init_info.Device = GD3D12Rhi.GetDevice().Get();
-	init_info.CommandQueue = GD3D12Rhi.GetCommandQueue().Get();
-	init_info.NumFramesInFlight = static_cast<int>(EngineSettings::FramesInFlight);
-	init_info.RTVFormat = GD3D12SwapChain.GetBackBufferFormat();
-	init_info.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	init_info.SrvDescriptorHeap = GD3D12DescriptorHeapManager.GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)->GetRaw();
-	init_info.SrvDescriptorAllocFn = &AllocSRV;
-	init_info.SrvDescriptorFreeFn = &FreeSRV;
-	// Validate required D3D12 objects before calling ImGui init.
-	if (init_info.Device == nullptr || init_info.CommandQueue == nullptr || init_info.SrvDescriptorHeap == nullptr)
+bool UI::InitializeD3D12Backend()
+{
+	ImGui_ImplDX12_InitInfo initInfo = {};
+	initInfo.Device = m_rhi->GetDevice().Get();
+	initInfo.CommandQueue = m_rhi->GetCommandQueue().Get();
+	initInfo.NumFramesInFlight = static_cast<int>(EngineSettings::FramesInFlight);
+	initInfo.RTVFormat = m_swapChain->GetBackBufferFormat();
+	initInfo.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	initInfo.SrvDescriptorHeap = m_descriptorHeapManager->GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)->GetRaw();
+	initInfo.SrvDescriptorAllocFn = &AllocSRV;
+	initInfo.SrvDescriptorFreeFn = &FreeSRV;
+	initInfo.UserData = m_descriptorHeapManager;
+
+	if (initInfo.Device == nullptr || initInfo.CommandQueue == nullptr || initInfo.SrvDescriptorHeap == nullptr)
 	{
-		LOG_FATAL("UI::Initialize: missing DX12 device/queue/descriptor-heap for ImGui initialization");
-		return;
+		LOG_FATAL("UI::InitializeD3D12Backend: missing DX12 device/queue/descriptor-heap");
+		return false;
 	}
 
-	ImGui_ImplDX12_Init(&init_info);
+	ImGui_ImplDX12_Init(&initInfo);
 
+	ImGuiIO& io = ImGui::GetIO();
 	io.Fonts->AddFontDefault();
 
-	// Setup DPI scaling and style sizes.
-	SetupDPIScaling();
+	return true;
+}
+
+void UI::InitializeDefaultPanels()
+{
+	m_rendererPanel = std::make_unique<RendererPanel>();
 
 	if (!m_rendererPanel->HasSection(UIRendererSectionId::Stats))
-		m_rendererPanel->SetSection(std::make_unique<StatsOverlay>());
+		m_rendererPanel->SetSection(std::make_unique<StatsOverlay>(*m_timer));
 
 	if (!m_rendererPanel->HasSection(UIRendererSectionId::ViewMode))
 		m_rendererPanel->SetSection(std::make_unique<ViewMode>());
 
 	if (!m_rendererPanel->HasSection(UIRendererSectionId::Time))
-		m_rendererPanel->SetSection(std::make_unique<TimeControls>());
-
-	if (!m_rendererPanel->HasSection(UIRendererSectionId::Scene))
-		m_rendererPanel->SetSection(std::make_unique<SceneSection>());
-
-	if (!m_rendererPanel->HasSection(UIRendererSectionId::Camera))
-		m_rendererPanel->SetSection(std::make_unique<CameraSection>());
+		m_rendererPanel->SetSection(std::make_unique<TimeControls>(*m_timer));
 }
 
+void UI::SubscribeToWindowEvents(Window& window)
+{
+	auto handle = window.OnWindowMessage.Add(
+	    [this](WindowMessageEvent& event)
+	    {
+		    HandleWindowMessage(event);
+	    });
+	m_windowMessageHandle = ScopedEventHandle(window.OnWindowMessage, handle);
+}
 
 ViewMode::Type UI::GetViewMode() noexcept
 {
@@ -125,8 +155,8 @@ ViewMode::Type UI::GetViewMode() noexcept
 void UI::NewFrame()
 {
 	ImGuiIO& io = ImGui::GetIO();
-	io.DeltaTime = static_cast<float>(GTimer.GetDelta(Engine::TimeDomain::Unscaled, Engine::TimeUnit::Seconds));
-	io.DisplaySize = ImVec2(GWindow.GetWidth(), GWindow.GetHeight());
+	io.DeltaTime = static_cast<float>(m_timer->GetDelta(TimeDomain::Unscaled, TimeUnit::Seconds));
+	io.DisplaySize = ImVec2(m_window->GetWidth(), m_window->GetHeight());
 
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
@@ -157,11 +187,11 @@ void UI::Update()
 // Submits ImGui draw data using the current DX12 command list.
 void UI::Render() noexcept
 {
-	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), GD3D12Rhi.GetCommandList().Get());
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_rhi->GetCommandList().Get());
 }
 
-// Shuts down ImGui backends and destroys the context.
-void UI::Shutdown() noexcept
+// Destructor - shuts down ImGui backends and destroys the context.
+UI::~UI() noexcept
 {
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();

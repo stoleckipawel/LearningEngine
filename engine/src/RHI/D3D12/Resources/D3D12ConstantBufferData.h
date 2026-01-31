@@ -102,4 +102,4 @@ struct alignas(256) PerObjectPSConstantBufferData
 CBV_CHECK(PerObjectPSConstantBufferData);
 
 //------------------------------------------------------------------------------
-// ToDo: Per-Instance Data (structured buffer element) — updated per instance
+// TODO: Per-Instance Data (structured buffer element) — updated per instance

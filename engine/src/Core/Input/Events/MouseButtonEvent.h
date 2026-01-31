@@ -26,44 +26,23 @@ struct MouseButtonEvent
 	bool bPressed = false;                          ///< True = press, False = release
 
 	/// Returns the device type (always Mouse).
-	[[nodiscard]] constexpr InputDevice GetDevice() const noexcept
-	{
-		return InputDevice::Mouse;
-	}
+	[[nodiscard]] constexpr InputDevice GetDevice() const noexcept { return InputDevice::Mouse; }
 
 	/// Returns true if this is a button press event.
-	[[nodiscard]] constexpr bool IsPressed() const noexcept
-	{
-		return bPressed;
-	}
+	[[nodiscard]] constexpr bool IsPressed() const noexcept { return bPressed; }
 
 	/// Returns true if this is a button release event.
-	[[nodiscard]] constexpr bool IsReleased() const noexcept
-	{
-		return !bPressed;
-	}
+	[[nodiscard]] constexpr bool IsReleased() const noexcept { return !bPressed; }
 
 	/// Returns true if the specified modifier is active.
-	[[nodiscard]] constexpr bool HasModifier(ModifierFlags flag) const noexcept
-	{
-		return HasAnyFlag(Modifiers, flag);
-	}
+	[[nodiscard]] constexpr bool HasModifier(ModifierFlags flag) const noexcept { return HasAnyFlag(Modifiers, flag); }
 
 	/// Returns true if this is a left button event.
-	[[nodiscard]] constexpr bool IsLeftButton() const noexcept
-	{
-		return Button == MouseButton::Left;
-	}
+	[[nodiscard]] constexpr bool IsLeftButton() const noexcept { return Button == MouseButton::Left; }
 
 	/// Returns true if this is a right button event.
-	[[nodiscard]] constexpr bool IsRightButton() const noexcept
-	{
-		return Button == MouseButton::Right;
-	}
+	[[nodiscard]] constexpr bool IsRightButton() const noexcept { return Button == MouseButton::Right; }
 
 	/// Returns true if this is a middle button event.
-	[[nodiscard]] constexpr bool IsMiddleButton() const noexcept
-	{
-		return Button == MouseButton::Middle;
-	}
+	[[nodiscard]] constexpr bool IsMiddleButton() const noexcept { return Button == MouseButton::Middle; }
 };

@@ -3,22 +3,22 @@
 // Classification of engine asset types with directory mapping.
 // ----------------------------------------------------------------------------
 // USAGE:
-//   auto subdir = GetAssetSubdirectory(AssetType::Texture);  // "textures"
+//   auto subdir = GetAssetSubdirectory(AssetType::Texture);  // "Textures"
 //
 // DESIGN:
 //   Each asset type maps to a canonical subdirectory under the asset root.
 //   This enables automatic path resolution and type-specific loading.
 //
 // DIRECTORY STRUCTURE:
-//   assets/
-//   ├── shaders/           <- AssetType::Shader
+//   Assets/
+//   ├── Shaders/           <- AssetType::Shader
 //   │   └── ShaderSymbols/ <- AssetType::ShaderSymbols (debug PDBs)
-//   ├── textures/          <- AssetType::Texture
-//   ├── meshes/            <- AssetType::Mesh
-//   ├── materials/         <- AssetType::Material
-//   ├── scenes/            <- AssetType::Scene
-//   ├── audio/             <- AssetType::Audio
-//   └── fonts/             <- AssetType::Font
+//   ├── Textures/          <- AssetType::Texture
+//   ├── Meshes/            <- AssetType::Mesh
+//   ├── Materials/         <- AssetType::Material
+//   ├── Scenes/            <- AssetType::Scene
+//   ├── Audio/             <- AssetType::Audio
+//   └── Fonts/             <- AssetType::Font
 // ============================================================================
 #pragma once
 
@@ -46,21 +46,21 @@ enum class AssetType : uint8_t
 	switch (type)
 	{
 		case AssetType::Shader:
-			return "shaders";
+			return "Shaders";
 		case AssetType::ShaderSymbols:
-			return "shaders/shadersymbols";
+			return "Shaders/ShaderSymbols";
 		case AssetType::Texture:
-			return "textures";
+			return "Textures";
 		case AssetType::Mesh:
-			return "meshes";
+			return "Meshes";
 		case AssetType::Material:
-			return "materials";
+			return "Materials";
 		case AssetType::Scene:
-			return "scenes";
+			return "Scenes";
 		case AssetType::Audio:
-			return "audio";
+			return "Audio";
 		case AssetType::Font:
-			return "fonts";
+			return "Fonts";
 		case AssetType::Count:
 		default:
 			return {};

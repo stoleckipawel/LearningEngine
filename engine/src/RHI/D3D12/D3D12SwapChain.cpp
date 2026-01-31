@@ -5,14 +5,9 @@
 #include "D3D12DescriptorHeapManager.h"
 #include "DebugUtils.h"
 
-D3D12SwapChain& D3D12SwapChain::Get() noexcept
-{
-	static D3D12SwapChain instance;
-	return instance;
-}
-
-// Initializes the swap chain and creates render target views
-void D3D12SwapChain::Initialize()
+// Constructs the swap chain and creates render target views
+D3D12SwapChain::D3D12SwapChain(D3D12Rhi& rhi, Window& window, D3D12DescriptorHeapManager& descriptorHeapManager) :
+    m_rhi(rhi), m_window(&window), m_descriptorHeapManager(&descriptorHeapManager)
 {
 	AllocateHandles();
 	Create();
@@ -27,12 +22,18 @@ void D3D12SwapChain::Initialize()
 	CreateRenderTargetViews();
 }
 
+D3D12SwapChain::~D3D12SwapChain()
+{
+	ReleaseBuffers();
+	m_swapChain.Reset();
+}
+
 void D3D12SwapChain::Create()
 {
 	// Create swap chain description
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-	swapChainDesc.Width = GWindow.GetWidth();
-	swapChainDesc.Height = GWindow.GetHeight();
+	swapChainDesc.Width = m_window->GetWidth();
+	swapChainDesc.Height = m_window->GetHeight();
 	swapChainDesc.Format = EngineSettings::BackBufferFormat;
 	swapChainDesc.Stereo = false;
 	swapChainDesc.SampleDesc.Quality = 0;
@@ -50,9 +51,9 @@ void D3D12SwapChain::Create()
 
 	// Create the swap chain for the window
 	ComPtr<IDXGISwapChain1> swapChain;
-	CHECK(GD3D12Rhi.GetDxgiFactory()->CreateSwapChainForHwnd(
-	    GD3D12Rhi.GetCommandQueue().Get(),
-	    GWindow.GetHWND(),
+	CHECK(m_rhi.GetDxgiFactory()->CreateSwapChainForHwnd(
+	    m_rhi.GetCommandQueue().Get(),
+	    m_window->GetHWND(),
 	    &swapChainDesc,
 	    &swapChainFullsceenDesc,
 	    nullptr,
@@ -66,7 +67,7 @@ void D3D12SwapChain::Create()
 void D3D12SwapChain::Clear()
 {
 	float clearColor[4] = {0.0f, 0.00f, 0.00f, 1.0f};
-	GD3D12Rhi.GetCommandList()->ClearRenderTargetView(GD3D12SwapChain.GetCPUHandle(), clearColor, 0, nullptr);
+	m_rhi.GetCommandList()->ClearRenderTargetView(GetCPUHandle(), clearColor, 0, nullptr);
 }
 
 // Resizes the swap chain buffers and recreates render target views
@@ -76,8 +77,8 @@ void D3D12SwapChain::Resize()
 
 	m_swapChain->ResizeBuffers(
 	    EngineSettings::FramesInFlight,
-	    GWindow.GetWidth(),
-	    GWindow.GetHeight(),
+	    m_window->GetWidth(),
+	    m_window->GetHeight(),
 	    EngineSettings::BackBufferFormat,
 	    ComputeSwapChainFlags());
 
@@ -91,7 +92,7 @@ void D3D12SwapChain::AllocateHandles()
 {
 	for (UINT i = 0; i < EngineSettings::FramesInFlight; i++)
 	{
-		m_rtvHandles[i] = GD3D12DescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		m_rtvHandles[i] = m_descriptorHeapManager->AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	}
 }
 
@@ -112,7 +113,7 @@ void D3D12SwapChain::CreateRenderTargetViews()
 		rtvDesc.Texture2D.PlaneSlice = 0;
 
 		// Create the render target view
-		GD3D12Rhi.GetDevice()->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, GetCPUHandle(i));
+		m_rhi.GetDevice()->CreateRenderTargetView(m_buffers[i].Get(), &rtvDesc, GetCPUHandle(i));
 	}
 }
 
@@ -120,7 +121,7 @@ UINT D3D12SwapChain::GetAllowTearingFlag() const
 {
 	BOOL allowTearing = FALSE;
 
-	GD3D12Rhi.GetDxgiFactory()->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+	m_rhi.GetDxgiFactory()->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
 
 	return (allowTearing == TRUE) ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u;
 }
@@ -139,8 +140,8 @@ D3D12_VIEWPORT D3D12SwapChain::GetDefaultViewport() const
 	D3D12_VIEWPORT vp;
 	vp.TopLeftX = 0;
 	vp.TopLeftY = 0;
-	vp.Width = float(GWindow.GetWidth());
-	vp.Height = float(GWindow.GetHeight());
+	vp.Width = float(m_window->GetWidth());
+	vp.Height = float(m_window->GetHeight());
 	// Reversed-Z: map near to 1.0 and far to 0.0 for better precision
 	vp.MinDepth = 1.0f;
 	vp.MaxDepth = 0.0f;
@@ -153,8 +154,8 @@ D3D12_RECT D3D12SwapChain::GetDefaultScissorRect() const
 	D3D12_RECT scissorRect;
 	scissorRect.left = 0;
 	scissorRect.top = 0;
-	scissorRect.right = GWindow.GetWidth();
-	scissorRect.bottom = GWindow.GetHeight();
+	scissorRect.right = m_window->GetWidth();
+	scissorRect.bottom = m_window->GetHeight();
 	return scissorRect;
 }
 
@@ -168,7 +169,7 @@ void D3D12SwapChain::Present()
 	{
 		// If tearing is supported by the runtime, request it when presenting without vsync.
 		BOOL allowTearing = FALSE;
-		GD3D12Rhi.GetDxgiFactory()->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
+		m_rhi.GetDxgiFactory()->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allowTearing, sizeof(allowTearing));
 		presentFlags = (allowTearing == TRUE) ? DXGI_PRESENT_ALLOW_TEARING : 0u;
 	}
 
@@ -179,13 +180,13 @@ void D3D12SwapChain::Present()
 // Sets the current buffer to render target state
 void D3D12SwapChain::SetRenderTargetState()
 {
-	GD3D12Rhi.SetBarrier(m_buffers[m_frameInFlightIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	m_rhi.SetBarrier(m_buffers[m_frameInFlightIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 }
 
 // Sets the current buffer to present state
 void D3D12SwapChain::SetPresentState()
 {
-	GD3D12Rhi.SetBarrier(
+	m_rhi.SetBarrier(
 
 	    m_buffers[m_frameInFlightIndex].Get(),
 	    D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -200,14 +201,7 @@ void D3D12SwapChain::ReleaseBuffers()
 		m_buffers[i].Reset();
 		if (m_rtvHandles[i].IsValid())
 		{
-			GD3D12DescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, m_rtvHandles[i]);
+			m_descriptorHeapManager->FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, m_rtvHandles[i]);
 		}
 	}
-}
-
-// Releases all resources associated with the swap chain
-void D3D12SwapChain::Shutdown()
-{
-	ReleaseBuffers();
-	m_swapChain.Reset();
 }

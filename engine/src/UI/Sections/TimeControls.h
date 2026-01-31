@@ -4,26 +4,28 @@
 // UI section for time scale and pause/resume controls.
 //
 // USAGE:
-//   TimeControls timeCtrl;
+//   TimeControls timeCtrl(timer);
 //   timeCtrl.BuildUI();  // Called each frame in ImGui context
 //
 // DESIGN:
 //   - Implements UIRendererSection interface for panel integration
-//   - Exposes Engine::Timer scale and pause state
-//   - Slider for time scale, button for pause/resume
+//   - Exposes Timer scale and pause state
+//   - Slider for time scale, checkbox for pause/resume
 //
 // NOTES:
-//   - Changes take effect immediately via Engine::GTimer
+//   - Timer reference must be provided at construction
 // ============================================================================
 
 #pragma once
 
 #include "Framework/UIRendererSection.h"
 
+class Timer;
+
 class TimeControls final : public UIRendererSection
 {
   public:
-	TimeControls() noexcept = default;
+	explicit TimeControls(Timer& timer) noexcept;
 	~TimeControls() = default;
 
 	TimeControls(const TimeControls&) = delete;
@@ -35,4 +37,7 @@ class TimeControls final : public UIRendererSection
 	const char* GetTitle() const noexcept override { return "Time"; }
 
 	void BuildUI() override;
+
+  private:
+	Timer& m_timer;
 };

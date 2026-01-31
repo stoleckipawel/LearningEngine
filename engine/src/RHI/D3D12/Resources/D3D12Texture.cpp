@@ -1,27 +1,31 @@
-
-#include "PCH.h"
-#include "Texture.h"
+#include "Core/PCH.h"
+#include "D3D12Texture.h"
+#include "D3D12Rhi.h"
 #include "D3D12DescriptorHeapManager.h"
 #include "DebugUtils.h"
 
 // Loads the texture from disk and creates all required GPU resources.
 // Allocates an SRV descriptor from the CBV/SRV/UAV heap.
-Texture::Texture(const std::filesystem::path& fileName) :
-    m_loader(std::make_unique<TextureLoader>(fileName)),
-    m_srvHandle(GD3D12DescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV))
+D3D12Texture::D3D12Texture(
+    const AssetSystem& assetSystem,
+    D3D12Rhi& rhi,
+    const std::filesystem::path& fileName,
+    D3D12DescriptorHeapManager& descriptorHeapManager) :
+    m_rhi(rhi),
+    m_loader(std::make_unique<TextureLoader>(assetSystem, fileName)),
+    m_srvHandle(descriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)),
+    m_descriptorHeapManager(&descriptorHeapManager)
 {
 	// TODO: Switch to DirectXTex for better format support and mipmap generation.
 	// Basic validation: ensure SRV descriptor allocated and loader produced data.
 	if (!m_srvHandle.IsValid())
 	{
-		LOG_FATAL("Texture: failed to allocate SRV descriptor.");
-		return;
+		LOG_FATAL("D3D12Texture: failed to allocate SRV descriptor.");
 	}
 
 	if (!m_loader)
 	{
-		LOG_FATAL("Texture: loader failed to initialize.");
-		return;
+		LOG_FATAL("D3D12Texture: loader failed to initialize.");
 	}
 
 	CreateResource();
@@ -29,8 +33,7 @@ Texture::Texture(const std::filesystem::path& fileName) :
 	CreateShaderResourceView();
 }
 
-// Creates the committed GPU resource for the texture and its upload buffer
-void Texture::CreateResource()
+void D3D12Texture::CreateResource()
 {
 	// Describe the texture resource
 	m_texResourceDesc = {};
@@ -48,14 +51,14 @@ void Texture::CreateResource()
 
 	// Create the default heap resource for the texture
 	CD3DX12_HEAP_PROPERTIES heapDefaultProperties(D3D12_HEAP_TYPE_DEFAULT);
-	CHECK(GD3D12Rhi.GetDevice()->CreateCommittedResource(
+	CHECK(m_rhi.GetDevice()->CreateCommittedResource(
 	    &heapDefaultProperties,
 	    D3D12_HEAP_FLAG_NONE,
 	    &m_texResourceDesc,
 	    D3D12_RESOURCE_STATE_COPY_DEST,
 	    nullptr,
 	    IID_PPV_ARGS(m_textureResource.ReleaseAndGetAddressOf())));
-	DebugUtils::SetDebugName(m_textureResource, L"RHI_Texture");
+	DebugUtils::SetDebugName(m_textureResource, L"RHI_D3D12Texture");
 
 	// Calculate required size for the upload buffer
 	UINT64 uploadBufferSize = GetRequiredIntermediateSize(m_textureResource.Get(), 0, 1);  // Update when adding mipmaps
@@ -63,7 +66,7 @@ void Texture::CreateResource()
 	// Create the upload heap resource for staging texture data
 	CD3DX12_HEAP_PROPERTIES heapUploadProperties(D3D12_HEAP_TYPE_UPLOAD);
 	CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
-	CHECK(GD3D12Rhi.GetDevice()->CreateCommittedResource(
+	CHECK(m_rhi.GetDevice()->CreateCommittedResource(
 	    &heapUploadProperties,
 	    D3D12_HEAP_FLAG_NONE,
 	    &resourceDesc,
@@ -72,8 +75,7 @@ void Texture::CreateResource()
 	    IID_PPV_ARGS(m_uploadResource.ReleaseAndGetAddressOf())));
 }
 
-// Uploads the texture data from CPU to GPU resource
-void Texture::UploadToGPU()
+void D3D12Texture::UploadToGPU()
 {
 	// Prepare subresource data for upload
 	const auto& img = m_loader->GetData();
@@ -83,18 +85,17 @@ void Texture::UploadToGPU()
 	subResourceData.SlicePitch = static_cast<LONG_PTR>(img.slicePitch);
 
 	// Upload the data to the GPU texture resource
-	UpdateSubresources(GD3D12Rhi.GetCommandList().Get(), m_textureResource.Get(), m_uploadResource.Get(), 0, 0, (UINT) 1, &subResourceData);
+	UpdateSubresources(m_rhi.GetCommandList().Get(), m_textureResource.Get(), m_uploadResource.Get(), 0, 0, (UINT) 1, &subResourceData);
 
 	// Transition the texture resource to PIXEL_SHADER_RESOURCE state
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 	    m_textureResource.Get(),
 	    D3D12_RESOURCE_STATE_COPY_DEST,
 	    D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	GD3D12Rhi.GetCommandList()->ResourceBarrier(1, &barrier);
+	m_rhi.GetCommandList()->ResourceBarrier(1, &barrier);
 }
 
-// Creates the shader resource view (SRV) for the texture
-void Texture::CreateShaderResourceView()
+void D3D12Texture::CreateShaderResourceView()
 {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = m_loader->GetData().dxgiPixelFormat;
@@ -103,18 +104,17 @@ void Texture::CreateShaderResourceView()
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2D.MipLevels = 1;  // TODO: Update when adding mipmaps
 
-	GD3D12Rhi.GetDevice()->CreateShaderResourceView(m_textureResource.Get(), &srvDesc, GetCPUHandle());
+	m_rhi.GetDevice()->CreateShaderResourceView(m_textureResource.Get(), &srvDesc, GetCPUHandle());
 }
 
-// Destructor releases resources
-Texture::~Texture() noexcept
+D3D12Texture::~D3D12Texture() noexcept
 {
 	m_textureResource.Reset();
 	m_uploadResource.Reset();
 	// Return SRV descriptor to allocator
 	if (m_srvHandle.IsValid())
 	{
-		GD3D12DescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, m_srvHandle);
+		m_descriptorHeapManager->FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, m_srvHandle);
 		m_srvHandle = D3D12DescriptorHandle();
 	}
 }

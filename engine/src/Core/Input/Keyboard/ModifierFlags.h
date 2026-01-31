@@ -54,22 +54,19 @@ enum class ModifierFlags : std::uint16_t
 [[nodiscard]] constexpr ModifierFlags operator|(ModifierFlags lhs, ModifierFlags rhs) noexcept
 {
 	return static_cast<ModifierFlags>(
-	    static_cast<std::underlying_type_t<ModifierFlags>>(lhs) | static_cast<std::underlying_type_t<ModifierFlags>>(rhs)
-	);
+	    static_cast<std::underlying_type_t<ModifierFlags>>(lhs) | static_cast<std::underlying_type_t<ModifierFlags>>(rhs));
 }
 
 [[nodiscard]] constexpr ModifierFlags operator&(ModifierFlags lhs, ModifierFlags rhs) noexcept
 {
 	return static_cast<ModifierFlags>(
-	    static_cast<std::underlying_type_t<ModifierFlags>>(lhs) & static_cast<std::underlying_type_t<ModifierFlags>>(rhs)
-	);
+	    static_cast<std::underlying_type_t<ModifierFlags>>(lhs) & static_cast<std::underlying_type_t<ModifierFlags>>(rhs));
 }
 
 [[nodiscard]] constexpr ModifierFlags operator^(ModifierFlags lhs, ModifierFlags rhs) noexcept
 {
 	return static_cast<ModifierFlags>(
-	    static_cast<std::underlying_type_t<ModifierFlags>>(lhs) ^ static_cast<std::underlying_type_t<ModifierFlags>>(rhs)
-	);
+	    static_cast<std::underlying_type_t<ModifierFlags>>(lhs) ^ static_cast<std::underlying_type_t<ModifierFlags>>(rhs));
 }
 
 [[nodiscard]] constexpr ModifierFlags operator~(ModifierFlags flags) noexcept

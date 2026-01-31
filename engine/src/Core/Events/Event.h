@@ -43,16 +43,14 @@
 // ============================================================================
 
 /// Forward declaration for partial specialization.
-template <typename Signature, std::size_t Capacity = 8>
-class Event;
+template <typename Signature, std::size_t Capacity = 8> class Event;
 
 /// Multicast event with fixed-capacity listener storage.
 /// @tparam Args Parameter types for the callback signature.
 /// @tparam Capacity Maximum number of concurrent subscriptions.
-template <typename... Args, std::size_t Capacity>
-class Event<void(Args...), Capacity>
+template <typename... Args, std::size_t Capacity> class Event<void(Args...), Capacity>
 {
-public:
+  public:
 	using CallbackType = std::function<void(Args...)>;
 
 	Event() noexcept = default;
@@ -120,7 +118,7 @@ public:
 	// =========================================================================
 
 	/// Invokes all registered listeners with the given arguments.
-	void Broadcast(Args... InArgs) const
+	void Broadcast(Args... InArgs) const noexcept
 	{
 		for (std::size_t i = 0; i < Capacity; ++i)
 		{
@@ -159,12 +157,9 @@ public:
 	}
 
 	/// Returns the maximum number of subscriptions this event can hold.
-	[[nodiscard]] static constexpr std::size_t GetCapacity() noexcept
-	{
-		return Capacity;
-	}
+	[[nodiscard]] static constexpr std::size_t GetCapacity() noexcept { return Capacity; }
 
-private:
+  private:
 	// -------------------------------------------------------------------------
 	// Internal Storage
 	// -------------------------------------------------------------------------

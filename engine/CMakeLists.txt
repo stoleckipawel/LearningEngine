@@ -30,31 +30,31 @@ target_include_directories(SparkleEngine
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
   PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Application"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Assets"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Core"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Diagnostics"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Events"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Hash"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Math"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Memory"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Strings"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Time"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Core/Input"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Platform"
-    # RHI abstraction layer
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/Platform/Input"
+    # D3D12 RHI
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI"
-    # D3D12 backend
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/D3D12"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/D3D12/Descriptors"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/D3D12/Resources"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/D3D12/Pipeline"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/D3D12/Shaders"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/D3D12/Samplers"
-    # Vulkan backend (placeholder)
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/RHI/Vulkan"
     # High-level modules
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Renderer"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/Resources"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Scene"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/GameEngine"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/GameEngine/Camera"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/UI"
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
 )

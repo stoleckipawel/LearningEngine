@@ -102,7 +102,7 @@ enum class Key : std::uint16_t
 	RightCtrl,
 	LeftAlt,
 	RightAlt,
-	LeftSuper,   // Windows key / Command
+	LeftSuper,  // Windows key / Command
 	RightSuper,
 
 	// -------------------------------------------------------------------------
@@ -122,17 +122,17 @@ enum class Key : std::uint16_t
 	// -------------------------------------------------------------------------
 	// Punctuation / Symbols (77-87)
 	// -------------------------------------------------------------------------
-	Comma = 77,   // ,<
-	Period,       // .>
-	Slash,        // /?
-	Semicolon,    // ;:
-	Apostrophe,   // '"
-	LeftBracket,  // [{
-	RightBracket, // ]}
-	Backslash,    // \|
-	Grave,        // `~
-	Minus,        // -_
-	Equals,       // =+
+	Comma = 77,    // ,<
+	Period,        // .>
+	Slash,         // /?
+	Semicolon,     // ;:
+	Apostrophe,    // '"
+	LeftBracket,   // [{
+	RightBracket,  // ]}
+	Backslash,     // \|
+	Grave,         // `~
+	Minus,         // -_
+	Equals,        // =+
 
 	// -------------------------------------------------------------------------
 	// Numpad (88-103)

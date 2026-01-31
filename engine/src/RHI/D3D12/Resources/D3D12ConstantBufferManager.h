@@ -3,9 +3,9 @@
 // Centralized constant buffer management with GPU/CPU synchronization.
 // ----------------------------------------------------------------------------
 // USAGE:
-//   D3D12ConstantBufferManager::Get().Initialize();
-//   auto gpuAddr = D3D12ConstantBufferManager::Get().GetPerFrameGpuAddress();
-//   D3D12ConstantBufferManager::Get().UpdatePerFrame(frameData);
+//   D3D12ConstantBufferManager cbManager(timer, rhi, window, ...);
+//   auto gpuAddr = cbManager.GetPerFrameGpuAddress();
+//   cbManager.UpdatePerFrame();
 //
 // DESIGN:
 //   Per-Frame/Per-View CBs:
@@ -28,21 +28,32 @@
 #include "D3D12ConstantBufferData.h"
 #include "D3D12ConstantBuffer.h"
 
+class Timer;
+class RenderCamera;
+class Window;
+class D3D12Rhi;
+class D3D12DescriptorHeapManager;
+class D3D12FrameResourceManager;
+class D3D12SwapChain;
+class UI;
+
 class D3D12ConstantBufferManager final
 {
   public:
-	[[nodiscard]] static D3D12ConstantBufferManager& Get() noexcept;
+	D3D12ConstantBufferManager(
+	    Timer& timer,
+	    D3D12Rhi& rhi,
+	    Window& window,
+	    D3D12DescriptorHeapManager& descriptorHeapManager,
+	    D3D12FrameResourceManager& frameResourceManager,
+	    D3D12SwapChain& swapChain,
+	    UI& ui);
+	~D3D12ConstantBufferManager();
 
 	D3D12ConstantBufferManager(const D3D12ConstantBufferManager&) = delete;
 	D3D12ConstantBufferManager& operator=(const D3D12ConstantBufferManager&) = delete;
 	D3D12ConstantBufferManager(D3D12ConstantBufferManager&&) = delete;
 	D3D12ConstantBufferManager& operator=(D3D12ConstantBufferManager&&) = delete;
-
-	// Initialize all constant buffers.
-	void Initialize();
-
-	// Cleanup resources.
-	void Shutdown();
 
 	// -------------------------------------------------------------------------
 	// GPU Address Accessors (for binding root CBVs)
@@ -62,7 +73,7 @@ class D3D12ConstantBufferManager final
 	void UpdatePerFrame();
 
 	// Update per-view constant buffer. Call once per camera/view.
-	void UpdatePerView();
+	void UpdatePerView(const RenderCamera& camera);
 
 	// Update per-object VS constant buffer for a draw.
 	// Any system can provide this data (Primitive, SkeletalMesh, etc.) without coupling.
@@ -71,15 +82,16 @@ class D3D12ConstantBufferManager final
 	// Update per-object PS constant buffer (material data).
 	[[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS UpdatePerObjectPS();
 
-  private:
-	D3D12ConstantBufferManager() = default;
-	~D3D12ConstantBufferManager() = default;
-
 	// Per-Frame constant buffers (persistent, one per frame-in-flight)
 	std::unique_ptr<D3D12ConstantBuffer<PerFrameConstantBufferData>> m_PerFrameCB[EngineSettings::FramesInFlight];
 
 	// Per-View constant buffers (persistent, one per frame-in-flight)
 	std::unique_ptr<D3D12ConstantBuffer<PerViewConstantBufferData>> m_PerViewCB[EngineSettings::FramesInFlight];
-};
 
-inline D3D12ConstantBufferManager& GD3D12ConstantBufferManager = D3D12ConstantBufferManager::Get();
+  private:
+	Timer* m_timer = nullptr;
+	Window* m_window = nullptr;
+	D3D12FrameResourceManager* m_frameResourceManager = nullptr;
+	D3D12SwapChain* m_swapChain = nullptr;
+	UI* m_ui = nullptr;
+};

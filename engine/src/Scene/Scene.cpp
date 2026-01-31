@@ -1,34 +1,23 @@
 #include "PCH.h"
 #include "Scene.h"
-#include "D3D12Rhi.h"
-#include "Camera.h"
 #include "Scene/Mesh.h"
+#include "GameCamera.h"
 
-Scene& Scene::Get() noexcept
+Scene::Scene() : m_camera(std::make_unique<GameCamera>()), m_meshFactory(std::make_unique<MeshFactory>())
 {
-	static Scene instance;
-	return instance;
+	RebuildGeometry();
 }
 
 Scene::~Scene() noexcept = default;
 
-void Scene::Initialize()
+GameCamera& Scene::GetCamera() noexcept
 {
-	if (m_initialized)
-		return;
-
-	m_meshFactory = std::make_unique<MeshFactory>();
-
-	// Build initial geometry
-	RebuildGeometry();
-
-	m_initialized = true;
+	return *m_camera;
 }
 
-void Scene::Shutdown() noexcept
+const GameCamera& Scene::GetCamera() const noexcept
 {
-	m_meshFactory.reset();
-	m_initialized = false;
+	return *m_camera;
 }
 
 void Scene::SetPrimitiveConfig(const PrimitiveConfig& config)
@@ -39,13 +28,10 @@ void Scene::SetPrimitiveConfig(const PrimitiveConfig& config)
 
 void Scene::SetPrimitives(MeshFactory::Shape shape, std::uint32_t count)
 {
-	// Update spawn center based on current camera position
-	const DirectX::XMFLOAT3 camPos = GCamera.GetPosition();
-	const DirectX::XMFLOAT3 camDir = GCamera.GetDirection();
-
 	m_primitiveConfig.shape = shape;
 	m_primitiveConfig.count = count;
-	m_primitiveConfig.center = {camPos.x + camDir.x * 10.0f, camPos.y + camDir.y * 10.0f, camPos.z + camDir.z * 10.0f};
+	// Spawn at world origin with default extents
+	m_primitiveConfig.center = {0.0f, 0.0f, 0.0f};
 
 	RebuildGeometry();
 }
@@ -55,26 +41,17 @@ void Scene::RebuildGeometry()
 	if (!m_meshFactory)
 		return;
 
-	// Flush GPU before destroying/recreating geometry
-	GD3D12Rhi.Flush();
-
-	m_meshFactory->Rebuild(
+	// Rebuild meshes (CPU-side geometry only, no GPU upload)
+	m_meshFactory->Clear();
+	m_meshFactory->AppendShapes(
 	    m_primitiveConfig.shape,
 	    m_primitiveConfig.count,
 	    m_primitiveConfig.center,
 	    m_primitiveConfig.extents,
 	    m_primitiveConfig.seed);
 
-	// To Do: remove this rendering code from scene.cpp the scene should be decoupled
-
-	// Execute upload commands
-	GD3D12Rhi.CloseCommandListScene();
-	GD3D12Rhi.ExecuteCommandList();
-	GD3D12Rhi.Flush();
-
-	// Reset for next frame
-	GD3D12Rhi.ResetCommandAllocator();
-	GD3D12Rhi.ResetCommandList();
+	// Note: GPU upload must be done externally via MeshFactory::Upload()
+	// This keeps Scene decoupled from RHI implementation.
 }
 
 const std::vector<std::unique_ptr<Mesh>>& Scene::GetMeshes() const noexcept

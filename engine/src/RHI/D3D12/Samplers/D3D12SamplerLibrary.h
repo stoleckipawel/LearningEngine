@@ -17,6 +17,9 @@
 #include "D3D12RootBindings.h"
 #include <d3d12.h>
 
+class D3D12DescriptorHeapManager;
+class D3D12Rhi;
+
 class D3D12SamplerLibrary
 {
   public:
@@ -93,16 +96,13 @@ class D3D12SamplerLibrary
 	// -------------------------------------------------------------------------
 	// Lifecycle
 	// -------------------------------------------------------------------------
-	D3D12SamplerLibrary() = default;
+	D3D12SamplerLibrary(D3D12Rhi& rhi, D3D12DescriptorHeapManager& descriptorHeapManager);
 	~D3D12SamplerLibrary() noexcept;
 
 	D3D12SamplerLibrary(const D3D12SamplerLibrary&) = delete;
 	D3D12SamplerLibrary& operator=(const D3D12SamplerLibrary&) = delete;
 	D3D12SamplerLibrary(D3D12SamplerLibrary&&) = delete;
 	D3D12SamplerLibrary& operator=(D3D12SamplerLibrary&&) = delete;
-
-	void Initialize();
-	void Shutdown() noexcept;
 
 	// -------------------------------------------------------------------------
 	// Accessors
@@ -125,6 +125,8 @@ class D3D12SamplerLibrary
 	static D3D12_TEXTURE_ADDRESS_MODE ToD3D12Address(AddressMode address);
 
 	bool m_bInitialized = false;
+	D3D12Rhi* m_rhi = nullptr;
 	D3D12DescriptorHandle m_tableHandle;
 	uint32_t m_descriptorSize = 0;
+	D3D12DescriptorHeapManager* m_descriptorHeapManager = nullptr;
 };

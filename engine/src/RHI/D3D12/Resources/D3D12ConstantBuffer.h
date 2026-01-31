@@ -4,7 +4,7 @@
 // Template class for managing typed GPU constant buffers.
 //
 // USAGE:
-//   D3D12ConstantBuffer<PerFrameData> frameCB;
+//   D3D12ConstantBuffer<PerFrameData> frameCB(descriptorHeapManager);
 //   frameCB.Update(frameData);
 //   cmdList->SetGraphicsRootConstantBufferView(0, frameCB.GetGPUVirtualAddress());
 //
@@ -25,19 +25,24 @@
 #pragma once
 
 #include "D3D12DescriptorHeap.h"
-#include "D3D12UploadBuffer.h"
 #include "D3D12DescriptorHeapManager.h"
 #include "DebugUtils.h"
 #include <cstring>
+#include <d3d12.h>
+#include <wrl/client.h>
 
 using Microsoft::WRL::ComPtr;
+
+class D3D12Rhi;
 
 template <typename T> class D3D12ConstantBuffer
 {
   public:
 	// Create and map constant buffer, create a CBV view. Allocates a descriptor via the manager.
-	explicit D3D12ConstantBuffer() :
-	    m_cbvHandle(GD3D12DescriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)),
+	explicit D3D12ConstantBuffer(D3D12Rhi& rhi, D3D12DescriptorHeapManager& descriptorHeapManager) :
+	    m_rhi(&rhi),
+	    m_descriptorHeapManager(&descriptorHeapManager),
+	    m_cbvHandle(descriptorHeapManager.AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)),
 	    m_ConstantBufferSize((sizeof(T) + 255) & ~255)
 	{
 		std::memset(&m_ConstantBufferData, 0, sizeof(T));
@@ -90,7 +95,7 @@ template <typename T> class D3D12ConstantBuffer
 
 		if (m_cbvHandle.IsValid())
 		{
-			GD3D12DescriptorHeapManager.FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, m_cbvHandle);
+			m_descriptorHeapManager->FreeHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, m_cbvHandle);
 		}
 	}
 
@@ -111,7 +116,7 @@ template <typename T> class D3D12ConstantBuffer
 		resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 		resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-		CHECK(GD3D12Rhi.GetDevice()->CreateCommittedResource(
+		CHECK(m_rhi->GetDevice()->CreateCommittedResource(
 		    &heapProperties,
 		    D3D12_HEAP_FLAG_NONE,
 		    &resourceDesc,
@@ -134,10 +139,12 @@ template <typename T> class D3D12ConstantBuffer
 	{
 		m_ConstantBufferViewDesc.BufferLocation = Resource->GetGPUVirtualAddress();
 		m_ConstantBufferViewDesc.SizeInBytes = m_ConstantBufferSize;
-		GD3D12Rhi.GetDevice()->CreateConstantBufferView(&m_ConstantBufferViewDesc, GetCPUHandle());
+		m_rhi->GetDevice()->CreateConstantBufferView(&m_ConstantBufferViewDesc, GetCPUHandle());
 	}
 
   private:
+	D3D12Rhi* m_rhi = nullptr;                                      // RHI reference
+	D3D12DescriptorHeapManager* m_descriptorHeapManager = nullptr;  // Descriptor heap manager reference
 	ComPtr<ID3D12Resource2> Resource = nullptr;
 	D3D12DescriptorHandle m_cbvHandle;  // CBV descriptor handle
 	T m_ConstantBufferData;             // Cached buffer data

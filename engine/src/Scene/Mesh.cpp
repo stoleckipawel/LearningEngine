@@ -92,35 +92,35 @@ DirectX::XMFLOAT3X3 Mesh::GetWorldRotationMatrix3x3() const noexcept
 	return rot3x3;
 }
 
-void Mesh::UploadVertexBuffer()
+void Mesh::UploadVertexBuffer(D3D12Rhi& rhi)
 {
 	std::vector<Vertex> vertexList;
 	GenerateVertices(vertexList);
 	const UINT vertsDataSize = static_cast<UINT>(sizeof(Vertex) * vertexList.size());
 
-	VertexBuffer = D3D12UploadBuffer::Upload(vertexList.data(), vertsDataSize);
+	VertexBuffer = D3D12UploadBuffer::Upload(rhi, vertexList.data(), vertsDataSize);
 	m_vertexBufferView.BufferLocation = VertexBuffer->GetGPUVirtualAddress();
 	m_vertexBufferView.SizeInBytes = vertsDataSize;
 	m_vertexBufferView.StrideInBytes = sizeof(Vertex);
 }
 
-void Mesh::UploadIndexBuffer()
+void Mesh::UploadIndexBuffer(D3D12Rhi& rhi)
 {
 	std::vector<DWORD> indexList;
 	GenerateIndices(indexList);
 	m_indexCount = static_cast<UINT>(indexList.size());
 	UINT indexDataSize = static_cast<UINT>(sizeof(DWORD) * indexList.size());
 
-	IndexBuffer = D3D12UploadBuffer::Upload(indexList.data(), indexDataSize);
+	IndexBuffer = D3D12UploadBuffer::Upload(rhi, indexList.data(), indexDataSize);
 	m_indexBufferView.BufferLocation = IndexBuffer->GetGPUVirtualAddress();
 	m_indexBufferView.SizeInBytes = indexDataSize;
 	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 }
 
-void Mesh::Upload()
+void Mesh::Upload(D3D12Rhi& rhi)
 {
-	UploadIndexBuffer();
-	UploadVertexBuffer();
+	UploadIndexBuffer(rhi);
+	UploadVertexBuffer(rhi);
 }
 
 void Mesh::Bind(ID3D12GraphicsCommandList* commandList) const noexcept

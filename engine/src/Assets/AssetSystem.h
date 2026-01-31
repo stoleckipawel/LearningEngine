@@ -3,9 +3,9 @@
 // Unified asset path resolution service with marker-based discovery.
 // ----------------------------------------------------------------------------
 // USAGE:
-//   GAssetSystem.Initialize();
-//   const auto& shaderDir = GAssetSystem.GetShaderPath();
-//   auto fullPath = GAssetSystem.ResolvePath(AssetType::Texture, "diffuse.png");
+//   AssetSystem assetSystem;  // Auto-discovers paths in constructor
+//   const auto& shaderDir = assetSystem.GetShaderPath();
+//   auto fullPath = assetSystem.ResolvePath(AssetType::Texture, "diffuse.png");
 //
 // DESIGN:
 //   Marker Hierarchy (files that identify directory roles):
@@ -28,24 +28,13 @@
 class AssetSystem final
 {
   public:
-	[[nodiscard]] static AssetSystem& Get() noexcept;
+	AssetSystem();
+	~AssetSystem();
 
 	AssetSystem(const AssetSystem&) = delete;
 	AssetSystem& operator=(const AssetSystem&) = delete;
 	AssetSystem(AssetSystem&&) = delete;
 	AssetSystem& operator=(AssetSystem&&) = delete;
-
-	// =========================================================================
-	// Lifecycle
-	// ===================================
-
-	// Initializes with automatic marker-based path discovery.
-	void Initialize();
-
-	// Reset to uninitialized state. Call during shutdown.
-	void Shutdown() noexcept;
-
-	[[nodiscard]] bool IsInitialized() const noexcept { return m_bInitialized; }
 
 	// =========================================================================
 	// Root Path Accessors
@@ -102,9 +91,6 @@ class AssetSystem final
 	[[nodiscard]] bool HasEngineAssets() const noexcept { return !m_engineAssetsPath.empty(); }
 
   private:
-	AssetSystem() = default;
-	~AssetSystem() = default;
-
 	void DiscoverPaths();
 	void InitializeTypedPaths();
 	void InitializeOutputPaths();
@@ -116,8 +102,6 @@ class AssetSystem final
 	    AssetType type) const;
 
 	static constexpr size_t kAssetTypeCount = static_cast<size_t>(AssetType::Count);
-
-	bool m_bInitialized = false;
 
 	// Discovered root paths
 	std::filesystem::path m_projectPath;
@@ -136,5 +120,3 @@ class AssetSystem final
 
 	inline static const std::filesystem::path s_emptyPath{};
 };
-
-inline AssetSystem& GAssetSystem = AssetSystem::Get();

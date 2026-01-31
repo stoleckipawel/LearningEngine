@@ -11,7 +11,10 @@
 
 #pragma once
 
-#include "Core/Input/Events/InputEvent.h"
+#include "Core/Input/Events/KeyboardEvent.h"
+#include "Core/Input/Events/MouseButtonEvent.h"
+#include "Core/Input/Events/MouseMoveEvent.h"
+#include "Core/Input/Events/MouseWheelEvent.h"
 
 #include <cstdint>
 
@@ -52,14 +55,13 @@ struct InputBackendResult
 
 class IInputBackend
 {
-public:
+  public:
 	virtual ~IInputBackend() = default;
 
 	/// Translates a native message to an engine input event.
-	[[nodiscard]] virtual InputBackendResult ProcessMessage(
-		uint32_t Msg, uintptr_t Param1, intptr_t Param2) = 0;
+	[[nodiscard]] virtual InputBackendResult ProcessMessage(uint32_t Msg, uintptr_t Param1, intptr_t Param2) = 0;
 
-protected:
+  protected:
 	IInputBackend() = default;
 	IInputBackend(const IInputBackend&) = default;
 	IInputBackend& operator=(const IInputBackend&) = default;

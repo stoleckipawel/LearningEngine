@@ -4,26 +4,28 @@
 // UI section displaying performance statistics (FPS, frame time, frame index).
 //
 // USAGE:
-//   StatsOverlay stats;
+//   StatsOverlay stats(timer);
 //   stats.BuildUI();  // Called each frame in ImGui context
 //
 // DESIGN:
 //   - Implements UIRendererSection interface for panel integration
 //   - Renders only contents; caller owns window placement/layout
-//   - Queries Engine::Timer for timing data
+//   - Queries Timer for timing data
 //
 // NOTES:
-//   - Lightweight: no state beyond base class
+//   - Timer reference must be provided at construction
 // ============================================================================
 
 #pragma once
 
 #include "Framework/UIRendererSection.h"
 
+class Timer;
+
 class StatsOverlay final : public UIRendererSection
 {
   public:
-	StatsOverlay() noexcept = default;
+	explicit StatsOverlay(Timer& timer) noexcept;
 	~StatsOverlay() = default;
 
 	StatsOverlay(const StatsOverlay&) = delete;
@@ -37,4 +39,7 @@ class StatsOverlay final : public UIRendererSection
 
 	// Builds the overlay contents. Call once per-frame while an ImGui frame is active.
 	void BuildUI() override;
+
+  private:
+	Timer& m_timer;
 };

@@ -1,10 +1,10 @@
 // ============================================================================
-// LinearAllocator.h
+// D3D12LinearAllocator.h
 // ----------------------------------------------------------------------------
 // High-performance per-frame linear (bump) allocator for GPU upload memory.
 //
 // USAGE:
-//   LinearAllocator alloc;
+//   D3D12LinearAllocator alloc;
 //   alloc.Initialize(1024 * 1024, L"FrameAllocator");
 //   auto result = alloc.Allocate(256);
 //   memcpy(result.CpuPtr, &data, sizeof(data));
@@ -25,7 +25,6 @@
 #pragma once
 
 #include "DebugUtils.h"
-#include "D3D12Rhi.h"
 
 #include <atomic>
 #include <cassert>
@@ -36,11 +35,13 @@
 
 using Microsoft::WRL::ComPtr;
 
+class D3D12Rhi;
+
 // ============================================================================
-// LinearAllocation Result
+// D3D12LinearAllocation Result
 // ============================================================================
 
-struct LinearAllocation
+struct D3D12LinearAllocation
 {
 	void* CpuPtr = nullptr;                    // Write destination
 	D3D12_GPU_VIRTUAL_ADDRESS GpuAddress = 0;  // Bind address for CBV
@@ -48,20 +49,20 @@ struct LinearAllocation
 	uint64_t Offset = 0;                       // Offset from buffer start
 };
 
-class LinearAllocator
+class D3D12LinearAllocator
 {
   public:
-	LinearAllocator() = default;
-	~LinearAllocator() { Shutdown(); }
+	D3D12LinearAllocator() = default;
+	~D3D12LinearAllocator() { Shutdown(); }
 
 	// Non-copyable, non-movable (owns GPU resource)
-	LinearAllocator(const LinearAllocator&) = delete;
-	LinearAllocator& operator=(const LinearAllocator&) = delete;
-	LinearAllocator(LinearAllocator&&) = delete;
-	LinearAllocator& operator=(LinearAllocator&&) = delete;
+	D3D12LinearAllocator(const D3D12LinearAllocator&) = delete;
+	D3D12LinearAllocator& operator=(const D3D12LinearAllocator&) = delete;
+	D3D12LinearAllocator(D3D12LinearAllocator&&) = delete;
+	D3D12LinearAllocator& operator=(D3D12LinearAllocator&&) = delete;
 
 	// Creates the upload buffer with specified capacity.
-	void Initialize(uint64_t capacity, const wchar_t* debugName = L"LinearAllocator");
+	void Initialize(D3D12Rhi& rhi, uint64_t capacity, const wchar_t* debugName = L"D3D12LinearAllocator");
 
 	// Releases all resources. Called automatically by destructor.
 	void Shutdown();
@@ -70,14 +71,14 @@ class LinearAllocator
 	void Reset() noexcept;
 
 	// Allocates aligned memory from the linear buffer.
-	[[nodiscard]] LinearAllocation Allocate(uint64_t size, uint64_t alignment = 256);
+	[[nodiscard]] D3D12LinearAllocation Allocate(uint64_t size, uint64_t alignment = 256);
 
 	// Convenience method: allocate, copy data, return GPU address.
 	template <typename T> [[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS AllocateAndCopy(const T& data)
 	{
 		static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
 
-		LinearAllocation alloc = Allocate(sizeof(T), 256);
+		D3D12LinearAllocation alloc = Allocate(sizeof(T), 256);
 		std::memcpy(alloc.CpuPtr, &data, sizeof(T));
 		return alloc.GpuAddress;
 	}
@@ -110,6 +111,7 @@ class LinearAllocator
 	}
 
   private:
+	D3D12Rhi* m_rhi = nullptr;
 	ComPtr<ID3D12Resource> m_Resource;
 	uint8_t* m_CpuBase = nullptr;
 	D3D12_GPU_VIRTUAL_ADDRESS m_GpuBase = 0;

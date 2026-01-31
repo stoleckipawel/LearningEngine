@@ -4,23 +4,19 @@
 #include "D3D12Rhi.h"
 #include "Log.h"
 
-void D3D12SamplerLibrary::Initialize()
+D3D12SamplerLibrary::D3D12SamplerLibrary(D3D12Rhi& rhi, D3D12DescriptorHeapManager& descriptorHeapManager) :
+    m_rhi(&rhi), m_descriptorHeapManager(&descriptorHeapManager)
 {
-	if (m_bInitialized)
-	{
-		return;
-	}
-
 	constexpr uint32_t samplerCount = static_cast<uint32_t>(Slot::Count);
 
-	m_tableHandle = GD3D12DescriptorHeapManager.AllocateContiguous(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, samplerCount);
+	m_tableHandle = m_descriptorHeapManager->AllocateContiguous(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, samplerCount);
 	if (!m_tableHandle.IsValid())
 	{
 		LOG_FATAL("Failed to allocate sampler descriptor table.");
 		return;
 	}
 
-	m_descriptorSize = GD3D12Rhi.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+	m_descriptorSize = m_rhi->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 
 	// Point MinMag samplers
 	CreateSampler(Slot::PointMipPointWrap, {MinMagFilter::Point, MipFilter::Point, AddressMode::Wrap, 1});
@@ -64,19 +60,14 @@ void D3D12SamplerLibrary::Initialize()
 	m_bInitialized = true;
 }
 
-void D3D12SamplerLibrary::Shutdown() noexcept
+D3D12SamplerLibrary::~D3D12SamplerLibrary() noexcept
 {
-	if (m_tableHandle.IsValid())
+	if (m_tableHandle.IsValid() && m_descriptorHeapManager)
 	{
-		GD3D12DescriptorHeapManager.FreeContiguous(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, m_tableHandle, static_cast<uint32_t>(Slot::Count));
+		m_descriptorHeapManager->FreeContiguous(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, m_tableHandle, static_cast<uint32_t>(Slot::Count));
 		m_tableHandle = D3D12DescriptorHandle{};
 	}
 	m_bInitialized = false;
-}
-
-D3D12SamplerLibrary::~D3D12SamplerLibrary() noexcept
-{
-	Shutdown();
 }
 
 void D3D12SamplerLibrary::CreateSampler(Slot slot, const SamplerConfig& config)
@@ -97,7 +88,7 @@ void D3D12SamplerLibrary::CreateSampler(Slot slot, const SamplerConfig& config)
 	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = m_tableHandle.GetCPU();
 	cpuHandle.ptr += static_cast<SIZE_T>(static_cast<uint32_t>(slot)) * m_descriptorSize;
 
-	GD3D12Rhi.GetDevice()->CreateSampler(&desc, cpuHandle);
+	m_rhi->GetDevice()->CreateSampler(&desc, cpuHandle);
 }
 
 D3D12_FILTER D3D12SamplerLibrary::ToD3D12Filter(MinMagFilter minMag, MipFilter mip, bool anisotropic)

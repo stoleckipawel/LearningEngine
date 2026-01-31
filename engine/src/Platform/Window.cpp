@@ -1,204 +1,312 @@
 #include "PCH.h"
 #include "Window.h"
-#include "Renderer.h"
-#include "D3D12Rhi.h"
-#include "UI.h"
 #include "EngineConfig.h"
-#include <string>
 
-Window& Window::Get() noexcept
+// =============================================================================
+// Construction / Destruction
+// =============================================================================
+
+Window::Window(std::string_view windowTitle)
 {
-	static Window instance;
-	return instance;
+	m_hInstance = GetModuleHandleW(nullptr);
+
+	RegisterWindowClass();
+	CreateWindowHandle(windowTitle);
+	ApplyInitialWindowState();
 }
 
-RECT Window::GetRect() const noexcept
+Window::~Window()
 {
-	RECT rect{};
-	if (m_windowHWND)
+	if (m_hWnd)
 	{
-		GetClientRect(m_windowHWND, &rect);
-	}
-	return rect;
-}
-
-UINT Window::GetWidth() const noexcept
-{
-	RECT rect = GetRect();
-	return rect.right - rect.left;
-}
-
-UINT Window::GetHeight() const noexcept
-{
-	RECT rect = GetRect();
-	return rect.bottom - rect.top;
-}
-
-DirectX::XMFLOAT2 Window::GetViewportSize() const noexcept
-{
-	return DirectX::XMFLOAT2(static_cast<float>(GetWidth()), static_cast<float>(GetHeight()));
-}
-
-DirectX::XMFLOAT2 Window::GetViewportSizeInv() const noexcept
-{
-	const auto s = GetViewportSize();
-	return DirectX::XMFLOAT2(s.x != 0.0f ? 1.0f / s.x : 0.0f, s.y != 0.0f ? 1.0f / s.y : 0.0f);
-}
-
-// Initializes the window and registers its class
-void Window::Initialize(std::string_view windowTitle)
-{
-	// Create window class description
-	WNDCLASSEXW windowClass{0};
-	windowClass.cbSize = sizeof(windowClass);
-	windowClass.style = CS_OWNDC;  // Own device context
-	windowClass.lpfnWndProc = &Window::OnWindowMessage;
-	windowClass.hInstance = GetModuleHandle(nullptr);
-	windowClass.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
-	windowClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	windowClass.lpszClassName = L"Default Window Name";
-	windowClass.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);
-
-	// Register window class
-	m_wndClass = RegisterClassExW(&windowClass);
-	if (!m_wndClass)
-	{
-		LOG_FATAL("Failed to register window class");
+		DestroyWindow(m_hWnd);
+		m_hWnd = nullptr;
 	}
 
-	// Convert app-provided window title to wide string
-	std::wstring wtitle(windowTitle.begin(), windowTitle.end());
+	if (m_windowClassAtom && m_hInstance)
+	{
+		UnregisterClassW(kWindowClassName, m_hInstance);
+		m_windowClassAtom = 0;
+	}
+}
 
-	// Create the window with configured initial size
-	m_windowHWND = CreateWindowExW(
-	    WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW,
-	    L"Default Window Name",  // class name string
-	    wtitle.c_str(),          // window name string
-	    WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+// =============================================================================
+// Window Class Registration
+// =============================================================================
+
+void Window::RegisterWindowClass()
+{
+	WNDCLASSEXW wc{};
+	wc.cbSize = sizeof(WNDCLASSEXW);
+	wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+	wc.lpfnWndProc = &Window::WindowProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = sizeof(Window*);  // Store 'this' pointer
+	wc.hInstance = m_hInstance;
+	wc.hIcon = LoadIconW(nullptr, MAKEINTRESOURCEW(32512));      // IDI_APPLICATION = 32512
+	wc.hCursor = LoadCursorW(nullptr, MAKEINTRESOURCEW(32512));  // IDC_ARROW = 32512
+	wc.hbrBackground = nullptr;                                  // No background brush - we render everything
+	wc.lpszMenuName = nullptr;
+	wc.lpszClassName = kWindowClassName;
+	wc.hIconSm = LoadIconW(nullptr, MAKEINTRESOURCEW(32512));  // IDI_APPLICATION = 32512
+
+	m_windowClassAtom = RegisterClassExW(&wc);
+	if (!m_windowClassAtom)
+	{
+		LOG_FATAL("Window: Failed to register window class");
+	}
+}
+
+// =============================================================================
+// Window Creation
+// =============================================================================
+
+void Window::CreateWindowHandle(std::string_view title)
+{
+	constexpr DWORD kWindowStyle = WS_OVERLAPPEDWINDOW;
+	constexpr DWORD kWindowExStyle = WS_EX_APPWINDOW | WS_EX_OVERLAPPEDWINDOW;
+
+	const std::wstring wideTitle(title.begin(), title.end());
+
+	m_hWnd = CreateWindowExW(
+	    kWindowExStyle,
+	    kWindowClassName,
+	    wideTitle.c_str(),
+	    kWindowStyle,
 	    CW_USEDEFAULT,
 	    CW_USEDEFAULT,
 	    CW_USEDEFAULT,
 	    CW_USEDEFAULT,
 	    nullptr,
 	    nullptr,
-	    windowClass.hInstance,
-	    nullptr);
+	    m_hInstance,
+	    this  // Pass 'this' to WM_NCCREATE
+	);
 
-	if (m_windowHWND == nullptr)
+	if (!m_hWnd)
 	{
-		LOG_FATAL("Failed to Create a Window");
+		LOG_FATAL("Window: Failed to create window");
 	}
+}
 
-	// Apply fullscreen if requested by settings
+void Window::ApplyInitialWindowState()
+{
+	// Save initial windowed rect before any state changes
+	GetWindowRect(m_hWnd, &m_windowedRect);
+
 	if (EngineSettings::StartFullscreen)
 	{
 		SetFullScreen(true);
 	}
-}
-
-// Shuts down the window and unregisters its class
-void Window::Shutdown()
-{
-	if (m_windowHWND)
+	else
 	{
-		DestroyWindow(m_windowHWND);
-	}
-
-	if (m_wndClass)
-	{
-		UnregisterClassW(L"Default Window Name", GetModuleHandle(nullptr));
-		m_wndClass = 0;
+		// Show maximized by default in windowed mode
+		ShowWindow(m_hWnd, SW_SHOWMAXIMIZED);
 	}
 }
 
-// Polls and dispatches pending window messages (event loop)
+// =============================================================================
+// Frame Operations
+// =============================================================================
+
 void Window::PollEvents() noexcept
 {
-	MSG msg;
-	while (PeekMessageW(&msg, m_windowHWND, 0, 0, PM_REMOVE))
+	MSG msg{};
+	while (PeekMessageW(&msg, m_hWnd, 0, 0, PM_REMOVE))
 	{
 		TranslateMessage(&msg);
 		DispatchMessageW(&msg);
 	}
 }
 
-// Sets the window to fullscreen or windowed mode
-void Window::SetFullScreen(bool bSetFullScreen)
+// =============================================================================
+// Accessors
+// =============================================================================
+
+uint32_t Window::GetWidth() const noexcept
 {
-	DWORD style;
-	DWORD exStyle;
-	if (bSetFullScreen)
+	RECT rect{};
+	if (m_hWnd && GetClientRect(m_hWnd, &rect))
 	{
-		style = WS_POPUP | WS_VISIBLE;
-		exStyle = WS_EX_APPWINDOW;
+		return static_cast<uint32_t>(rect.right - rect.left);
 	}
-	else
-	{
-		style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
-		exStyle = WS_EX_OVERLAPPEDWINDOW | WS_EX_APPWINDOW;
-	}
-
-	SetWindowLongW(m_windowHWND, GWL_STYLE, style);
-	SetWindowLongW(m_windowHWND, GWL_EXSTYLE, exStyle);
-
-	if (bSetFullScreen)
-	{
-		// Resize window to cover the monitor
-		HMONITOR monitorFromWindow = MonitorFromWindow(m_windowHWND, MONITOR_DEFAULTTONEAREST);
-		MONITORINFO monitorInfo{};
-		monitorInfo.cbSize = sizeof(MONITORINFO);
-		if (GetMonitorInfoW(monitorFromWindow, &monitorInfo))
-		{
-			SetWindowPos(
-			    m_windowHWND,
-			    nullptr,
-			    monitorInfo.rcMonitor.left,
-			    monitorInfo.rcMonitor.top,
-			    monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
-			    monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
-			    SWP_NOZORDER);
-		}
-	}
-	else
-	{
-		// Maximize window in windowed mode
-		ShowWindow(m_windowHWND, SW_MAXIMIZE);
-	}
-
-	m_bIsFullScreen = bSetFullScreen;
+	return 0;
 }
 
-// Window message handler (WndProc)
-LRESULT Window::OnWindowMessage(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
+uint32_t Window::GetHeight() const noexcept
 {
-	if (GUI.OnWindowMessage(wnd, msg, wParam, lParam))
+	RECT rect{};
+	if (m_hWnd && GetClientRect(m_hWnd, &rect))
 	{
-		// GUI Layer enforces being first & if it returns true we must stop processing further events
-		return true;
+		return static_cast<uint32_t>(rect.bottom - rect.top);
+	}
+	return 0;
+}
+
+// =============================================================================
+// Fullscreen Management
+// =============================================================================
+
+void Window::SetFullScreen(bool bFullScreen)
+{
+	if (m_bIsFullScreen == bFullScreen)
+	{
+		return;  // No change needed
 	}
 
+	if (bFullScreen)
+	{
+		// Save current window rect before going fullscreen
+		GetWindowRect(m_hWnd, &m_windowedRect);
+
+		// Remove window decorations
+		SetWindowLongW(m_hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+		SetWindowLongW(m_hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
+
+		// Get monitor dimensions
+		HMONITOR hMonitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
+		MONITORINFO monitorInfo{};
+		monitorInfo.cbSize = sizeof(MONITORINFO);
+
+		if (GetMonitorInfoW(hMonitor, &monitorInfo))
+		{
+			const RECT& rc = monitorInfo.rcMonitor;
+			SetWindowPos(m_hWnd, HWND_TOP, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_FRAMECHANGED | SWP_NOACTIVATE);
+		}
+
+		ShowWindow(m_hWnd, SW_SHOW);
+	}
+	else
+	{
+		// Restore window decorations
+		SetWindowLongW(m_hWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
+		SetWindowLongW(m_hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW | WS_EX_OVERLAPPEDWINDOW);
+
+		// Restore previous window position and size
+		SetWindowPos(
+		    m_hWnd,
+		    HWND_NOTOPMOST,
+		    m_windowedRect.left,
+		    m_windowedRect.top,
+		    m_windowedRect.right - m_windowedRect.left,
+		    m_windowedRect.bottom - m_windowedRect.top,
+		    SWP_FRAMECHANGED | SWP_NOACTIVATE);
+
+		ShowWindow(m_hWnd, SW_SHOWMAXIMIZED);
+	}
+
+	m_bIsFullScreen = bFullScreen;
+}
+
+// =============================================================================
+// Message Handling
+// =============================================================================
+
+LRESULT CALLBACK Window::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	Window* window = nullptr;
+
+	if (msg == WM_NCCREATE)
+	{
+		// Store 'this' pointer from CreateWindowEx call
+		auto* create = reinterpret_cast<CREATESTRUCTW*>(lParam);
+		window = static_cast<Window*>(create->lpCreateParams);
+		SetWindowLongPtrW(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window));
+
+		// Set m_hWnd early so HandleMessage can use it
+		window->m_hWnd = hWnd;
+	}
+	else
+	{
+		window = reinterpret_cast<Window*>(GetWindowLongPtrW(hWnd, GWLP_USERDATA));
+	}
+
+	if (window)
+	{
+		return window->HandleMessage(msg, wParam, lParam);
+	}
+
+	return DefWindowProcW(hWnd, msg, wParam, lParam);
+}
+
+LRESULT Window::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	// Broadcast message to all subscribers via event system
+	WindowMessageEvent msgEvent{m_hWnd, msg, wParam, lParam, false};
+	OnWindowMessage.Broadcast(msgEvent);
+
+	// If any subscriber handled the message, return early
+	if (msgEvent.handled)
+	{
+		return 0;
+	}
+
+	// Handle window-specific messages
 	switch (msg)
 	{
+		case WM_SIZE:
+			OnSizeChanged(wParam, LOWORD(lParam), HIWORD(lParam));
+			return 0;
+
+		case WM_CLOSE:
+			m_bShouldClose = true;
+			return 0;
+
+		case WM_DESTROY:
+			m_hWnd = nullptr;
+			return 0;
+
 		case WM_KEYDOWN:
-			// Toggle fullscreen on F11
+			// F11 toggles fullscreen
 			if (wParam == VK_F11)
 			{
-				GWindow.SetFullScreen(!GWindow.IsFullScreen());
+				SetFullScreen(!m_bIsFullScreen);
+				return 0;
 			}
-			return 0;
-		case WM_SIZE:
-			// Trigger resize when the window is not minimized and device is ready
-			if (wParam != SIZE_MINIMIZED && GD3D12Rhi.GetDevice() != nullptr)
+			break;
+
+		case WM_SYSKEYDOWN:
+			// Alt+Enter toggles fullscreen
+			if (wParam == VK_RETURN && (lParam & (1 << 29)))  // Alt key flag
 			{
-				GRenderer.OnResize();
+				SetFullScreen(!m_bIsFullScreen);
+				return 0;
 			}
+			break;
+
+		case WM_GETMINMAXINFO:
+		{
+			// Set minimum window size
+			auto* minMaxInfo = reinterpret_cast<MINMAXINFO*>(lParam);
+			minMaxInfo->ptMinTrackSize.x = 320;
+			minMaxInfo->ptMinTrackSize.y = 240;
 			return 0;
-		case WM_CLOSE:
-		case WM_QUIT:
-			// Signal to close the window
-			GWindow.m_bShouldClose = true;
-			return 0;
+		}
+
+		case WM_ACTIVATEAPP:
+			// Could handle focus gain/loss here
+			break;
+
+		case WM_ERASEBKGND:
+			// Prevent flickering - we handle all rendering
+			return 1;
 	}
-	// Default message handling
-	return DefWindowProcW(wnd, msg, wParam, lParam);
+
+	return DefWindowProcW(m_hWnd, msg, wParam, lParam);
+}
+
+void Window::OnSizeChanged(WPARAM sizeType, [[maybe_unused]] uint32_t width, [[maybe_unused]] uint32_t height)
+{
+	switch (sizeType)
+	{
+		case SIZE_MINIMIZED:
+			m_bIsMinimized = true;
+			break;
+
+		case SIZE_RESTORED:
+		case SIZE_MAXIMIZED:
+			m_bIsMinimized = false;
+			OnResized.Broadcast();
+			break;
+	}
 }

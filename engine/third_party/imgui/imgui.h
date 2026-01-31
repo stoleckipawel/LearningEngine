@@ -1524,9 +1524,9 @@ namespace ImGui
 	IMGUI_API ImGuiTableSortSpecs* TableGetSortSpecs();  // get latest sort specs for the table (NULL if not sorting).  Lifetime: don't hold
 	                                                     // on this pointer over multiple frames or past any subsequent call to
 	                                                     // BeginTable().
-	IMGUI_API int TableGetColumnCount();  // return number of columns (value passed to BeginTable)
-	IMGUI_API int TableGetColumnIndex();  // return current column index.
-	IMGUI_API int TableGetRowIndex();     // return current row index (header rows are accounted for)
+	IMGUI_API int TableGetColumnCount();                 // return number of columns (value passed to BeginTable)
+	IMGUI_API int TableGetColumnIndex();                 // return current column index.
+	IMGUI_API int TableGetRowIndex();                    // return current row index (header rows are accounted for)
 	IMGUI_API const char* TableGetColumnName(
 	    int column_n = -1);  // return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
 	IMGUI_API ImGuiTableColumnFlags TableGetColumnFlags(
@@ -1653,9 +1653,9 @@ namespace ImGui
 	IMGUI_API bool IsItemHovered(
 	    ImGuiHoveredFlags flags =
 	        0);  // is the last item hovered? (and usable, aka not blocked by a popup, etc.). See ImGuiHoveredFlags for more options.
-	IMGUI_API bool IsItemActive();  // is the last item active? (e.g. button being held, text field being edited. This will continuously
-	                                // return true while holding mouse button on an item. Items that don't interact will always return
-	                                // false)
+	IMGUI_API bool IsItemActive();   // is the last item active? (e.g. button being held, text field being edited. This will continuously
+	                                 // return true while holding mouse button on an item. Items that don't interact will always return
+	                                 // false)
 	IMGUI_API bool IsItemFocused();  // is the last item focused for keyboard/gamepad navigation?
 	IMGUI_API bool IsItemClicked(
 	    ImGuiMouseButton mouse_button =
@@ -1672,14 +1672,14 @@ namespace ImGui
 	                                              // editing. Note that you may get false positives (some widgets such as
 	                                              // Combo()/ListBox()/Selectable() will return true even when clicking an already selected
 	                                              // item).
-	IMGUI_API bool IsItemToggledOpen();  // was the last item open state toggled? set by TreeNode().
-	IMGUI_API bool IsAnyItemHovered();   // is any item hovered?
-	IMGUI_API bool IsAnyItemActive();    // is any item active?
-	IMGUI_API bool IsAnyItemFocused();   // is any item focused?
-	IMGUI_API ImGuiID GetItemID();       // get ID of last item (~~ often same ImGui::GetID(label) beforehand)
-	IMGUI_API ImVec2 GetItemRectMin();   // get upper-left bounding rectangle of the last item (screen space)
-	IMGUI_API ImVec2 GetItemRectMax();   // get lower-right bounding rectangle of the last item (screen space)
-	IMGUI_API ImVec2 GetItemRectSize();  // get size of last item
+	IMGUI_API bool IsItemToggledOpen();           // was the last item open state toggled? set by TreeNode().
+	IMGUI_API bool IsAnyItemHovered();            // is any item hovered?
+	IMGUI_API bool IsAnyItemActive();             // is any item active?
+	IMGUI_API bool IsAnyItemFocused();            // is any item focused?
+	IMGUI_API ImGuiID GetItemID();                // get ID of last item (~~ often same ImGui::GetID(label) beforehand)
+	IMGUI_API ImVec2 GetItemRectMin();            // get upper-left bounding rectangle of the last item (screen space)
+	IMGUI_API ImVec2 GetItemRectMax();            // get lower-right bounding rectangle of the last item (screen space)
+	IMGUI_API ImVec2 GetItemRectSize();           // get size of last item
 
 	// Viewports
 	// - Currently represents the Platform Window created by the application which is hosting our Dear ImGui windows.

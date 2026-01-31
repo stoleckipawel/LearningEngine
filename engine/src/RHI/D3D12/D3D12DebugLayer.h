@@ -4,12 +4,11 @@
 // Manages D3D12 and DXGI debug/validation layers.
 //
 // USAGE:
-//   #ifdef ENGINE_GPU_VALIDATION
-//   GD3D12DebugLayer.Initialize();        // Before device creation
-//   GD3D12DebugLayer.InitializeInfoQueue(); // After device creation
-//   // ... application runs ...
-//   GD3D12DebugLayer.Shutdown();          // Reports live objects
-//   #endif
+//   // Owned by D3D12Rhi, created before device:
+//   m_debugLayer = std::make_unique<D3D12DebugLayer>();
+//   // After device creation:
+//   m_debugLayer->InitializeInfoQueue(device);
+//   // Destructor handles shutdown and live object reporting
 //
 // DESIGN:
 //   - Only available when ENGINE_GPU_VALIDATION is defined (debug builds)
@@ -18,8 +17,8 @@
 //   - Reports live D3D12/DXGI objects at shutdown for leak detection
 //
 // NOTES:
-//   - Singleton accessed via GD3D12DebugLayer global reference
-//   - Initialize/Shutdown are idempotent (safe to call multiple times)
+//   - Owned by D3D12Rhi as a unique_ptr member
+//   - Must be created before device and destroyed after device
 // ============================================================================
 
 #pragma once
@@ -33,39 +32,34 @@ using Microsoft::WRL::ComPtr;
 class D3D12DebugLayer final
 {
   public:
-	[[nodiscard]] static D3D12DebugLayer& Get() noexcept;
+	// Constructs and enables debug layers. Call before device creation.
+	D3D12DebugLayer();
+
+	// Shuts down debug layers and reports live objects.
+	~D3D12DebugLayer() noexcept;
 
 	D3D12DebugLayer(const D3D12DebugLayer&) = delete;
 	D3D12DebugLayer& operator=(const D3D12DebugLayer&) = delete;
 	D3D12DebugLayer(D3D12DebugLayer&&) = delete;
 	D3D12DebugLayer& operator=(D3D12DebugLayer&&) = delete;
 
-	// Initialize debug layers. Safe to call multiple times (idempotent).
-	void Initialize();
-
 	// After device creation, initialize InfoQueue filters for the created device.
-	void InitializeInfoQueue();
+	void InitializeInfoQueue(ID3D12Device* device);
 
-	// Shutdown debug layers and optionally report live objects. Safe to call multiple times.
-	void Shutdown();
+	// Reports live D3D12 device objects (call before device Reset).
+	void ReportLiveDeviceObjects(ID3D12Device* device);
 
-	// Helpers to explicitly report live objects. Call before releasing the device.
-	void ReportLiveDeviceObjects();
+	// Reports DXGI live objects (factory, adapters, swapchains).
 	void ReportLiveDXGIObjects();
 
   private:
-	D3D12DebugLayer() = default;
-	~D3D12DebugLayer() = default;
-
 	void InitD3D12Debug();
 	void InitDXGIDebug();
-	void ConfigureInfoQueue();
-	void ApplyInfoQueueFilters();
+	void ConfigureInfoQueue(ID3D12Device* device);
+	void ApplyInfoQueueFilters(ID3D12Device* device);
 
 	ComPtr<ID3D12Debug> m_d3d12Debug;  // D3D12 debug interface
 	ComPtr<IDXGIDebug1> m_dxgiDebug;   // DXGI debug interface
-	bool m_bInitialized = false;       // guard to make Initialize/Shutdown idempotent
 };
 
-inline D3D12DebugLayer& GD3D12DebugLayer = D3D12DebugLayer::Get();
 #endif

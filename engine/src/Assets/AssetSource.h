@@ -3,7 +3,7 @@
 // Identifies the origin of engine assets (Project vs Engine).
 // ----------------------------------------------------------------------------
 // USAGE:
-//   auto path = GAssetSystem.GetShaderPath(AssetSource::Engine);
+//   auto path = assetSystem.GetShaderPath(AssetSource::Engine);
 //   auto name = GetAssetSourceName(AssetSource::Project);  // "Project"
 //
 // DESIGN:

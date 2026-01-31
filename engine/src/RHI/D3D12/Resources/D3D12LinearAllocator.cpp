@@ -1,13 +1,15 @@
 #include "Core/PCH.h"
 
-#include "LinearAllocator.h"
+#include "D3D12LinearAllocator.h"
+#include "D3D12Rhi.h"
 
 #include <cstring>
 
-void LinearAllocator::Initialize(uint64_t capacity, const wchar_t* debugName)
+void D3D12LinearAllocator::Initialize(D3D12Rhi& rhi, uint64_t capacity, const wchar_t* debugName)
 {
 	assert(capacity > 0);
 
+	m_rhi = &rhi;
 	m_Capacity = capacity;
 	m_Offset.store(0, std::memory_order_relaxed);
 
@@ -30,7 +32,7 @@ void LinearAllocator::Initialize(uint64_t capacity, const wchar_t* debugName)
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-	HRESULT hr = GD3D12Rhi.GetDevice()->CreateCommittedResource(
+	HRESULT hr = m_rhi->GetDevice()->CreateCommittedResource(
 	    &heapProps,
 	    D3D12_HEAP_FLAG_NONE,
 	    &resourceDesc,
@@ -40,7 +42,7 @@ void LinearAllocator::Initialize(uint64_t capacity, const wchar_t* debugName)
 
 	if (FAILED(hr))
 	{
-		throw std::runtime_error("LinearAllocator: Failed to create upload buffer");
+		throw std::runtime_error("D3D12LinearAllocator: Failed to create upload buffer");
 	}
 
 	DebugUtils::SetDebugName(m_Resource, debugName);
@@ -50,14 +52,14 @@ void LinearAllocator::Initialize(uint64_t capacity, const wchar_t* debugName)
 	hr = m_Resource->Map(0, &readRange, reinterpret_cast<void**>(&m_CpuBase));
 	if (FAILED(hr))
 	{
-		throw std::runtime_error("LinearAllocator: Failed to map upload buffer");
+		throw std::runtime_error("D3D12LinearAllocator: Failed to map upload buffer");
 	}
 
 	m_GpuBase = m_Resource->GetGPUVirtualAddress();
 	m_bInitialized = true;
 }
 
-void LinearAllocator::Shutdown()
+void D3D12LinearAllocator::Shutdown()
 {
 	if (m_Resource)
 	{
@@ -71,15 +73,15 @@ void LinearAllocator::Shutdown()
 	m_bInitialized = false;
 }
 
-void LinearAllocator::Reset() noexcept
+void D3D12LinearAllocator::Reset() noexcept
 {
 	m_Offset.store(0, std::memory_order_release);
 	m_HighWaterMark = 0;  // Reset per-frame tracking
 }
 
-LinearAllocation LinearAllocator::Allocate(uint64_t size, uint64_t alignment)
+D3D12LinearAllocation D3D12LinearAllocator::Allocate(uint64_t size, uint64_t alignment)
 {
-	assert(m_bInitialized && "LinearAllocator not initialized");
+	assert(m_bInitialized && "D3D12LinearAllocator not initialized");
 	assert(size > 0 && "Cannot allocate zero bytes");
 	assert((alignment & (alignment - 1)) == 0 && "Alignment must be power of 2");
 
@@ -108,7 +110,7 @@ LinearAllocation LinearAllocator::Allocate(uint64_t size, uint64_t alignment)
 	while (newOffset > currentHigh && !m_HighWaterMark.compare_exchange_weak(currentHigh, newOffset, std::memory_order_relaxed))
 		;
 
-	LinearAllocation alloc;
+	D3D12LinearAllocation alloc;
 	alloc.CpuPtr = m_CpuBase + alignedOffset;
 	alloc.GpuAddress = m_GpuBase + alignedOffset;
 	alloc.Size = alignedSize;

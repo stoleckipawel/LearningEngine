@@ -1,5 +1,6 @@
 #include "PCH.h"
 #include "D3D12UploadBuffer.h"
+#include "D3D12Rhi.h"
 #include "DebugUtils.h"
 #include "Log.h"
 #include <cstring>
@@ -7,7 +8,7 @@
 // Uploads data to a GPU-accessible buffer using an upload heap.
 // Returns a ComPtr to the created ID3D12Resource2 buffer.
 // Note: For optimal performance, consider using a default heap and staging resource for large or frequent uploads.
-ComPtr<ID3D12Resource2> D3D12UploadBuffer::Upload(const void* data, size_t dataSize)
+ComPtr<ID3D12Resource2> D3D12UploadBuffer::Upload(D3D12Rhi& rhi, const void* data, size_t dataSize)
 {
 	// Describe the buffer resource
 	D3D12_RESOURCE_DESC resourceDesc = {};
@@ -26,7 +27,7 @@ ComPtr<ID3D12Resource2> D3D12UploadBuffer::Upload(const void* data, size_t dataS
 	// Create the committed resource in the upload heap
 	ComPtr<ID3D12Resource2> uploadBuffer;
 	CD3DX12_HEAP_PROPERTIES heapUploadProperties(D3D12_HEAP_TYPE_UPLOAD);
-	CHECK(GD3D12Rhi.GetDevice()->CreateCommittedResource(
+	CHECK(rhi.GetDevice()->CreateCommittedResource(
 	    &heapUploadProperties,
 	    D3D12_HEAP_FLAG_NONE,
 	    &resourceDesc,

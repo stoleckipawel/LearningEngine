@@ -1,10 +1,11 @@
 
 #include "PCH.h"
 #include "D3D12RootSignature.h"
+#include "D3D12Rhi.h"
 #include "D3D12RootBindings.h"
 #include "DebugUtils.h"
 
-D3D12RootSignature::D3D12RootSignature()
+D3D12RootSignature::D3D12RootSignature(D3D12Rhi& rhi) : m_rhi(rhi)
 {
 	Create();
 }
@@ -56,7 +57,7 @@ void D3D12RootSignature::Create()
 	ID3DBlob* signature = nullptr;
 	ID3DBlob* error = nullptr;
 	CHECK(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
-	CHECK(GD3D12Rhi.GetDevice()->CreateRootSignature(
+	CHECK(m_rhi.GetDevice()->CreateRootSignature(
 	    0,
 	    signature->GetBufferPointer(),
 	    signature->GetBufferSize(),

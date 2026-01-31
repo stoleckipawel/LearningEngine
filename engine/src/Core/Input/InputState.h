@@ -59,7 +59,7 @@ class InputSystem;
 /// Updated by InputSystem, read by gameplay code.
 class InputState
 {
-public:
+  public:
 	InputState() = default;
 	~InputState() = default;
 
@@ -156,7 +156,7 @@ public:
 	/// Returns true if cursor is currently hidden.
 	[[nodiscard]] bool IsCursorHidden() const noexcept;
 
-private:
+  private:
 	// =========================================================================
 	// Friend Access (InputSystem manages state)
 	// =========================================================================

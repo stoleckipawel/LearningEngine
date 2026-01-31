@@ -22,16 +22,21 @@
 
 #pragma once
 
-#include "D3D12Rhi.h"
 #include "D3D12DescriptorHandle.h"
+#include <d3d12.h>
+#include <wrl/client.h>
 
 using Microsoft::WRL::ComPtr;
+
+class Window;
+class D3D12DescriptorHeapManager;
+class D3D12Rhi;
 
 class D3D12DepthStencil
 {
   public:
 	// Constructs and initializes the depth stencil resource and view
-	D3D12DepthStencil();
+	D3D12DepthStencil(D3D12Rhi& rhi, Window& window, D3D12DescriptorHeapManager& descriptorHeapManager);
 
 	// Destructor releases resources and descriptor handle
 	~D3D12DepthStencil() noexcept;
@@ -65,7 +70,10 @@ class D3D12DepthStencil
 	void CreateDepthStencilView();
 
   private:
-	ComPtr<ID3D12Resource2> m_resource;                     // Depth stencil resource
-	D3D12_DEPTH_STENCIL_VIEW_DESC m_depthStencilDesc = {};  // DSV description
-	D3D12DescriptorHandle m_dsvHandle;                      // Allocated DSV descriptor handle
+	D3D12Rhi& m_rhi;                                                // RHI reference
+	ComPtr<ID3D12Resource2> m_resource;                             // Depth stencil resource
+	D3D12_DEPTH_STENCIL_VIEW_DESC m_depthStencilDesc = {};          // DSV description
+	D3D12DescriptorHandle m_dsvHandle;                              // Allocated DSV descriptor handle
+	Window* m_window = nullptr;                                     // Window reference for dimensions
+	D3D12DescriptorHeapManager* m_descriptorHeapManager = nullptr;  // Descriptor heap manager reference
 };

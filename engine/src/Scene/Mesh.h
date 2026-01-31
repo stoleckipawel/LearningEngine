@@ -10,7 +10,7 @@
 //       void GenerateIndices(std::vector<DWORD>& out) const override;
 //   };
 //   MyMesh mesh({0,0,0}, {0,0,0}, {1,1,1});
-//   mesh.Upload();
+//   mesh.Upload(rhi);
 //   mesh.Bind(commandList);
 //
 // DESIGN:
@@ -130,7 +130,7 @@ class Mesh
 	void Bind(ID3D12GraphicsCommandList* commandList) const noexcept;
 
 	/// Uploads both vertex and index buffers to the GPU.
-	void Upload();
+	void Upload(D3D12Rhi& rhi);
 
   protected:
 	// ========================================================================
@@ -148,10 +148,10 @@ class Mesh
 	// ------------------------------------------------------------------------
 
 	/// Creates and uploads the vertex buffer resource.
-	void UploadVertexBuffer();
+	void UploadVertexBuffer(D3D12Rhi& rhi);
 
 	/// Creates and uploads the index buffer resource.
-	void UploadIndexBuffer();
+	void UploadIndexBuffer(D3D12Rhi& rhi);
 
 	/// Marks cached world matrix as invalid (called from setters).
 	void InvalidateWorldCache() noexcept { m_bWorldDirty = true; }

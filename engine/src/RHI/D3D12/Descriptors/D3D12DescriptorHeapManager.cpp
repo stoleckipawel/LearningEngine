@@ -1,17 +1,12 @@
 #include "PCH.h"
 #include "D3D12DescriptorHeapManager.h"
 
-D3D12DescriptorHeapManager& D3D12DescriptorHeapManager::Get() noexcept
-{
-	static D3D12DescriptorHeapManager instance;
-	return instance;
-}
-
 // Initializes all descriptor heaps required by the engine.
-void D3D12DescriptorHeapManager::Initialize()
+D3D12DescriptorHeapManager::D3D12DescriptorHeapManager(D3D12Rhi& rhi) : m_rhi(&rhi)
 {
 	// Create CBV/SRV/UAV heap (shader visible)
 	m_HeapSRV = std::make_unique<D3D12DescriptorHeap>(
+	    *m_rhi,
 	    D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
 	    D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
 	    L"CBVSRVUAVHeap");
@@ -20,6 +15,7 @@ void D3D12DescriptorHeapManager::Initialize()
 
 	// Create Sampler heap (shader visible)
 	m_HeapSampler = std::make_unique<D3D12DescriptorHeap>(
+	    *m_rhi,
 	    D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
 	    D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
 	    L"SamplerHeap");
@@ -28,18 +24,17 @@ void D3D12DescriptorHeapManager::Initialize()
 
 	// Create Depth Stencil View heap (not shader visible)
 	m_HeapDepthStencil =
-	    std::make_unique<D3D12DescriptorHeap>(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, L"DepthStencilHeap");
+	    std::make_unique<D3D12DescriptorHeap>(*m_rhi, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, L"DepthStencilHeap");
 	// Initialize DSV allocator
 	m_AllocatorDepthStencil = std::make_unique<D3D12DescriptorAllocator>(m_HeapDepthStencil.get());
 
 	// Create Render Target View heap (not shader visible)
 	m_HeapRenderTarget =
-	    std::make_unique<D3D12DescriptorHeap>(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, L"RenderTargetHeap");
+	    std::make_unique<D3D12DescriptorHeap>(*m_rhi, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, L"RenderTargetHeap");
 	// Initialize RTV allocator
 	m_AllocatorRenderTarget = std::make_unique<D3D12DescriptorAllocator>(m_HeapRenderTarget.get());
 }
 
-// Binds shader-visible heaps (SRV/CBV/UAV and Sampler) on the command list.
 void D3D12DescriptorHeapManager::SetShaderVisibleHeaps() const
 {
 	ID3D12DescriptorHeap* heaps[] = {
@@ -47,10 +42,9 @@ void D3D12DescriptorHeapManager::SetShaderVisibleHeaps() const
 	    m_HeapSampler->GetRaw()  // Sampler heap (optional for UI; harmless)
 	};
 
-	GD3D12Rhi.GetCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
+	m_rhi->GetCommandList()->SetDescriptorHeaps(_countof(heaps), heaps);
 }
 
-// Allocates a descriptor of the given type and returns raw CPU/GPU handles.
 void D3D12DescriptorHeapManager::AllocateHandle(
     D3D12_DESCRIPTOR_HEAP_TYPE type,
     D3D12_CPU_DESCRIPTOR_HANDLE& outCPU,
@@ -62,7 +56,6 @@ void D3D12DescriptorHeapManager::AllocateHandle(
 	outGPU = handle.GetGPU();
 }
 
-// Frees a descriptor of the given type using raw CPU/GPU handles.
 void D3D12DescriptorHeapManager::FreeHandle(
     D3D12_DESCRIPTOR_HEAP_TYPE type,
     D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle,
@@ -78,7 +71,7 @@ void D3D12DescriptorHeapManager::FreeHandle(
 
 	// Compute index from CPU handle pointer arithmetic against the heap's CPU start
 	const auto heapCPUStart = heap->GetRaw()->GetCPUDescriptorHandleForHeapStart();
-	const UINT increment = GD3D12Rhi.GetDevice()->GetDescriptorHandleIncrementSize(type);
+	const UINT increment = m_rhi->GetDevice()->GetDescriptorHandleIncrementSize(type);
 	const SIZE_T delta = (cpuHandle.ptr - heapCPUStart.ptr);
 	const UINT index = static_cast<UINT>(delta / static_cast<SIZE_T>(increment));
 
@@ -90,7 +83,7 @@ void D3D12DescriptorHeapManager::FreeHandle(
 		heapGPUStart = heap->GetRaw()->GetGPUDescriptorHandleForHeapStart();
 	}
 
-	const D3D12DescriptorHandle handle(index, type, heapCPUStart, heapGPUStart);
+	const D3D12DescriptorHandle handle(*m_rhi, index, type, heapCPUStart, heapGPUStart);
 	allocator->Free(handle);
 }
 
@@ -128,18 +121,17 @@ D3D12DescriptorAllocator* D3D12DescriptorHeapManager::GetAllocator(D3D12_DESCRIP
 	}
 }
 
-// Resets all descriptor heap resources
-void D3D12DescriptorHeapManager::Shutdown() noexcept
+D3D12DescriptorHeapManager::~D3D12DescriptorHeapManager() noexcept
 {
-	m_HeapSRV.reset();
-	m_AllocatorSRV.reset();
-
-	m_HeapSampler.reset();
-	m_AllocatorSampler.reset();
-
-	m_HeapDepthStencil.reset();
-	m_AllocatorDepthStencil.reset();
-
-	m_HeapRenderTarget.reset();
 	m_AllocatorRenderTarget.reset();
+	m_HeapRenderTarget.reset();
+
+	m_AllocatorDepthStencil.reset();
+	m_HeapDepthStencil.reset();
+
+	m_AllocatorSampler.reset();
+	m_HeapSampler.reset();
+
+	m_AllocatorSRV.reset();
+	m_HeapSRV.reset();
 }

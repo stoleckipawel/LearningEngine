@@ -4,14 +4,13 @@
 // Manages the DXGI swap chain and associated render targets for presentation.
 //
 // USAGE:
-//   GD3D12SwapChain.Initialize();
+//   D3D12SwapChain swapChain(window, descriptorHeapManager);
 //   // Each frame:
-//   GD3D12SwapChain.SetRenderTargetState();
-//   GD3D12SwapChain.Clear();
+//   swapChain.SetRenderTargetState();
+//   swapChain.Clear();
 //   // ... render ...
-//   GD3D12SwapChain.SetPresentState();
-//   GD3D12SwapChain.Present();
-//   GD3D12SwapChain.Shutdown();
+//   swapChain.SetPresentState();
+//   swapChain.Present();
 //
 // DESIGN:
 //   - Owns IDXGISwapChain3 and per-frame back buffer resources
@@ -19,7 +18,7 @@
 //   - Handles resize by releasing and recreating buffers
 //
 // NOTES:
-//   - Singleton accessed via GD3D12SwapChain global reference
+//   - Owned by Renderer, passed by reference where needed
 //   - Frame index updated via UpdateFrameInFlightIndex() after Present()
 //   - Buffer count configured by EngineSettings::FramesInFlight
 // ============================================================================
@@ -41,6 +40,10 @@
 
 using Microsoft::WRL::ComPtr;
 
+class Window;
+class D3D12DescriptorHeapManager;
+class D3D12Rhi;
+
 class D3D12SwapChain final
 {
   public:
@@ -48,19 +51,16 @@ class D3D12SwapChain final
 	// Lifecycle
 	// ========================================================================
 
-	/// Returns the singleton D3D12SwapChain instance.
-	[[nodiscard]] static D3D12SwapChain& Get() noexcept;
+	/// Constructs the swap chain and render target views.
+	D3D12SwapChain(D3D12Rhi& rhi, Window& window, D3D12DescriptorHeapManager& descriptorHeapManager);
+
+	/// Releases all swap chain resources.
+	~D3D12SwapChain();
 
 	D3D12SwapChain(const D3D12SwapChain&) = delete;
 	D3D12SwapChain& operator=(const D3D12SwapChain&) = delete;
 	D3D12SwapChain(D3D12SwapChain&&) = delete;
 	D3D12SwapChain& operator=(D3D12SwapChain&&) = delete;
-
-	/// Creates the swap chain and render target views.
-	void Initialize();
-
-	/// Releases all swap chain resources.
-	void Shutdown();
 
 	// ========================================================================
 	// Frame Operations
@@ -126,9 +126,6 @@ class D3D12SwapChain final
 	[[nodiscard]] UINT ComputeSwapChainFlags() const;
 
   private:
-	D3D12SwapChain() = default;
-	~D3D12SwapChain() = default;
-
 	// ------------------------------------------------------------------------
 	// Initialization Helpers
 	// ------------------------------------------------------------------------
@@ -142,12 +139,12 @@ class D3D12SwapChain final
 	// State
 	// ------------------------------------------------------------------------
 
-	UINT m_frameInFlightIndex = 0;                                      ///< Current back buffer index
+	D3D12Rhi& m_rhi;                                                     ///< RHI reference
+	UINT m_frameInFlightIndex = 0;                                       ///< Current back buffer index
 	ComPtr<IDXGISwapChain3> m_swapChain = nullptr;                       ///< DXGI swap chain
 	ComPtr<ID3D12Resource2> m_buffers[EngineSettings::FramesInFlight];   ///< Back buffer resources
 	D3D12DescriptorHandle m_rtvHandles[EngineSettings::FramesInFlight];  ///< RTV descriptor handles
 	HANDLE m_WaitableObject = nullptr;                                   ///< Frame latency waitable object
+	Window* m_window = nullptr;                                          ///< Window reference for dimensions
+	D3D12DescriptorHeapManager* m_descriptorHeapManager = nullptr;       ///< Descriptor heap manager reference
 };
-
-/// Global singleton reference for convenient access.
-inline D3D12SwapChain& GD3D12SwapChain = D3D12SwapChain::Get();

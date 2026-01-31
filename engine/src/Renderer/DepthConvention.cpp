@@ -63,30 +63,26 @@ D3D12_COMPARISON_FUNC DepthConvention::GetDepthComparisonFuncEqual() noexcept
 
 XMMATRIX DepthConvention::CreatePerspectiveFovLH(float fovY, float aspect, float nearZ, float farZ) noexcept
 {
-	const float h = 1.0f / std::tan(fovY * 0.5f);
-	const float w = h / aspect;
+	// Use DirectXMath's sin/cos for precision (matches XMMatrixPerspectiveFovLH)
+	float sinFov, cosFov;
+	XMScalarSinCos(&sinFov, &cosFov, 0.5f * fovY);
+
+	const float height = cosFov / sinFov;  // cot(fov/2)
+	const float width = height / aspect;
 
 	if (IsReversedZ())
 	{
 		// Reversed-Z: near → 1, far → 0
-		//
-		// DirectX LH projection matrix layout (row-major, matches XMMatrixPerspectiveFovLH):
-		//   w    0    0    0
-		//   0    h    0    0
-		//   0    0    A    1     ← 1 copies z_view into w_clip for perspective divide
-		//   0    0    B    0
-		//
-		// Result: x_clip = x*w, y_clip = y*h, z_clip = z*A + B, w_clip = z
-		// After divide: z_ndc = A + B/z
-		//
-		// For reversed-Z (near→1, far→0):
-		//   A + B/near = 1
-		//   A + B/far  = 0
-		// Solving: A = near/(near-far), B = near*far/(far-near)
-		const float a = nearZ / (nearZ - farZ);
-		const float b = (nearZ * farZ) / (farZ - nearZ);
+		// Standard formula: fRange = far / (far - near), then m22 = fRange, m32 = -fRange * near
+		// For reversed-Z: we invert to get near → 1, far → 0
+		const float fRange = nearZ / (nearZ - farZ);
 
-		return XMMATRIX(w, 0.0f, 0.0f, 0.0f, 0.0f, h, 0.0f, 0.0f, 0.0f, 0.0f, a, 1.0f, 0.0f, 0.0f, b, 0.0f);
+		XMMATRIX m;
+		m.r[0] = XMVectorSet(width, 0.0f, 0.0f, 0.0f);
+		m.r[1] = XMVectorSet(0.0f, height, 0.0f, 0.0f);
+		m.r[2] = XMVectorSet(0.0f, 0.0f, fRange, 1.0f);
+		m.r[3] = XMVectorSet(0.0f, 0.0f, -fRange * farZ, 0.0f);
+		return m;
 	}
 	else
 	{

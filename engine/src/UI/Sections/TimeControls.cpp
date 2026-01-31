@@ -5,20 +5,22 @@
 
 #include <imgui.h>
 
+TimeControls::TimeControls(Timer& timer) noexcept : m_timer(timer) {}
+
 void TimeControls::BuildUI()
 {
-	float timeScale = static_cast<float>(GTimer.GetTimeScale());
+	float timeScale = static_cast<float>(m_timer.GetTimeScale());
 	if (ImGui::SliderFloat("Time Scale", &timeScale, 0.0f, 4.0f, "%.2f"))
 	{
-		GTimer.SetTimeScale(static_cast<double>(timeScale));
+		m_timer.SetTimeScale(static_cast<double>(timeScale));
 	}
 
-	bool paused = GTimer.IsPaused();
+	bool paused = m_timer.IsPaused();
 	if (ImGui::Checkbox("Paused", &paused))
 	{
 		if (paused)
-			GTimer.Pause();
+			m_timer.Pause();
 		else
-			GTimer.Resume();
+			m_timer.Resume();
 	}
 }

@@ -5,20 +5,8 @@
 #include "Core/FileSystemUtils.h"
 #include "Log.h"
 
-AssetSystem& AssetSystem::Get() noexcept
+AssetSystem::AssetSystem()
 {
-	static AssetSystem instance;
-	return instance;
-}
-
-void AssetSystem::Initialize()
-{
-	if (m_bInitialized)
-	{
-		LOG_WARNING("AssetSystem::Initialize called multiple times");
-		return;
-	}
-
 	m_workingDirectory = std::filesystem::current_path();
 	m_executableDirectory = Engine::FileSystem::GetExecutableDirectory();
 
@@ -32,8 +20,6 @@ void AssetSystem::Initialize()
 	InitializeTypedPaths();
 	InitializeOutputPaths();
 	ValidatePaths();
-
-	m_bInitialized = true;
 }
 
 void AssetSystem::DiscoverPaths()
@@ -41,13 +27,13 @@ void AssetSystem::DiscoverPaths()
 	if (auto engineRoot = Engine::FileSystem::DiscoverEngineRoot())
 	{
 		m_enginePath = *engineRoot;
-		m_engineAssetsPath = m_enginePath / "assets";
+		m_engineAssetsPath = m_enginePath / "Assets";
 	}
 
 	if (auto projectRoot = Engine::FileSystem::DiscoverProjectRoot())
 	{
 		m_projectPath = *projectRoot;
-		m_projectAssetsPath = m_projectPath / "assets";
+		m_projectAssetsPath = m_projectPath / "Assets";
 	}
 }
 
@@ -135,7 +121,7 @@ void AssetSystem::ValidatePaths()
 	LOG_INFO("================================================");
 }
 
-void AssetSystem::Shutdown() noexcept
+AssetSystem::~AssetSystem()
 {
 	m_projectPath.clear();
 	m_projectAssetsPath.clear();
@@ -154,7 +140,6 @@ void AssetSystem::Shutdown() noexcept
 	}
 
 	m_shaderSymbolsOutputPath.clear();
-	m_bInitialized = false;
 }
 
 const std::filesystem::path& AssetSystem::GetTypedPath(AssetType type, AssetSource source) const noexcept

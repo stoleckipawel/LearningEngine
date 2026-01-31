@@ -1,23 +1,18 @@
 // ============================================================================
 // Scene.h
 // ----------------------------------------------------------------------------
-// Manages renderable objects and scene state for the application.
+// Container for gameplay objects (camera, meshes, etc.).
 //
 // USAGE:
-//   GScene.Initialize();
-//   GScene.SetPrimitives(MeshFactory::Shape::Sphere, 64);
-//   for (const auto& mesh : GScene.GetMeshes()) { ... }
-//   GScene.Shutdown();
+//   Scene scene;  // Ready to use immediately
 //
 // DESIGN:
-//   - PrimitiveConfig struct holds all parameters for procedural generation
-//   - Geometry is rebuilt immediately when configuration changes
-//   - MeshFactory creates actual geometry based on configuration
+//   - Pure container for logical game objects
+//   - No direct GPU/RHI dependencies (decoupled from rendering backend)
+//   - Camera and mesh data created in constructor
+//   - Scene owns its objects, external systems configure them
+//   - GPU resource upload handled externally by MeshFactory::Upload()
 //
-// NOTES:
-//   - Singleton accessed via GScene global reference
-//   - Initialize() must be called before use
-//   - Meshes are owned by Scene; returned as const references
 // ============================================================================
 
 #pragma once
@@ -29,6 +24,7 @@
 #include <vector>
 
 class Mesh;
+class GameCamera;
 
 class Scene final
 {
@@ -37,19 +33,21 @@ class Scene final
 	// Lifecycle
 	// ========================================================================
 
-	/// Returns the singleton Scene instance.
-	[[nodiscard]] static Scene& Get() noexcept;
+	Scene();
+	~Scene() noexcept;
 
 	Scene(const Scene&) = delete;
 	Scene& operator=(const Scene&) = delete;
 	Scene(Scene&&) = delete;
 	Scene& operator=(Scene&&) = delete;
 
-	/// Initializes scene resources and mesh factory. Call once at startup.
-	void Initialize();
+	// ========================================================================
+	// Camera
+	// ========================================================================
 
-	/// Releases all scene resources. Safe to call multiple times.
-	void Shutdown() noexcept;
+	/// Returns the scene's camera.
+	[[nodiscard]] GameCamera& GetCamera() noexcept;
+	[[nodiscard]] const GameCamera& GetCamera() const noexcept;
 
 	// ========================================================================
 	// Configuration
@@ -59,56 +57,47 @@ class Scene final
 	struct PrimitiveConfig
 	{
 		MeshFactory::Shape shape = MeshFactory::Shape::Box;  ///< Primitive type to spawn
-		std::uint32_t count = 128;                           ///< Number of primitives
-		DirectX::XMFLOAT3 center = {0.0f, 0.0f, 10.0f};      ///< Center of spawn volume
-		DirectX::XMFLOAT3 extents = {20.0f, 20.0f, 20.0f};   ///< Half-extents of spawn volume
+		std::uint32_t count = 500;                           ///< Number of primitives
+		DirectX::XMFLOAT3 center = {0.0f, 0.0f, 50.0f};      ///< Center of spawn volume
+		DirectX::XMFLOAT3 extents = {100.0f, 100.0f, 100.0f};  ///< Half-extents of spawn volume
 		std::uint32_t seed = 1337;                           ///< Random seed for positions
 	};
 
 	/// Updates primitive configuration and rebuilds geometry immediately.
+	/// Note: Call UploadMeshes() after this to send data to GPU.
 	void SetPrimitiveConfig(const PrimitiveConfig& config);
 
-	/// Convenience method to update only shape and count (common UI case).
+	/// Convenience method to update only shape and count.
+	/// Note: Call UploadMeshes() after this to send data to GPU.
 	void SetPrimitives(MeshFactory::Shape shape, std::uint32_t count);
 
 	// ========================================================================
 	// Accessors
 	// ========================================================================
 
-	/// Returns the current primitive configuration.
 	[[nodiscard]] const PrimitiveConfig& GetPrimitiveConfig() const noexcept { return m_primitiveConfig; }
-
-	/// Returns the current primitive shape type.
 	[[nodiscard]] MeshFactory::Shape GetCurrentShape() const noexcept { return m_primitiveConfig.shape; }
-
-	/// Returns the current primitive count.
 	[[nodiscard]] std::uint32_t GetCurrentCount() const noexcept { return m_primitiveConfig.count; }
-
-	/// Returns read-only access to all meshes for rendering.
 	[[nodiscard]] const std::vector<std::unique_ptr<Mesh>>& GetMeshes() const noexcept;
-
-	/// Returns true if the scene has any meshes to render.
 	[[nodiscard]] bool HasMeshes() const noexcept;
 
+	/// Returns the mesh factory for external GPU upload.
+	[[nodiscard]] MeshFactory& GetMeshFactory() noexcept { return *m_meshFactory; }
+	[[nodiscard]] const MeshFactory& GetMeshFactory() const noexcept { return *m_meshFactory; }
+
   private:
-	Scene() = default;
-	~Scene() noexcept;
-
-	// ------------------------------------------------------------------------
-	// Internal Helpers
-	// ------------------------------------------------------------------------
-
-	/// Destroys existing meshes and recreates based on m_primitiveConfig.
 	void RebuildGeometry();
+
+	// ------------------------------------------------------------------------
+	// Owned Objects
+	// ------------------------------------------------------------------------
+
+	std::unique_ptr<GameCamera> m_camera;
+	std::unique_ptr<MeshFactory> m_meshFactory;
 
 	// ------------------------------------------------------------------------
 	// State
 	// ------------------------------------------------------------------------
 
-	PrimitiveConfig m_primitiveConfig;              ///< Current primitive generation settings
-	std::unique_ptr<MeshFactory> m_meshFactory;     ///< Factory for creating mesh geometry
-	bool m_initialized = false;                     ///< True after Initialize() succeeds
+	PrimitiveConfig m_primitiveConfig;
 };
-
-/// Global singleton reference for convenient access.
-inline Scene& GScene = Scene::Get();
