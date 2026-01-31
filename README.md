@@ -29,15 +29,30 @@
 
 ## Architecture
 
-`
-APPLICATION       projects/<YourProject>/main.cpp
-       
-ENGINE API        App.h    EngineConfig.h    Log.h
-       
-SYSTEMS           Core    Platform    Renderer    Scene    UI
-       
-RHI               D3D12 Backend (Device, Heaps, PSO, Shaders, Resources)
-`
+<table>
+<tr>
+<td align="center"><b>Layer</b></td>
+<td><b>Components</b></td>
+</tr>
+<tr>
+<td align="center">🎮<br><b>Application</b></td>
+<td>Your game project — subclass <code>App</code>, implement lifecycle hooks, run</td>
+</tr>
+<tr>
+<td align="center">📤<br><b>Engine API</b></td>
+<td>Public interface: <code>App.h</code> · <code>EngineConfig.h</code> · <code>Log.h</code></td>
+</tr>
+<tr>
+<td align="center">⚙️<br><b>Systems</b></td>
+<td>
+<b>Core</b> (Timer, Math, Events) · <b>Platform</b> (Window, Input) · <b>Renderer</b> (Camera, Depth, Textures) · <b>Scene</b> (Meshes, Primitives) · <b>UI</b> (ImGui)
+</td>
+</tr>
+<tr>
+<td align="center">🖥️<br><b>RHI</b></td>
+<td>DirectX 12 backend: Device, Command Queues, Descriptor Heaps, Pipeline States, Shaders (DXC), Resources, Synchronization</td>
+</tr>
+</table>
 
 ---
 
@@ -124,23 +139,45 @@ RHI               D3D12 Backend (Device, Heaps, PSO, Shaders, Resources)
 
 ## Project Structure
 
-`
-engine/
- include/            Public API (App, Config, Log)
- src/
-    Core/           Timer, Math, Events
-    Platform/       Window, InputSystem
-    Renderer/       RenderCamera, DepthConvention, Textures
-    RHI/D3D12/      Device, Heaps, Pipeline, Shaders, Resources
-    Scene/          MeshFactory, 15 Primitives
-    UI/             ImGui Panels
- Assets/Shaders/     HLSL (BRDF, Lighting, Passes)
+<table>
+<tr>
+<td width="50%" valign="top">
 
-projects/
- HelloWorld/         Minimal example
- SampleScenes/       Primitive showcase
- TemplateProject/    New project template
-`
+### Engine Library
+
+| Directory | Contents |
+|-----------|----------|
+| `include/` | Public API |
+| `src/Core/` | Timer, Math, Events, Diagnostics |
+| `src/Platform/` | Window, Input System |
+| `src/Renderer/` | Camera, Depth, Textures |
+| `src/RHI/D3D12/` | Device, Heaps, PSO, Shaders |
+| `src/Scene/` | Mesh Factory, 15 Primitives |
+| `src/UI/` | ImGui Integration |
+| `Assets/Shaders/` | HLSL (BRDF, Lighting, Passes) |
+
+</td>
+<td width="50%" valign="top">
+
+### Game Projects
+
+| Project | Description |
+|---------|-------------|
+| `HelloWorld/` | Minimal starter example |
+| `SampleScenes/` | Primitive showcase |
+| `TemplateProject/` | Template for new projects |
+
+### Build Output
+
+| Directory | Contents |
+|-----------|----------|
+| `build/` | CMake cache, VS solution |
+| `bin/Debug/` | Debug builds + PDBs |
+| `bin/Release/` | Optimized builds |
+
+</td>
+</tr>
+</table>
 
 ---
 
