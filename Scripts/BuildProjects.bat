@@ -21,7 +21,7 @@ setlocal enabledelayedexpansion
 :: Logging bootstrap
 :: ---------------------------------------------------------------------------
 if not defined LOG_CAPTURED (
-    call "%~dp0Tools\Internal\BootstrapLog.bat" "%~f0" %*
+    call "%~dp0Internal\BootstrapLog.bat" "%~f0" %*
     exit /B %ERRORLEVEL%
 )
 
@@ -143,9 +143,9 @@ echo.
 echo [LOG] Selected configuration: !CONFIG!
 
 :: Validate internal implementation exists
-set "IMPL_SCRIPT=%~dp0Tools\Internal\BuildProjectsImpl.bat"
+set "IMPL_SCRIPT=%~dp0Internal\BuildProjectsImpl.bat"
 if not exist "!IMPL_SCRIPT!" (
-    echo [ERROR] Missing: Tools\Internal\BuildProjectsImpl.bat
+    echo [ERROR] Missing: Scripts\Internal\BuildProjectsImpl.bat
     call :FINISH 1
 )
 

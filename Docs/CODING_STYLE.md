@@ -13,8 +13,8 @@ This document captures the coding conventions used across the engine. The reposi
 - **Quick commands (Windows PowerShell)**:
 
 ```powershell
-.\tools\RunClangFormat.bat
-# optionally inspect the log at Logs/LogClangFormat.txt
+.\Scripts\RunClangFormat.bat
+# optionally inspect the log at logs/LogClangFormat.txt
 ``` 
 
 ## Formatting (authoritative: `.clang-format`)

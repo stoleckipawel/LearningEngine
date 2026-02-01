@@ -95,9 +95,9 @@ SparkleCore (base - no dependencies)
 
 | Step | Command | Description |
 |:----:|---------|-------------|
-| 1 | `BuildSolution.bat` | Generate Visual Studio solution |
-| 2 | `BuildProjects.bat Release` | Build all projects |
-| 3 | `CreateNewProject.bat MyGame` | Create new project from template |
+| 1 | `Scripts\BuildSolution.bat` | Generate Visual Studio solution |
+| 2 | `Scripts\BuildProjects.bat Release` | Build all projects |
+| 3 | `Scripts\CreateNewProject.bat MyGame` | Create new project from template |
 
 **Prerequisites:** Visual Studio 2022 (17.0+)  Windows SDK (10.0.19041+)  CMake (3.20+)
 
@@ -219,14 +219,31 @@ Module/
 | `bin/Debug/` | Debug builds + PDBs |
 | `bin/Release/` | Optimized builds |
 
-### Tools
+### Scripts
+
+All build and development scripts are located in the `Scripts/` folder.
 
 | Script | Purpose |
 |--------|---------|
-| `BuildSolution.bat` | Generate VS solution |
-| `BuildProjects.bat` | Build all projects |
-| `CreateNewProject.bat` | Scaffold new game |
-| `Tools/RunClangFormat.bat` | Format codebase |
+| `BuildSolution.bat` | Generate VS solution via CMake |
+| `BuildProjects.bat [config]` | Build all projects (Debug/Release/RelWithDebInfo) |
+| `BuildProjectsDebug.bat` | Shortcut for Debug build |
+| `BuildProjectsRelease.bat` | Shortcut for Release build |
+| `CreateNewProject.bat <name>` | Scaffold new game from template |
+| `CheckDependencies.bat` | Verify build prerequisites |
+| `CleanIntermediateFiles.bat` | Remove build artifacts |
+| `RunClangFormat.bat` | Format all source files |
+
+**Usage from repository root:**
+```powershell
+Scripts\BuildSolution.bat           # Generate solution
+Scripts\BuildProjects.bat Release   # Build in Release mode
+Scripts\CreateNewProject.bat MyGame # Create new project
+```
+
+**Internal scripts** (`Scripts/Internal/`) handle logging and build implementation.  
+**Clang config** (`Scripts/Clang/`) contains `.clang-tidy` and `.clang-tidy-ignore`.  
+**Build logs** are written to the `logs/` folder (gitignored).
 
 </td>
 </tr>

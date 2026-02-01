@@ -89,8 +89,8 @@ Makefile
 .tmp
 .cache
 
-# Generated logs from tools/bootstrap logging
-Logs/.*
-Logs/*
-Logs/Tools/.*
-Logs/Tools/*
+# Generated logs from scripts/bootstrap logging
+logs/.*
+logs/*
+logs/Scripts/.*
+logs/Scripts/*

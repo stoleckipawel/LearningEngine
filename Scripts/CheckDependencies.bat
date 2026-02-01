@@ -26,7 +26,7 @@ setlocal
 :: Logging bootstrap
 :: ---------------------------------------------------------------------------
 if not defined LOG_CAPTURED (
-    call "%~dp0Tools\Internal\BootstrapLog.bat" "%~f0" %*
+    call "%~dp0Internal\BootstrapLog.bat" "%~f0" %*
     exit /B %ERRORLEVEL%
 )
 

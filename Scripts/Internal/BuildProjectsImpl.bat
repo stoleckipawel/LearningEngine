@@ -22,7 +22,7 @@ setlocal enabledelayedexpansion
 :: ---------------------------------------------------------------------------
 set "ARCH=x64"
 set "SCRIPT_DIR=%~dp0"
-:: Script resides in tools\internal; repository root is two levels up
+:: Script resides in Scripts\Internal; repository root is two levels up
 for %%I in ("%SCRIPT_DIR%..\..\") do set "SRC_DIR=%%~fI"
 set "BUILD_DIR=!SRC_DIR!build"
 set "PROJECTS_DIR=!SRC_DIR!projects"

@@ -34,7 +34,7 @@ shift
 :: Resolve repository root directory
 :: ---------------------------------------------------------------------------
 :: Prefer the caller's directory if it contains LICENSE.txt (repo root marker).
-:: Otherwise fall back to this script's directory (tools\internal).
+:: Otherwise fall back to this script's directory (Scripts\Internal).
 for %%F in ("%CALLER%") do set "CALLER_DIR=%%~dpF"
 
 set "ROOT_DIR="
