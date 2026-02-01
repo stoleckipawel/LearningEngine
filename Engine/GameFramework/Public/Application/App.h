@@ -1,0 +1,53 @@
+// ============================================================================
+// App.h
+// Application base class.
+// ----------------------------------------------------------------------------
+// USAGE:
+//   App app("MyGame");
+//   app.Run();
+// ============================================================================
+#pragma once
+
+#include "GameFramework/Public/GameFrameworkAPI.h"
+#include <string>
+#include <memory>
+
+class Timer;
+class Window;
+class InputSystem;
+class Scene;
+class CameraController;
+class Renderer;
+class D3D12Rhi;
+class AssetSystem;
+
+class SPARKLE_ENGINE_API App
+{
+  public:
+	explicit App(std::string windowTitle);
+	~App();
+
+	App(const App&) = delete;
+	App& operator=(const App&) = delete;
+	App(App&&) = delete;
+	App& operator=(App&&) = delete;
+
+	void Run();
+
+  private:
+	void Initialize();
+	void BeginFrame();
+	void EndFrame();
+	void RenderLoop();
+	void Shutdown();
+
+	std::string m_windowTitle;
+	std::unique_ptr<Timer> m_timer;
+	std::unique_ptr<AssetSystem> m_assetSystem;
+	std::unique_ptr<D3D12Rhi> m_rhi;
+	std::unique_ptr<Window> m_window;
+	std::unique_ptr<InputSystem> m_inputSystem;
+	std::unique_ptr<Scene> m_scene;
+	std::unique_ptr<CameraController> m_cameraController;
+	std::unique_ptr<Renderer> m_renderer;
+};

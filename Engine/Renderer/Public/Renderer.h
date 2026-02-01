@@ -1,0 +1,172 @@
+// =============================================================================
+// Renderer.h — High-Level Graphics Pipeline Orchestration
+// =============================================================================
+//
+// Central rendering subsystem that manages the graphics pipeline, resource
+// binding, and frame submission. Acts as the primary interface between game
+// logic and the D3D12 RHI layer.
+//
+// USAGE:
+//   Renderer renderer(scene);  // Construct with scene reference
+//   renderer.OnRender();        // Call each frame from the main loop
+//
+// RESPONSIBILITIES:
+//   - Pipeline state object (PSO) creation and management
+//   - Per-frame and per-object constant buffer binding
+//   - Depth buffer management and depth mode switching
+//   - Scene traversal and mesh rendering
+//   - Integration with UI overlay rendering
+//
+// NOTES:
+//   - Owned by App, constructed after Window and before render loop
+//   - Automatically subscribes to Window resize events
+//   - Owns shader bytecode, textures, and pipeline objects
+//
+// =============================================================================
+
+#pragma once
+
+#include "Renderer/Public/RendererAPI.h"
+
+#include "Event.h"
+#include "Events/ScopedEventHandle.h"
+#include "ShaderCompileResult.h"
+#include <cstdint>
+#include <memory>
+
+enum class DepthMode : std::uint8_t;
+
+class Timer;
+
+// Forward declarations
+class AssetSystem;
+class D3D12Rhi;
+class D3D12Texture;
+class D3D12PipelineState;
+class D3D12RootSignature;
+class D3D12SamplerLibrary;
+class D3D12DepthStencil;
+class D3D12ConstantBufferManager;
+class D3D12DescriptorHeapManager;
+class D3D12FrameResourceManager;
+class D3D12SwapChain;
+class Mesh;
+class RenderCamera;
+class Scene;
+class Window;
+class UI;
+class TextureManager;
+
+// =============================================================================
+// Renderer
+// =============================================================================
+
+class SPARKLE_RENDERER_API Renderer final
+{
+  public:
+	// Constructs and initializes all rendering resources.
+	// Takes Timer, AssetSystem, D3D12Rhi, Scene and Window references. Owns UI.
+	Renderer(Timer& timer, const AssetSystem& assetSystem, D3D12Rhi& rhi, Scene& scene, Window& window) noexcept;
+	~Renderer() noexcept;
+
+	Renderer(const Renderer&) = delete;
+	Renderer& operator=(const Renderer&) = delete;
+	Renderer(Renderer&&) = delete;
+	Renderer& operator=(Renderer&&) = delete;
+
+	// =========================================================================
+	// Frame Operations
+	// =========================================================================
+
+	// Executes a complete render frame: setup, scene traversal, UI, submission.
+	void OnRender() noexcept;
+
+  private:
+	// -------------------------------------------------------------------------
+	// Initialization Helpers
+	// -------------------------------------------------------------------------
+
+	void PostLoad() noexcept;
+	void CreateDepthStencilBuffer();
+	void CreatePSO();
+	void OnDepthModeChanged(DepthMode mode) noexcept;
+	void OnResize() noexcept;
+
+	// -------------------------------------------------------------------------
+	// Frame Pipeline Stages
+	// -------------------------------------------------------------------------
+
+	void PopulateCommandList();
+	void BeginFrame() noexcept;
+	void SetupFrame() noexcept;
+	void RecordFrame() noexcept;
+	void SubmitFrame() noexcept;
+	void EndFrame() noexcept;
+
+	// -------------------------------------------------------------------------
+	// Resource Binding
+	// -------------------------------------------------------------------------
+
+	void SetViewport() noexcept;
+	void SetBackBufferRTV() noexcept;
+	void BindPerFrameResources() noexcept;
+	void BindPerObjectResources(const Mesh& mesh) noexcept;
+
+	// -------------------------------------------------------------------------
+	// Owned Resources
+	// -------------------------------------------------------------------------
+
+	// Timer reference (not owned - owned by App)
+	Timer* m_timer = nullptr;
+
+	// AssetSystem reference (not owned - owned by App)
+	const AssetSystem* m_assetSystem = nullptr;
+
+	// RHI reference (not owned - owned by App)
+	D3D12Rhi* m_rhi = nullptr;
+
+	// Texture manager
+	std::unique_ptr<TextureManager> m_textureManager;
+
+	// Frame buffers
+	std::unique_ptr<D3D12DepthStencil> m_depthStencil;
+
+	// Sampler library
+	std::unique_ptr<D3D12SamplerLibrary> m_samplerLibrary;
+
+	// Pipeline
+	std::unique_ptr<D3D12PipelineState> m_pso;
+	std::unique_ptr<D3D12RootSignature> m_rootSignature;
+
+	// Compiled shaders (owned bytecode)
+	ShaderCompileResult m_vertexShader;
+	ShaderCompileResult m_pixelShader;
+
+	// Camera (set once at initialization)
+	std::unique_ptr<RenderCamera> m_renderCamera;
+
+	// Constant buffer manager
+	std::unique_ptr<D3D12ConstantBufferManager> m_constantBufferManager;
+
+	// Frame resource manager (per-frame GPU ring buffers)
+	std::unique_ptr<D3D12FrameResourceManager> m_frameResourceManager;
+
+	// Descriptor heap manager
+	std::unique_ptr<D3D12DescriptorHeapManager> m_descriptorHeapManager;
+
+	// Swap chain
+	std::unique_ptr<D3D12SwapChain> m_swapChain;
+
+	// UI (owned, created after descriptor heap manager)
+	std::unique_ptr<UI> m_ui;
+
+	// Scene reference (not owned, for mesh access)
+	Scene* m_scene = nullptr;
+
+	// Window reference (not owned)
+	Window* m_window = nullptr;
+
+	// Event subscriptions (RAII - auto-cleanup on destruction)
+	ScopedEventHandle m_depthModeChangedHandle;
+	ScopedEventHandle m_resizeHandle;
+};

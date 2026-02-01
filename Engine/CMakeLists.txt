@@ -1,92 +1,90 @@
 # Engine CMake configuration
+# Layered DLL Architecture (Unreal-style)
+#
+# Module Dependency Hierarchy (strict layering - each layer only depends on layers below):
+#
+#   ┌─────────────────────────────────────────────────────────────┐
+#   │                     SparkleEditor.dll                       │
+#   └─────────────────────────────────────────────────────────────┘
+#                               │
+#   ┌─────────────────────────────────────────────────────────────┐
+#   │                     SparkleEngine.dll                       │
+#   │          (GameFramework, World, Components, Assets)         │
+#   └─────────────────────────────────────────────────────────────┘
+#                               │
+#         ┌─────────────────────┼─────────────────────┐
+#         ▼                     ▼                     ▼
+#   ┌───────────┐    ┌────────────┐    ┌──────────────┐
+#   │ Physics   │    │   Audio    │    │     AI       │
+#   └───────────┘    └────────────┘    └──────────────┘
+#         │                │                   │
+#         └────────────────┼───────────────────┘
+#                          │
+#   ┌─────────────────────────────────────────────────────────────┐
+#   │                   SparkleRenderer.dll                       │
+#   └─────────────────────────────────────────────────────────────┘
+#                               │
+#   ┌─────────────────────────────────────────────────────────────┐
+#   │                     SparkleRHI.dll                          │
+#   └─────────────────────────────────────────────────────────────┘
+#                               │
+#   ┌─────────────────────────────────────────────────────────────┐
+#   │                   SparklePlatform.dll                       │
+#   └─────────────────────────────────────────────────────────────┘
+#                               │
+#   ┌─────────────────────────────────────────────────────────────┐
+#   │                    SparkleCore.dll                          │
+#   └─────────────────────────────────────────────────────────────┘
+#
 
-# Collect all source files
-file(GLOB_RECURSE ENGINE_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/Src/**/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Src/*.cpp    
-)
+# Option to build as shared libraries (DLLs) or static libraries
+option(SPARKLE_BUILD_SHARED "Build Sparkle modules as shared libraries (DLLs)" OFF)
 
-# Collect all header files for IDE visibility
-file(GLOB_RECURSE ENGINE_HEADERS
-  ${CMAKE_CURRENT_SOURCE_DIR}/Include/*.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/Include/**/*.h
-)
-
-# Create engine static library
-add_library(SparkleEngine STATIC
-  ${ENGINE_SOURCES}
-  ${ENGINE_HEADERS}
-)
-
-# Add third-party libraries
+# Add third-party libraries first (they're used by modules)
 add_subdirectory(third_party/imgui)
 add_subdirectory(third_party/cgltf)
 
-# Include directories
-# Public: exposed to consumers (projects, games)
-# Private: internal engine modules organized by responsibility
-target_include_directories(SparkleEngine 
-  PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}/Include"
-  PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/Application"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/Assets"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/Core"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/Core/Diagnostics"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/Core/Events"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/Core/Hash"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/Core/Math"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/Core/Strings"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/Core/Time"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/Core/Input"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/Platform"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/Platform/Input"
-    # D3D12 RHI
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/RHI"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/RHI/D3D12"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/RHI/D3D12/Descriptors"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/RHI/D3D12/Resources"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/RHI/D3D12/Pipeline"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/RHI/D3D12/Shaders"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/RHI/D3D12/Samplers"
-    # High-level modules
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/Renderer"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/Scene"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/GameEngine"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/GameEngine/Camera"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Src/UI"
-    "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
+# ============================================================================
+# CORE MODULES (always built - the foundation of the engine)
+# ============================================================================
+add_subdirectory(Core)           # SparkleCore.dll     - Math, Memory, Events, Logging
+add_subdirectory(Platform)       # SparklePlatform.dll - Window, Input, FileSystem
+add_subdirectory(RHI)            # SparkleRHI.dll      - D3D12/Vulkan abstraction
+add_subdirectory(Renderer)       # SparkleRenderer.dll - Rendering pipeline
+add_subdirectory(GameFramework)  # SparkleEngine.dll   - World, Entities, Components
+add_subdirectory(UI)             # SparkleUI.dll       - Widget system, Layout
+
+# ============================================================================
+# OPTIONAL MODULES (placeholders - add when implementation exists)
+# ============================================================================
+# Uncomment as these modules get implemented:
+# add_subdirectory(Physics)      # SparklePhysics.dll    - PhysX/Jolt integration
+# add_subdirectory(Animation)    # SparkleAnimation.dll  - Skeletal animation
+# add_subdirectory(Audio)        # SparkleAudio.dll      - FMOD/Wwise integration
+# add_subdirectory(AI)           # SparkleAI.dll         - Navigation, BehaviorTree
+# add_subdirectory(Networking)   # SparkleNetworking.dll - Replication, RPCs
+# add_subdirectory(Scripting)    # SparkleScripting.dll  - Lua/Mono integration
+# add_subdirectory(Editor)       # SparkleEditor.dll     - Editor tools
+
+# ============================================================================
+# CONVENIENCE TARGET
+# ============================================================================
+# SparkleEngine interface target links all active modules for easy project setup
+add_library(SparkleEngineAll INTERFACE)
+target_link_libraries(SparkleEngineAll INTERFACE
+    SparkleCore
+    SparklePlatform
+    SparkleRHI
+    SparkleRenderer
+    SparkleGameFramework
+    SparkleUI
 )
 
-# Require C++20
-target_compile_features(SparkleEngine PUBLIC cxx_std_20)
-
-
-# Link libraries
-target_link_libraries(SparkleEngine PUBLIC
-  d3d12
-  dxgi
-  d3dcompiler
-  dxguid
-  dxcompiler
-  imgui
-  cgltf
-)
-
-# Set compiler flags for debug builds.
-# Use MSVC-style flags when building with Visual Studio/MSVC (including clang-cl),
-# otherwise use GNU/Clang-style flags.
+# Set compiler flags for debug builds
 if (MSVC)
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi")
-  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /Od /Zi")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /Od /Zi")
 else()
-  set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-  set(CMAKE_C_FLAGS_DEBUG "-O0 -g")
+    set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+    set(CMAKE_C_FLAGS_DEBUG "-O0 -g")
 endif()
-
-# --- PCH setup ---
-target_precompile_headers(SparkleEngine
-    PRIVATE
-      Src/Core/PCH.h
-)

@@ -5,17 +5,16 @@ add_executable(__PROJECT_NAME__
     src/main.cpp
 )
 
-# Include engine public headers and third-party (if needed)
-target_include_directories(__PROJECT_NAME__ PRIVATE
-    ${CMAKE_SOURCE_DIR}/engine/include
-    ${CMAKE_SOURCE_DIR}/engine/third_party
-)
-
 # Require C++20
 target_compile_features(__PROJECT_NAME__ PRIVATE cxx_std_20)
 
-# Link against engine static library
-target_link_libraries(__PROJECT_NAME__ PRIVATE SparkleEngine)
+# Link against engine modules (SparkleEngineAll links all active modules)
+target_link_libraries(__PROJECT_NAME__ PRIVATE SparkleEngineAll)
+
+# Include third-party headers if needed directly
+target_include_directories(__PROJECT_NAME__ PRIVATE
+    ${CMAKE_SOURCE_DIR}/Engine/third_party
+)
 
 # Configure Visual Studio debugger to launch from project directory.
 # Path discovery uses marker files, so we just need the working directory set correctly.
