@@ -29,7 +29,7 @@ if /I "%~1"=="CONTINUE" set "CALLED_FROM_PARENT=1"
 :: Logging bootstrap
 :: ---------------------------------------------------------------------------
 if not defined LOG_CAPTURED (
-    call "%~dp0tools\internal\BootstrapLog.bat" "%~f0" %*
+    call "%~dp0Tools\Internal\BootstrapLog.bat" "%~f0" %*
     exit /B %ERRORLEVEL%
 )
 

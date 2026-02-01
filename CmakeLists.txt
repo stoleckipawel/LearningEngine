@@ -74,14 +74,14 @@ endif()
 # ---------------------------
 # Add subdirectories
 # ---------------------------
-add_subdirectory(engine)
+add_subdirectory(Engine)
 
 # ---------------------------
 # Auto-discover projects via .sparkle-project marker
 # ---------------------------
-# Scans projects/ directory for project markers
+# Scans Projects/ directory for project markers
 set(PROJECT_SEARCH_DIRS
-    "${CMAKE_SOURCE_DIR}/projects"
+    "${CMAKE_SOURCE_DIR}/Projects"
 )
 
 set(DISCOVERED_PROJECTS "")
@@ -118,10 +118,10 @@ if(CLANG_FORMAT_EXE)
 
     # Collect all C++ files excluding third_party
     file(GLOB_RECURSE ALL_CPP
-        "${CMAKE_SOURCE_DIR}/engine/*.cpp"
-        "${CMAKE_SOURCE_DIR}/engine/*.h"
-        "${CMAKE_SOURCE_DIR}/projects/*.cpp"
-        "${CMAKE_SOURCE_DIR}/projects/*.h"
+        "${CMAKE_SOURCE_DIR}/Engine/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Engine/*.h"
+        "${CMAKE_SOURCE_DIR}/Projects/*.cpp"
+        "${CMAKE_SOURCE_DIR}/Projects/*.h"
     )
 
     foreach(f ${ALL_CPP})
