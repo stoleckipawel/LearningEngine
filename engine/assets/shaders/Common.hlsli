@@ -12,41 +12,41 @@
 // =============================================================================
 
 // -----------------------------------------------------------------------------
-// Common - Foundation utilities
+// common - Foundation utilities
 // -----------------------------------------------------------------------------
-#include "Common/Constants.hlsli"
-#include "Common/Math.hlsli"
+#include "common/constants.hlsli"
+#include "common/math.hlsli"
 
 // -----------------------------------------------------------------------------
-// Resources - GPU resource bindings
+// resources - GPU resource bindings
 // -----------------------------------------------------------------------------
-#include "Resources/ConstantBuffers.hlsli"
+#include "resources/constantbuffers.hlsli"
 
 // -----------------------------------------------------------------------------
-// Geometry - Vertex/pixel shader IO and transforms
+// geometry - Vertex/pixel shader IO and transforms
 // -----------------------------------------------------------------------------
-#include "Geometry/VertexInput.hlsli"
-#include "Geometry/VertexOutput.hlsli"
-#include "Geometry/PixelInput.hlsli"
-#include "Geometry/PixelOutput.hlsli"
-#include "Geometry/Transforms.hlsli"
+#include "geometry/vertexinput.hlsli"
+#include "geometry/vertexoutput.hlsli"
+#include "geometry/pixelinput.hlsli"
+#include "geometry/pixeloutput.hlsli"
+#include "geometry/transforms.hlsli"
 
 // -----------------------------------------------------------------------------
-// Material - Surface properties
+// material - Surface properties
 // -----------------------------------------------------------------------------
-#include "Material/Material.hlsli"
+#include "material/material.hlsli"
 
 // -----------------------------------------------------------------------------
-// BRDF - Physically-based shading models
+// brdf - Physically-based shading models
 // -----------------------------------------------------------------------------
-#include "BRDF/BRDF.hlsli"
+#include "brdf/brdf.hlsli"
 
 // -----------------------------------------------------------------------------
-// Lighting - Light evaluation
+// lighting - Light evaluation
 // -----------------------------------------------------------------------------
-#include "Lighting/LightEvaluation.hlsli"
+#include "lighting/lightevaluation.hlsli"
 
 // -----------------------------------------------------------------------------
-// Debug - Visualization tools
+// debug - Visualization tools
 // -----------------------------------------------------------------------------
-#include "Debug/ViewModes.hlsli"
+#include "debug/viewmodes.hlsli"

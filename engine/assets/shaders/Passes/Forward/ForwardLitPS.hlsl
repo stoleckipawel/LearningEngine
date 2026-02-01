@@ -3,7 +3,7 @@
 // =============================================================================
 // PBR forward lighting with material sampling and debug view modes.
 
-#include "CommonPS.hlsli"
+#include "commonps.hlsli"
 
 void main(in PS::Input Input, out PS::Output Output)
 {

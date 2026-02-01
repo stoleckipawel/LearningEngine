@@ -1,5 +1,5 @@
-#include "Geometry/PixelInput.hlsli"
-#include "Lighting/LightEvaluation.hlsli"
+#include "geometry/pixelinput.hlsli"
+#include "lighting/lightevaluation.hlsli"
 
 namespace Forward
 {

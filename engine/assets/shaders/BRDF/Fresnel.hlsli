@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Common/Math.hlsli"
-#include "BRDF/Config.hlsli"
+#include "common/math.hlsli"
+#include "brdf/config.hlsli"
 
 // =============================================================================
 // Fresnel Term (F)

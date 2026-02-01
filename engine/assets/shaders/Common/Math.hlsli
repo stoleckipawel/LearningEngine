@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common/Constants.hlsli"
+#include "common/constants.hlsli"
 
 // =============================================================================
 // Math Utility Functions

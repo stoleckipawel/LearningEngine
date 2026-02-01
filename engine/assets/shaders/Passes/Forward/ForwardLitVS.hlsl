@@ -3,7 +3,7 @@
 // =============================================================================
 // Basic vertex transformation with world-space outputs for PBR lighting.
 
-#include "CommonVS.hlsli"
+#include "commonvs.hlsli"
 
 void main(in VS::Input Input, out VS::Output Output)
 {

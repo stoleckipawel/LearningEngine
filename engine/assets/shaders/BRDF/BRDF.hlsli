@@ -22,14 +22,14 @@
 
 
 // BRDF Components
-#include "BRDF/ShadingData.hlsli"
-#include "BRDF/Fresnel.hlsli"
-#include "BRDF/Distribution.hlsli"
-#include "BRDF/Geometry.hlsli"
-#include "BRDF/Diffuse.hlsli"
-#include "BRDF/Subsurface.hlsli"
-#include "BRDF/Specular.hlsli"
-#include "BRDF/Occlusion.hlsli"
+#include "brdf/shadingdata.hlsli"
+#include "brdf/fresnel.hlsli"
+#include "brdf/distribution.hlsli"
+#include "brdf/geometry.hlsli"
+#include "brdf/diffuse.hlsli"
+#include "brdf/subsurface.hlsli"
+#include "brdf/specular.hlsli"
+#include "brdf/occlusion.hlsli"
 
 // =============================================================================
 // High-Level Evaluation API

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Common/Constants.hlsli"
-#include "BRDF/Config.hlsli"
+#include "common/constants.hlsli"
+#include "brdf/config.hlsli"
 
 // =============================================================================
 // Geometry Term (G) - Masking-Shadowing Function

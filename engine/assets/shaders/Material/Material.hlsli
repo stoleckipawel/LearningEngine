@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Resources/ConstantBuffers.hlsli"
-#include "Resources/Samplers.hlsli"
-#include "Geometry/PixelInput.hlsli"
-#include "Geometry/Transforms.hlsli"
+#include "resources/constantbuffers.hlsli"
+#include "resources/samplers.hlsli"
+#include "geometry/pixelinput.hlsli"
+#include "geometry/transforms.hlsli"
 
 // =============================================================================
 // Material System

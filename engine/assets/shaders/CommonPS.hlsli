@@ -5,15 +5,15 @@
 // =============================================================================
 // Lightweight include for pixel shaders.
 
-#include "Common/Constants.hlsli"
-#include "Common/Math.hlsli"
-#include "Resources/ConstantBuffers.hlsli"
+#include "common/constants.hlsli"
+#include "common/math.hlsli"
+#include "resources/constantbuffers.hlsli"
 
-#include "Geometry/PixelInput.hlsli"
-#include "Geometry/PixelOutput.hlsli"
-#include "Material/Material.hlsli"
-#include "BRDF/BRDF.hlsli"
-#include "Lighting/LightEvaluation.hlsli"
-#include "Passes/Forward/ForwardLighting.hlsli"
+#include "geometry/pixelinput.hlsli"
+#include "geometry/pixeloutput.hlsli"
+#include "material/material.hlsli"
+#include "brdf/brdf.hlsli"
+#include "lighting/lightevaluation.hlsli"
+#include "passes/forward/forwardlighting.hlsli"
 
-#include "Debug/ViewModes.hlsli"
+#include "debug/viewmodes.hlsli"

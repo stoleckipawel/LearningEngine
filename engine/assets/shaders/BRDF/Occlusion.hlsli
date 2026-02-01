@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BRDF/Config.hlsli"
+#include "brdf/config.hlsli"
 
 // =============================================================================
 // Ambient & Specular Occlusion

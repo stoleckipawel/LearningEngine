@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Common/Constants.hlsli"
-#include "BRDF/Config.hlsli"
-#include "BRDF/ShadingData.hlsli"
-#include "BRDF/Fresnel.hlsli"
-#include "BRDF/Distribution.hlsli"
-#include "BRDF/Geometry.hlsli"
+#include "common/constants.hlsli"
+#include "brdf/config.hlsli"
+#include "brdf/shadingdata.hlsli"
+#include "brdf/fresnel.hlsli"
+#include "brdf/distribution.hlsli"
+#include "brdf/geometry.hlsli"
 
 // =============================================================================
 // Specular BRDF (Cook-Torrance Microfacet Model)

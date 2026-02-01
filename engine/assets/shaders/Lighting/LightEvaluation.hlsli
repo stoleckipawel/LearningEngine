@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Resources/ConstantBuffers.hlsli"
-#include "Material/Material.hlsli"
-#include "BRDF/BRDF.hlsli"
+#include "resources/constantbuffers.hlsli"
+#include "material/material.hlsli"
+#include "brdf/brdf.hlsli"
 
 // =============================================================================
 // Lighting System

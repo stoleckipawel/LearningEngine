@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Common/Constants.hlsli"
-#include "Common/Math.hlsli"
-#include "BRDF/Config.hlsli"
-#include "BRDF/ShadingData.hlsli"
+#include "common/constants.hlsli"
+#include "common/math.hlsli"
+#include "brdf/config.hlsli"
+#include "brdf/shadingdata.hlsli"
 
 // =============================================================================
 // Diffuse BRDF

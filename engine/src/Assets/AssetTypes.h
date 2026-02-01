@@ -46,21 +46,21 @@ enum class AssetType : uint8_t
 	switch (type)
 	{
 		case AssetType::Shader:
-			return "Shaders";
+			return "shaders";
 		case AssetType::ShaderSymbols:
-			return "Shaders/ShaderSymbols";
+			return "shaders/shadersymbols";
 		case AssetType::Texture:
-			return "Textures";
+			return "textures";
 		case AssetType::Mesh:
-			return "Meshes";
+			return "meshes";
 		case AssetType::Material:
-			return "Materials";
+			return "materials";
 		case AssetType::Scene:
-			return "Scenes";
+			return "scenes";
 		case AssetType::Audio:
-			return "Audio";
+			return "audio";
 		case AssetType::Font:
-			return "Fonts";
+			return "fonts";
 		case AssetType::Count:
 		default:
 			return {};

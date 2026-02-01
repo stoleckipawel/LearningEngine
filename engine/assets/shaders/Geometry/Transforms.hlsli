@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Resources/ConstantBuffers.hlsli"
+#include "resources/constantbuffers.hlsli"
 
 // -----------------------------------------------------------------------------
 // Position Transforms

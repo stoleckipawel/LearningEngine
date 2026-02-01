@@ -37,8 +37,8 @@ Renderer::Renderer(Timer& timer, const AssetSystem& assetSystem, D3D12Rhi& rhi, 
 	m_rootSignature = std::make_unique<D3D12RootSignature>(*m_rhi);
 
 	// Compile shaders
-	m_vertexShader = DxcShaderCompiler::CompileFromAsset(*m_assetSystem, "Passes/Forward/ForwardLitVS.hlsl", ShaderStage::Vertex, "main");
-	m_pixelShader = DxcShaderCompiler::CompileFromAsset(*m_assetSystem, "Passes/Forward/ForwardLitPS.hlsl", ShaderStage::Pixel, "main");
+	m_vertexShader = DxcShaderCompiler::CompileFromAsset(*m_assetSystem, "passes/forward/forwardlitvs.hlsl", ShaderStage::Vertex, "main");
+	m_pixelShader = DxcShaderCompiler::CompileFromAsset(*m_assetSystem, "passes/forward/forwardlitps.hlsl", ShaderStage::Pixel, "main");
 
 	m_descriptorHeapManager = std::make_unique<D3D12DescriptorHeapManager>(*m_rhi);
 	m_swapChain = std::make_unique<D3D12SwapChain>(*m_rhi, *m_window, *m_descriptorHeapManager);
