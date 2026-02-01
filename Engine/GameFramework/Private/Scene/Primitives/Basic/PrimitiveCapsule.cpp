@@ -3,6 +3,8 @@
 
 #include "MathUtils.h"
 
+using namespace DirectX;
+
 PrimitiveCapsule::PrimitiveCapsule(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale) :
     Mesh(translation, rotation, scale)
 {
@@ -29,8 +31,8 @@ void PrimitiveCapsule::GenerateVertices(std::vector<Vertex>& outVertices) const
 		{
 			float u = (float) lon / (float) lonSegments;
 			float phi = u * DirectX::XM_2PI;
-			float c = std::cosf(phi);
-			float s = std::sinf(phi);
+			float c = cosf(phi);
+			float s = sinf(phi);
 
 			float x = r * c;
 			float z = r * s;
@@ -56,7 +58,7 @@ void PrimitiveCapsule::GenerateVertices(std::vector<Vertex>& outVertices) const
 			DirectX::XMFLOAT3 tangent3{-s, 0.0f, c};
 			tangent3 = MathUtils::Normalize3(tangent3);
 
-			DirectX::XMFLOAT4 color{std::fabs(normal.x), std::fabs(normal.y), std::fabs(normal.z), 1.0f};
+			DirectX::XMFLOAT4 color{fabsf(normal.x), fabsf(normal.y), fabsf(normal.z), 1.0f};
 			outVertices.push_back({pos, uv, color, normal, {tangent3.x, tangent3.y, tangent3.z, 1.0f}});
 		}
 	};
@@ -66,8 +68,8 @@ void PrimitiveCapsule::GenerateVertices(std::vector<Vertex>& outVertices) const
 	{
 		float t = (float) i / (float) hemiStacks;
 		float a = t * (DirectX::XM_PI * 0.5f);  // 0..pi/2
-		float r = radius * std::cosf(a);
-		float y = -halfCylinder - radius * std::sinf(a);
+		float r = radius * cosf(a);
+		float y = -halfCylinder - radius * sinf(a);
 		addRing(y, r);
 	}
 
@@ -84,8 +86,8 @@ void PrimitiveCapsule::GenerateVertices(std::vector<Vertex>& outVertices) const
 	{
 		float t = (float) i / (float) hemiStacks;
 		float a = t * (DirectX::XM_PI * 0.5f);
-		float r = radius * std::cosf(a);
-		float y = halfCylinder + radius * std::sinf(a);
+		float r = radius * cosf(a);
+		float y = halfCylinder + radius * sinf(a);
 		addRing(y, r);
 	}
 }

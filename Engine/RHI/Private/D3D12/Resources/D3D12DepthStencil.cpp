@@ -5,7 +5,6 @@
 #include "D3D12DescriptorHeapManager.h"
 #include "DebugUtils.h"
 #include "DepthConvention.h"
-#include "EngineConfig.h"
 
 // Constructs and initializes the depth stencil resource and view
 D3D12DepthStencil::D3D12DepthStencil(D3D12Rhi& rhi, Window& window, D3D12DescriptorHeapManager& descriptorHeapManager) :
@@ -22,13 +21,13 @@ D3D12DepthStencil::D3D12DepthStencil(D3D12Rhi& rhi, Window& window, D3D12Descrip
 void D3D12DepthStencil::CreateResource()
 {
 	// Describe the depth stencil view
-	m_depthStencilDesc.Format = EngineSettings::DepthStencilFormat;
+	m_depthStencilDesc.Format = RHISettings::DepthStencilFormat;
 	m_depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	m_depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
 
 	// Set optimized clear value for depth and stencil
 	D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
-	depthOptimizedClearValue.Format = EngineSettings::DepthStencilFormat;
+	depthOptimizedClearValue.Format = RHISettings::DepthStencilFormat;
 	depthOptimizedClearValue.DepthStencil.Depth = DepthConvention::GetClearDepth();
 	depthOptimizedClearValue.DepthStencil.Stencil = 0;
 
@@ -42,7 +41,7 @@ void D3D12DepthStencil::CreateResource()
 
 	// Describe the depth stencil resource
 	D3D12_RESOURCE_DESC depthStencilResourceDesc = {};
-	depthStencilResourceDesc.Format = EngineSettings::DepthStencilFormat;
+	depthStencilResourceDesc.Format = RHISettings::DepthStencilFormat;
 	depthStencilResourceDesc.MipLevels = 1;
 	depthStencilResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	depthStencilResourceDesc.Height = static_cast<UINT>(m_window->GetHeight());

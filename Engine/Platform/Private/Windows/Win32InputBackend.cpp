@@ -6,6 +6,7 @@
 //
 // ============================================================================
 
+#include "PCH.h"
 #include "Win32InputBackend.h"
 
 #include <windowsx.h>  // GET_X_LPARAM, GET_Y_LPARAM

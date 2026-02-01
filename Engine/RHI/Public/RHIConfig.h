@@ -1,30 +1,25 @@
 // ============================================================================
-// EngineConfig.h
+// RHIConfig.h
 // ----------------------------------------------------------------------------
-// Engine-wide configuration constants and compile-time toggles.
+// RHI module configuration constants and compile-time toggles.
 //
 // DESIGN:
-//   - Header-only with minimal dependencies for cheap inclusion everywhere
-//   - Compile-time macros for feature toggles (GUI, validation, etc.)
-//   - Runtime-configurable settings in EngineSettings namespace
+//   - Header-only with minimal dependencies
+//   - Compile-time macros for debug/validation features
+//   - Runtime-configurable settings in RHISettings namespace
 //
 // NOTES:
-//   - Modify EngineSettings values at runtime for app-specific behavior
+//   - This keeps RHI self-contained without coupling to Core
 //   - FramesInFlight affects resource allocation and latency
 // ============================================================================
 
 #pragma once
 
-#include <string>
 #include <dxgi1_6.h>
 
 // ============================================================================
 // Compile-Time Feature Toggles
 // ============================================================================
-
-/// Set to 0 to completely exclude GUI from builds.
-#define USE_GUI 1
-// #define USE_IMGUI_DEMO_WINDOW 1
 
 /// Shader compilation flags (enabled by default in debug builds).
 #if defined(_DEBUG)
@@ -46,7 +41,7 @@
 // Runtime Configuration
 // ============================================================================
 
-namespace EngineSettings
+namespace RHISettings
 {
 	// ------------------------------------------------------------------------
 	// Rendering
@@ -66,13 +61,6 @@ namespace EngineSettings
 	inline bool VSync = true;
 
 	// ------------------------------------------------------------------------
-	// Window
-	// ------------------------------------------------------------------------
-
-	/// Start in fullscreen mode when true.
-	inline bool StartFullscreen = false;
-
-	// ------------------------------------------------------------------------
 	// Hardware
 	// ------------------------------------------------------------------------
 
@@ -87,4 +75,4 @@ namespace EngineSettings
 	inline constexpr int ShaderModelMajor = 6;
 	inline constexpr int ShaderModelMinor = 0;
 
-}  // namespace EngineSettings
+}  // namespace RHISettings

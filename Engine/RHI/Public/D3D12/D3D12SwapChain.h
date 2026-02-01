@@ -20,7 +20,7 @@
 // NOTES:
 //   - Owned by Renderer, passed by reference where needed
 //   - Frame index updated via UpdateFrameInFlightIndex() after Present()
-//   - Buffer count configured by EngineSettings::FramesInFlight
+//   - Buffer count configured by RHISettings::FramesInFlight
 // ============================================================================
 
 #pragma once
@@ -36,7 +36,7 @@
 #include <dxgi1_6.h>
 #include <wrl/client.h>
 #include "D3D12DescriptorHandle.h"
-#include "EngineConfig.h"
+#include "RHIConfig.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -55,7 +55,7 @@ class D3D12SwapChain final
 	D3D12SwapChain(D3D12Rhi& rhi, Window& window, D3D12DescriptorHeapManager& descriptorHeapManager);
 
 	/// Releases all swap chain resources.
-	~D3D12SwapChain();
+	~D3D12SwapChain() noexcept;
 
 	D3D12SwapChain(const D3D12SwapChain&) = delete;
 	D3D12SwapChain& operator=(const D3D12SwapChain&) = delete;
@@ -98,7 +98,7 @@ class D3D12SwapChain final
 	void UpdateFrameInFlightIndex() { m_frameInFlightIndex = m_swapChain->GetCurrentBackBufferIndex(); }
 
 	/// Returns the waitable object handle for frame pacing.
-	[[nodiscard]] HANDLE GetWaitableObject() const { return m_WaitableObject; }
+	[[nodiscard]] HANDLE GetWaitableObject() const { return m_waitableObject; }
 
 	/// Returns the default viewport matching window dimensions.
 	[[nodiscard]] D3D12_VIEWPORT GetDefaultViewport() const;
@@ -107,7 +107,7 @@ class D3D12SwapChain final
 	[[nodiscard]] D3D12_RECT GetDefaultScissorRect() const;
 
 	/// Returns the back buffer format from engine settings.
-	[[nodiscard]] DXGI_FORMAT GetBackBufferFormat() const { return EngineSettings::BackBufferFormat; }
+	[[nodiscard]] DXGI_FORMAT GetBackBufferFormat() const { return RHISettings::BackBufferFormat; }
 
 	// ========================================================================
 	// Feature Queries
@@ -119,7 +119,7 @@ class D3D12SwapChain final
 	/// Returns waitable object flag if multiple frames in flight.
 	[[nodiscard]] UINT GetFrameLatencyWaitableFlag() const
 	{
-		return (EngineSettings::FramesInFlight > 1) ? DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT : 0u;
+		return (RHISettings::FramesInFlight > 1) ? DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT : 0u;
 	}
 
 	/// Returns combined swap chain flags for creation.
@@ -139,12 +139,12 @@ class D3D12SwapChain final
 	// State
 	// ------------------------------------------------------------------------
 
-	D3D12Rhi& m_rhi;                                                     ///< RHI reference
-	UINT m_frameInFlightIndex = 0;                                       ///< Current back buffer index
-	ComPtr<IDXGISwapChain3> m_swapChain = nullptr;                       ///< DXGI swap chain
-	ComPtr<ID3D12Resource2> m_buffers[EngineSettings::FramesInFlight];   ///< Back buffer resources
-	D3D12DescriptorHandle m_rtvHandles[EngineSettings::FramesInFlight];  ///< RTV descriptor handles
-	HANDLE m_WaitableObject = nullptr;                                   ///< Frame latency waitable object
-	Window* m_window = nullptr;                                          ///< Window reference for dimensions
-	D3D12DescriptorHeapManager* m_descriptorHeapManager = nullptr;       ///< Descriptor heap manager reference
+	D3D12Rhi& m_rhi;                                                  ///< RHI reference
+	UINT m_frameInFlightIndex = 0;                                    ///< Current back buffer index
+	ComPtr<IDXGISwapChain3> m_swapChain = nullptr;                    ///< DXGI swap chain
+	ComPtr<ID3D12Resource2> m_buffers[RHISettings::FramesInFlight];   ///< Back buffer resources
+	D3D12DescriptorHandle m_rtvHandles[RHISettings::FramesInFlight];  ///< RTV descriptor handles
+	HANDLE m_waitableObject = nullptr;                                ///< Frame latency waitable object
+	Window* m_window = nullptr;                                       ///< Window reference for dimensions
+	D3D12DescriptorHeapManager* m_descriptorHeapManager = nullptr;    ///< Descriptor heap manager reference
 };

@@ -18,7 +18,11 @@ CameraController::CameraController(Timer& timer, InputSystem& inputSystem, Windo
 	OnWindowResized();
 
 	// Subscribe to window resize events
-	auto resizeHandle = m_window.OnResized.Add([this]() { OnWindowResized(); });
+	auto resizeHandle = m_window.OnResized.Add(
+	    [this]()
+	    {
+		    OnWindowResized();
+	    });
 	m_windowResizeHandle = ScopedEventHandle(m_window.OnResized, resizeHandle);
 
 	// Subscribe to input events using ScopedEventHandle for RAII cleanup

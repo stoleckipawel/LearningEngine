@@ -58,11 +58,11 @@ class SPARKLE_ENGINE_API Scene final
 	/// Configuration for procedural primitive spawning.
 	struct PrimitiveConfig
 	{
-		MeshFactory::Shape shape = MeshFactory::Shape::Box;  ///< Primitive type to spawn
-		std::uint32_t count = 500;                           ///< Number of primitives
-		DirectX::XMFLOAT3 center = {0.0f, 0.0f, 50.0f};      ///< Center of spawn volume
+		MeshFactory::Shape shape = MeshFactory::Shape::Box;    ///< Primitive type to spawn
+		std::uint32_t count = 500;                             ///< Number of primitives
+		DirectX::XMFLOAT3 center = {0.0f, 0.0f, 50.0f};        ///< Center of spawn volume
 		DirectX::XMFLOAT3 extents = {100.0f, 100.0f, 100.0f};  ///< Half-extents of spawn volume
-		std::uint32_t seed = 1337;                           ///< Random seed for positions
+		std::uint32_t seed = 1337;                             ///< Random seed for positions
 	};
 
 	/// Updates primitive configuration and rebuilds geometry immediately.

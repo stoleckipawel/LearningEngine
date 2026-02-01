@@ -4,8 +4,8 @@
 #include "D3D12Rhi.h"
 #include "D3D12DescriptorHeapManager.h"
 #include "D3D12SwapChain.h"
+#include "RHIConfig.h"
 #include "Timer.h"
-#include "Log.h"
 
 #include "Panels/RendererPanel.h"
 #include "Sections/StatsOverlay.h"
@@ -93,7 +93,7 @@ bool UI::InitializeD3D12Backend()
 	ImGui_ImplDX12_InitInfo initInfo = {};
 	initInfo.Device = m_rhi->GetDevice().Get();
 	initInfo.CommandQueue = m_rhi->GetCommandQueue().Get();
-	initInfo.NumFramesInFlight = static_cast<int>(EngineSettings::FramesInFlight);
+	initInfo.NumFramesInFlight = static_cast<int>(RHISettings::FramesInFlight);
 	initInfo.RTVFormat = m_swapChain->GetBackBufferFormat();
 	initInfo.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	initInfo.SrvDescriptorHeap = m_descriptorHeapManager->GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)->GetRaw();

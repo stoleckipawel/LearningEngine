@@ -4,6 +4,7 @@
 #include "D3D12Rhi.h"
 #include "D3D12RootBindings.h"
 #include "DebugUtils.h"
+#include "Log.h"
 
 D3D12RootSignature::D3D12RootSignature(D3D12Rhi& rhi) : m_rhi(rhi)
 {
@@ -65,7 +66,7 @@ void D3D12RootSignature::Create()
 	DebugUtils::SetDebugName(m_rootSignature, L"RHI_RootSignature");
 }
 
-D3D12RootSignature::~D3D12RootSignature()
+D3D12RootSignature::~D3D12RootSignature() noexcept
 {
 	m_rootSignature.Reset();
 }

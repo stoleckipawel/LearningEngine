@@ -1,6 +1,8 @@
 #include "PCH.h"
 #include "Primitives/Polyhedra/PrimitiveOctahedron.h"
 
+using namespace DirectX;
+
 PrimitiveOctahedron::PrimitiveOctahedron(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale) :
     Mesh(translation, rotation, scale)
 {

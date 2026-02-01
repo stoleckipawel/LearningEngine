@@ -3,7 +3,6 @@
 #include "Assets/AssetSystem.h"
 
 #include "FileSystemUtils.h"
-#include "Log.h"
 
 AssetSystem::AssetSystem()
 {

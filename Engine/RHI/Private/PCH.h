@@ -1,61 +1,70 @@
 // ============================================================================
 // PCH.h - SparkleRHI Module
-// Precompiled header for RHI module with DirectX headers.
+// ----------------------------------------------------------------------------
+// Precompiled header for RHI module.
+//
+// RULES:
+// - Only STL, Windows, and DirectX headers (stable, rarely change)
+// - RHIConfig.h for compile-time feature toggles
+// - Headers must be used in 50%+ of this module's .cpp files
 // ============================================================================
 
 #pragma once
 
-// Windows macros
-#define NOMINMAX
+// ============================================================================
+// RHI Configuration - Required for ENGINE_GPU_VALIDATION macros
+// ============================================================================
+#include "RHIConfig.h"
 
+// ============================================================================
+// Windows Configuration
+// ============================================================================
+#define NOMINMAX
 #ifndef WIN32_LEAN_AND_MEAN
 	#define WIN32_LEAN_AND_MEAN
 #endif
 
-// Standard library
-#include <chrono>
-#include <cstdlib>
-#include <vector>
-#include <filesystem>
-#include <string>
-#include <cstring>
-#include <string_view>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <algorithm>
-#include <map>
-#include <set>
-#include <unordered_map>
-#include <unordered_set>
-#include <cmath>
-#include <functional>
+// ============================================================================
+// C++ Standard Library - Commonly used across RHI
+// ============================================================================
 #include <cstdint>
+#include <cstdlib>
+#include <string>
+#include <string_view>
+#include <memory>
+#include <vector>
+#include <array>
+#include <algorithm>
 
-// Windows
+// ============================================================================
+// Windows - Required for D3D12
+// ============================================================================
 #include <Windows.h>
-#include "wincodec.h"
-#include <winnt.h>
-#include <wingdi.h>
-
-// DirectX
-#include <d3d12.h>
-#include <dxcapi.h>
-#include <DirectXMath.h>
-#include <dxgi1_6.h>
-#include <d3dcompiler.h>
-#include <d3dx12.h>
 #include <wrl/client.h>
 
-// DirectX debug
-#ifdef _DEBUG
+// ============================================================================
+// Engine Logging - Available everywhere via PCH
+// ============================================================================
+#include "Log.h"
+
+// ============================================================================
+// DirectX 12 - Core RHI dependency (used in 100% of .cpp files)
+// ============================================================================
+#include <d3d12.h>
+#include <dxgi1_6.h>
+#include <DirectXMath.h>
+
+#include <d3dx12.h>
+
+// ============================================================================
+// DirectX Debug (conditional)
+// ============================================================================
+#ifdef ENGINE_GPU_VALIDATION
 	#include <d3d12sdklayers.h>
 	#include <dxgidebug.h>
 #endif
 
-using namespace DirectX;
-using namespace Microsoft::WRL;
-
-// Core module
-#include "Diagnostics/Log.h"
-#include "EngineConfig.h"
+// ============================================================================
+// Convenience Aliases
+// ============================================================================
+using Microsoft::WRL::ComPtr;

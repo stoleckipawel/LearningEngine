@@ -18,46 +18,22 @@ void Frustum::ExtractFromViewProjection(const XMFLOAT4X4& viewProj) noexcept
 	const XMFLOAT4X4& m = viewProj;
 
 	// Left:   row3 + row0
-	planes[Left] = XMFLOAT4(
-	    m._14 + m._11,
-	    m._24 + m._21,
-	    m._34 + m._31,
-	    m._44 + m._41);
+	planes[Left] = XMFLOAT4(m._14 + m._11, m._24 + m._21, m._34 + m._31, m._44 + m._41);
 
 	// Right:  row3 - row0
-	planes[Right] = XMFLOAT4(
-	    m._14 - m._11,
-	    m._24 - m._21,
-	    m._34 - m._31,
-	    m._44 - m._41);
+	planes[Right] = XMFLOAT4(m._14 - m._11, m._24 - m._21, m._34 - m._31, m._44 - m._41);
 
 	// Bottom: row3 + row1
-	planes[Bottom] = XMFLOAT4(
-	    m._14 + m._12,
-	    m._24 + m._22,
-	    m._34 + m._32,
-	    m._44 + m._42);
+	planes[Bottom] = XMFLOAT4(m._14 + m._12, m._24 + m._22, m._34 + m._32, m._44 + m._42);
 
 	// Top:    row3 - row1
-	planes[Top] = XMFLOAT4(
-	    m._14 - m._12,
-	    m._24 - m._22,
-	    m._34 - m._32,
-	    m._44 - m._42);
+	planes[Top] = XMFLOAT4(m._14 - m._12, m._24 - m._22, m._34 - m._32, m._44 - m._42);
 
 	// Near:   row2 (for [0,1] depth range)
-	planes[Near] = XMFLOAT4(
-	    m._13,
-	    m._23,
-	    m._33,
-	    m._43);
+	planes[Near] = XMFLOAT4(m._13, m._23, m._33, m._43);
 
 	// Far:    row3 - row2
-	planes[Far] = XMFLOAT4(
-	    m._14 - m._13,
-	    m._24 - m._23,
-	    m._34 - m._33,
-	    m._44 - m._43);
+	planes[Far] = XMFLOAT4(m._14 - m._13, m._24 - m._23, m._34 - m._33, m._44 - m._43);
 
 	// Normalize all planes
 	for (int i = 0; i < Count; ++i)

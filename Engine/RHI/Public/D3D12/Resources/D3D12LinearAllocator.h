@@ -53,7 +53,7 @@ class D3D12LinearAllocator
 {
   public:
 	D3D12LinearAllocator() = default;
-	~D3D12LinearAllocator() { Shutdown(); }
+	~D3D12LinearAllocator() noexcept { Shutdown(); }
 
 	// Non-copyable, non-movable (owns GPU resource)
 	D3D12LinearAllocator(const D3D12LinearAllocator&) = delete;

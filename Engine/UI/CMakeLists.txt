@@ -36,14 +36,31 @@ endif()
 target_include_directories(SparkleUI
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/Public
+        ${CMAKE_CURRENT_SOURCE_DIR}/Public/Panels
+        ${CMAKE_CURRENT_SOURCE_DIR}/Public/Sections
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/Private
         ${CMAKE_CURRENT_SOURCE_DIR}/Private/ImGui
+        ${CMAKE_CURRENT_SOURCE_DIR}/Private/Panels
+        ${CMAKE_CURRENT_SOURCE_DIR}/Private/Sections
         # Engine root for module-prefixed includes
         ${CMAKE_CURRENT_SOURCE_DIR}/..
+        # Core module subdirectories for direct includes
+        ${CMAKE_CURRENT_SOURCE_DIR}/../Core/Public/Time
+        ${CMAKE_CURRENT_SOURCE_DIR}/../Core/Public/Diagnostics
+        # RHI module public headers (for RHIConfig.h)
+        ${CMAKE_CURRENT_SOURCE_DIR}/../RHI/Public
+        # RHI module subdirectories for direct includes
+        ${CMAKE_CURRENT_SOURCE_DIR}/../RHI/Public/D3D12
+        ${CMAKE_CURRENT_SOURCE_DIR}/../RHI/Public/D3D12/Descriptors
 )
 
 target_compile_features(SparkleUI PUBLIC cxx_std_20)
+
+# Precompiled header (per-module PCH)
+target_precompile_headers(SparkleUI PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Private/PCH.h
+)
 
 # UI depends on Core, Platform, Renderer
 target_link_libraries(SparkleUI 

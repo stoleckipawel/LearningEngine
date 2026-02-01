@@ -44,6 +44,11 @@ target_include_directories(SparklePlatform
 
 target_compile_features(SparklePlatform PUBLIC cxx_std_20)
 
+# Precompiled header (per-module PCH)
+target_precompile_headers(SparklePlatform PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Private/PCH.h
+)
+
 # Platform depends on Core
 target_link_libraries(SparklePlatform 
     PUBLIC 

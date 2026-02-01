@@ -59,6 +59,11 @@ target_include_directories(SparkleCore
 # Require C++20
 target_compile_features(SparkleCore PUBLIC cxx_std_20)
 
+# Precompiled header (per-module PCH)
+target_precompile_headers(SparkleCore PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Private/PCH.h
+)
+
 # Core module has no engine dependencies (it's the base)
 # Add any system dependencies here if needed
 

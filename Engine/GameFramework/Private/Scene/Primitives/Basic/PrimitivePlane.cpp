@@ -1,6 +1,8 @@
 #include "PCH.h"
 #include "Primitives/Basic/PrimitivePlane.h"
 
+using namespace DirectX;
+
 PrimitivePlane::PrimitivePlane(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale) :
     Mesh(translation, rotation, scale)
 {

@@ -67,18 +67,31 @@ add_subdirectory(UI)             # SparkleUI.dll       - Widget system, Layout
 # add_subdirectory(Editor)       # SparkleEditor.dll     - Editor tools
 
 # ============================================================================
-# CONVENIENCE TARGET
+# MODULE LINKING GUIDE
 # ============================================================================
-# SparkleEngine interface target links all active modules for easy project setup
-add_library(SparkleEngineAll INTERFACE)
-target_link_libraries(SparkleEngineAll INTERFACE
-    SparkleCore
-    SparklePlatform
-    SparkleRHI
-    SparkleRenderer
-    SparkleGameFramework
-    SparkleUI
-)
+# Projects should explicitly link only the modules they need:
+#
+#   SparkleCore         - Math, Memory, Events, Logging (required by all)
+#   SparklePlatform     - Window, Input (required for windowed apps)
+#   SparkleRHI          - D3D12/Vulkan abstraction (required for rendering)
+#   SparkleRenderer     - High-level rendering (requires RHI)
+#   SparkleGameFramework - Scene, Camera, Primitives (requires Renderer)
+#   SparkleUI           - ImGui integration (requires Renderer)
+#
+# Example for a typical game project:
+#   target_link_libraries(MyGame PRIVATE
+#       SparkleCore
+#       SparklePlatform
+#       SparkleRHI
+#       SparkleRenderer
+#       SparkleGameFramework
+#       SparkleUI
+#   )
+#
+# Example for a headless tool (no rendering):
+#   target_link_libraries(MyTool PRIVATE
+#       SparkleCore
+#   )
 
 # Set compiler flags for debug builds
 if (MSVC)

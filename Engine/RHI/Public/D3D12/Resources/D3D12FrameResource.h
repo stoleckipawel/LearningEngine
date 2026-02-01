@@ -30,7 +30,7 @@
 #include <array>
 #include <cassert>
 #include "D3D12LinearAllocator.h"
-#include "EngineConfig.h"
+#include "RHIConfig.h"
 #include "D3D12Rhi.h"
 
 // ============================================================================
@@ -89,17 +89,17 @@ class D3D12FrameResourceManager final
 	// @param rhi Reference to the D3D12Rhi for GPU resource creation.
 	// @param capacityPerFrame Allocator capacity per frame (default 4MB).
 	explicit D3D12FrameResourceManager(D3D12Rhi& rhi, uint64_t capacityPerFrame = DefaultCapacityPerFrame) :
-	    m_CapacityPerFrame(capacityPerFrame)
+	    m_capacityPerFrame(capacityPerFrame)
 	{
-		for (uint32_t i = 0; i < EngineSettings::FramesInFlight; ++i)
+		for (uint32_t i = 0; i < RHISettings::FramesInFlight; ++i)
 		{
-			m_FrameResources[i].Initialize(rhi, capacityPerFrame, i);
+			m_frameResources[i].Initialize(rhi, capacityPerFrame, i);
 		}
 	}
 
 	~D3D12FrameResourceManager()
 	{
-		for (auto& frame : m_FrameResources)
+		for (auto& frame : m_frameResources)
 		{
 			frame.Shutdown();
 		}
@@ -120,8 +120,8 @@ class D3D12FrameResourceManager final
 	// @param frameIndex Current frame-in-flight index.
 	void BeginFrame(ID3D12Fence* fence, HANDLE fenceEvent, uint32_t frameIndex)
 	{
-		m_CurrentFrameIndex = frameIndex;
-		D3D12FrameResource& frame = m_FrameResources[frameIndex];
+		m_currentFrameIndex = frameIndex;
+		D3D12FrameResource& frame = m_frameResources[frameIndex];
 
 		// Wait for GPU to finish with this frame's resources before reusing
 		// This is the critical synchronization point that prevents races
@@ -142,14 +142,14 @@ class D3D12FrameResourceManager final
 
 	// Record fence value for current frame. Call after ExecuteCommandLists.
 	// fenceValue The fence value that was signaled for this frame.
-	void EndFrame(uint64_t fenceValue) { m_FrameResources[m_CurrentFrameIndex].FenceValue = fenceValue; }
+	void EndFrame(uint64_t fenceValue) { m_frameResources[m_currentFrameIndex].FenceValue = fenceValue; }
 
 	//--------------------------------------------------------------------------
 	// Allocation
 	//--------------------------------------------------------------------------
 
 	// Get the current frame's linear allocator.
-	[[nodiscard]] D3D12LinearAllocator& GetCurrentAllocator() { return m_FrameResources[m_CurrentFrameIndex].CbAllocator; }
+	[[nodiscard]] D3D12LinearAllocator& GetCurrentAllocator() noexcept { return m_frameResources[m_currentFrameIndex].CbAllocator; }
 
 	// Allocate from current frame's allocator.
 	[[nodiscard]] D3D12LinearAllocation Allocate(uint64_t size, uint64_t alignment = 256)
@@ -168,13 +168,16 @@ class D3D12FrameResourceManager final
 	//--------------------------------------------------------------------------
 
 	// Get current frame's allocator usage percentage.
-	[[nodiscard]] float GetCurrentUsagePercent() const { return m_FrameResources[m_CurrentFrameIndex].CbAllocator.GetUsagePercent(); }
+	[[nodiscard]] float GetCurrentUsagePercent() const noexcept
+	{
+		return m_frameResources[m_currentFrameIndex].CbAllocator.GetUsagePercent();
+	}
 
 	// Get high water mark across all frames (for capacity tuning).
-	[[nodiscard]] uint64_t GetMaxHighWaterMark() const
+	[[nodiscard]] uint64_t GetMaxHighWaterMark() const noexcept
 	{
 		uint64_t maxHwm = 0;
-		for (const auto& frame : m_FrameResources)
+		for (const auto& frame : m_frameResources)
 		{
 			maxHwm = (std::max) (maxHwm, frame.CbAllocator.GetHighWaterMark());
 		}
@@ -182,10 +185,10 @@ class D3D12FrameResourceManager final
 	}
 
 	// Get capacity per frame.
-	[[nodiscard]] uint64_t GetCapacityPerFrame() const { return m_CapacityPerFrame; }
+	[[nodiscard]] uint64_t GetCapacityPerFrame() const noexcept { return m_capacityPerFrame; }
 
   private:
-	std::array<D3D12FrameResource, EngineSettings::FramesInFlight> m_FrameResources;
-	uint64_t m_CapacityPerFrame = DefaultCapacityPerFrame;
-	uint32_t m_CurrentFrameIndex = 0;
+	std::array<D3D12FrameResource, RHISettings::FramesInFlight> m_frameResources;
+	uint64_t m_capacityPerFrame = DefaultCapacityPerFrame;
+	uint32_t m_currentFrameIndex = 0;
 };

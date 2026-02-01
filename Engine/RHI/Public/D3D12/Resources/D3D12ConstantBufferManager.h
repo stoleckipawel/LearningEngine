@@ -25,6 +25,7 @@
 #include <wrl/client.h>
 #include <cstdint>
 #include <array>
+#include "RHIConfig.h"
 #include "D3D12ConstantBufferData.h"
 #include "D3D12ConstantBuffer.h"
 
@@ -48,7 +49,7 @@ class D3D12ConstantBufferManager final
 	    D3D12FrameResourceManager& frameResourceManager,
 	    D3D12SwapChain& swapChain,
 	    UI& ui);
-	~D3D12ConstantBufferManager();
+	~D3D12ConstantBufferManager() noexcept;
 
 	D3D12ConstantBufferManager(const D3D12ConstantBufferManager&) = delete;
 	D3D12ConstantBufferManager& operator=(const D3D12ConstantBufferManager&) = delete;
@@ -82,13 +83,13 @@ class D3D12ConstantBufferManager final
 	// Update per-object PS constant buffer (material data).
 	[[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS UpdatePerObjectPS();
 
+  private:
 	// Per-Frame constant buffers (persistent, one per frame-in-flight)
-	std::unique_ptr<D3D12ConstantBuffer<PerFrameConstantBufferData>> m_PerFrameCB[EngineSettings::FramesInFlight];
+	std::unique_ptr<D3D12ConstantBuffer<PerFrameConstantBufferData>> m_perFrameCB[RHISettings::FramesInFlight];
 
 	// Per-View constant buffers (persistent, one per frame-in-flight)
-	std::unique_ptr<D3D12ConstantBuffer<PerViewConstantBufferData>> m_PerViewCB[EngineSettings::FramesInFlight];
+	std::unique_ptr<D3D12ConstantBuffer<PerViewConstantBufferData>> m_perViewCB[RHISettings::FramesInFlight];
 
-  private:
 	Timer* m_timer = nullptr;
 	Window* m_window = nullptr;
 	D3D12FrameResourceManager* m_frameResourceManager = nullptr;

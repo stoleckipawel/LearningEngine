@@ -3,6 +3,8 @@
 
 #include "MathUtils.h"
 
+using namespace DirectX;
+
 PrimitivePyramid::PrimitivePyramid(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale) :
     Mesh(translation, rotation, scale)
 {
@@ -59,9 +61,9 @@ void PrimitivePyramid::GenerateVertices(std::vector<Vertex>& outVertices) const
 		auto uvB = DirectX::XMFLOAT2{1.0f, 1.0f};
 		auto uvC = DirectX::XMFLOAT2{0.5f, 0.0f};
 
-		outVertices.push_back({faces[f].a, uvA, {std::fabs(normal.x), std::fabs(normal.y), std::fabs(normal.z), 1.0f}, normal, tangent});
-		outVertices.push_back({faces[f].b, uvB, {std::fabs(normal.x), std::fabs(normal.y), std::fabs(normal.z), 1.0f}, normal, tangent});
-		outVertices.push_back({faces[f].c, uvC, {std::fabs(normal.x), std::fabs(normal.y), std::fabs(normal.z), 1.0f}, normal, tangent});
+		outVertices.push_back({faces[f].a, uvA, {fabsf(normal.x), fabsf(normal.y), fabsf(normal.z), 1.0f}, normal, tangent});
+		outVertices.push_back({faces[f].b, uvB, {fabsf(normal.x), fabsf(normal.y), fabsf(normal.z), 1.0f}, normal, tangent});
+		outVertices.push_back({faces[f].c, uvC, {fabsf(normal.x), fabsf(normal.y), fabsf(normal.z), 1.0f}, normal, tangent});
 	}
 }
 

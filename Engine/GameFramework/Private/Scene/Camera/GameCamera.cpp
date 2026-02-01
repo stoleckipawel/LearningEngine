@@ -1,5 +1,6 @@
 #include "PCH.h"
 #include "GameCamera.h"
+#include <algorithm>
 #include <cmath>
 
 using namespace DirectX;

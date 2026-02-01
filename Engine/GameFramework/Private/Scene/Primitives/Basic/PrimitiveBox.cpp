@@ -1,6 +1,8 @@
 #include "PCH.h"
 #include "Primitives/Basic/PrimitiveBox.h"
 
+using namespace DirectX;
+
 PrimitiveBox::PrimitiveBox(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale) :
     Mesh(translation, rotation, scale)
 {

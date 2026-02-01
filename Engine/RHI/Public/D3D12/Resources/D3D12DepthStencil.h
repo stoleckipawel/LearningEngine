@@ -47,7 +47,6 @@ class D3D12DepthStencil
 	D3D12DepthStencil(D3D12DepthStencil&&) = delete;
 	D3D12DepthStencil& operator=(D3D12DepthStencil&&) = delete;
 
-	// Returns the GPU descriptor handle for shader access
 	// Returns the GPU descriptor handle for shader binding (non-owning)
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const noexcept { return m_dsvHandle.GetGPU(); }
 	// Returns the CPU descriptor handle for descriptor heap management (non-owning)

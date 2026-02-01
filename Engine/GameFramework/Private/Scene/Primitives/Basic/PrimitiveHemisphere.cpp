@@ -3,6 +3,8 @@
 
 #include "MathUtils.h"
 
+using namespace DirectX;
+
 PrimitiveHemisphere::PrimitiveHemisphere(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale) :
     Mesh(translation, rotation, scale)
 {
@@ -22,15 +24,15 @@ void PrimitiveHemisphere::GenerateVertices(std::vector<Vertex>& outVertices) con
 	{
 		float tLat = (float) lat / (float) latSegments;
 		float theta = tLat * (DirectX::XM_PI * 0.5f);
-		float sinTheta = std::sinf(theta);
-		float cosTheta = std::cosf(theta);
+		float sinTheta = sinf(theta);
+		float cosTheta = cosf(theta);
 
 		for (int lon = 0; lon <= lonSegments; ++lon)
 		{
 			float tLon = (float) lon / (float) lonSegments;
 			float phi = tLon * DirectX::XM_2PI;
-			float sinPhi = std::sinf(phi);
-			float cosPhi = std::cosf(phi);
+			float sinPhi = sinf(phi);
+			float cosPhi = cosf(phi);
 
 			float x = sinTheta * cosPhi;
 			float y = cosTheta;
@@ -43,7 +45,7 @@ void PrimitiveHemisphere::GenerateVertices(std::vector<Vertex>& outVertices) con
 			DirectX::XMFLOAT3 tangent3{-sinPhi, 0.0f, cosPhi};
 			tangent3 = MathUtils::Normalize3(tangent3);
 
-			DirectX::XMFLOAT4 color{std::fabs(normal.x), std::fabs(normal.y), std::fabs(normal.z), 1.0f};
+			DirectX::XMFLOAT4 color{fabsf(normal.x), fabsf(normal.y), fabsf(normal.z), 1.0f};
 			outVertices.push_back({pos, uv, color, normal, {tangent3.x, tangent3.y, tangent3.z, 1.0f}});
 		}
 	}
@@ -56,12 +58,12 @@ void PrimitiveHemisphere::GenerateVertices(std::vector<Vertex>& outVertices) con
 	{
 		float tLon = (float) lon / (float) lonSegments;
 		float phi = tLon * DirectX::XM_2PI;
-		float x = std::cosf(phi);
-		float z = std::sinf(phi);
+		float x = cosf(phi);
+		float z = sinf(phi);
 
 		DirectX::XMFLOAT3 pos{x, 0.0f, z};
 		DirectX::XMFLOAT2 uv{0.5f + 0.5f * x, 0.5f - 0.5f * z};
-		DirectX::XMFLOAT4 color{std::fabs(x), 0.3f, std::fabs(z), 1.0f};
+		DirectX::XMFLOAT4 color{fabsf(x), 0.3f, fabsf(z), 1.0f};
 		outVertices.push_back({pos, uv, color, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
 	}
 

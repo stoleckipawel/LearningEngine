@@ -29,7 +29,7 @@ class D3D12DescriptorAllocator
 {
   public:
 	// Constructs allocator for an existing heap (does not take ownership).
-	explicit D3D12DescriptorAllocator(D3D12DescriptorHeap* Heap) : m_Heap(Heap) {}
+	explicit D3D12DescriptorAllocator(D3D12DescriptorHeap* heap) : m_heap(heap) {}
 
 	// Allocates a single descriptor slot.
 	D3D12DescriptorHandle Allocate();
@@ -46,7 +46,7 @@ class D3D12DescriptorAllocator
 	void FreeContiguous(const D3D12DescriptorHandle& firstHandle, uint32_t count) noexcept;
 
   private:
-	D3D12DescriptorHeap* m_Heap;
+	D3D12DescriptorHeap* m_heap;
 	std::vector<UINT> m_freeIndices;
 	UINT m_currentOffset = 0;
 	std::mutex m_mutex;

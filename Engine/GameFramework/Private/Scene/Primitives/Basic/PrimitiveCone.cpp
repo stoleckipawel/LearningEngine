@@ -1,6 +1,8 @@
 #include "PCH.h"
 #include "Primitives/Basic/PrimitiveCone.h"
 
+using namespace DirectX;
+
 PrimitiveCone::PrimitiveCone(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale) :
     Mesh(translation, rotation, scale)
 {
@@ -21,11 +23,11 @@ void PrimitiveCone::GenerateVertices(std::vector<Vertex>& outVertices) const
 	for (int i = 0; i < slices; ++i)
 	{
 		float phi = (float) i / (float) slices * DirectX::XM_2PI;
-		float x = std::cosf(phi);
-		float z = std::sinf(phi);
+		float x = cosf(phi);
+		float z = sinf(phi);
 		DirectX::XMFLOAT3 pos{x, -1.0f, z};
 		DirectX::XMFLOAT2 uv{(float) i / (float) slices, 1.0f};
-		DirectX::XMFLOAT4 color{std::fabs(x), 0.5f, std::fabs(z), 1.0f};
+		DirectX::XMFLOAT4 color{fabsf(x), 0.5f, fabsf(z), 1.0f};
 		// approximate side normal: (x, radius/height, z) with radius=1, height=2 -> y=0.5
 		DirectX::XMFLOAT3 normal{x, 0.5f, z};
 		// tangent around circumference

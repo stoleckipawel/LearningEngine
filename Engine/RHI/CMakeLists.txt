@@ -37,6 +37,16 @@ target_include_directories(SparkleRHI
         ${CMAKE_CURRENT_SOURCE_DIR}/Private
         # Engine root for module-prefixed includes
         ${CMAKE_CURRENT_SOURCE_DIR}/..
+        # Core module subdirectories for direct includes
+        ${CMAKE_CURRENT_SOURCE_DIR}/../Core/Public/Diagnostics
+        ${CMAKE_CURRENT_SOURCE_DIR}/../Core/Public/Events
+        ${CMAKE_CURRENT_SOURCE_DIR}/../Core/Public/Time
+        # Renderer module for DepthConvention.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/../Renderer/Public
+        # UI module for UI.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/../UI/Public
+        # GameFramework module for Assets/AssetSystem.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/../GameFramework/Public
         # D3D12 subdirectories for internal includes
         ${CMAKE_CURRENT_SOURCE_DIR}/Private/D3D12
         ${CMAKE_CURRENT_SOURCE_DIR}/Private/D3D12/Descriptors
@@ -56,6 +66,11 @@ target_include_directories(SparkleRHI
 )
 
 target_compile_features(SparkleRHI PUBLIC cxx_std_20)
+
+# Precompiled header (per-module PCH)
+target_precompile_headers(SparkleRHI PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Private/PCH.h
+)
 
 # RHI depends on Core and Platform
 target_link_libraries(SparkleRHI 

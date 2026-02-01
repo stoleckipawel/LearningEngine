@@ -29,30 +29,65 @@
 
 ## Architecture
 
+Sparkle Engine uses a **modular DLL architecture** where each subsystem is a separate library that can be built as either a shared (DLL) or static library. This enables faster iteration, cleaner dependencies, and better code organization.
+
 <table>
 <tr>
-<td align="center"><b>Layer</b></td>
-<td><b>Components</b></td>
+<td align="center"><b>Module</b></td>
+<td><b>Library</b></td>
+<td><b>Description</b></td>
 </tr>
 <tr>
-<td align="center">🎮<br><b>Application</b></td>
-<td>Your game project — subclass <code>App</code>, implement lifecycle hooks, run</td>
+<td align="center">🧱<br><b>Core</b></td>
+<td><code>SparkleCore</code></td>
+<td>Foundation: Math, Events, Timer, Diagnostics, Logging</td>
 </tr>
 <tr>
-<td align="center">📤<br><b>Engine API</b></td>
-<td>Public interface: <code>App.h</code> · <code>EngineConfig.h</code> · <code>Log.h</code></td>
+<td align="center">🖥️<br><b>Platform</b></td>
+<td><code>SparklePlatform</code></td>
+<td>OS abstraction: Window, Input System</td>
 </tr>
 <tr>
-<td align="center">⚙️<br><b>Systems</b></td>
-<td>
-<b>Core</b> (Timer, Math, Events) · <b>Platform</b> (Window, Input) · <b>Renderer</b> (Camera, Depth, Textures) · <b>Scene</b> (Meshes, Primitives) · <b>UI</b> (ImGui)
-</td>
+<td align="center">⚡<br><b>RHI</b></td>
+<td><code>SparkleRHI</code></td>
+<td>DirectX 12 backend: Device, Heaps, PSO, Shaders, Resources</td>
 </tr>
 <tr>
-<td align="center">🖥️<br><b>RHI</b></td>
-<td>DirectX 12 backend: Device, Command Queues, Descriptor Heaps, Pipeline States, Shaders (DXC), Resources, Synchronization</td>
+<td align="center">🎨<br><b>Renderer</b></td>
+<td><code>SparkleRenderer</code></td>
+<td>High-level rendering: Camera, Depth, Textures, Materials</td>
+</tr>
+<tr>
+<td align="center">🎮<br><b>GameFramework</b></td>
+<td><code>SparkleGameFramework</code></td>
+<td>Game systems: Scene, Mesh, Assets, Application framework</td>
+</tr>
+<tr>
+<td align="center">🖼️<br><b>UI</b></td>
+<td><code>SparkleUI</code></td>
+<td>ImGui integration: Panels, Overlays, Debug tools</td>
 </tr>
 </table>
+
+### Module Dependencies
+
+```
+SparkleCore (base - no dependencies)
+    └── SparklePlatform
+            └── SparkleRHI
+                    └── SparkleRenderer
+                            ├── SparkleUI
+                            └── SparkleGameFramework
+```
+
+### Design Principles
+
+| Principle | Implementation |
+|-----------|----------------|
+| **Per-Module PCH** | Each module has its own precompiled header for fast builds |
+| **Global Logging** | `Log.h` included in all PCH files — `LOG_INFO`, `CHECK` available everywhere |
+| **Public/Private Split** | Public headers in `Public/`, implementation in `Private/` |
+| **DLL/Static Toggle** | `SPARKLE_BUILD_SHARED` CMake option switches between DLL and static libs |
 
 ---
 
@@ -143,18 +178,26 @@
 <tr>
 <td width="50%" valign="top">
 
-### Engine Library
+### Engine Modules
 
 | Directory | Contents |
 |-----------|----------|
-| `include/` | Public API |
-| `src/Core/` | Timer, Math, Events, Diagnostics |
-| `src/Platform/` | Window, Input System |
-| `src/Renderer/` | Camera, Depth, Textures |
-| `src/RHI/D3D12/` | Device, Heaps, PSO, Shaders |
-| `src/Scene/` | Mesh Factory, 15 Primitives |
-| `src/UI/` | ImGui Integration |
-| `Assets/Shaders/` | HLSL (BRDF, Lighting, Passes) |
+| `Engine/Core/` | Math, Events, Timer, Diagnostics, Logging |
+| `Engine/Platform/` | Window, Input System |
+| `Engine/RHI/` | D3D12 Device, Heaps, PSO, Shaders |
+| `Engine/Renderer/` | Camera, Depth, Textures, Materials |
+| `Engine/GameFramework/` | Scene, Mesh, Assets, App Framework |
+| `Engine/UI/` | ImGui Panels, Overlays, Debug Tools |
+| `Engine/third_party/` | imgui, d3dx12, cgltf |
+
+Each module follows the structure:
+```
+Module/
+├── Public/      # Headers for other modules
+├── Private/     # Implementation (.cpp, internal .h)
+│   └── PCH.h    # Per-module precompiled header
+└── CMakeLists.txt
+```
 
 </td>
 <td width="50%" valign="top">
@@ -163,17 +206,27 @@
 
 | Project | Description |
 |---------|-------------|
-| `HelloWorld/` | Minimal starter example |
-| `SampleScenes/` | Primitive showcase |
-| `TemplateProject/` | Template for new projects |
+| `Projects/HelloWorld/` | Minimal starter example |
+| `Projects/SampleScenes/` | Primitive showcase |
+| `Projects/TemplateProject/` | Template for new projects |
 
 ### Build Output
 
 | Directory | Contents |
 |-----------|----------|
 | `build/` | CMake cache, VS solution |
+| `build/lib/` | Module libraries (.lib/.dll) |
 | `bin/Debug/` | Debug builds + PDBs |
 | `bin/Release/` | Optimized builds |
+
+### Tools
+
+| Script | Purpose |
+|--------|---------|
+| `BuildSolution.bat` | Generate VS solution |
+| `BuildProjects.bat` | Build all projects |
+| `CreateNewProject.bat` | Scaffold new game |
+| `Tools/RunClangFormat.bat` | Format codebase |
 
 </td>
 </tr>

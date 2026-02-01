@@ -5,17 +5,17 @@
 #include "CoreAPI.h"
 
 // Standard library includes used throughout the engine
-#include &lt;cstdint&gt;
-#include &lt;string&gt;
-#include &lt;string_view&gt;
-#include &lt;vector&gt;
-#include &lt;array&gt;
-#include &lt;memory&gt;
-#include &lt;functional&gt;
-#include &lt;optional&gt;
-#include &lt;variant&gt;
-#include &lt;span&gt;
-#include &lt;filesystem&gt;
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <vector>
+#include <array>
+#include <memory>
+#include <functional>
+#include <optional>
+#include <variant>
+#include <span>
+#include <filesystem>
 
 // Core types and utilities
 #include "CoreTypes.h"

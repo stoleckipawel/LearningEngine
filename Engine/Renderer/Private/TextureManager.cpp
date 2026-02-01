@@ -8,7 +8,6 @@
 #include "Assets/AssetSystem.h"
 #include "D3D12Rhi.h"
 #include "D3D12DescriptorHeapManager.h"
-#include "Log.h"
 
 #include <format>
 

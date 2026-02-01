@@ -1,14 +1,38 @@
 // ============================================================================
 // PCH.h - SparkleRenderer Module
+// ----------------------------------------------------------------------------
 // Precompiled header for Renderer module.
-// Inherits from Core PCH and adds Renderer-specific includes.
+//
+// RULES:
+// - Only STL headers and DirectXMath (stable, rarely change)
+// - NO cross-module includes (no Core/PCH.h, no RHI headers)
+// - Headers must be used in 50%+ of this module's .cpp files
 // ============================================================================
 
 #pragma once
 
-// Include Core's PCH for common headers
-#include "Core/Private/PCH.h"
+// ============================================================================
+// Windows Configuration
+// ============================================================================
+#define NOMINMAX
+#ifndef WIN32_LEAN_AND_MEAN
+	#define WIN32_LEAN_AND_MEAN
+#endif
 
-// DirectX Math (used extensively in rendering code)
+// ============================================================================
+// C++ Standard Library
+// ============================================================================
+#include <cstdint>
+#include <memory>
+#include <vector>
+#include <string>
+
+// ============================================================================
+// DirectX Math - Used extensively in rendering code
+// ============================================================================
 #include <DirectXMath.h>
 
+// ============================================================================
+// Engine Logging - Available everywhere via PCH
+// ============================================================================
+#include "Log.h"

@@ -2,6 +2,7 @@
 #include "D3D12Rhi.h"
 #include "D3D12DebugLayer.h"
 #include "Window.h"
+#include "DebugUtils.h"
 
 // Constructs and initializes the RHI and all required resources
 D3D12Rhi::D3D12Rhi(bool requireDXRSupport) noexcept
@@ -13,7 +14,7 @@ D3D12Rhi::D3D12Rhi(bool requireDXRSupport) noexcept
 	CreateDevice(requireDXRSupport);
 
 #if ENGINE_GPU_VALIDATION
-	m_debugLayer->InitializeInfoQueue(m_Device.Get());
+	m_debugLayer->InitializeInfoQueue(m_device.Get());
 #endif
 
 	CheckShaderModel6Support();
@@ -27,14 +28,14 @@ D3D12Rhi::D3D12Rhi(bool requireDXRSupport) noexcept
 void D3D12Rhi::SelectAdapter() noexcept
 {
 	const DXGI_GPU_PREFERENCE pref =
-	    EngineSettings::PreferHighPerformanceAdapter ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE : DXGI_GPU_PREFERENCE_MINIMUM_POWER;
+	    RHISettings::PreferHighPerformanceAdapter ? DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE : DXGI_GPU_PREFERENCE_MINIMUM_POWER;
 
 	// Try adapter-by-preference first. Use a local temporary adapter to avoid
 	// repeatedly replacing the member until a suitable one is found.
 	for (UINT i = 0;; ++i)
 	{
 		ComPtr<IDXGIAdapter1> candidate;
-		HRESULT hr = m_DxgiFactory->EnumAdapterByGpuPreference(i, pref, IID_PPV_ARGS(candidate.ReleaseAndGetAddressOf()));
+		HRESULT hr = m_dxgiFactory->EnumAdapterByGpuPreference(i, pref, IID_PPV_ARGS(candidate.ReleaseAndGetAddressOf()));
 		if (hr != S_OK)
 			break;  // no more adapters or error
 
@@ -46,9 +47,9 @@ void D3D12Rhi::SelectAdapter() noexcept
 
 		// Lightweight feature probe: does this adapter support D3D12 at the
 		// desired feature level? We don't create a device here, just test.
-		if (SUCCEEDED(D3D12CreateDevice(candidate.Get(), m_DesiredD3DFeatureLevel, _uuidof(ID3D12Device), nullptr)))
+		if (SUCCEEDED(D3D12CreateDevice(candidate.Get(), m_desiredD3DFeatureLevel, _uuidof(ID3D12Device), nullptr)))
 		{
-			m_Adapter = candidate;  // accept
+			m_adapter = candidate;  // accept
 			return;
 		}
 	}
@@ -57,7 +58,7 @@ void D3D12Rhi::SelectAdapter() noexcept
 	for (UINT i = 0;; ++i)
 	{
 		ComPtr<IDXGIAdapter1> candidate;
-		HRESULT hr = m_DxgiFactory->EnumAdapters1(i, candidate.ReleaseAndGetAddressOf());
+		HRESULT hr = m_dxgiFactory->EnumAdapters1(i, candidate.ReleaseAndGetAddressOf());
 		if (hr != S_OK)
 			break;
 
@@ -67,14 +68,14 @@ void D3D12Rhi::SelectAdapter() noexcept
 		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
 			continue;
 
-		if (SUCCEEDED(D3D12CreateDevice(candidate.Get(), m_DesiredD3DFeatureLevel, _uuidof(ID3D12Device), nullptr)))
+		if (SUCCEEDED(D3D12CreateDevice(candidate.Get(), m_desiredD3DFeatureLevel, _uuidof(ID3D12Device), nullptr)))
 		{
-			m_Adapter = candidate;
+			m_adapter = candidate;
 			return;
 		}
 	}
 
-	// If not found, leave m_Adapter null; caller will handle this failure.
+	// If not found, leave m_adapter null; caller will handle this failure.
 }
 
 // Checks for Shader Model 6.0 support
@@ -82,12 +83,12 @@ void D3D12Rhi::CheckShaderModel6Support() const noexcept
 {
 	D3D12_FEATURE_DATA_SHADER_MODEL shaderModel = {};
 	shaderModel.HighestShaderModel = D3D_SHADER_MODEL_6_0;
-	if (!m_Device)
+	if (!m_device)
 	{
 		LOG_FATAL("CheckShaderModel6Support called before device creation");
 	}
 
-	HRESULT hr = m_Device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(shaderModel));
+	HRESULT hr = m_device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(shaderModel));
 	if (FAILED(hr) || shaderModel.HighestShaderModel < D3D_SHADER_MODEL_6_0)
 	{
 		LOG_FATAL("Device does not support Shader Model 6.0. Minimum required for engine.");
@@ -102,18 +103,18 @@ void D3D12Rhi::CreateFactory()
 #else
 	UINT dxgiFactoryFlags = 0;
 #endif
-	CHECK(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(m_DxgiFactory.ReleaseAndGetAddressOf())));
+	CHECK(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(m_dxgiFactory.ReleaseAndGetAddressOf())));
 }
 
 void D3D12Rhi::CreateDevice(bool /*requireDXRSupport*/)
 {
 	SelectAdapter();
-	if (!m_Adapter)
+	if (!m_adapter)
 	{
 		LOG_FATAL("No suitable adapter found when creating device");
 	}
 
-	CHECK(D3D12CreateDevice(m_Adapter.Get(), m_DesiredD3DFeatureLevel, IID_PPV_ARGS(m_Device.ReleaseAndGetAddressOf())));
+	CHECK(D3D12CreateDevice(m_adapter.Get(), m_desiredD3DFeatureLevel, IID_PPV_ARGS(m_device.ReleaseAndGetAddressOf())));
 }
 
 void D3D12Rhi::CreateCommandQueue()
@@ -123,46 +124,46 @@ void D3D12Rhi::CreateCommandQueue()
 	cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
 	cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	cmdQueueDesc.NodeMask = 0;
-	CHECK(m_Device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(m_CmdQueue.ReleaseAndGetAddressOf())));
+	CHECK(m_device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(m_cmdQueue.ReleaseAndGetAddressOf())));
 }
 
 void D3D12Rhi::CreateCommandAllocators()
 {
-	for (size_t i = 0; i < EngineSettings::FramesInFlight; ++i)
+	for (size_t i = 0; i < RHISettings::FramesInFlight; ++i)
 	{
-		CHECK(m_Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_CmdAllocator[i].ReleaseAndGetAddressOf())));
+		CHECK(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(m_cmdAllocator[i].ReleaseAndGetAddressOf())));
 	}
 }
 
 void D3D12Rhi::CreateCommandLists()
 {
-	for (UINT i = 0; i < EngineSettings::FramesInFlight; ++i)
+	for (UINT i = 0; i < RHISettings::FramesInFlight; ++i)
 	{
-		CHECK(m_Device->CreateCommandList(
+		CHECK(m_device->CreateCommandList(
 		    0,
 		    D3D12_COMMAND_LIST_TYPE_DIRECT,
-		    m_CmdAllocator[i].Get(),
+		    m_cmdAllocator[i].Get(),
 		    nullptr,
-		    IID_PPV_ARGS(m_CmdList[i].ReleaseAndGetAddressOf())));
+		    IID_PPV_ARGS(m_cmdList[i].ReleaseAndGetAddressOf())));
 
 		// Close immediately - command lists are created in recording state,
 		// but we want them closed so BeginFrame can reset allocator then reopen.
-		CHECK(m_CmdList[i]->Close());
+		CHECK(m_cmdList[i]->Close());
 	}
 }
 
 void D3D12Rhi::CreateFenceAndEvent()
 {
-	for (UINT i = 0; i < EngineSettings::FramesInFlight; ++i)
+	for (UINT i = 0; i < RHISettings::FramesInFlight; ++i)
 	{
-		m_FenceValues[i] = 0;
+		m_fenceValues[i] = 0;
 	}
 
-	CHECK(m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_Fence.ReleaseAndGetAddressOf())));
+	CHECK(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence.ReleaseAndGetAddressOf())));
 
-	m_FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+	m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 
-	if (!m_FenceEvent)
+	if (!m_fenceEvent)
 	{
 		LOG_FATAL("Failed To Create Fence Event");
 	}
@@ -170,107 +171,107 @@ void D3D12Rhi::CreateFenceAndEvent()
 
 void D3D12Rhi::CloseCommandList(uint32_t frameInFlightIndex) noexcept
 {
-	CHECK(m_CmdList[frameInFlightIndex]->Close());
+	CHECK(m_cmdList[frameInFlightIndex]->Close());
 }
 
 void D3D12Rhi::ResetCommandAllocator(uint32_t frameInFlightIndex) noexcept
 {
-	if (!m_CmdAllocator[frameInFlightIndex])
+	if (!m_cmdAllocator[frameInFlightIndex])
 	{
 		LOG_FATAL("ResetCommandAllocator called with missing allocator");
 		return;
 	}
 
-	CHECK(m_CmdAllocator[frameInFlightIndex]->Reset());
+	CHECK(m_cmdAllocator[frameInFlightIndex]->Reset());
 }
 
 void D3D12Rhi::ResetCommandList(uint32_t frameInFlightIndex) noexcept
 {
-	if (!m_CmdList[frameInFlightIndex])
+	if (!m_cmdList[frameInFlightIndex])
 	{
 		LOG_FATAL("ResetCommandList called without a valid command list");
 		return;
 	}
-	if (!m_CmdAllocator[frameInFlightIndex])
+	if (!m_cmdAllocator[frameInFlightIndex])
 	{
 		LOG_FATAL("ResetCommandList called with missing allocator");
 		return;
 	}
 
-	CHECK(m_CmdList[frameInFlightIndex]->Reset(m_CmdAllocator[frameInFlightIndex].Get(), nullptr));
+	CHECK(m_cmdList[frameInFlightIndex]->Reset(m_cmdAllocator[frameInFlightIndex].Get(), nullptr));
 }
 
 void D3D12Rhi::ExecuteCommandList(uint32_t frameInFlightIndex) noexcept
 {
-	if (!m_CmdList[frameInFlightIndex] || !m_CmdQueue)
+	if (!m_cmdList[frameInFlightIndex] || !m_cmdQueue)
 	{
 		LOG_FATAL("ExecuteCommandList called without valid command list or queue");
 	}
 
-	ID3D12CommandList* ppcommandLists[] = {m_CmdList[frameInFlightIndex].Get()};
-	m_CmdQueue->ExecuteCommandLists(1, ppcommandLists);
+	ID3D12CommandList* ppcommandLists[] = {m_cmdList[frameInFlightIndex].Get()};
+	m_cmdQueue->ExecuteCommandLists(1, ppcommandLists);
 }
 
 void D3D12Rhi::SetBarrier(
     uint32_t frameInFlightIndex,
-    ID3D12Resource* Resource,
-    D3D12_RESOURCE_STATES StateBefore,
-    D3D12_RESOURCE_STATES StateAfter) noexcept
+    ID3D12Resource* resource,
+    D3D12_RESOURCE_STATES stateBefore,
+    D3D12_RESOURCE_STATES stateAfter) noexcept
 {
 	D3D12_RESOURCE_BARRIER barrier{};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = Resource;
+	barrier.Transition.pResource = resource;
 	// Transition all subresources (depth + stencil planes)
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-	barrier.Transition.StateBefore = StateBefore;
-	barrier.Transition.StateAfter = StateAfter;
+	barrier.Transition.StateBefore = stateBefore;
+	barrier.Transition.StateAfter = stateAfter;
 
-	if (!m_CmdList[frameInFlightIndex])
+	if (!m_cmdList[frameInFlightIndex])
 	{
 		LOG_FATAL("SetBarrier: command list is null");
 	}
 
-	m_CmdList[frameInFlightIndex]->ResourceBarrier(1, &barrier);
+	m_cmdList[frameInFlightIndex]->ResourceBarrier(1, &barrier);
 }
 
 void D3D12Rhi::WaitForGPU(uint32_t frameInFlightIndex) noexcept
 {
 	// TODO: Implement WaitForMultipleObjects for correct frame buffering & pacing
 
-	const uint64_t fenceCurrentValue = m_FenceValues[frameInFlightIndex];
-	if (!m_Fence)
+	const uint64_t fenceCurrentValue = m_fenceValues[frameInFlightIndex];
+	if (!m_fence)
 	{
 		LOG_FATAL("WaitForGPU called without a fence");
 	}
 
-	const uint64_t fenceCompletedValue = m_Fence->GetCompletedValue();
+	const uint64_t fenceCompletedValue = m_fence->GetCompletedValue();
 	if (fenceCompletedValue < fenceCurrentValue)
 	{
-		CHECK(m_Fence->SetEventOnCompletion(fenceCurrentValue, m_FenceEvent));
-		WaitForSingleObject(m_FenceEvent, INFINITE);
+		CHECK(m_fence->SetEventOnCompletion(fenceCurrentValue, m_fenceEvent));
+		WaitForSingleObject(m_fenceEvent, INFINITE);
 	}
 }
 
 void D3D12Rhi::Signal(uint32_t frameInFlightIndex) noexcept
 {
 	// Schedule a Signal command in the queue. -> Updates Fence Completed Value
-	const uint64_t currentFenceValue = m_NextFenceValue++;
-	if (!m_CmdQueue || !m_Fence)
+	const uint64_t currentFenceValue = m_nextFenceValue++;
+	if (!m_cmdQueue || !m_fence)
 	{
 		LOG_FATAL("Signal called without command queue or fence");
 	}
 
-	CHECK(m_CmdQueue->Signal(m_Fence.Get(), currentFenceValue));
+	CHECK(m_cmdQueue->Signal(m_fence.Get(), currentFenceValue));
 
 	// Set the fence value for the next frame.
-	m_FenceValues[frameInFlightIndex] = currentFenceValue;
+	m_fenceValues[frameInFlightIndex] = currentFenceValue;
 }
 
 void D3D12Rhi::Flush() noexcept
 {
 	// Signal and wait for all frames to complete
-	for (UINT i = 0; i < EngineSettings::FramesInFlight; ++i)
+	for (UINT i = 0; i < RHISettings::FramesInFlight; ++i)
 	{
 		Signal(i);
 		WaitForGPU(i);
@@ -279,32 +280,32 @@ void D3D12Rhi::Flush() noexcept
 
 D3D12Rhi::~D3D12Rhi() noexcept
 {
-	for (UINT i = 0; i < EngineSettings::FramesInFlight; ++i)
+	for (UINT i = 0; i < RHISettings::FramesInFlight; ++i)
 	{
-		m_CmdList[i].Reset();
-		m_CmdAllocator[i].Reset();
-		m_FenceValues[i] = 0;
+		m_cmdList[i].Reset();
+		m_cmdAllocator[i].Reset();
+		m_fenceValues[i] = 0;
 	}
 
-	if (m_FenceEvent)
+	if (m_fenceEvent)
 	{
-		CloseHandle(m_FenceEvent);
-		m_FenceEvent = nullptr;
+		CloseHandle(m_fenceEvent);
+		m_fenceEvent = nullptr;
 	}
 
-	m_Fence.Reset();
-	m_CmdQueue.Reset();
+	m_fence.Reset();
+	m_cmdQueue.Reset();
 
 #if ENGINE_REPORT_LIVE_OBJECTS
 	if (m_debugLayer)
 	{
-		m_debugLayer->ReportLiveDeviceObjects(m_Device.Get());
+		m_debugLayer->ReportLiveDeviceObjects(m_device.Get());
 	}
 #endif
 
-	m_Device.Reset();
-	m_Adapter.Reset();
-	m_DxgiFactory.Reset();
+	m_device.Reset();
+	m_adapter.Reset();
+	m_dxgiFactory.Reset();
 
 #if ENGINE_GPU_VALIDATION
 	m_debugLayer.reset();  // Destroy after device to report live objects

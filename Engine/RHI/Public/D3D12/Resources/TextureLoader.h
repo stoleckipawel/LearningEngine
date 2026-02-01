@@ -24,6 +24,16 @@
 
 #pragma once
 
+#include <cstdint>
+#include <filesystem>
+#include <vector>
+#include <d3d12.h>
+#include <dxgi1_6.h>
+#include <wincodec.h>
+#include <wrl/client.h>
+
+using Microsoft::WRL::ComPtr;
+
 class AssetSystem;
 
 class TextureLoader

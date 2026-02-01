@@ -26,6 +26,7 @@
 #ifdef ENGINE_GPU_VALIDATION
 	#include <wrl/client.h>
 	#include <d3d12.h>
+	#include <dxgidebug.h>
 
 using Microsoft::WRL::ComPtr;
 

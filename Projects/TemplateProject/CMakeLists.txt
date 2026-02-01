@@ -8,8 +8,16 @@ add_executable(__PROJECT_NAME__
 # Require C++20
 target_compile_features(__PROJECT_NAME__ PRIVATE cxx_std_20)
 
-# Link against engine modules (SparkleEngineAll links all active modules)
-target_link_libraries(__PROJECT_NAME__ PRIVATE SparkleEngineAll)
+# Link against engine modules explicitly
+# Only link what you need - remove modules you don't use to reduce build time
+target_link_libraries(__PROJECT_NAME__ PRIVATE
+    SparkleCore           # Math, Events, Logging
+    SparklePlatform       # Window, Input
+    SparkleRHI            # D3D12 backend
+    SparkleRenderer       # High-level rendering
+    SparkleGameFramework  # Scene, Camera, Primitives
+    SparkleUI             # ImGui integration
+)
 
 # Include third-party headers if needed directly
 target_include_directories(__PROJECT_NAME__ PRIVATE

@@ -12,8 +12,8 @@ D3D12SwapChain::D3D12SwapChain(D3D12Rhi& rhi, Window& window, D3D12DescriptorHea
 	AllocateHandles();
 	Create();
 
-	m_swapChain->SetMaximumFrameLatency(EngineSettings::FramesInFlight);
-	m_WaitableObject = m_swapChain->GetFrameLatencyWaitableObject();
+	m_swapChain->SetMaximumFrameLatency(RHISettings::FramesInFlight);
+	m_waitableObject = m_swapChain->GetFrameLatencyWaitableObject();
 
 	// Initialize current frame-in-flight index from swap chain
 	UpdateFrameInFlightIndex();
@@ -22,7 +22,7 @@ D3D12SwapChain::D3D12SwapChain(D3D12Rhi& rhi, Window& window, D3D12DescriptorHea
 	CreateRenderTargetViews();
 }
 
-D3D12SwapChain::~D3D12SwapChain()
+D3D12SwapChain::~D3D12SwapChain() noexcept
 {
 	ReleaseBuffers();
 	m_swapChain.Reset();
@@ -34,12 +34,12 @@ void D3D12SwapChain::Create()
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	swapChainDesc.Width = m_window->GetWidth();
 	swapChainDesc.Height = m_window->GetHeight();
-	swapChainDesc.Format = EngineSettings::BackBufferFormat;
+	swapChainDesc.Format = RHISettings::BackBufferFormat;
 	swapChainDesc.Stereo = false;
 	swapChainDesc.SampleDesc.Quality = 0;
 	swapChainDesc.SampleDesc.Count = 1;
 	swapChainDesc.BufferUsage = DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.BufferCount = EngineSettings::FramesInFlight;
+	swapChainDesc.BufferCount = RHISettings::FramesInFlight;
 	swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
@@ -76,10 +76,10 @@ void D3D12SwapChain::Resize()
 	ReleaseBuffers();
 
 	m_swapChain->ResizeBuffers(
-	    EngineSettings::FramesInFlight,
+	    RHISettings::FramesInFlight,
 	    m_window->GetWidth(),
 	    m_window->GetHeight(),
-	    EngineSettings::BackBufferFormat,
+	    RHISettings::BackBufferFormat,
 	    ComputeSwapChainFlags());
 
 	CreateRenderTargetViews();
@@ -90,7 +90,7 @@ void D3D12SwapChain::Resize()
 // Returns the CPU descriptor handle for the current back buffer
 void D3D12SwapChain::AllocateHandles()
 {
-	for (UINT i = 0; i < EngineSettings::FramesInFlight; i++)
+	for (UINT i = 0; i < RHISettings::FramesInFlight; i++)
 	{
 		m_rtvHandles[i] = m_descriptorHeapManager->AllocateHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	}
@@ -99,7 +99,7 @@ void D3D12SwapChain::AllocateHandles()
 // Creates render target views for all swap chain buffers
 void D3D12SwapChain::CreateRenderTargetViews()
 {
-	for (UINT i = 0; i < EngineSettings::FramesInFlight; i++)
+	for (UINT i = 0; i < RHISettings::FramesInFlight; i++)
 	{
 		// Get the buffer resource from the swap chain
 		CHECK(m_swapChain->GetBuffer(i, IID_PPV_ARGS(m_buffers[i].ReleaseAndGetAddressOf())));
@@ -107,7 +107,7 @@ void D3D12SwapChain::CreateRenderTargetViews()
 
 		// Describe the render target view
 		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
-		rtvDesc.Format = EngineSettings::BackBufferFormat;
+		rtvDesc.Format = RHISettings::BackBufferFormat;
 		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 		rtvDesc.Texture2D.MipSlice = 0;
 		rtvDesc.Texture2D.PlaneSlice = 0;
@@ -163,9 +163,9 @@ D3D12_RECT D3D12SwapChain::GetDefaultScissorRect() const
 void D3D12SwapChain::Present()
 {
 	// Present according to runtime setting: vsync on -> interval 1, vsync off -> interval 0
-	UINT presentInterval = EngineSettings::VSync ? 1u : 0u;
+	UINT presentInterval = RHISettings::VSync ? 1u : 0u;
 	UINT presentFlags = 0u;
-	if (!EngineSettings::VSync)
+	if (!RHISettings::VSync)
 	{
 		// If tearing is supported by the runtime, request it when presenting without vsync.
 		BOOL allowTearing = FALSE;
@@ -196,7 +196,7 @@ void D3D12SwapChain::SetPresentState()
 // Releases all buffer resources
 void D3D12SwapChain::ReleaseBuffers()
 {
-	for (UINT i = 0; i < EngineSettings::FramesInFlight; i++)
+	for (UINT i = 0; i < RHISettings::FramesInFlight; i++)
 	{
 		m_buffers[i].Reset();
 		if (m_rtvHandles[i].IsValid())

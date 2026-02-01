@@ -1,41 +1,43 @@
 // ============================================================================
 // PCH.h - SparkleCore Module
+// ----------------------------------------------------------------------------
 // Precompiled header for Core module.
-// Core module should NOT include platform-specific or RHI headers.
+//
+// RULES:
+// - Only STL and Windows headers (stable, rarely change)
+// - NO module headers (Log.h, EngineConfig.h, etc.)
+// - Headers must be used in 50%+ of this module's .cpp files
 // ============================================================================
 
 #pragma once
 
-// Windows macros
+// ============================================================================
+// Windows Configuration
+// ============================================================================
 #define NOMINMAX
-
 #ifndef WIN32_LEAN_AND_MEAN
-	#define WIN32_LEAN_AND_MEAN  // Exclude rarely-used stuff from Windows headers
+	#define WIN32_LEAN_AND_MEAN
 #endif
 
-// Standard library
-#include <chrono>
-#include <cstdlib>
-#include <vector>
-#include <filesystem>
-#include <string>
-#include <cstring>
-#include <string_view>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <algorithm>
-#include <map>
-#include <set>
-#include <unordered_map>
-#include <unordered_set>
-#include <cmath>
-#include <functional>
+// ============================================================================
+// C++ Standard Library - Commonly used across Core
+// ============================================================================
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <string>
+#include <string_view>
+#include <memory>
+#include <vector>
+#include <functional>
+#include <algorithm>
 
-// Windows (basic)
+// ============================================================================
+// Windows - Required for platform abstraction
+// ============================================================================
 #include <Windows.h>
 
-// Core module headers
+// ============================================================================
+// Engine Logging - Available everywhere via PCH
+// ============================================================================
 #include "Diagnostics/Log.h"
-#include "EngineConfig.h"

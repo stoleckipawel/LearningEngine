@@ -11,7 +11,7 @@
 
 #include <utility>
 
-App::App(std::string windowTitle) : m_windowTitle(std::move(windowTitle)) {}
+App::App(std::string&& windowTitle) : m_windowTitle(std::move(windowTitle)) {}
 
 App::~App() = default;
 

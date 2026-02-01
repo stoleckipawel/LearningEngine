@@ -1,6 +1,8 @@
 #include "PCH.h"
 #include "Primitives/Basic/PrimitiveSphere.h"
 
+using namespace DirectX;
+
 PrimitiveSphere::PrimitiveSphere(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale) :
     Mesh(translation, rotation, scale)
 {
@@ -17,14 +19,14 @@ void PrimitiveSphere::GenerateVertices(std::vector<Vertex>& outVertices) const
 	for (int lat = 0; lat <= latSegments; ++lat)
 	{
 		float theta = (float) lat / (float) latSegments * DirectX::XM_PI;  // 0..PI
-		float sinTheta = std::sinf(theta);
-		float cosTheta = std::cosf(theta);
+		float sinTheta = sinf(theta);
+		float cosTheta = cosf(theta);
 
 		for (int lon = 0; lon <= lonSegments; ++lon)
 		{
 			float phi = (float) lon / (float) lonSegments * DirectX::XM_2PI;  // 0..2PI
-			float sinPhi = std::sinf(phi);
-			float cosPhi = std::cosf(phi);
+			float sinPhi = sinf(phi);
+			float cosPhi = cosf(phi);
 
 			float x = sinTheta * cosPhi;
 			float y = cosTheta;
@@ -32,7 +34,7 @@ void PrimitiveSphere::GenerateVertices(std::vector<Vertex>& outVertices) const
 
 			DirectX::XMFLOAT3 pos{x, y, z};
 			DirectX::XMFLOAT2 uv{(float) lon / (float) lonSegments, (float) lat / (float) latSegments};
-			DirectX::XMFLOAT4 color{std::fabs(x), std::fabs(y), std::fabs(z), 1.0f};
+			DirectX::XMFLOAT4 color{fabsf(x), fabsf(y), fabsf(z), 1.0f};
 
 			// normal is position on unit sphere
 			DirectX::XMFLOAT3 normal = pos;
@@ -49,7 +51,7 @@ void PrimitiveSphere::GenerateVertices(std::vector<Vertex>& outVertices) const
 				tangent = DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f};
 			else
 			{
-				float invLen = 1.0f / std::sqrt(len2);
+				float invLen = 1.0f / sqrtf(len2);
 				tangent.x *= invLen;
 				tangent.y *= invLen;
 				tangent.z *= invLen;

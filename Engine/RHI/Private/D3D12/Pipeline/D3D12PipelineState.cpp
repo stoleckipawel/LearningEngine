@@ -3,8 +3,6 @@
 #include "D3D12Rhi.h"
 #include "DebugUtils.h"
 #include "DepthConvention.h"
-#include "EngineConfig.h"
-#include "Log.h"
 
 #include <cstdio>
 #include <vector>
@@ -132,8 +130,8 @@ D3D12PipelineState::D3D12PipelineState(
 
 	// Render target formats
 	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = EngineSettings::BackBufferFormat;
-	psoDesc.DSVFormat = EngineSettings::DepthStencilFormat;
+	psoDesc.RTVFormats[0] = RHISettings::BackBufferFormat;
+	psoDesc.DSVFormat = RHISettings::DepthStencilFormat;
 
 	// Multisampling
 	psoDesc.NodeMask = 0;

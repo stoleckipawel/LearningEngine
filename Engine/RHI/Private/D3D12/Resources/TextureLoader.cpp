@@ -34,11 +34,8 @@ ComPtr<IWICBitmapFrameDecode> TextureLoader::DecodeImageFile(IWICImagingFactory*
 	CHECK(wicFileStream->InitializeFromFilename(resolvedPath.wstring().c_str(), GENERIC_READ));
 
 	ComPtr<IWICBitmapDecoder> wicDecoder;
-	CHECK(wicFactory->CreateDecoderFromStream(
-	    wicFileStream.Get(),
-	    nullptr,
-	    WICDecodeMetadataCacheOnDemand,
-	    wicDecoder.ReleaseAndGetAddressOf()));
+	CHECK(wicFactory
+	          ->CreateDecoderFromStream(wicFileStream.Get(), nullptr, WICDecodeMetadataCacheOnDemand, wicDecoder.ReleaseAndGetAddressOf()));
 
 	ComPtr<IWICBitmapFrameDecode> wicFrame;
 	CHECK(wicDecoder->GetFrame(0, wicFrame.ReleaseAndGetAddressOf()));
@@ -87,7 +84,7 @@ void TextureLoader::CalculateBufferLayout()
 	const uint64_t stride64 = bytesPerPixel * static_cast<uint64_t>(m_data.width);
 	const uint64_t slicePitch64 = stride64 * static_cast<uint64_t>(m_data.height);
 
-	if (stride64 > std::numeric_limits<uint32_t>::max() || slicePitch64 > std::numeric_limits<size_t>::max())
+	if (stride64 > (std::numeric_limits<uint32_t>::max)() || slicePitch64 > (std::numeric_limits<size_t>::max)())
 	{
 		LOG_FATAL("Texture too large or stride overflow");
 	}

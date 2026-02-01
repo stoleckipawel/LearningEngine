@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "EngineConfig.h"
+#include "RHIConfig.h"
 #include <filesystem>
 #include <vector>
 #include <string>
@@ -78,9 +78,9 @@ struct ShaderCompileOptions
 		profile.reserve(8);
 		profile += GetShaderStagePrefix(Stage);
 		profile += '_';
-		profile += std::to_string(EngineSettings::ShaderModelMajor);
+		profile += std::to_string(RHISettings::ShaderModelMajor);
 		profile += '_';
-		profile += std::to_string(EngineSettings::ShaderModelMinor);
+		profile += std::to_string(RHISettings::ShaderModelMinor);
 		return profile;
 	}
 };

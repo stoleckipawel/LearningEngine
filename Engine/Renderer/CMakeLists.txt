@@ -37,9 +37,27 @@ target_include_directories(SparkleRenderer
         ${CMAKE_CURRENT_SOURCE_DIR}/Private
         # Engine root for module-prefixed includes
         ${CMAKE_CURRENT_SOURCE_DIR}/..
+        # Core module subdirectories for direct includes
+        ${CMAKE_CURRENT_SOURCE_DIR}/../Core/Public/Events
+        ${CMAKE_CURRENT_SOURCE_DIR}/../Core/Public/Diagnostics
+        # RHI module subdirectories for direct includes
+        ${CMAKE_CURRENT_SOURCE_DIR}/../RHI/Public/D3D12
+        ${CMAKE_CURRENT_SOURCE_DIR}/../RHI/Public/D3D12/Descriptors
+        ${CMAKE_CURRENT_SOURCE_DIR}/../RHI/Public/D3D12/Pipeline
+        ${CMAKE_CURRENT_SOURCE_DIR}/../RHI/Public/D3D12/Resources
+        ${CMAKE_CURRENT_SOURCE_DIR}/../RHI/Public/D3D12/Shaders
+        # GameFramework module for Scene/Camera includes
+        ${CMAKE_CURRENT_SOURCE_DIR}/../GameFramework/Public
+        # UI module for UI.h include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../UI/Public
 )
 
 target_compile_features(SparkleRenderer PUBLIC cxx_std_20)
+
+# Precompiled header (per-module PCH)
+target_precompile_headers(SparkleRenderer PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Private/PCH.h
+)
 
 # Renderer depends on Core, Platform, RHI
 # Note: Also needs GameFramework for Scene/Mesh/Assets and UI for rendering UI

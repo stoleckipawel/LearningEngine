@@ -5,6 +5,8 @@
 
 #include <array>
 
+using namespace DirectX;
+
 PrimitiveIcosahedron::PrimitiveIcosahedron(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale) :
     Mesh(translation, rotation, scale)
 {
@@ -12,7 +14,7 @@ PrimitiveIcosahedron::PrimitiveIcosahedron(const XMFLOAT3& translation, const XM
 
 void PrimitiveIcosahedron::GenerateVertices(std::vector<Vertex>& outVertices) const
 {
-	const float phi = (1.0f + std::sqrt(5.0f)) * 0.5f;
+	const float phi = (1.0f + sqrtf(5.0f)) * 0.5f;
 
 	std::array<DirectX::XMFLOAT3, 12> base = {
 	    DirectX::XMFLOAT3{-1.0f, phi, 0.0f},
@@ -38,10 +40,10 @@ void PrimitiveIcosahedron::GenerateVertices(std::vector<Vertex>& outVertices) co
 		DirectX::XMFLOAT2 uv = MathUtils::SphericalUV(n);
 
 		float phiAng = std::atan2(n.z, n.x);
-		DirectX::XMFLOAT3 tangent{-std::sinf(phiAng), 0.0f, std::cosf(phiAng)};
+		DirectX::XMFLOAT3 tangent{-sinf(phiAng), 0.0f, cosf(phiAng)};
 		tangent = MathUtils::Normalize3(tangent);
 
-		DirectX::XMFLOAT4 color{std::fabs(n.x), std::fabs(n.y), std::fabs(n.z), 1.0f};
+		DirectX::XMFLOAT4 color{fabsf(n.x), fabsf(n.y), fabsf(n.z), 1.0f};
 		outVertices.push_back({n, uv, color, n, {tangent.x, tangent.y, tangent.z, 1.0f}});
 	}
 }

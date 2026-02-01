@@ -13,7 +13,7 @@ D3D12DescriptorHandle D3D12DescriptorAllocator::Allocate()
 		index = m_freeIndices.back();
 		m_freeIndices.pop_back();
 	}
-	else if (m_currentOffset < m_Heap->GetNumDescriptors())
+	else if (m_currentOffset < m_heap->GetNumDescriptors())
 	{
 		index = m_currentOffset++;
 	}
@@ -27,7 +27,7 @@ D3D12DescriptorHandle D3D12DescriptorAllocator::Allocate()
 		LOG_FATAL("Invalid descriptor index.");
 	}
 
-	return m_Heap->GetHandleAt(index);
+	return m_heap->GetHandleAt(index);
 }
 
 D3D12DescriptorHandle D3D12DescriptorAllocator::AllocateContiguous(uint32_t count)
@@ -40,7 +40,7 @@ D3D12DescriptorHandle D3D12DescriptorAllocator::AllocateContiguous(uint32_t coun
 	std::lock_guard<std::mutex> lock(m_mutex);
 
 	// Contiguous allocation requires linear growth - cannot use fragmented free-list
-	if (m_currentOffset + count > m_Heap->GetNumDescriptors())
+	if (m_currentOffset + count > m_heap->GetNumDescriptors())
 	{
 		LOG_FATAL("Descriptor heap cannot allocate contiguous block (insufficient space).");
 		return D3D12DescriptorHandle{};
@@ -49,7 +49,7 @@ D3D12DescriptorHandle D3D12DescriptorAllocator::AllocateContiguous(uint32_t coun
 	uint32_t startIndex = m_currentOffset;
 	m_currentOffset += count;
 
-	return m_Heap->GetHandleAt(startIndex);
+	return m_heap->GetHandleAt(startIndex);
 }
 
 void D3D12DescriptorAllocator::Free(const D3D12DescriptorHandle& handle) noexcept

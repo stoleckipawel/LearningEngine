@@ -2,7 +2,6 @@
 #include "D3D12SamplerLibrary.h"
 #include "D3D12DescriptorHeapManager.h"
 #include "D3D12Rhi.h"
-#include "Log.h"
 
 D3D12SamplerLibrary::D3D12SamplerLibrary(D3D12Rhi& rhi, D3D12DescriptorHeapManager& descriptorHeapManager) :
     m_rhi(&rhi), m_descriptorHeapManager(&descriptorHeapManager)

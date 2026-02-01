@@ -1,7 +1,6 @@
 #include "PCH.h"
 #include "Mesh.h"
 #include "D3D12UploadBuffer.h"
-#include "Log.h"
 
 Mesh::Mesh(const DirectX::XMFLOAT3& translation, const DirectX::XMFLOAT3& rotation, const DirectX::XMFLOAT3& scale) noexcept :
     m_translation(translation), m_rotationEuler(rotation), m_scale(scale)

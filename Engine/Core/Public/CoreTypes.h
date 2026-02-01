@@ -2,7 +2,7 @@
 #pragma once
 
 #include "CoreAPI.h"
-#include &lt;cstdint&gt;
+#include <cstdint>
 
 namespace Sparkle
 {
@@ -24,4 +24,4 @@ namespace Sparkle
 	using float32 = float;
 	using float64 = double;
 
-} // namespace Sparkle
+}  // namespace Sparkle

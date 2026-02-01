@@ -1,6 +1,8 @@
 #include "PCH.h"
 #include "Primitives/Basic/PrimitiveCylinder.h"
 
+using namespace DirectX;
+
 PrimitiveCylinder::PrimitiveCylinder(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale) :
     Mesh(translation, rotation, scale)
 {
@@ -16,15 +18,15 @@ void PrimitiveCylinder::GenerateVertices(std::vector<Vertex>& outVertices) const
 	for (int i = 0; i < slices; ++i)
 	{
 		float phi = (float) i / (float) slices * DirectX::XM_2PI;
-		float x = std::cosf(phi);
-		float z = std::sinf(phi);
+		float x = cosf(phi);
+		float z = sinf(phi);
 		// side vertex bottom ring: normal points outward, tangent along circumference
 		DirectX::XMFLOAT3 normal{x, 0.0f, z};
 		DirectX::XMFLOAT3 tangent{-z, 0.0f, x};
 		outVertices.push_back(
 		    {{x, -1.0f, z},
 		     {(float) i / slices, 1.0f},
-		     {std::fabs(x), 0.3f, std::fabs(z), 1.0f},
+		     {fabsf(x), 0.3f, fabsf(z), 1.0f},
 		     normal,
 		     DirectX::XMFLOAT4{tangent.x, tangent.y, tangent.z, 1.0f}});
 	}
@@ -33,14 +35,14 @@ void PrimitiveCylinder::GenerateVertices(std::vector<Vertex>& outVertices) const
 	for (int i = 0; i < slices; ++i)
 	{
 		float phi = (float) i / (float) slices * DirectX::XM_2PI;
-		float x = std::cosf(phi);
-		float z = std::sinf(phi);
+		float x = cosf(phi);
+		float z = sinf(phi);
 		DirectX::XMFLOAT3 normal{x, 0.0f, z};
 		DirectX::XMFLOAT3 tangent{-z, 0.0f, x};
 		outVertices.push_back(
 		    {{x, 1.0f, z},
 		     {(float) i / slices, 0.0f},
-		     {0.3f, std::fabs(x), std::fabs(z), 1.0f},
+		     {0.3f, fabsf(x), fabsf(z), 1.0f},
 		     normal,
 		     DirectX::XMFLOAT4{tangent.x, tangent.y, tangent.z, 1.0f}});
 	}

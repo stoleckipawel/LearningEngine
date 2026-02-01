@@ -1,6 +1,8 @@
 #include "PCH.h"
 #include "Primitives/Basic/PrimitiveTorus.h"
 
+using namespace DirectX;
+
 PrimitiveTorus::PrimitiveTorus(const XMFLOAT3& translation, const XMFLOAT3& rotation, const XMFLOAT3& scale) :
     Mesh(translation, rotation, scale)
 {
@@ -19,14 +21,14 @@ void PrimitiveTorus::GenerateVertices(std::vector<Vertex>& outVertices) const
 	for (int i = 0; i < major; ++i)
 	{
 		float u = (float) i / (float) major * DirectX::XM_2PI;
-		float cu = std::cosf(u);
-		float su = std::sinf(u);
+		float cu = cosf(u);
+		float su = sinf(u);
 
 		for (int j = 0; j < minor; ++j)
 		{
 			float v = (float) j / (float) minor * DirectX::XM_2PI;
-			float cv = std::cosf(v);
-			float sv = std::sinf(v);
+			float cv = cosf(v);
+			float sv = sinf(v);
 
 			float x = (R + r * cv) * cu;
 			float y = r * sv;
@@ -34,7 +36,7 @@ void PrimitiveTorus::GenerateVertices(std::vector<Vertex>& outVertices) const
 
 			DirectX::XMFLOAT3 pos{x, y, z};
 			DirectX::XMFLOAT2 uv{(float) i / major, (float) j / minor};
-			DirectX::XMFLOAT4 color{std::fabs(cu), std::fabs(sv), std::fabs(cv), 1.0f};
+			DirectX::XMFLOAT4 color{fabsf(cu), fabsf(sv), fabsf(cv), 1.0f};
 
 			// Compute normal: direction from tube center to surface point
 			float cx = R * cu;
@@ -42,7 +44,7 @@ void PrimitiveTorus::GenerateVertices(std::vector<Vertex>& outVertices) const
 			DirectX::XMFLOAT3 center{cx, 0.0f, cz};
 			DirectX::XMFLOAT3 normal{pos.x - center.x, pos.y - center.y, pos.z - center.z};
 			// normalize normal
-			float nl = std::sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+			float nl = sqrtf(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
 			if (nl > 1e-6f)
 			{
 				normal.x /= nl;
@@ -52,7 +54,7 @@ void PrimitiveTorus::GenerateVertices(std::vector<Vertex>& outVertices) const
 
 			// Tangent along major direction (u) approximate
 			DirectX::XMFLOAT3 tangent{-su * (R + r * cv), 0.0f, cu * (R + r * cv)};
-			float tl = std::sqrt(tangent.x * tangent.x + tangent.y * tangent.y + tangent.z * tangent.z);
+			float tl = sqrtf(tangent.x * tangent.x + tangent.y * tangent.y + tangent.z * tangent.z);
 			if (tl > 1e-6f)
 			{
 				tangent.x /= tl;

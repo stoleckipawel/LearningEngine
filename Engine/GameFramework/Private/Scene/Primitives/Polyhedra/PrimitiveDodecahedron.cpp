@@ -5,12 +5,14 @@
 
 #include <array>
 
+using namespace DirectX;
+
 namespace
 {
 	// Shared base icosahedron definition (same indexing as PrimitiveIcosahedron)
 	static void BuildIcosahedron(std::array<DirectX::XMFLOAT3, 12>& outVerts, std::array<DWORD, 60>& outIdx)
 	{
-		const float phi = (1.0f + std::sqrt(5.0f)) * 0.5f;
+		const float phi = (1.0f + sqrtf(5.0f)) * 0.5f;
 		outVerts = {
 		    DirectX::XMFLOAT3{-1.0f, phi, 0.0f},
 		    DirectX::XMFLOAT3{1.0f, phi, 0.0f},
@@ -69,10 +71,10 @@ void PrimitiveDodecahedron::GenerateVertices(std::vector<Vertex>& outVertices) c
 		DirectX::XMFLOAT2 uv = MathUtils::SphericalUV(n);
 
 		float phiAng = std::atan2(n.z, n.x);
-		DirectX::XMFLOAT3 tangent{-std::sinf(phiAng), 0.0f, std::cosf(phiAng)};
+		DirectX::XMFLOAT3 tangent{-sinf(phiAng), 0.0f, cosf(phiAng)};
 		tangent = MathUtils::Normalize3(tangent);
 
-		DirectX::XMFLOAT4 color{std::fabs(n.x), std::fabs(n.y), std::fabs(n.z), 1.0f};
+		DirectX::XMFLOAT4 color{fabsf(n.x), fabsf(n.y), fabsf(n.z), 1.0f};
 		outVertices.push_back({n, uv, color, n, {tangent.x, tangent.y, tangent.z, 1.0f}});
 	}
 }
@@ -108,7 +110,7 @@ void PrimitiveDodecahedron::GenerateIndices(std::vector<DWORD>& outIndices) cons
 			continue;
 
 		DirectX::XMFLOAT3 n = MathUtils::Normalize3(icoVerts[v]);
-		DirectX::XMFLOAT3 up = (std::fabs(n.y) < 0.9f) ? DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f} : DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f};
+		DirectX::XMFLOAT3 up = (fabsf(n.y) < 0.9f) ? DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f} : DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f};
 		DirectX::XMFLOAT3 tangent = MathUtils::Normalize3(MathUtils::Cross(up, n));
 		DirectX::XMFLOAT3 bitangent = MathUtils::Cross(n, tangent);
 

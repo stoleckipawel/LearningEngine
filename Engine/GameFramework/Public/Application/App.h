@@ -24,7 +24,7 @@ class AssetSystem;
 class SPARKLE_ENGINE_API App
 {
   public:
-	explicit App(std::string windowTitle);
+	explicit App(std::string&& windowTitle);
 	~App();
 
 	App(const App&) = delete;

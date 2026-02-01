@@ -1,6 +1,6 @@
 #include "PCH.h"
 #include "Window.h"
-#include "EngineConfig.h"
+#include "PlatformConfig.h"
 #include "Diagnostics/Log.h"
 
 // =============================================================================
@@ -95,7 +95,7 @@ void Window::ApplyInitialWindowState()
 	// Save initial windowed rect before any state changes
 	GetWindowRect(m_hWnd, &m_windowedRect);
 
-	if (EngineSettings::StartFullscreen)
+	if (PlatformSettings::StartFullscreen)
 	{
 		SetFullScreen(true);
 	}

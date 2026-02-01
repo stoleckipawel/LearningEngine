@@ -22,7 +22,6 @@
 #include "UI.h"
 #include "Time/Timer.h"
 #include "RenderCamera.h"
-#include "Log.h"
 #include "Scene/Camera/GameCamera.h"
 
 Renderer::Renderer(Timer& timer, const AssetSystem& assetSystem, D3D12Rhi& rhi, Scene& scene, Window& window) noexcept :
@@ -63,7 +62,7 @@ Renderer::Renderer(Timer& timer, const AssetSystem& assetSystem, D3D12Rhi& rhi, 
 	// Create texture manager (auto-loads default textures)
 	m_textureManager = std::make_unique<TextureManager>(*m_assetSystem, *m_rhi, *m_descriptorHeapManager);
 
-	// Add listener for depth mode changes 
+	// Add listener for depth mode changes
 	auto depthHandle = DepthConvention::OnModeChanged.Add(
 	    [this](DepthMode mode)
 	    {
