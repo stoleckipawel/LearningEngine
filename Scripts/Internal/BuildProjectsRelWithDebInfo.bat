@@ -12,13 +12,13 @@ setlocal
 
 :: Logging bootstrap
 if not defined LOG_CAPTURED (
-    call "%~dp0internal\BootstrapLog.bat" "%~f0" %*
+    call "%~dp0BootstrapLog.bat" "%~f0" %*
     exit /B %ERRORLEVEL%
 )
 
 :: Delegate to implementation with RelWithDebInfo config
 set "PARENT_BATCH=1"
-call "%~dp0internal\BuildProjectsImpl.bat" RelWithDebInfo
+call "%~dp0BuildProjectsImpl.bat" RelWithDebInfo
 set "RC=%ERRORLEVEL%"
 set "PARENT_BATCH="
 
