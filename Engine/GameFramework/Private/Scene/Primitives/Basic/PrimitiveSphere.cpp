@@ -8,8 +8,11 @@ PrimitiveSphere::PrimitiveSphere(const XMFLOAT3& translation, const XMFLOAT3& ro
 {
 }
 
-void PrimitiveSphere::GenerateVertices(std::vector<Vertex>& outVertices) const
+void PrimitiveSphere::GenerateGeometry(MeshData& outMeshData) const
 {
+	auto& outVertices = outMeshData.vertices;
+	auto& outIndices = outMeshData.indices;
+
 	// UV sphere parameterization
 	const int latSegments = 16;
 	const int lonSegments = 16;
@@ -60,12 +63,7 @@ void PrimitiveSphere::GenerateVertices(std::vector<Vertex>& outVertices) const
 			outVertices.push_back({pos, uv, color, normal, {tangent.x, tangent.y, tangent.z, 1.0f}});
 		}
 	}
-}
 
-void PrimitiveSphere::GenerateIndices(std::vector<DWORD>& outIndices) const
-{
-	const int latSegments = 16;
-	const int lonSegments = 16;
 	outIndices.clear();
 	outIndices.reserve(latSegments * lonSegments * 6);
 
@@ -73,8 +71,8 @@ void PrimitiveSphere::GenerateIndices(std::vector<DWORD>& outIndices) const
 	{
 		for (int lon = 0; lon < lonSegments; ++lon)
 		{
-			DWORD first = (DWORD) (lat * (lonSegments + 1) + lon);
-			DWORD second = (DWORD) ((lat + 1) * (lonSegments + 1) + lon);
+			uint32_t first = (uint32_t) (lat * (lonSegments + 1) + lon);
+			uint32_t second = (uint32_t) ((lat + 1) * (lonSegments + 1) + lon);
 
 			// Two triangles per quad on the sphere surface
 			outIndices.push_back(first);

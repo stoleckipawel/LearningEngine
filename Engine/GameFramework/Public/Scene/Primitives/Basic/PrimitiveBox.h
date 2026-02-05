@@ -19,9 +19,6 @@ class SPARKLE_ENGINE_API PrimitiveBox : public Mesh
 	    const DirectX::XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});
 
   protected:
-	// Generate the vertex data for the box into outVertices. Override to change layout.
-	void GenerateVertices(std::vector<Vertex>& outVertices) const override;
-
-	// Generate the index data for the box into outIndices. Override to change layout.
-	void GenerateIndices(std::vector<DWORD>& outIndices) const override;
+	// Generate the geometry data for the box.
+	void GenerateGeometry(MeshData& outMeshData) const override;
 };

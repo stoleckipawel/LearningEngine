@@ -8,8 +8,11 @@ PrimitiveTorus::PrimitiveTorus(const XMFLOAT3& translation, const XMFLOAT3& rota
 {
 }
 
-void PrimitiveTorus::GenerateVertices(std::vector<Vertex>& outVertices) const
+void PrimitiveTorus::GenerateGeometry(MeshData& outMeshData) const
 {
+	auto& outVertices = outMeshData.vertices;
+	auto& outIndices = outMeshData.indices;
+
 	const int major = 32;
 	const int minor = 16;
 	const float R = 1.0f;  // major radius
@@ -65,12 +68,7 @@ void PrimitiveTorus::GenerateVertices(std::vector<Vertex>& outVertices) const
 			outVertices.push_back({pos, uv, color, normal, DirectX::XMFLOAT4{tangent.x, tangent.y, tangent.z, 1.0f}});
 		}
 	}
-}
 
-void PrimitiveTorus::GenerateIndices(std::vector<DWORD>& outIndices) const
-{
-	const int major = 32;
-	const int minor = 16;
 	outIndices.clear();
 	outIndices.reserve(major * minor * 6);
 
@@ -81,10 +79,10 @@ void PrimitiveTorus::GenerateIndices(std::vector<DWORD>& outIndices) const
 			int nextI = (i + 1) % major;
 			int nextJ = (j + 1) % minor;
 
-			DWORD a = (DWORD) (i * minor + j);
-			DWORD b = (DWORD) (nextI * minor + j);
-			DWORD c = (DWORD) (i * minor + nextJ);
-			DWORD d = (DWORD) (nextI * minor + nextJ);
+			uint32_t a = (uint32_t) (i * minor + j);
+			uint32_t b = (uint32_t) (nextI * minor + j);
+			uint32_t c = (uint32_t) (i * minor + nextJ);
+			uint32_t d = (uint32_t) (nextI * minor + nextJ);
 
 			outIndices.push_back(a);
 			outIndices.push_back(b);

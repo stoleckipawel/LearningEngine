@@ -8,8 +8,11 @@ PrimitiveBox::PrimitiveBox(const XMFLOAT3& translation, const XMFLOAT3& rotation
 {
 }
 
-void PrimitiveBox::GenerateVertices(std::vector<Vertex>& outVertices) const
+void PrimitiveBox::GenerateGeometry(MeshData& outMeshData) const
 {
+	auto& outVertices = outMeshData.vertices;
+	auto& outIndices = outMeshData.indices;
+
 	outVertices.clear();
 	outVertices.reserve(24);
 	const XMFLOAT4 whiteColor{1.0f, 1.0f, 1.0f, 1.0f};
@@ -49,10 +52,7 @@ void PrimitiveBox::GenerateVertices(std::vector<Vertex>& outVertices) const
 	outVertices.push_back({{-1.0f, -1.0f, 1.0f}, {0.0f, 0.0f}, whiteColor, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
 	outVertices.push_back({{1.0f, -1.0f, 1.0f}, {1.0f, 0.0f}, whiteColor, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
 	outVertices.push_back({{1.0f, -1.0f, -1.0f}, {1.0f, 1.0f}, whiteColor, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
-}
 
-void PrimitiveBox::GenerateIndices(std::vector<DWORD>& outIndices) const
-{
 	outIndices.clear();
 	outIndices.reserve(36);
 	for (uint32_t face = 0; face < 6; ++face)

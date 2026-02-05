@@ -39,11 +39,10 @@ void Mesh::RebuildWorldIfNeeded() const noexcept
 	if (!m_bWorldDirty)
 		return;
 
-
-	const DirectX::XMMATRIX S = XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
-	const DirectX::XMMATRIX R = XMMatrixRotationRollPitchYaw(m_rotationEuler.x, m_rotationEuler.y, m_rotationEuler.z);
-	const DirectX::XMMATRIX T = XMMatrixTranslation(m_translation.x, m_translation.y, m_translation.z);
-	XMStoreFloat4x4(&m_worldMatrixCache, S * R * T);
+	const DirectX::XMMATRIX S = DirectX::XMMatrixScaling(m_scale.x, m_scale.y, m_scale.z);
+	const DirectX::XMMATRIX R = DirectX::XMMatrixRotationRollPitchYaw(m_rotationEuler.x, m_rotationEuler.y, m_rotationEuler.z);
+	const DirectX::XMMATRIX T = DirectX::XMMatrixTranslation(m_translation.x, m_translation.y, m_translation.z);
+	DirectX::XMStoreFloat4x4(&m_worldMatrixCache, S * R * T);
 	m_bWorldDirty = false;
 }
 

@@ -8,8 +8,11 @@ PrimitiveDisk::PrimitiveDisk(const XMFLOAT3& translation, const XMFLOAT3& rotati
 {
 }
 
-void PrimitiveDisk::GenerateVertices(std::vector<Vertex>& outVertices) const
+void PrimitiveDisk::GenerateGeometry(MeshData& outMeshData) const
 {
+	auto& outVertices = outMeshData.vertices;
+	auto& outIndices = outMeshData.indices;
+
 	const int slices = 32;
 	outVertices.clear();
 	outVertices.reserve((size_t) slices + 2);
@@ -32,11 +35,7 @@ void PrimitiveDisk::GenerateVertices(std::vector<Vertex>& outVertices) const
 
 		outVertices.push_back({pos, uv, color, normal, tangent});
 	}
-}
 
-void PrimitiveDisk::GenerateIndices(std::vector<DWORD>& outIndices) const
-{
-	const int slices = 32;
 	outIndices.clear();
 	outIndices.reserve((size_t) slices * 3);
 
@@ -44,7 +43,7 @@ void PrimitiveDisk::GenerateIndices(std::vector<DWORD>& outIndices) const
 	for (int i = 0; i < slices; ++i)
 	{
 		outIndices.push_back(0);
-		outIndices.push_back((DWORD) (1 + i));
-		outIndices.push_back((DWORD) (1 + i + 1));
+		outIndices.push_back((uint32_t) (1 + i));
+		outIndices.push_back((uint32_t) (1 + i + 1));
 	}
 }

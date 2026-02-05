@@ -10,8 +10,11 @@ PrimitiveHemisphere::PrimitiveHemisphere(const XMFLOAT3& translation, const XMFL
 {
 }
 
-void PrimitiveHemisphere::GenerateVertices(std::vector<Vertex>& outVertices) const
+void PrimitiveHemisphere::GenerateGeometry(MeshData& outMeshData) const
 {
+	auto& outVertices = outMeshData.vertices;
+	auto& outIndices = outMeshData.indices;
+
 	const int latSegments = 8;
 	const int lonSegments = 16;
 
@@ -51,7 +54,7 @@ void PrimitiveHemisphere::GenerateVertices(std::vector<Vertex>& outVertices) con
 	}
 
 	// Base cap (y = 0), outward is -Y
-	const DWORD capCenterIndex = (DWORD) outVertices.size();
+	const uint32_t capCenterIndex = (uint32_t) outVertices.size();
 	outVertices.push_back({{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f}, {0.7f, 0.7f, 0.7f, 1.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
 
 	for (int lon = 0; lon <= lonSegments; ++lon)
@@ -67,14 +70,6 @@ void PrimitiveHemisphere::GenerateVertices(std::vector<Vertex>& outVertices) con
 		outVertices.push_back({pos, uv, color, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
 	}
 
-	(void) capCenterIndex;
-}
-
-void PrimitiveHemisphere::GenerateIndices(std::vector<DWORD>& outIndices) const
-{
-	const int latSegments = 8;
-	const int lonSegments = 16;
-
 	outIndices.clear();
 	// Curved surface
 	outIndices.reserve((size_t) latSegments * lonSegments * 6 + (size_t) lonSegments * 3);
@@ -83,8 +78,8 @@ void PrimitiveHemisphere::GenerateIndices(std::vector<DWORD>& outIndices) const
 	{
 		for (int lon = 0; lon < lonSegments; ++lon)
 		{
-			DWORD first = (DWORD) (lat * (lonSegments + 1) + lon);
-			DWORD second = (DWORD) ((lat + 1) * (lonSegments + 1) + lon);
+			uint32_t first = (uint32_t) (lat * (lonSegments + 1) + lon);
+			uint32_t second = (uint32_t) ((lat + 1) * (lonSegments + 1) + lon);
 
 			outIndices.push_back(first);
 			outIndices.push_back(second);
@@ -97,14 +92,14 @@ void PrimitiveHemisphere::GenerateIndices(std::vector<DWORD>& outIndices) const
 	}
 
 	// Cap fan (faces downward): center, next, current
-	const DWORD curvedVertexCount = (DWORD) ((latSegments + 1) * (lonSegments + 1));
-	const DWORD capCenterIndex = curvedVertexCount;
-	const DWORD capRingStart = capCenterIndex + 1;
+	const uint32_t curvedVertexCount = (uint32_t) ((latSegments + 1) * (lonSegments + 1));
+	const uint32_t capCenterIdx = curvedVertexCount;
+	const uint32_t capRingStart = capCenterIdx + 1;
 
 	for (int lon = 0; lon < lonSegments; ++lon)
 	{
-		outIndices.push_back(capCenterIndex);
-		outIndices.push_back((DWORD) (capRingStart + lon + 1));
-		outIndices.push_back((DWORD) (capRingStart + lon));
+		outIndices.push_back(capCenterIdx);
+		outIndices.push_back((uint32_t) (capRingStart + lon + 1));
+		outIndices.push_back((uint32_t) (capRingStart + lon));
 	}
 }

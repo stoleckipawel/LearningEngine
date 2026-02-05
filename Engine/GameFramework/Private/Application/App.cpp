@@ -6,7 +6,6 @@
 #include "Scene/Scene.h"
 #include "Scene/Camera/CameraController.h"
 #include "Assets/AssetSystem.h"
-#include "D3D12/D3D12Rhi.h"
 #include "Time/Timer.h"
 
 #include <utility>
@@ -53,19 +52,16 @@ void App::Initialize()
 
 	m_assetSystem = std::make_unique<AssetSystem>();
 
-	m_rhi = std::make_unique<D3D12Rhi>();
-
 	m_window = std::make_unique<Window>(m_windowTitle);
 
 	m_inputSystem = InputSystem::Create();
 	m_inputSystem->SubscribeToWindow(*m_window);
 
 	m_scene = std::make_unique<Scene>();
-	m_scene->GetMeshFactory().Upload(*m_rhi);
 
 	m_cameraController = std::make_unique<CameraController>(*m_timer, *m_inputSystem, *m_window, m_scene->GetCamera());
 
-	m_renderer = std::make_unique<Renderer>(*m_timer, *m_assetSystem, *m_rhi, *m_scene, *m_window);
+	m_renderer = std::make_unique<Renderer>(*m_timer, *m_assetSystem, *m_scene, *m_window);
 }
 
 void App::Shutdown()
@@ -75,7 +71,6 @@ void App::Shutdown()
 	m_scene.reset();
 	m_inputSystem.reset();
 	m_window.reset();
-	m_rhi.reset();
 	m_assetSystem.reset();
 	m_timer.reset();
 }

@@ -10,7 +10,7 @@ using namespace DirectX;
 namespace
 {
 	// Shared base icosahedron definition (same indexing as PrimitiveIcosahedron)
-	static void BuildIcosahedron(std::array<DirectX::XMFLOAT3, 12>& outVerts, std::array<DWORD, 60>& outIdx)
+	static void BuildIcosahedron(std::array<DirectX::XMFLOAT3, 12>& outVerts, std::array<uint32_t, 60>& outIdx)
 	{
 		const float phi = (1.0f + sqrtf(5.0f)) * 0.5f;
 		outVerts = {
@@ -43,22 +43,25 @@ PrimitiveDodecahedron::PrimitiveDodecahedron(const XMFLOAT3& translation, const 
 {
 }
 
-void PrimitiveDodecahedron::GenerateVertices(std::vector<Vertex>& outVertices) const
+void PrimitiveDodecahedron::GenerateGeometry(MeshData& outMeshData) const
 {
+	auto& outVertices = outMeshData.vertices;
+	auto& outIndices = outMeshData.indices;
+
 	// Build dual of icosahedron:
 	// - Each icosa face center => a dodeca vertex (20)
 	// - Each icosa vertex connects 5 faces => a dodeca face (pentagon)
 	std::array<DirectX::XMFLOAT3, 12> icoVerts;
-	std::array<DWORD, 60> icoIdx;
+	std::array<uint32_t, 60> icoIdx;
 	BuildIcosahedron(icoVerts, icoIdx);
 
 	// Face centers
 	std::array<DirectX::XMFLOAT3, 20> faceCenters;
 	for (int f = 0; f < 20; ++f)
 	{
-		DWORD i0 = icoIdx[f * 3 + 0];
-		DWORD i1 = icoIdx[f * 3 + 1];
-		DWORD i2 = icoIdx[f * 3 + 2];
+		uint32_t i0 = icoIdx[f * 3 + 0];
+		uint32_t i1 = icoIdx[f * 3 + 1];
+		uint32_t i2 = icoIdx[f * 3 + 2];
 		DirectX::XMFLOAT3 c = MathUtils::Mul(MathUtils::Add(MathUtils::Add(icoVerts[i0], icoVerts[i1]), icoVerts[i2]), 1.0f / 3.0f);
 		faceCenters[f] = MathUtils::Normalize3(c);
 	}
@@ -77,13 +80,6 @@ void PrimitiveDodecahedron::GenerateVertices(std::vector<Vertex>& outVertices) c
 		DirectX::XMFLOAT4 color{fabsf(n.x), fabsf(n.y), fabsf(n.z), 1.0f};
 		outVertices.push_back({n, uv, color, n, {tangent.x, tangent.y, tangent.z, 1.0f}});
 	}
-}
-
-void PrimitiveDodecahedron::GenerateIndices(std::vector<DWORD>& outIndices) const
-{
-	std::array<DirectX::XMFLOAT3, 12> icoVerts;
-	std::array<DWORD, 60> icoIdx;
-	BuildIcosahedron(icoVerts, icoIdx);
 
 	// Map each icosa vertex -> incident faces
 	std::array<std::vector<int>, 12> incidentFaces;
@@ -92,9 +88,9 @@ void PrimitiveDodecahedron::GenerateIndices(std::vector<DWORD>& outIndices) cons
 
 	for (int f = 0; f < 20; ++f)
 	{
-		DWORD i0 = icoIdx[f * 3 + 0];
-		DWORD i1 = icoIdx[f * 3 + 1];
-		DWORD i2 = icoIdx[f * 3 + 2];
+		uint32_t i0 = icoIdx[f * 3 + 0];
+		uint32_t i1 = icoIdx[f * 3 + 1];
+		uint32_t i2 = icoIdx[f * 3 + 2];
 		incidentFaces[i0].push_back(f);
 		incidentFaces[i1].push_back(f);
 		incidentFaces[i2].push_back(f);
@@ -144,11 +140,11 @@ void PrimitiveDodecahedron::GenerateIndices(std::vector<DWORD>& outIndices) cons
 			    return a.angle < b.angle;
 		    });
 
-		DWORD a = (DWORD) ordered[0].faceIndex;
-		DWORD b = (DWORD) ordered[1].faceIndex;
-		DWORD c = (DWORD) ordered[2].faceIndex;
-		DWORD d = (DWORD) ordered[3].faceIndex;
-		DWORD e = (DWORD) ordered[4].faceIndex;
+		uint32_t a = (uint32_t) ordered[0].faceIndex;
+		uint32_t b = (uint32_t) ordered[1].faceIndex;
+		uint32_t c = (uint32_t) ordered[2].faceIndex;
+		uint32_t d = (uint32_t) ordered[3].faceIndex;
+		uint32_t e = (uint32_t) ordered[4].faceIndex;
 
 		// Triangulate pentagon (a,b,c,d,e) as fan around a
 		outIndices.push_back(a);

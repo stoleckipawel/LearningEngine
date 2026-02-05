@@ -50,6 +50,8 @@ target_include_directories(SparkleRenderer
         ${CMAKE_CURRENT_SOURCE_DIR}/../GameFramework/Public
         # UI module for UI.h include
         ${CMAKE_CURRENT_SOURCE_DIR}/../UI/Public
+        # Third-party (d3dx12.h)
+        ${CMAKE_CURRENT_SOURCE_DIR}/../third_party
 )
 
 target_compile_features(SparkleRenderer PUBLIC cxx_std_20)

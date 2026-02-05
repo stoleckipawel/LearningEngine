@@ -10,8 +10,11 @@ PrimitiveCapsule::PrimitiveCapsule(const XMFLOAT3& translation, const XMFLOAT3& 
 {
 }
 
-void PrimitiveCapsule::GenerateVertices(std::vector<Vertex>& outVertices) const
+void PrimitiveCapsule::GenerateGeometry(MeshData& outMeshData) const
 {
+	auto& outVertices = outMeshData.vertices;
+	auto& outIndices = outMeshData.indices;
+
 	const int lonSegments = 32;
 	const int hemiStacks = 8;
 	const int cylStacks = 4;
@@ -90,14 +93,6 @@ void PrimitiveCapsule::GenerateVertices(std::vector<Vertex>& outVertices) const
 		float y = halfCylinder + radius * sinf(a);
 		addRing(y, r);
 	}
-}
-
-void PrimitiveCapsule::GenerateIndices(std::vector<DWORD>& outIndices) const
-{
-	const int lonSegments = 32;
-	const int hemiStacks = 8;
-	const int cylStacks = 4;
-	const int ringCount = 2 * hemiStacks + cylStacks + 1;
 
 	outIndices.clear();
 	outIndices.reserve((size_t) (ringCount - 1) * (size_t) lonSegments * 6);
@@ -106,8 +101,8 @@ void PrimitiveCapsule::GenerateIndices(std::vector<DWORD>& outIndices) const
 	{
 		for (int lon = 0; lon < lonSegments; ++lon)
 		{
-			DWORD first = (DWORD) (ring * (lonSegments + 1) + lon);
-			DWORD second = (DWORD) ((ring + 1) * (lonSegments + 1) + lon);
+			uint32_t first = (uint32_t) (ring * (lonSegments + 1) + lon);
+			uint32_t second = (uint32_t) ((ring + 1) * (lonSegments + 1) + lon);
 
 			outIndices.push_back(first);
 			outIndices.push_back(second);

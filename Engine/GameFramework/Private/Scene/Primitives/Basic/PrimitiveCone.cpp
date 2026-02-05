@@ -8,8 +8,11 @@ PrimitiveCone::PrimitiveCone(const XMFLOAT3& translation, const XMFLOAT3& rotati
 {
 }
 
-void PrimitiveCone::GenerateVertices(std::vector<Vertex>& outVertices) const
+void PrimitiveCone::GenerateGeometry(MeshData& outMeshData) const
 {
+	auto& outVertices = outMeshData.vertices;
+	auto& outIndices = outMeshData.indices;
+
 	const int slices = 32;
 	outVertices.clear();
 	outVertices.reserve(slices + 2);
@@ -39,31 +42,27 @@ void PrimitiveCone::GenerateVertices(std::vector<Vertex>& outVertices) const
 	DirectX::XMFLOAT3 baseCenter{0.0f, -1.0f, 0.0f};
 	// base center normal points down
 	outVertices.push_back({baseCenter, {0.5f, 0.5f}, {0.8f, 0.8f, 0.8f, 1.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
-}
 
-void PrimitiveCone::GenerateIndices(std::vector<DWORD>& outIndices) const
-{
-	const int slices = 32;
 	outIndices.clear();
 	outIndices.reserve(slices * 6);
 
 	// Apex is vertex 0, ring starts at 1, base center is last
-	DWORD apex = 0;
-	DWORD baseStart = 1;
-	DWORD baseCenter = (DWORD) (1 + slices);
+	uint32_t apex_idx = 0;
+	uint32_t baseStart = 1;
+	uint32_t baseCenter_idx = (uint32_t) (1 + slices);
 
 	for (int i = 0; i < slices; ++i)
 	{
-		DWORD next = (DWORD) (baseStart + ((i + 1) % slices));
-		DWORD cur = (DWORD) (baseStart + i);
+		uint32_t next = (uint32_t) (baseStart + ((i + 1) % slices));
+		uint32_t cur = (uint32_t) (baseStart + i);
 
 		// side triangle (cur, next, apex) - use winding consistent with others
 		outIndices.push_back(cur);
 		outIndices.push_back(next);
-		outIndices.push_back(apex);
+		outIndices.push_back(apex_idx);
 
 		// base triangle (baseCenter, next, cur)
-		outIndices.push_back(baseCenter);
+		outIndices.push_back(baseCenter_idx);
 		outIndices.push_back(next);
 		outIndices.push_back(cur);
 	}

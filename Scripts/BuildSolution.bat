@@ -62,9 +62,10 @@ if errorlevel 1 (
 set "ARCH=x64"
 set "GENERATOR=Visual Studio 17 2022"
 set "CLANG_TOOLSET=ClangCL"
-set "SRC_DIR=%~dp0"
+:: Navigate to repository root (parent of Scripts folder)
+set "SRC_DIR=%~dp0.."
 :: Strip trailing backslash to avoid quoting issues with CMake
-if "!SRC_DIR:~-1!"=="\" set "SRC_DIR=!SRC_DIR:~0,-1!"
+for %%I in ("!SRC_DIR!") do set "SRC_DIR=%%~fI"
 set "BUILD_DIR=!SRC_DIR!\build"
 
 :: Detect ClangCL availability

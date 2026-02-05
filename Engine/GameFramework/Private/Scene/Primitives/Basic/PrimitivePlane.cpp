@@ -8,8 +8,11 @@ PrimitivePlane::PrimitivePlane(const XMFLOAT3& translation, const XMFLOAT3& rota
 {
 }
 
-void PrimitivePlane::GenerateVertices(std::vector<Vertex>& outVertices) const
+void PrimitivePlane::GenerateGeometry(MeshData& outMeshData) const
 {
+	auto& outVertices = outMeshData.vertices;
+	auto& outIndices = outMeshData.indices;
+
 	// Simple 2x2 plane in XZ
 	outVertices = {
 	    // position, uv, color, normal, tangent
@@ -18,9 +21,6 @@ void PrimitivePlane::GenerateVertices(std::vector<Vertex>& outVertices) const
 	    {{1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f, 1.0}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},     // 2
 	    {{1.0f, 0.0f, -1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f, 1.0}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},    // 3
 	};
-}
 
-void PrimitivePlane::GenerateIndices(std::vector<DWORD>& outIndices) const
-{
 	outIndices = {0, 1, 2, 0, 2, 3};
 }

@@ -140,6 +140,7 @@ bool GPUMesh::Upload(D3D12Rhi& rhi, const MeshData& meshData)
 
 void GPUMesh::Bind(ID3D12GraphicsCommandList* cmdList) const
 {
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	cmdList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 	cmdList->IASetIndexBuffer(&m_indexBufferView);
 }

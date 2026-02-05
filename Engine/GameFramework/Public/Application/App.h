@@ -18,7 +18,6 @@ class InputSystem;
 class Scene;
 class CameraController;
 class Renderer;
-class D3D12Rhi;
 class AssetSystem;
 
 class SPARKLE_ENGINE_API App
@@ -44,7 +43,6 @@ class SPARKLE_ENGINE_API App
 	std::string m_windowTitle;
 	std::unique_ptr<Timer> m_timer;
 	std::unique_ptr<AssetSystem> m_assetSystem;
-	std::unique_ptr<D3D12Rhi> m_rhi;
 	std::unique_ptr<Window> m_window;
 	std::unique_ptr<InputSystem> m_inputSystem;
 	std::unique_ptr<Scene> m_scene;

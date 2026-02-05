@@ -50,6 +50,7 @@ class D3D12ConstantBufferManager;
 class D3D12DescriptorHeapManager;
 class D3D12FrameResourceManager;
 class D3D12SwapChain;
+class GPUMeshCache;
 class Mesh;
 class RenderCamera;
 class Scene;
@@ -65,8 +66,7 @@ class SPARKLE_RENDERER_API Renderer final
 {
   public:
 	// Constructs and initializes all rendering resources.
-	// Takes Timer, AssetSystem, D3D12Rhi, Scene and Window references. Owns UI.
-	Renderer(Timer& timer, const AssetSystem& assetSystem, D3D12Rhi& rhi, Scene& scene, Window& window) noexcept;
+	Renderer(Timer& timer, const AssetSystem& assetSystem, Scene& scene, Window& window) noexcept;
 	~Renderer() noexcept;
 
 	Renderer(const Renderer&) = delete;
@@ -91,6 +91,8 @@ class SPARKLE_RENDERER_API Renderer final
 	void CreatePSO();
 	void OnDepthModeChanged(DepthMode mode) noexcept;
 	void OnResize() noexcept;
+	void SubscribeToDepthModeChanges() noexcept;
+	void SubscribeToWindowResize() noexcept;
 
 	// -------------------------------------------------------------------------
 	// Frame Pipeline Stages
@@ -122,8 +124,11 @@ class SPARKLE_RENDERER_API Renderer final
 	// AssetSystem reference (not owned - owned by App)
 	const AssetSystem* m_assetSystem = nullptr;
 
-	// RHI reference (not owned - owned by App)
-	D3D12Rhi* m_rhi = nullptr;
+	// RHI (OWNED - Renderer creates and manages the RHI)
+	std::unique_ptr<D3D12Rhi> m_rhi;
+
+	// GPU mesh cache for lazy uploading CPU meshes to GPU
+	std::unique_ptr<GPUMeshCache> m_gpuMeshCache;
 
 	// Texture manager
 	std::unique_ptr<TextureManager> m_textureManager;

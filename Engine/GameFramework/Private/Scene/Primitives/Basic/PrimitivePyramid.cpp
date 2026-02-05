@@ -10,8 +10,11 @@ PrimitivePyramid::PrimitivePyramid(const XMFLOAT3& translation, const XMFLOAT3& 
 {
 }
 
-void PrimitivePyramid::GenerateVertices(std::vector<Vertex>& outVertices) const
+void PrimitivePyramid::GenerateGeometry(MeshData& outMeshData) const
 {
+	auto& outVertices = outMeshData.vertices;
+	auto& outIndices = outMeshData.indices;
+
 	outVertices.clear();
 	outVertices.reserve(18);
 
@@ -65,13 +68,10 @@ void PrimitivePyramid::GenerateVertices(std::vector<Vertex>& outVertices) const
 		outVertices.push_back({faces[f].b, uvB, {fabsf(normal.x), fabsf(normal.y), fabsf(normal.z), 1.0f}, normal, tangent});
 		outVertices.push_back({faces[f].c, uvC, {fabsf(normal.x), fabsf(normal.y), fabsf(normal.z), 1.0f}, normal, tangent});
 	}
-}
 
-void PrimitivePyramid::GenerateIndices(std::vector<DWORD>& outIndices) const
-{
 	// Vertices are already expanded per-triangle.
 	outIndices.clear();
 	outIndices.reserve(18);
-	for (DWORD i = 0; i < 18; ++i)
+	for (uint32_t i = 0; i < 18; ++i)
 		outIndices.push_back(i);
 }

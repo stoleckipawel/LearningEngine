@@ -8,6 +8,8 @@
 #include "DxcShaderCompiler.h"
 #include "D3D12Texture.h"
 #include "TextureManager.h"
+#include "GPUMesh.h"
+#include "GPUMeshCache.h"
 #include "Scene/Scene.h"
 #include "Scene/Mesh.h"
 #include "D3D12PipelineState.h"
@@ -16,6 +18,7 @@
 #include "D3D12ConstantBuffer.h"
 #include "D3D12ConstantBufferManager.h"
 #include "D3D12FrameResource.h"
+#include "D3D12VertexLayout.h"
 #include "Samplers/D3D12SamplerLibrary.h"
 #include "D3D12DepthStencil.h"
 #include "DepthConvention.h"
@@ -24,9 +27,12 @@
 #include "RenderCamera.h"
 #include "Scene/Camera/GameCamera.h"
 
-Renderer::Renderer(Timer& timer, const AssetSystem& assetSystem, D3D12Rhi& rhi, Scene& scene, Window& window) noexcept :
-    m_timer(&timer), m_assetSystem(&assetSystem), m_rhi(&rhi), m_scene(&scene), m_window(&window)
+Renderer::Renderer(Timer& timer, const AssetSystem& assetSystem, Scene& scene, Window& window) noexcept :
+    m_timer(&timer), m_assetSystem(&assetSystem), m_scene(&scene), m_window(&window)
 {
+	// Create and own the RHI
+	m_rhi = std::make_unique<D3D12Rhi>();
+
 	// Open command list for initialization recording (starts closed after RHI creation)
 	constexpr UINT kInitFrameIndex = 0;
 	m_rhi->SetCurrentFrameIndex(kInitFrameIndex);
@@ -62,21 +68,12 @@ Renderer::Renderer(Timer& timer, const AssetSystem& assetSystem, D3D12Rhi& rhi, 
 	// Create texture manager (auto-loads default textures)
 	m_textureManager = std::make_unique<TextureManager>(*m_assetSystem, *m_rhi, *m_descriptorHeapManager);
 
-	// Add listener for depth mode changes
-	auto depthHandle = DepthConvention::OnModeChanged.Add(
-	    [this](DepthMode mode)
-	    {
-		    OnDepthModeChanged(mode);
-	    });
-	m_depthModeChangedHandle = ScopedEventHandle(DepthConvention::OnModeChanged, depthHandle);
+	// Create GPU mesh cache for lazy uploading CPU meshes
+	m_gpuMeshCache = std::make_unique<GPUMeshCache>(*m_rhi);
 
-	// Subscribe to window resize events
-	auto resizeHandle = m_window->OnResized.Add(
-	    [this]()
-	    {
-		    OnResize();
-	    });
-	m_resizeHandle = ScopedEventHandle(m_window->OnResized, resizeHandle);
+	// Subscribe to events
+	SubscribeToDepthModeChanges();
+	SubscribeToWindowResize();
 
 	// Create pipeline state object
 	CreatePSO();
@@ -142,10 +139,18 @@ void Renderer::BindPerFrameResources() noexcept
 
 void Renderer::BindPerObjectResources(const Mesh& mesh) noexcept
 {
+	// Build per-object VS constant buffer data from mesh transforms
+	PerObjectVSConstantBufferData perObjectData{};
+	DirectX::XMStoreFloat4x4(&perObjectData.WorldMTX, mesh.GetWorldMatrix());
+
+	// Store inverse-transpose as 3x4 for normal transformation (matches HLSL cbuffer float3x3 packing)
+	const DirectX::XMMATRIX worldInvTranspose = mesh.GetWorldInverseTransposeMatrix();
+	DirectX::XMStoreFloat3x4(&perObjectData.WorldInvTransposeMTX, worldInvTranspose);
+
 	// Per-object VS constant buffer (b2) - world matrix
 	m_rhi->GetCommandList()->SetGraphicsRootConstantBufferView(
 	    RootBindings::RootParam::PerObjectVS,
-	    m_constantBufferManager->UpdatePerObjectVS(mesh.GetPerObjectVSConstants()));
+	    m_constantBufferManager->UpdatePerObjectVS(perObjectData));
 
 	// Per-object PS constant buffer (b3) - material properties
 	m_rhi->GetCommandList()->SetGraphicsRootConstantBufferView(
@@ -180,9 +185,10 @@ void Renderer::PopulateCommandList()
 	const auto& meshes = m_scene->GetMeshes();
 	for (const auto& mesh : meshes)
 	{
-		mesh->Bind(m_rhi->GetCommandList().Get());
+		GPUMesh* gpuMesh = m_gpuMeshCache->GetOrUpload(*mesh);
+		gpuMesh->Bind(m_rhi->GetCommandList().Get());
 		BindPerObjectResources(*mesh);
-		m_rhi->GetCommandList()->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
+		m_rhi->GetCommandList()->DrawIndexedInstanced(gpuMesh->GetIndexCount(), 1, 0, 0, 0);
 	}
 
 	// Post-render
@@ -201,6 +207,26 @@ void Renderer::OnResize() noexcept
 	m_rhi->Flush();
 	m_swapChain->Resize();
 	CreateDepthStencilBuffer();
+}
+
+void Renderer::SubscribeToDepthModeChanges() noexcept
+{
+	auto handle = DepthConvention::OnModeChanged.Add(
+	    [this](DepthMode mode)
+	    {
+		    OnDepthModeChanged(mode);
+	    });
+	m_depthModeChangedHandle = ScopedEventHandle(DepthConvention::OnModeChanged, handle);
+}
+
+void Renderer::SubscribeToWindowResize() noexcept
+{
+	auto handle = m_window->OnResized.Add(
+	    [this]()
+	    {
+		    OnResize();
+	    });
+	m_resizeHandle = ScopedEventHandle(m_window->OnResized, handle);
 }
 
 void Renderer::OnRender() noexcept
@@ -280,7 +306,7 @@ void Renderer::CreatePSO()
 {
 	m_pso = std::make_unique<D3D12PipelineState>(
 	    *m_rhi,
-	    Mesh::GetStaticVertexLayout(),
+	    D3D12VertexLayout::GetStaticMeshLayout(),
 	    *m_rootSignature,
 	    m_vertexShader.GetBytecode(),
 	    m_pixelShader.GetBytecode());

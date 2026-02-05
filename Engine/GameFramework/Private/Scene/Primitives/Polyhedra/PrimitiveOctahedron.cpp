@@ -8,8 +8,11 @@ PrimitiveOctahedron::PrimitiveOctahedron(const XMFLOAT3& translation, const XMFL
 {
 }
 
-void PrimitiveOctahedron::GenerateVertices(std::vector<Vertex>& outVertices) const
+void PrimitiveOctahedron::GenerateGeometry(MeshData& outMeshData) const
 {
+	auto& outVertices = outMeshData.vertices;
+	auto& outIndices = outMeshData.indices;
+
 	outVertices = {
 	    {{1.0f, 0.0f, 0.0f}, {0.0f, 0.5f}, {1, 0, 0, 1}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}},    // 0
 	    {{-1.0f, 0.0f, 0.0f}, {1.0f, 0.5f}, {0, 1, 0, 1}, {-1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 1.0f}},  // 1
@@ -18,35 +21,17 @@ void PrimitiveOctahedron::GenerateVertices(std::vector<Vertex>& outVertices) con
 	    {{0.0f, 0.0f, 1.0f}, {0.5f, 0.5f}, {1, 0, 1, 1}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},    // 4
 	    {{0.0f, 0.0f, -1.0f}, {0.5f, 0.5f}, {0, 1, 1, 1}, {0.0f, 0.0f, -1.0f}, {1.0f, 0.0f, 0.0f, 1.0f}}   // 5
 	};
-}
 
-void PrimitiveOctahedron::GenerateIndices(std::vector<DWORD>& outIndices) const
-{
 	outIndices = {
 	    // Upper pyramid
-	    2,
-	    4,
-	    0,
-	    2,
-	    0,
-	    5,
-	    2,
-	    5,
-	    1,
-	    2,
-	    1,
-	    4,
+	    2, 4, 0,
+	    2, 0, 5,
+	    2, 5, 1,
+	    2, 1, 4,
 	    // Lower pyramid
-	    3,
-	    0,
-	    4,
-	    3,
-	    5,
-	    0,
-	    3,
-	    1,
-	    5,
-	    3,
-	    4,
-	    1};
+	    3, 0, 4,
+	    3, 5, 0,
+	    3, 1, 5,
+	    3, 4, 1
+	};
 }

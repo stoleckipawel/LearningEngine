@@ -8,8 +8,11 @@ PrimitiveCylinder::PrimitiveCylinder(const XMFLOAT3& translation, const XMFLOAT3
 {
 }
 
-void PrimitiveCylinder::GenerateVertices(std::vector<Vertex>& outVertices) const
+void PrimitiveCylinder::GenerateGeometry(MeshData& outMeshData) const
 {
+	auto& outVertices = outMeshData.vertices;
+	auto& outIndices = outMeshData.indices;
+
 	const int slices = 32;
 	outVertices.clear();
 	outVertices.reserve((slices + 1) * 2 + 2);
@@ -51,27 +54,23 @@ void PrimitiveCylinder::GenerateVertices(std::vector<Vertex>& outVertices) const
 	outVertices.push_back({{0.0f, -1.0f, 0.0f}, {0.5f, 1.0f}, {0.6f, 0.6f, 0.6f, 1.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
 	// Top center
 	outVertices.push_back({{0.0f, 1.0f, 0.0f}, {0.5f, 0.0f}, {0.9f, 0.9f, 0.9f, 1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
-}
 
-void PrimitiveCylinder::GenerateIndices(std::vector<DWORD>& outIndices) const
-{
-	const int slices = 32;
 	outIndices.clear();
 	outIndices.reserve(slices * 12);
 
-	DWORD bottomStart = 0;
-	DWORD topStart = (DWORD) slices;
-	DWORD bottomCenter = (DWORD) (slices * 2);
-	DWORD topCenter = (DWORD) (slices * 2 + 1);
+	uint32_t bottomStart = 0;
+	uint32_t topStart = (uint32_t) slices;
+	uint32_t bottomCenter = (uint32_t) (slices * 2);
+	uint32_t topCenter = (uint32_t) (slices * 2 + 1);
 
 	// Side quads (two triangles each)
 	for (int i = 0; i < slices; ++i)
 	{
-		DWORD next = (DWORD) ((i + 1) % slices);
-		DWORD b0 = bottomStart + i;
-		DWORD b1 = bottomStart + next;
-		DWORD t0 = topStart + i;
-		DWORD t1 = topStart + next;
+		uint32_t next = (uint32_t) ((i + 1) % slices);
+		uint32_t b0 = bottomStart + i;
+		uint32_t b1 = bottomStart + next;
+		uint32_t t0 = topStart + i;
+		uint32_t t1 = topStart + next;
 
 		outIndices.push_back(b0);
 		outIndices.push_back(t1);
@@ -85,7 +84,7 @@ void PrimitiveCylinder::GenerateIndices(std::vector<DWORD>& outIndices) const
 	// Bottom cap
 	for (int i = 0; i < slices; ++i)
 	{
-		DWORD next = (DWORD) ((i + 1) % slices);
+		uint32_t next = (uint32_t) ((i + 1) % slices);
 		outIndices.push_back(bottomCenter);
 		outIndices.push_back(bottomStart + next);
 		outIndices.push_back(bottomStart + i);
@@ -94,7 +93,7 @@ void PrimitiveCylinder::GenerateIndices(std::vector<DWORD>& outIndices) const
 	// Top cap
 	for (int i = 0; i < slices; ++i)
 	{
-		DWORD next = (DWORD) ((i + 1) % slices);
+		uint32_t next = (uint32_t) ((i + 1) % slices);
 		outIndices.push_back(topCenter);
 		outIndices.push_back(topStart + i);
 		outIndices.push_back(topStart + next);
