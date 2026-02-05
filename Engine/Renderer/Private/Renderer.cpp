@@ -6,6 +6,7 @@
 #include "D3D12SwapChain.h"
 #include "Window.h"
 #include "DxcShaderCompiler.h"
+#include "ShaderCompileResult.h"
 #include "D3D12Texture.h"
 #include "TextureManager.h"
 #include "GPUMesh.h"
@@ -42,8 +43,8 @@ Renderer::Renderer(Timer& timer, const AssetSystem& assetSystem, Scene& scene, W
 	m_rootSignature = std::make_unique<D3D12RootSignature>(*m_rhi);
 
 	// Compile shaders
-	m_vertexShader = DxcShaderCompiler::CompileFromAsset(*m_assetSystem, "Passes/Forward/ForwardLitVS.hlsl", ShaderStage::Vertex, "main");
-	m_pixelShader = DxcShaderCompiler::CompileFromAsset(*m_assetSystem, "Passes/Forward/ForwardLitPS.hlsl", ShaderStage::Pixel, "main");
+	m_vertexShader = std::make_unique<ShaderCompileResult>(DxcShaderCompiler::CompileFromAsset(*m_assetSystem, "Passes/Forward/ForwardLitVS.hlsl", ShaderStage::Vertex, "main"));
+	m_pixelShader = std::make_unique<ShaderCompileResult>(DxcShaderCompiler::CompileFromAsset(*m_assetSystem, "Passes/Forward/ForwardLitPS.hlsl", ShaderStage::Pixel, "main"));
 
 	m_descriptorHeapManager = std::make_unique<D3D12DescriptorHeapManager>(*m_rhi);
 	m_swapChain = std::make_unique<D3D12SwapChain>(*m_rhi, *m_window, *m_descriptorHeapManager);
@@ -308,8 +309,8 @@ void Renderer::CreatePSO()
 	    *m_rhi,
 	    D3D12VertexLayout::GetStaticMeshLayout(),
 	    *m_rootSignature,
-	    m_vertexShader.GetBytecode(),
-	    m_pixelShader.GetBytecode());
+	    m_vertexShader->GetBytecode(),
+	    m_pixelShader->GetBytecode());
 }
 
 void Renderer::OnDepthModeChanged([[maybe_unused]] DepthMode mode) noexcept

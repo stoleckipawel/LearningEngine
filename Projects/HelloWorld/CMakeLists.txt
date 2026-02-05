@@ -9,13 +9,9 @@ add_executable(HelloWorld
 target_compile_features(HelloWorld PRIVATE cxx_std_20)
 
 # Link against engine modules explicitly
-# Only link what you need - this project uses all core modules for demo purposes
+# SparkleApplication brings in GameFramework + Renderer + all their dependencies
 target_link_libraries(HelloWorld PRIVATE
-    SparkleCore           # Math, Events, Logging
-    SparklePlatform       # Window, Input
-    SparkleRHI            # D3D12 backend
-    SparkleRenderer       # High-level rendering
-    SparkleGameFramework  # Scene, Camera, Primitives
+    SparkleApplication    # App class (ties GameFramework + Renderer together)
     SparkleUI             # ImGui integration
 )
 

@@ -51,7 +51,8 @@ add_subdirectory(Core)           # SparkleCore.dll     - Math, Memory, Events, L
 add_subdirectory(Platform)       # SparklePlatform.dll - Window, Input, FileSystem
 add_subdirectory(RHI)            # SparkleRHI.dll      - D3D12/Vulkan abstraction
 add_subdirectory(Renderer)       # SparkleRenderer.dll - Rendering pipeline
-add_subdirectory(GameFramework)  # SparkleEngine.dll   - World, Entities, Components
+add_subdirectory(GameFramework)  # SparkleEngine.dll   - World, Entities, Components (NO rendering deps)
+add_subdirectory(Application)    # SparkleApplication  - App class (ties GameFramework + Renderer)
 add_subdirectory(UI)             # SparkleUI.dll       - Widget system, Layout
 
 # ============================================================================
@@ -75,16 +76,13 @@ add_subdirectory(UI)             # SparkleUI.dll       - Widget system, Layout
 #   SparklePlatform     - Window, Input (required for windowed apps)
 #   SparkleRHI          - D3D12/Vulkan abstraction (required for rendering)
 #   SparkleRenderer     - High-level rendering (requires RHI)
-#   SparkleGameFramework - Scene, Camera, Primitives (requires Renderer)
+#   SparkleGameFramework - Scene, Camera, Primitives (NO rendering deps)
+#   SparkleApplication  - App class (ties GameFramework + Renderer together)
 #   SparkleUI           - ImGui integration (requires Renderer)
 #
 # Example for a typical game project:
 #   target_link_libraries(MyGame PRIVATE
-#       SparkleCore
-#       SparklePlatform
-#       SparkleRHI
-#       SparkleRenderer
-#       SparkleGameFramework
+#       SparkleApplication  # Brings in GameFramework + Renderer + all deps
 #       SparkleUI
 #   )
 #

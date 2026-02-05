@@ -1,6 +1,6 @@
 // ============================================================================
 // App.h
-// Application base class.
+// Application base class - ties together GameFramework and Renderer.
 // ----------------------------------------------------------------------------
 // USAGE:
 //   App app("MyGame");
@@ -8,7 +8,7 @@
 // ============================================================================
 #pragma once
 
-#include "GameFramework/Public/GameFrameworkAPI.h"
+#include "Application/Public/ApplicationAPI.h"
 #include <string>
 #include <memory>
 
@@ -20,7 +20,7 @@ class CameraController;
 class Renderer;
 class AssetSystem;
 
-class SPARKLE_ENGINE_API App
+class SPARKLE_APPLICATION_API App
 {
   public:
 	explicit App(std::string&& windowTitle);

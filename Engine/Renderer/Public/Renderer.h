@@ -30,7 +30,6 @@
 
 #include "Event.h"
 #include "Events/ScopedEventHandle.h"
-#include "ShaderCompileResult.h"
 #include <cstdint>
 #include <memory>
 
@@ -57,6 +56,7 @@ class Scene;
 class Window;
 class UI;
 class TextureManager;
+class ShaderCompileResult;
 
 // =============================================================================
 // Renderer
@@ -143,9 +143,9 @@ class SPARKLE_RENDERER_API Renderer final
 	std::unique_ptr<D3D12PipelineState> m_pso;
 	std::unique_ptr<D3D12RootSignature> m_rootSignature;
 
-	// Compiled shaders (owned bytecode)
-	ShaderCompileResult m_vertexShader;
-	ShaderCompileResult m_pixelShader;
+	// Compiled shaders (owned bytecode, hidden from public header)
+	std::unique_ptr<ShaderCompileResult> m_vertexShader;
+	std::unique_ptr<ShaderCompileResult> m_pixelShader;
 
 	// Camera (set once at initialization)
 	std::unique_ptr<RenderCamera> m_renderCamera;

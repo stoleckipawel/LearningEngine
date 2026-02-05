@@ -1,9 +1,9 @@
 # SparkleGameFramework Module (SparkleEngine.dll)
 # Game framework: World, Entities, Components, Scene, Camera, Mesh, Assets
-# Dependencies: SparkleCore, SparklePlatform, SparkleRHI, SparkleRenderer
+# Dependencies: SparkleCore, SparklePlatform
 #
 # This corresponds to "SparkleEngine.dll" in the Unreal-style architecture.
-# It contains the high-level game systems that build on top of the renderer.
+# It contains the high-level game systems .
 
 file(GLOB_RECURSE SPARKLE_GAMEFRAMEWORK_PUBLIC_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/Public/*.h
@@ -38,7 +38,6 @@ target_include_directories(SparkleGameFramework
         ${CMAKE_CURRENT_SOURCE_DIR}/Public
         ${CMAKE_CURRENT_SOURCE_DIR}/Public/Scene
         ${CMAKE_CURRENT_SOURCE_DIR}/Public/Scene/Camera
-        ${CMAKE_CURRENT_SOURCE_DIR}/Public/Application
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/Private
         # Engine root for module-prefixed includes
@@ -50,20 +49,12 @@ target_include_directories(SparkleGameFramework
         ${CMAKE_CURRENT_SOURCE_DIR}/../Core/Public/Time
         # Platform module subdirectories for InputSystem.h
         ${CMAKE_CURRENT_SOURCE_DIR}/../Platform/Public/Input
-        # RHI module subdirectories for transitive includes from Renderer.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/../RHI/Public/D3D12
-        ${CMAKE_CURRENT_SOURCE_DIR}/../RHI/Public/D3D12/Shaders
-        ${CMAKE_CURRENT_SOURCE_DIR}/../RHI/Public/D3D12/Resources
-        ${CMAKE_CURRENT_SOURCE_DIR}/../RHI/Public/D3D12/Descriptors
         # Subdirectories for internal includes
         ${CMAKE_CURRENT_SOURCE_DIR}/Private/Scene
         ${CMAKE_CURRENT_SOURCE_DIR}/Private/Scene/Camera
         ${CMAKE_CURRENT_SOURCE_DIR}/Private/Scene/Primitives/Basic
         ${CMAKE_CURRENT_SOURCE_DIR}/Private/Scene/Primitives/Polyhedra
         ${CMAKE_CURRENT_SOURCE_DIR}/Private/Assets
-        ${CMAKE_CURRENT_SOURCE_DIR}/Private/Application
-        # Public subdirectories for direct includes from Private code
-        ${CMAKE_CURRENT_SOURCE_DIR}/Public/Application
 )
 
 target_compile_features(SparkleGameFramework PUBLIC cxx_std_20)
@@ -73,13 +64,11 @@ target_precompile_headers(SparkleGameFramework PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Private/PCH.h
 )
 
-# GameFramework depends on lower-level modules
+# GameFramework depends on lower-level modules only (NO Renderer/RHI)
 target_link_libraries(SparkleGameFramework 
     PUBLIC 
         SparkleCore
         SparklePlatform
-        SparkleRHI
-        SparkleRenderer
     PRIVATE
         cgltf
 )
