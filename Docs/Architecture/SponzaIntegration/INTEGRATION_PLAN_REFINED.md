@@ -290,98 +290,14 @@
 
 > **Goal:** Remove all D3D12 dependencies from GameFramework. Renderer owns all GPU resources.
 
-### Step -1.1: Create MeshData (Pure CPU Vertex Data)
-
-Create a new file with pure CPU data structures. No D3D12 dependencies.
-
-**File:** `Engine/GameFramework/Public/Scene/MeshData.h`
-
-| Structure | Members | Notes |
-|-----------|---------|-------|
-| **VertexData** | position (float3), uv (float2), color (float4), normal (float3), tangent (float4) | w = handedness |
-| **MeshData** | vertices (array), indices (array) | Pure CPU, no buffers |
-
-**MeshData Methods:**
-
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `IsValid()` | bool | True if has vertices and indices |
-| `GetVertexCount()` | uint32 | Number of vertices |
-| `GetIndexCount()` | uint32 | Number of indices |
-| `GetVertexBufferSize()` | size_t | vertices.count × sizeof(VertexData) |
-| `GetIndexBufferSize()` | size_t | indices.count × sizeof(uint32) |
 
 ---
 
-### Step -1.2: Refactor Mesh Class (Remove GPU Code)
 
-**File:** `Engine/GameFramework/Public/Scene/Mesh.h`
 
-**Remove:**
-- `#include "D3D12Rhi.h"`
-- `#include "D3D12ConstantBufferData.h"`
-- `m_vertexBuffer : ComPtr<...>`
-- `m_indexBuffer : ComPtr<...>`
-- `m_vertexBufferView : D3D12_VERTEX_BUFFER_VIEW`
-- `m_indexBufferView : D3D12_INDEX_BUFFER_VIEW`
-- `Upload(D3D12Rhi&)` method
-- `Bind(CommandList*)` method
 
-**Keep:**
-- `m_translation, m_rotation, m_scale`
-- `m_materialId`
-- `GetWorldMatrix()`
-- `GenerateGeometry()` (NVI pattern)
 
-**Add:**
-- `#include "MeshData.h"`
-- `m_meshData : MeshData`
-- `GetMeshData() : const MeshData&`
 
----
-
-### Step -1.3: Refactor MeshFactory (Remove Upload)
-
-**File:** `Engine/GameFramework/Public/Scene/MeshFactory.h`
-
-**Remove:**
-- `Upload(D3D12Rhi&)` method
-
-**Keep:**
-- `Rebuild(shape, count, config)`
-- `AppendShape(...)`
-- `Clear()`
-- `GetMeshes()`
-
----
-
-### Step -1.4: Create GPUMesh (New File in Renderer)
-
-**File:** `Engine/Renderer/Public/GPUMesh.h`
-
-| Member | Type | Description |
-|--------|------|-------------|
-| m_vertexBuffer | ComPtr<ID3D12Resource2> | GPU vertex buffer |
-| m_indexBuffer | ComPtr<ID3D12Resource2> | GPU index buffer |
-| m_vertexBufferView | D3D12_VERTEX_BUFFER_VIEW | For IASetVertexBuffers |
-| m_indexBufferView | D3D12_INDEX_BUFFER_VIEW | For IASetIndexBuffer |
-| m_indexCount | uint32 | For DrawIndexedInstanced |
-
-| Method | Description |
-|--------|-------------|
-| `Upload(rhi, meshData)` | Create GPU buffers from MeshData |
-| `Bind(cmdList)` | Call IASetVertexBuffers, IASetIndexBuffer |
-| `GetIndexCount()` | Return m_indexCount |
-
-**Upload Algorithm:**
-```
-Upload(rhi, meshData):
-    1. Create vertex buffer via rhi.CreateCommittedBuffer(size, UPLOAD, GENERIC_READ)
-    2. Map, memcpy vertices, Unmap
-    3. Create index buffer via rhi.CreateCommittedBuffer(size, UPLOAD, GENERIC_READ)
-    4. Map, memcpy indices, Unmap
-    5. Fill buffer views with GPU addresses
-```
 
 ---
 
