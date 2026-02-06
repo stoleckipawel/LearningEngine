@@ -1,26 +1,52 @@
 #pragma once
 
 #include "Renderer/Public/RendererAPI.h"
+#include "Renderer/Public/DirectionalLight.h"
+#include "Renderer/Public/MaterialData.h"
+#include "Renderer/Public/MeshDraw.h"
+
+#include <DirectXMath.h>
+#include <cstdint>
+#include <vector>
 
 /**
  * @brief Pure-data structure representing the scene for rendering.
  *
  * SceneView crosses the GameFramework → Renderer boundary.
- * Contains no D3D12 types - only POD data that can be serialized.
+ * Contains no D3D12 types - only POD data that can be serialized, logged, or replayed.
  *
- * TODO: Expand in Phase 2 with camera, lighting, and mesh draw data.
+ * Key Constraints:
+ * - NO D3D12 types
+ * - NO GPU handles
+ * - Pure data only
  */
 struct SPARKLE_RENDERER_API SceneView
 {
-	// Phase 2 will add:
-	// - Camera matrices (view, projection, viewProj)
-	// - Camera position/direction
-	// - Viewport dimensions
-	// - Sun light data
-	// - MeshDraw array
-	// - MaterialData array
+	// ─────────────────────────────────────────────────────────────────────────
+	// Camera Data
+	// ─────────────────────────────────────────────────────────────────────────
+	DirectX::XMFLOAT4X4 viewMatrix = {};         // World -> View
+	DirectX::XMFLOAT4X4 projMatrix = {};         // View -> Clip
+	DirectX::XMFLOAT4X4 viewProjMatrix = {};     // World -> Clip (precomputed)
+	DirectX::XMFLOAT3 cameraPosition = {};       // World-space camera position
+	float nearZ = 0.1f;                           // Near clip plane
+	DirectX::XMFLOAT3 cameraDirection = {};      // World-space camera forward vector
+	float farZ = 1000.0f;                         // Far clip plane
 
-	// Placeholder for MVP
+	// ─────────────────────────────────────────────────────────────────────────
+	// Viewport
+	// ─────────────────────────────────────────────────────────────────────────
 	uint32_t width = 0;
 	uint32_t height = 0;
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// Lighting
+	// ─────────────────────────────────────────────────────────────────────────
+	DirectionalLight sunLight = {};
+
+	// ─────────────────────────────────────────────────────────────────────────
+	// Draw Commands
+	// ─────────────────────────────────────────────────────────────────────────
+	std::vector<MeshDraw> meshDraws;             // One per mesh instance
+	std::vector<MaterialData> materials;         // All materials referenced by meshDraws
 };
