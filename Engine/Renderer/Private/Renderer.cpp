@@ -25,7 +25,7 @@
 #include "DepthConvention.h"
 #include "UI.h"
 #include "Time/Timer.h"
-#include "RenderCamera.h"
+#include "Renderer/Public/Camera/RenderCamera.h"
 #include "Scene/Camera/GameCamera.h"
 
 Renderer::Renderer(Timer& timer, const AssetSystem& assetSystem, Scene& scene, Window& window) noexcept :
@@ -283,6 +283,50 @@ void Renderer::EndFrame() noexcept
 }
 
 // -----------------------------------------------------------------------------
+// Scene View — per-frame data preparation
+// -----------------------------------------------------------------------------
+
+SceneView Renderer::BuildSceneView() const
+{
+	SceneView view = {};
+
+	// Viewport (from window, which swap chain tracks)
+	view.width = m_window->GetWidth();
+	view.height = m_window->GetHeight();
+
+	// Camera — store pointer to already-updated RenderCamera
+	view.camera = m_renderCamera.get();
+
+	// Lighting — struct defaults (sun down, white, intensity 1)
+	// Materials — single default PBR material at index 0
+	view.materials.emplace_back();
+
+	// Draw commands
+	BuildMeshDraws(view);
+
+	return view;
+}
+
+void Renderer::BuildMeshDraws(SceneView& view) const
+{
+	if (!m_scene || !m_scene->HasMeshes())
+		return;
+
+	const auto& meshes = m_scene->GetMeshes();
+	view.meshDraws.reserve(meshes.size());
+
+	for (const auto& mesh : meshes)
+	{
+		MeshDraw draw = {};
+		DirectX::XMStoreFloat4x4(&draw.worldMatrix, mesh->GetWorldMatrix());
+		DirectX::XMStoreFloat3x4(&draw.worldInvTranspose, mesh->GetWorldInverseTransposeMatrix());
+		draw.materialId = mesh->GetMaterialId();
+		draw.meshPtr = mesh.get();
+		view.meshDraws.push_back(draw);
+	}
+}
+
+// -----------------------------------------------------------------------------
 // Shuts down the renderer and all owned subsystems
 // -----------------------------------------------------------------------------
 Renderer::~Renderer() noexcept
@@ -293,7 +337,6 @@ Renderer::~Renderer() noexcept
 
 	m_pso.reset();
 	m_rootSignature.reset();
-	m_scene = nullptr;
 	m_depthStencil.reset();
 	m_samplerLibrary.reset();
 	m_textureManager.reset();

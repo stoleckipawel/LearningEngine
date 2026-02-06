@@ -25,6 +25,7 @@
 
 #pragma once
 
+#include <compare>
 #include <cstdint>
 #include <limits>
 
@@ -78,10 +79,8 @@ struct ResourceHandle
 	[[nodiscard]] constexpr bool IsDepthBuffer() const noexcept { return index == DEPTH_BUFFER_INDEX; }
 
 	// -------------------------------------------------------------------------
-	// Comparison
+	// Comparison (C++20 three-way)
 	// -------------------------------------------------------------------------
 
-	[[nodiscard]] constexpr bool operator==(const ResourceHandle& other) const noexcept { return index == other.index; }
-	[[nodiscard]] constexpr bool operator!=(const ResourceHandle& other) const noexcept { return index != other.index; }
-	[[nodiscard]] constexpr bool operator<(const ResourceHandle& other) const noexcept { return index < other.index; }
+	constexpr auto operator<=>(const ResourceHandle&) const noexcept = default;
 };

@@ -1,86 +1,79 @@
+// =============================================================================
+// PassBuilder.h — Resource Declaration Interface for Render Passes
+// =============================================================================
+//
+// Builder interface passed to RenderPass::Setup() for declaring resource usage.
+// Passes use PassBuilder to state which resources they read from and write to.
+// The FrameGraph uses this to manage lifetimes and barrier transitions.
+//
+// USAGE:
+//   void ForwardOpaquePass::Setup(PassBuilder& builder, const SceneView& view)
+//   {
+//       m_backBuffer = builder.UseBackBuffer();
+//       m_depthBuffer = builder.UseDepthBuffer();
+//   }
+//
+// NOTES:
+//   - MVP: Only UseBackBuffer() and UseDepthBuffer() are functional
+//   - Future: Read(), Write(), CreateTexture() for transient resources
+//
+// =============================================================================
+
 #pragma once
 
 #include "Renderer/Public/RendererAPI.h"
 #include "Renderer/Public/FrameGraph/ResourceHandle.h"
 #include "Renderer/Public/FrameGraph/ResourceState.h"
 
-/**
- * @brief Builder interface for render passes to declare resource usage.
- *
- * PassBuilder is passed to RenderPass::Setup() to allow passes to declare
- * which resources they read from and write to. This information is used
- * by the FrameGraph to manage resource lifetimes and state transitions.
- *
- * MVP Implementation: Only UseBackBuffer() and UseDepthBuffer() are functional.
- * Future: Read(), Write(), CreateTexture() for transient resources and automatic barriers.
- */
+// =============================================================================
+// PassBuilder
+// =============================================================================
+
 class SPARKLE_RENDERER_API PassBuilder
 {
-public:
+  public:
 	PassBuilder() = default;
 	~PassBuilder() = default;
 
-	// Non-copyable, non-movable
 	PassBuilder(const PassBuilder&) = delete;
 	PassBuilder& operator=(const PassBuilder&) = delete;
 	PassBuilder(PassBuilder&&) = delete;
 	PassBuilder& operator=(PassBuilder&&) = delete;
 
-	/**
-	 * @brief Declare write access to the back buffer.
-	 * @return Handle to the back buffer resource.
-	 */
-	ResourceHandle UseBackBuffer()
-	{
-		return ResourceHandle::BackBuffer();
-	}
+	// -------------------------------------------------------------------------
+	// Well-Known Resources
+	// -------------------------------------------------------------------------
 
-	/**
-	 * @brief Declare write access to the depth buffer.
-	 * @return Handle to the depth buffer resource.
-	 */
-	ResourceHandle UseDepthBuffer()
-	{
-		return ResourceHandle::DepthBuffer();
-	}
+	/// Declares write access to the swap chain back buffer.
+	[[nodiscard]] ResourceHandle UseBackBuffer() noexcept { return ResourceHandle::BackBuffer(); }
 
-	// ─────────────────────────────────────────────────────────────────────────
+	/// Declares write access to the depth buffer.
+	[[nodiscard]] ResourceHandle UseDepthBuffer() noexcept { return ResourceHandle::DepthBuffer(); }
+
+	// -------------------------------------------------------------------------
 	// Future API (stubbed for MVP)
-	// ─────────────────────────────────────────────────────────────────────────
+	// -------------------------------------------------------------------------
 
-	/**
-	 * @brief Declare read access to a resource. (Future)
-	 * @param handle The resource to read from.
-	 * @param state The state the resource should be in for reading.
-	 * @return The same handle for chaining.
-	 */
-	ResourceHandle Read([[maybe_unused]] ResourceHandle handle, [[maybe_unused]] ResourceState state)
+	/// Declares read access to a resource.
+	[[nodiscard]] ResourceHandle Read(
+	    [[maybe_unused]] ResourceHandle handle,
+	    [[maybe_unused]] ResourceState state) noexcept
 	{
-		// MVP: No-op, just return the handle
 		return handle;
 	}
 
-	/**
-	 * @brief Declare write access to a resource. (Future)
-	 * @param handle The resource to write to.
-	 * @param state The state the resource should be in for writing.
-	 * @return The same handle for chaining.
-	 */
-	ResourceHandle Write([[maybe_unused]] ResourceHandle handle, [[maybe_unused]] ResourceState state)
+	/// Declares write access to a resource.
+	[[nodiscard]] ResourceHandle Write(
+	    [[maybe_unused]] ResourceHandle handle,
+	    [[maybe_unused]] ResourceState state) noexcept
 	{
-		// MVP: No-op, just return the handle
 		return handle;
 	}
 
-	/**
-	 * @brief Create a transient texture resource. (Future)
-	 * @param desc Texture description (placeholder type for now).
-	 * @return Handle to the created transient texture.
-	 */
-	template<typename TextureDesc>
-	ResourceHandle CreateTexture([[maybe_unused]] const TextureDesc& desc)
+	/// Creates a transient texture resource.
+	template <typename TextureDesc>
+	[[nodiscard]] ResourceHandle CreateTexture([[maybe_unused]] const TextureDesc& desc) noexcept
 	{
-		// MVP: Return invalid handle - transient resources not yet supported
 		return ResourceHandle::Invalid();
 	}
 };

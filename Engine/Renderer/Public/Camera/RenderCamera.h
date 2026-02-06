@@ -66,6 +66,12 @@ class SPARKLE_RENDERER_API RenderCamera final
 	/// Returns the view frustum for culling operations.
 	[[nodiscard]] const Frustum& GetFrustum() const noexcept { return m_frustum; }
 
+	/// Camera transform data (cached from GameCamera).
+	[[nodiscard]] DirectX::XMFLOAT3 GetPosition() const noexcept;
+	[[nodiscard]] DirectX::XMFLOAT3 GetDirection() const noexcept;
+	[[nodiscard]] float GetNearZ() const noexcept;
+	[[nodiscard]] float GetFarZ() const noexcept;
+
 	/// Returns view constant buffer data for GPU upload.
 	[[nodiscard]] PerViewConstantBufferData GetViewConstantBufferData() const noexcept;
 

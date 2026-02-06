@@ -26,8 +26,6 @@
 #include <wrl/client.h>
 #include <cstdint>
 
-using Microsoft::WRL::ComPtr;
-
 class D3D12Rhi;
 struct MeshData;
 
@@ -59,7 +57,7 @@ class SPARKLE_RENDERER_API GPUMesh final
 	// -------------------------------------------------------------------------
 
 	// Sets vertex and index buffers on the command list (IA stage)
-	void Bind(ID3D12GraphicsCommandList* cmdList) const;
+	void Bind(ID3D12GraphicsCommandList* cmdList) const noexcept;
 
 	// -------------------------------------------------------------------------
 	// Accessors
@@ -74,8 +72,8 @@ class SPARKLE_RENDERER_API GPUMesh final
 	[[nodiscard]] const D3D12_INDEX_BUFFER_VIEW& GetIndexBufferView() const noexcept { return m_indexBufferView; }
 
   private:
-	ComPtr<ID3D12Resource2> m_vertexBuffer;
-	ComPtr<ID3D12Resource2> m_indexBuffer;
+	Microsoft::WRL::ComPtr<ID3D12Resource2> m_vertexBuffer;
+	Microsoft::WRL::ComPtr<ID3D12Resource2> m_indexBuffer;
 
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView{};
 	D3D12_INDEX_BUFFER_VIEW  m_indexBufferView{};

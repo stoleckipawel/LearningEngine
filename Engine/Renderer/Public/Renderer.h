@@ -27,6 +27,7 @@
 #pragma once
 
 #include "Renderer/Public/RendererAPI.h"
+#include "Renderer/Public/SceneData/SceneView.h"
 
 #include "Event.h"
 #include "Events/ScopedEventHandle.h"
@@ -104,6 +105,16 @@ class SPARKLE_RENDERER_API Renderer final
 	void RecordFrame() noexcept;
 	void SubmitFrame() noexcept;
 	void EndFrame() noexcept;
+
+	// -------------------------------------------------------------------------
+	// Scene View (Cauldron-style frame data)
+	// -------------------------------------------------------------------------
+
+	/// Builds a SceneView from owned subsystems for the current frame.
+	[[nodiscard]] SceneView BuildSceneView() const;
+
+	/// Populates mesh draw commands from the scene's mesh list.
+	void BuildMeshDraws(SceneView& view) const;
 
 	// -------------------------------------------------------------------------
 	// Resource Binding

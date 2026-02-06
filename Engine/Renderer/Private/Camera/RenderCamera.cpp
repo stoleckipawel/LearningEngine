@@ -1,5 +1,5 @@
 #include "PCH.h"
-#include "RenderCamera.h"
+#include "Renderer/Public/Camera/RenderCamera.h"
 #include "Scene/Camera/GameCamera.h"
 #include "DepthConvention.h"
 
@@ -77,16 +77,35 @@ XMMATRIX RenderCamera::GetViewProjectionMatrix() const noexcept
 	return XMLoadFloat4x4(&m_viewProjMatrix);
 }
 
+XMFLOAT3 RenderCamera::GetPosition() const noexcept
+{
+	return m_gameCamera.GetPosition();
+}
+
+XMFLOAT3 RenderCamera::GetDirection() const noexcept
+{
+	return m_gameCamera.GetDirection();
+}
+
+float RenderCamera::GetNearZ() const noexcept
+{
+	return m_gameCamera.GetNearZ();
+}
+
+float RenderCamera::GetFarZ() const noexcept
+{
+	return m_gameCamera.GetFarZ();
+}
+
 PerViewConstantBufferData RenderCamera::GetViewConstantBufferData() const noexcept
 {
 	PerViewConstantBufferData data = {};
 
-	// DirectXMath uses row-major storage, HLSL declares row_major - no transpose needed
-	XMStoreFloat4x4(&data.ViewMTX, GetViewMatrix());
-	XMStoreFloat4x4(&data.ProjectionMTX, GetProjectionMatrix());
-	XMStoreFloat4x4(&data.ViewProjMTX, GetViewProjectionMatrix());
+	// Matrices already cached as XMFLOAT4X4 — direct copy avoids Load/Store round-trip
+	data.ViewMTX = m_viewMatrix;
+	data.ProjectionMTX = m_projectionMatrix;
+	data.ViewProjMTX = m_viewProjMatrix;
 
-	// Camera transform data from game camera
 	data.CameraPosition = m_gameCamera.GetPosition();
 	data.CameraDirection = m_gameCamera.GetDirection();
 	data.NearZ = m_gameCamera.GetNearZ();

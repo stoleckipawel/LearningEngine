@@ -55,5 +55,5 @@ void GPUMeshCache::Clear() noexcept
 
 bool GPUMeshCache::Contains(const Mesh& cpuMesh) const noexcept
 {
-	return m_cache.find(&cpuMesh) != m_cache.end();
+	return m_cache.contains(&cpuMesh);
 }

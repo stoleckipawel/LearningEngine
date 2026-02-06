@@ -73,8 +73,6 @@ XMMATRIX DepthConvention::CreatePerspectiveFovLH(float fovY, float aspect, float
 	if (IsReversedZ())
 	{
 		// Reversed-Z: near → 1, far → 0
-		// Standard formula: fRange = far / (far - near), then m22 = fRange, m32 = -fRange * near
-		// For reversed-Z: we invert to get near → 1, far → 0
 		const float fRange = nearZ / (nearZ - farZ);
 
 		XMMATRIX m;
@@ -84,11 +82,9 @@ XMMATRIX DepthConvention::CreatePerspectiveFovLH(float fovY, float aspect, float
 		m.r[3] = XMVectorSet(0.0f, 0.0f, -fRange * farZ, 0.0f);
 		return m;
 	}
-	else
-	{
-		// Standard: near → 0, far → 1
-		return XMMatrixPerspectiveFovLH(fovY, aspect, nearZ, farZ);
-	}
+
+	// Standard: near → 0, far → 1
+	return XMMatrixPerspectiveFovLH(fovY, aspect, nearZ, farZ);
 }
 
 //------------------------------------------------------------------------------
@@ -99,33 +95,26 @@ float DepthConvention::LinearizeDepth(float ndcDepth, float nearZ, float farZ) n
 {
 	if (IsReversedZ())
 	{
-		// Reversed-Z: ndc = (far * near) / (far - z * (far - near)) ... rearranged
-		// For infinite far with reversed-Z: linearZ = nearZ / ndcDepth
 		if (ndcDepth <= 0.0f)
-			return farZ;  // At or beyond far plane
+			return farZ;
 		return nearZ / ndcDepth;
 	}
-	else
-	{
-		// Standard: linearZ = near * far / (far - ndc * (far - near))
-		const float range = farZ - nearZ;
-		return (nearZ * farZ) / (farZ - ndcDepth * range);
-	}
+
+	// Standard: linearZ = near * far / (far - ndc * (far - near))
+	const float range = farZ - nearZ;
+	return (nearZ * farZ) / (farZ - ndcDepth * range);
 }
 
 float DepthConvention::DepthToNDC(float linearZ, float nearZ, float farZ) noexcept
 {
 	if (IsReversedZ())
 	{
-		// Reversed-Z: ndc = nearZ / linearZ
 		if (linearZ <= 0.0f)
 			return 0.0f;
 		return nearZ / linearZ;
 	}
-	else
-	{
-		// Standard: ndc = (far * (z - near)) / (z * (far - near))
-		const float range = farZ - nearZ;
-		return (farZ * (linearZ - nearZ)) / (linearZ * range);
-	}
+
+	// Standard: ndc = (far * (z - near)) / (z * (far - near))
+	const float range = farZ - nearZ;
+	return (farZ * (linearZ - nearZ)) / (linearZ * range);
 }
