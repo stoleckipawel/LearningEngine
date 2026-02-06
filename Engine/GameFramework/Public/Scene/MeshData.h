@@ -29,8 +29,8 @@ struct VertexData
 	    const DirectX::XMFLOAT2& tex,
 	    const DirectX::XMFLOAT4& col,
 	    const DirectX::XMFLOAT3& norm,
-	    const DirectX::XMFLOAT4& tan) noexcept
-	    : position(pos), uv(tex), color(col), normal(norm), tangent(tan)
+	    const DirectX::XMFLOAT4& tan) noexcept :
+	    position(pos), uv(tex), color(col), normal(norm), tangent(tan)
 	{
 	}
 

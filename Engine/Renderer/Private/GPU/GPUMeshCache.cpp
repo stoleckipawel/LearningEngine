@@ -3,7 +3,7 @@
 // =============================================================================
 
 #include "PCH.h"
-#include "GPUMeshCache.h"
+#include "Renderer/Public/GPU/GPUMeshCache.h"
 
 #include "D3D12Rhi.h"
 #include "Scene/Mesh.h"
@@ -13,10 +13,7 @@
 // Construction
 // =============================================================================
 
-GPUMeshCache::GPUMeshCache(D3D12Rhi& rhi) noexcept
-    : m_rhi(&rhi)
-{
-}
+GPUMeshCache::GPUMeshCache(D3D12Rhi& rhi) noexcept : m_rhi(&rhi) {}
 
 // =============================================================================
 // Cache Operations

@@ -31,7 +31,7 @@ struct SceneView;
  */
 class SPARKLE_RENDERER_API FrameGraph
 {
-public:
+  public:
 	/**
 	 * @brief Construct a FrameGraph with access to render targets.
 	 * @param swapChain Pointer to the swap chain for back buffer access.
@@ -54,8 +54,7 @@ public:
 	 * @param args Additional arguments forwarded to the pass constructor.
 	 * @return Reference to the created pass.
 	 */
-	template<typename T, typename... Args>
-	T& AddPass(std::string_view name, Args&&... args)
+	template <typename T, typename... Args> T& AddPass(std::string_view name, Args&&... args)
 	{
 		static_assert(std::is_base_of_v<RenderPass, T>, "T must derive from RenderPass");
 		auto pass = std::make_unique<T>(name, std::forward<Args>(args)...);
@@ -107,7 +106,7 @@ public:
 	 */
 	[[nodiscard]] D3D12DepthStencil* GetDepthStencil() const { return m_depthStencil; }
 
-private:
+  private:
 	std::vector<std::unique_ptr<RenderPass>> m_passes;
 	D3D12SwapChain* m_swapChain = nullptr;
 	D3D12DepthStencil* m_depthStencil = nullptr;

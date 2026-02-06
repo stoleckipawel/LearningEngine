@@ -54,21 +54,21 @@ class SPARKLE_ENGINE_API Mesh
 	// Transform
 	// -------------------------------------------------------------------------
 
-	void                SetTranslation(const DirectX::XMFLOAT3& t) noexcept;
+	void SetTranslation(const DirectX::XMFLOAT3& t) noexcept;
 	[[nodiscard]] DirectX::XMFLOAT3 GetTranslation() const noexcept { return m_translation; }
 
-	void                SetRotationEuler(const DirectX::XMFLOAT3& r) noexcept;
+	void SetRotationEuler(const DirectX::XMFLOAT3& r) noexcept;
 	[[nodiscard]] DirectX::XMFLOAT3 GetRotationEuler() const noexcept { return m_rotationEuler; }
 
-	void                SetScale(const DirectX::XMFLOAT3& s) noexcept;
+	void SetScale(const DirectX::XMFLOAT3& s) noexcept;
 	[[nodiscard]] DirectX::XMFLOAT3 GetScale() const noexcept { return m_scale; }
 
 	// -------------------------------------------------------------------------
 	// World Matrix
 	// -------------------------------------------------------------------------
 
-	[[nodiscard]] DirectX::XMMATRIX   GetWorldMatrix() const noexcept;
-	[[nodiscard]] DirectX::XMMATRIX   GetWorldInverseTransposeMatrix() const noexcept;
+	[[nodiscard]] DirectX::XMMATRIX GetWorldMatrix() const noexcept;
+	[[nodiscard]] DirectX::XMMATRIX GetWorldInverseTransposeMatrix() const noexcept;
 	[[nodiscard]] DirectX::XMFLOAT3X3 GetWorldRotationMatrix3x3() const noexcept;
 
 	// -------------------------------------------------------------------------
@@ -87,7 +87,7 @@ class SPARKLE_ENGINE_API Mesh
 	// Material
 	// -------------------------------------------------------------------------
 
-	void   SetMaterialId(uint32 id) noexcept { m_materialId = id; }
+	void SetMaterialId(uint32 id) noexcept { m_materialId = id; }
 	uint32 GetMaterialId() const noexcept { return m_materialId; }
 
   protected:
@@ -112,14 +112,14 @@ class SPARKLE_ENGINE_API Mesh
 	DirectX::XMFLOAT3 m_scale{1.0f, 1.0f, 1.0f};
 
 	mutable DirectX::XMFLOAT4X4 m_worldMatrixCache{};
-	mutable bool                m_bWorldDirty = true;
+	mutable bool m_bWorldDirty = true;
 
 	// -------------------------------------------------------------------------
 	// Geometry
 	// -------------------------------------------------------------------------
 
 	mutable MeshData m_meshData;
-	mutable bool     m_bGeometryDirty = true;
+	mutable bool m_bGeometryDirty = true;
 
 	// -------------------------------------------------------------------------
 	// Material

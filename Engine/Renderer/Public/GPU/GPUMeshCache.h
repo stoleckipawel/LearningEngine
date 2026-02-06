@@ -20,7 +20,7 @@
 #pragma once
 
 #include "Renderer/Public/RendererAPI.h"
-#include "GPUMesh.h"
+#include "Renderer/Public/GPU/GPUMesh.h"
 
 #include <memory>
 #include <unordered_map>

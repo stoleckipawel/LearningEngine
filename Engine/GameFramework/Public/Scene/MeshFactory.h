@@ -61,12 +61,7 @@ class SPARKLE_ENGINE_API MeshFactory
 	// -------------------------------------------------------------------------
 
 	// Clears existing meshes and spawns 'count' instances randomly within AABB
-	void Rebuild(
-	    Shape shape,
-	    uint32 count,
-	    const DirectX::XMFLOAT3& center,
-	    const DirectX::XMFLOAT3& extents,
-	    uint32 seed = 0);
+	void Rebuild(Shape shape, uint32 count, const DirectX::XMFLOAT3& center, const DirectX::XMFLOAT3& extents, uint32 seed = 0);
 
 	// Appends a single mesh with explicit transform
 	void AppendShape(
@@ -76,12 +71,7 @@ class SPARKLE_ENGINE_API MeshFactory
 	    const DirectX::XMFLOAT3& scale = {1.0f, 1.0f, 1.0f});
 
 	// Appends N instances randomly within AABB
-	void AppendShapes(
-	    Shape shape,
-	    uint32 count,
-	    const DirectX::XMFLOAT3& center,
-	    const DirectX::XMFLOAT3& extents,
-	    uint32 seed = 0);
+	void AppendShapes(Shape shape, uint32 count, const DirectX::XMFLOAT3& center, const DirectX::XMFLOAT3& extents, uint32 seed = 0);
 
 	// -------------------------------------------------------------------------
 	// Management
@@ -94,7 +84,7 @@ class SPARKLE_ENGINE_API MeshFactory
 	// -------------------------------------------------------------------------
 
 	[[nodiscard]] const std::vector<std::unique_ptr<Mesh>>& GetMeshes() const noexcept { return m_meshes; }
-	[[nodiscard]] SizeType                                  GetMeshCount() const noexcept { return m_meshes.size(); }
+	[[nodiscard]] SizeType GetMeshCount() const noexcept { return m_meshes.size(); }
 
   private:
 	std::vector<std::unique_ptr<Mesh>> m_meshes;

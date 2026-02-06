@@ -3,7 +3,7 @@
 // =============================================================================
 
 #include "PCH.h"
-#include "GPUMesh.h"
+#include "Renderer/Public/GPU/GPUMesh.h"
 
 #include "D3D12Rhi.h"
 #include "Scene/MeshData.h"

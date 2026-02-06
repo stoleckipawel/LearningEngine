@@ -24,14 +24,29 @@ void PrimitiveOctahedron::GenerateGeometry(MeshData& outMeshData) const
 
 	outIndices = {
 	    // Upper pyramid
-	    2, 4, 0,
-	    2, 0, 5,
-	    2, 5, 1,
-	    2, 1, 4,
+	    2,
+	    4,
+	    0,
+	    2,
+	    0,
+	    5,
+	    2,
+	    5,
+	    1,
+	    2,
+	    1,
+	    4,
 	    // Lower pyramid
-	    3, 0, 4,
-	    3, 5, 0,
-	    3, 1, 5,
-	    3, 4, 1
-	};
+	    3,
+	    0,
+	    4,
+	    3,
+	    5,
+	    0,
+	    3,
+	    1,
+	    5,
+	    3,
+	    4,
+	    1};
 }

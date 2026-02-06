@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Renderer/Public/RendererAPI.h"
-#include "Renderer/Public/DirectionalLight.h"
-#include "Renderer/Public/MaterialData.h"
-#include "Renderer/Public/MeshDraw.h"
+#include "Renderer/Public/SceneData/DirectionalLight.h"
+#include "Renderer/Public/SceneData/MaterialData.h"
+#include "Renderer/Public/SceneData/MeshDraw.h"
 
 #include <DirectXMath.h>
 #include <cstdint>

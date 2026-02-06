@@ -9,8 +9,8 @@
 #include "ShaderCompileResult.h"
 #include "D3D12Texture.h"
 #include "TextureManager.h"
-#include "GPUMesh.h"
-#include "GPUMeshCache.h"
+#include "Renderer/Public/GPU/GPUMesh.h"
+#include "Renderer/Public/GPU/GPUMeshCache.h"
 #include "Scene/Scene.h"
 #include "Scene/Mesh.h"
 #include "D3D12PipelineState.h"
@@ -43,8 +43,10 @@ Renderer::Renderer(Timer& timer, const AssetSystem& assetSystem, Scene& scene, W
 	m_rootSignature = std::make_unique<D3D12RootSignature>(*m_rhi);
 
 	// Compile shaders
-	m_vertexShader = std::make_unique<ShaderCompileResult>(DxcShaderCompiler::CompileFromAsset(*m_assetSystem, "Passes/Forward/ForwardLitVS.hlsl", ShaderStage::Vertex, "main"));
-	m_pixelShader = std::make_unique<ShaderCompileResult>(DxcShaderCompiler::CompileFromAsset(*m_assetSystem, "Passes/Forward/ForwardLitPS.hlsl", ShaderStage::Pixel, "main"));
+	m_vertexShader = std::make_unique<ShaderCompileResult>(
+	    DxcShaderCompiler::CompileFromAsset(*m_assetSystem, "Passes/Forward/ForwardLitVS.hlsl", ShaderStage::Vertex, "main"));
+	m_pixelShader = std::make_unique<ShaderCompileResult>(
+	    DxcShaderCompiler::CompileFromAsset(*m_assetSystem, "Passes/Forward/ForwardLitPS.hlsl", ShaderStage::Pixel, "main"));
 
 	m_descriptorHeapManager = std::make_unique<D3D12DescriptorHeapManager>(*m_rhi);
 	m_swapChain = std::make_unique<D3D12SwapChain>(*m_rhi, *m_window, *m_descriptorHeapManager);

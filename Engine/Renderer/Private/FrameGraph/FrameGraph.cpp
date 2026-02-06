@@ -1,13 +1,11 @@
 #include "pch.h"
 #include "Renderer/Public/FrameGraph/FrameGraph.h"
 #include "Renderer/Public/RenderContext.h"
-#include "Renderer/Public/SceneView.h"
+#include "Renderer/Public/SceneData/SceneView.h"
 
 #include "Core/Public/Diagnostics/Log.h"
 
-FrameGraph::FrameGraph(D3D12SwapChain* swapChain, D3D12DepthStencil* depthStencil)
-	: m_swapChain(swapChain)
-	, m_depthStencil(depthStencil)
+FrameGraph::FrameGraph(D3D12SwapChain* swapChain, D3D12DepthStencil* depthStencil) : m_swapChain(swapChain), m_depthStencil(depthStencil)
 {
 	LOG_INFO("FrameGraph created");
 }

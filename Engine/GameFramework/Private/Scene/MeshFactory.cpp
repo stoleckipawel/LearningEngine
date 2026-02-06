@@ -84,12 +84,7 @@ void MeshFactory::AppendShape(
 	}
 }
 
-void MeshFactory::AppendShapes(
-    Shape shape,
-    uint32 count,
-    const DirectX::XMFLOAT3& center,
-    const DirectX::XMFLOAT3& extents,
-    uint32 seed)
+void MeshFactory::AppendShapes(Shape shape, uint32 count, const DirectX::XMFLOAT3& center, const DirectX::XMFLOAT3& extents, uint32 seed)
 {
 	if (count == 0)
 		return;
@@ -121,12 +116,7 @@ void MeshFactory::Clear() noexcept
 	m_meshes.clear();
 }
 
-void MeshFactory::Rebuild(
-    Shape shape,
-    uint32 count,
-    const DirectX::XMFLOAT3& center,
-    const DirectX::XMFLOAT3& extents,
-    uint32 seed)
+void MeshFactory::Rebuild(Shape shape, uint32 count, const DirectX::XMFLOAT3& center, const DirectX::XMFLOAT3& extents, uint32 seed)
 {
 	Clear();
 	AppendShapes(shape, count, center, extents, seed);

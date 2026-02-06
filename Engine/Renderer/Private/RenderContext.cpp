@@ -11,10 +11,7 @@
 // Construction
 // ============================================================================
 
-RenderContext::RenderContext(ID3D12GraphicsCommandList* cmdList) noexcept
-    : m_cmdList(cmdList)
-{
-}
+RenderContext::RenderContext(ID3D12GraphicsCommandList* cmdList) noexcept : m_cmdList(cmdList) {}
 
 // ============================================================================
 // Pipeline State
@@ -129,12 +126,7 @@ void RenderContext::DrawIndexedInstanced(
     std::int32_t baseVertexLocation,
     std::uint32_t startInstanceLocation) noexcept
 {
-	m_cmdList->DrawIndexedInstanced(
-	    indexCountPerInstance,
-	    instanceCount,
-	    startIndexLocation,
-	    baseVertexLocation,
-	    startInstanceLocation);
+	m_cmdList->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
 }
 
 void RenderContext::DrawInstanced(
@@ -143,11 +135,7 @@ void RenderContext::DrawInstanced(
     std::uint32_t startVertexLocation,
     std::uint32_t startInstanceLocation) noexcept
 {
-	m_cmdList->DrawInstanced(
-	    vertexCountPerInstance,
-	    instanceCount,
-	    startVertexLocation,
-	    startInstanceLocation);
+	m_cmdList->DrawInstanced(vertexCountPerInstance, instanceCount, startVertexLocation, startInstanceLocation);
 }
 
 // ============================================================================
@@ -175,25 +163,25 @@ D3D12_RESOURCE_STATES RenderContext::MapToD3D12State(ResourceState state) noexce
 {
 	switch (state)
 	{
-	case ResourceState::Common:
-		return D3D12_RESOURCE_STATE_COMMON;
-	case ResourceState::RenderTarget:
-		return D3D12_RESOURCE_STATE_RENDER_TARGET;
-	case ResourceState::DepthWrite:
-		return D3D12_RESOURCE_STATE_DEPTH_WRITE;
-	case ResourceState::DepthRead:
-		return D3D12_RESOURCE_STATE_DEPTH_READ;
-	case ResourceState::ShaderResource:
-		return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	case ResourceState::UnorderedAccess:
-		return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-	case ResourceState::CopySource:
-		return D3D12_RESOURCE_STATE_COPY_SOURCE;
-	case ResourceState::CopyDest:
-		return D3D12_RESOURCE_STATE_COPY_DEST;
-	case ResourceState::Present:
-		return D3D12_RESOURCE_STATE_PRESENT;
-	default:
-		return D3D12_RESOURCE_STATE_COMMON;
+		case ResourceState::Common:
+			return D3D12_RESOURCE_STATE_COMMON;
+		case ResourceState::RenderTarget:
+			return D3D12_RESOURCE_STATE_RENDER_TARGET;
+		case ResourceState::DepthWrite:
+			return D3D12_RESOURCE_STATE_DEPTH_WRITE;
+		case ResourceState::DepthRead:
+			return D3D12_RESOURCE_STATE_DEPTH_READ;
+		case ResourceState::ShaderResource:
+			return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		case ResourceState::UnorderedAccess:
+			return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		case ResourceState::CopySource:
+			return D3D12_RESOURCE_STATE_COPY_SOURCE;
+		case ResourceState::CopyDest:
+			return D3D12_RESOURCE_STATE_COPY_DEST;
+		case ResourceState::Present:
+			return D3D12_RESOURCE_STATE_PRESENT;
+		default:
+			return D3D12_RESOURCE_STATE_COMMON;
 	}
 }

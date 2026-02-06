@@ -1,10 +1,8 @@
 #include "PCH.h"
 #include "Mesh.h"
 
-Mesh::Mesh(const DirectX::XMFLOAT3& translation, const DirectX::XMFLOAT3& rotation, const DirectX::XMFLOAT3& scale) noexcept
-    : m_translation(translation)
-    , m_rotationEuler(rotation)
-    , m_scale(scale)
+Mesh::Mesh(const DirectX::XMFLOAT3& translation, const DirectX::XMFLOAT3& rotation, const DirectX::XMFLOAT3& scale) noexcept :
+    m_translation(translation), m_rotationEuler(rotation), m_scale(scale)
 {
 }
 
