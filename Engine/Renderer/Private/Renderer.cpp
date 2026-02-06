@@ -7,17 +7,15 @@
 #include "Window.h"
 #include "DxcShaderCompiler.h"
 #include "ShaderCompileResult.h"
-#include "D3D12Texture.h"
 #include "TextureManager.h"
-#include "Renderer/Public/GPU/GPUMesh.h"
 #include "Renderer/Public/GPU/GPUMeshCache.h"
 #include "Scene/Scene.h"
 #include "Scene/Mesh.h"
 #include "D3D12PipelineState.h"
 #include "D3D12RootSignature.h"
-#include "D3D12RootBindings.h"
 #include "D3D12ConstantBuffer.h"
 #include "D3D12ConstantBufferManager.h"
+#include "D3D12ConstantBufferData.h"
 #include "D3D12FrameResource.h"
 #include "D3D12VertexLayout.h"
 #include "Samplers/D3D12SamplerLibrary.h"
@@ -26,6 +24,9 @@
 #include "UI.h"
 #include "Time/Timer.h"
 #include "Renderer/Public/Camera/RenderCamera.h"
+#include "Renderer/Public/RenderContext.h"
+#include "Renderer/Public/FrameGraph/FrameGraph.h"
+#include "Renderer/Public/Passes/ForwardOpaquePass.h"
 #include "Scene/Camera/GameCamera.h"
 
 Renderer::Renderer(Timer& timer, const AssetSystem& assetSystem, Scene& scene, Window& window) noexcept :
@@ -86,6 +87,20 @@ Renderer::Renderer(Timer& timer, const AssetSystem& assetSystem, Scene& scene, W
 	// Create render camera bound to scene's game camera
 	m_renderCamera = std::make_unique<RenderCamera>(m_scene->GetCamera());
 
+	// Create Frame Graph and register passes
+	m_frameGraph = std::make_unique<FrameGraph>(m_swapChain.get(), m_depthStencil.get());
+	m_frameGraph->AddPass<ForwardOpaquePass>(
+	    "ForwardOpaque",
+	    *m_rootSignature,
+	    *m_pso,
+	    *m_constantBufferManager,
+	    *m_descriptorHeapManager,
+	    *m_textureManager,
+	    *m_samplerLibrary,
+	    *m_gpuMeshCache,
+	    *m_swapChain,
+	    *m_depthStencil);
+
 	PostLoad();
 }
 
@@ -97,108 +112,7 @@ void Renderer::PostLoad() noexcept
 	m_rhi->Flush();
 }
 
-void Renderer::SetViewport() noexcept
-{
-	D3D12_VIEWPORT viewport = m_swapChain->GetDefaultViewport();
-	m_rhi->GetCommandList()->RSSetViewports(1, &viewport);
 
-	D3D12_RECT scissorRect = m_swapChain->GetDefaultScissorRect();
-	m_rhi->GetCommandList()->RSSetScissorRects(1, &scissorRect);
-}
-
-void Renderer::SetBackBufferRTV() noexcept
-{
-	D3D12_CPU_DESCRIPTOR_HANDLE backBufferRTVHandle = m_swapChain->GetCPUHandle();
-	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilHandle = m_depthStencil->GetCPUHandle();
-	m_rhi->GetCommandList()->OMSetRenderTargets(1, &backBufferRTVHandle, FALSE, &depthStencilHandle);
-}
-
-void Renderer::BindPerFrameResources() noexcept
-{
-	// Per-frame constant buffer (b0)
-	m_rhi->GetCommandList()->SetGraphicsRootConstantBufferView(
-	    RootBindings::RootParam::PerFrame,
-	    m_constantBufferManager->GetPerFrameGpuAddress());
-
-	// Per-view constant buffer (b1)
-	m_rhi->GetCommandList()->SetGraphicsRootConstantBufferView(
-	    RootBindings::RootParam::PerView,
-	    m_constantBufferManager->GetPerViewGpuAddress());
-
-	// Texture SRV descriptor table
-	if (const D3D12Texture* checkerTex = m_textureManager->GetTexture(TextureId::Checker))
-	{
-		m_rhi->GetCommandList()->SetGraphicsRootDescriptorTable(RootBindings::RootParam::TextureSRV, checkerTex->GetGPUHandle());
-	}
-
-	// Sampler table (all samplers bound once per frame)
-	if (m_samplerLibrary && m_samplerLibrary->IsInitialized())
-	{
-		m_rhi->GetCommandList()->SetGraphicsRootDescriptorTable(
-		    RootBindings::RootParam::SamplerTable,
-		    m_samplerLibrary->GetTableGPUHandle());
-	}
-}
-
-void Renderer::BindPerObjectResources(const Mesh& mesh) noexcept
-{
-	// Build per-object VS constant buffer data from mesh transforms
-	PerObjectVSConstantBufferData perObjectData{};
-	DirectX::XMStoreFloat4x4(&perObjectData.WorldMTX, mesh.GetWorldMatrix());
-
-	// Store inverse-transpose as 3x4 for normal transformation (matches HLSL cbuffer float3x3 packing)
-	const DirectX::XMMATRIX worldInvTranspose = mesh.GetWorldInverseTransposeMatrix();
-	DirectX::XMStoreFloat3x4(&perObjectData.WorldInvTransposeMTX, worldInvTranspose);
-
-	// Per-object VS constant buffer (b2) - world matrix
-	m_rhi->GetCommandList()->SetGraphicsRootConstantBufferView(
-	    RootBindings::RootParam::PerObjectVS,
-	    m_constantBufferManager->UpdatePerObjectVS(perObjectData));
-
-	// Per-object PS constant buffer (b3) - material properties
-	m_rhi->GetCommandList()->SetGraphicsRootConstantBufferView(
-	    RootBindings::RootParam::PerObjectPS,
-	    m_constantBufferManager->UpdatePerObjectPS());
-}
-
-void Renderer::PopulateCommandList()
-{
-	// Prepare render target and depth buffer
-	m_swapChain->SetRenderTargetState();
-	m_depthStencil->SetWriteState();
-
-	// Set root signature and render state
-	m_rhi->GetCommandList()->SetGraphicsRootSignature(m_rootSignature->GetRaw());
-	SetViewport();
-	SetBackBufferRTV();
-
-	// Clear targets
-	m_swapChain->Clear();
-	m_depthStencil->Clear();
-
-	// Set shader-visible descriptor heaps
-	m_descriptorHeapManager->SetShaderVisibleHeaps();
-
-	// Bind per-frame resources
-	BindPerFrameResources();
-
-	// Draw loop
-	m_pso->Set();
-
-	const auto& meshes = m_scene->GetMeshes();
-	for (const auto& mesh : meshes)
-	{
-		GPUMesh* gpuMesh = m_gpuMeshCache->GetOrUpload(*mesh);
-		gpuMesh->Bind(m_rhi->GetCommandList().Get());
-		BindPerObjectResources(*mesh);
-		m_rhi->GetCommandList()->DrawIndexedInstanced(gpuMesh->GetIndexCount(), 1, 0, 0, 0);
-	}
-
-	// Post-render
-	m_ui->Render();
-	m_depthStencil->SetReadState();
-	m_swapChain->SetPresentState();
-}
 
 void Renderer::CreateDepthStencilBuffer()
 {
@@ -258,12 +172,38 @@ void Renderer::SetupFrame() noexcept
 	m_timer->Tick();
 	m_ui->Update();
 	m_constantBufferManager->UpdatePerFrame();
-	m_constantBufferManager->UpdatePerView(*m_renderCamera);
 }
 
 void Renderer::RecordFrame() noexcept
 {
-	PopulateCommandList();
+	// Build scene view from current frame state
+	SceneView sceneView = BuildSceneView();
+
+	// Build per-view constant buffer data (camera + sun light)
+	PerViewConstantBufferData viewData = m_renderCamera->GetViewConstantBufferData();
+	viewData.SunDirection = sceneView.sunLight.direction;
+	viewData.SunIntensity = sceneView.sunLight.intensity;
+	viewData.SunColor = sceneView.sunLight.color;
+	m_constantBufferManager->UpdatePerView(viewData);
+
+	// Frame graph: declare resource usage
+	m_frameGraph->Setup(sceneView);
+
+	// Frame graph: compile (MVP: no-op)
+	m_frameGraph->Compile();
+
+	// Create render context for this frame's command list
+	RenderContext context(m_rhi->GetCommandList().Get());
+
+	// Frame graph: record all pass commands
+	m_frameGraph->Execute(context);
+
+	// UI overlay (after all passes, before present transition)
+	m_ui->Render();
+
+	// Transition resources for presentation
+	m_depthStencil->SetReadState();
+	m_swapChain->SetPresentState();
 }
 
 void Renderer::SubmitFrame() noexcept
@@ -332,6 +272,9 @@ void Renderer::BuildMeshDraws(SceneView& view) const
 Renderer::~Renderer() noexcept
 {
 	m_rhi->Flush();
+
+
+	m_frameGraph.reset();
 
 	m_renderCamera.reset();
 

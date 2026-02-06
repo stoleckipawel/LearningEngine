@@ -1,7 +1,6 @@
 #include "PCH.h"
 #include "D3D12ConstantBufferManager.h"
 #include "D3D12FrameResource.h"
-#include "Renderer/Public/Camera/RenderCamera.h"
 #include "Timer.h"
 #include "Window.h"
 #include "UI.h"
@@ -74,10 +73,8 @@ void D3D12ConstantBufferManager::UpdatePerFrame()
 // Per-View Update (once per camera/view)
 //------------------------------------------------------------------------------
 
-void D3D12ConstantBufferManager::UpdatePerView(const RenderCamera& camera)
+void D3D12ConstantBufferManager::UpdatePerView(const PerViewConstantBufferData& data)
 {
-	const PerViewConstantBufferData data = camera.GetViewConstantBufferData();
-
 	const uint32_t frameInFlightIndex = m_swapChain->GetFrameInFlightIndex();
 	m_perViewCB[frameInFlightIndex]->Update(data);
 }

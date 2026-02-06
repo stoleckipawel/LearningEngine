@@ -30,7 +30,6 @@
 #include "D3D12ConstantBuffer.h"
 
 class Timer;
-class RenderCamera;
 class Window;
 class D3D12Rhi;
 class D3D12DescriptorHeapManager;
@@ -74,7 +73,7 @@ class D3D12ConstantBufferManager final
 	void UpdatePerFrame();
 
 	// Update per-view constant buffer. Call once per camera/view.
-	void UpdatePerView(const RenderCamera& camera);
+	void UpdatePerView(const PerViewConstantBufferData& data);
 
 	// Update per-object VS constant buffer for a draw.
 	// Any system can provide this data (Primitive, SkeletalMesh, etc.) without coupling.

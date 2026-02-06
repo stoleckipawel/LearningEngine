@@ -50,8 +50,8 @@ class D3D12ConstantBufferManager;
 class D3D12DescriptorHeapManager;
 class D3D12FrameResourceManager;
 class D3D12SwapChain;
+class FrameGraph;
 class GPUMeshCache;
-class Mesh;
 class RenderCamera;
 class Scene;
 class Window;
@@ -99,7 +99,6 @@ class SPARKLE_RENDERER_API Renderer final
 	// Frame Pipeline Stages
 	// -------------------------------------------------------------------------
 
-	void PopulateCommandList();
 	void BeginFrame() noexcept;
 	void SetupFrame() noexcept;
 	void RecordFrame() noexcept;
@@ -115,15 +114,6 @@ class SPARKLE_RENDERER_API Renderer final
 
 	/// Populates mesh draw commands from the scene's mesh list.
 	void BuildMeshDraws(SceneView& view) const;
-
-	// -------------------------------------------------------------------------
-	// Resource Binding
-	// -------------------------------------------------------------------------
-
-	void SetViewport() noexcept;
-	void SetBackBufferRTV() noexcept;
-	void BindPerFrameResources() noexcept;
-	void BindPerObjectResources(const Mesh& mesh) noexcept;
 
 	// -------------------------------------------------------------------------
 	// Owned Resources
@@ -175,6 +165,9 @@ class SPARKLE_RENDERER_API Renderer final
 
 	// UI (owned, created after descriptor heap manager)
 	std::unique_ptr<UI> m_ui;
+
+	// Frame Graph (owned, created after all dependencies)
+	std::unique_ptr<FrameGraph> m_frameGraph;
 
 	// Scene reference (not owned, for mesh access)
 	Scene* m_scene = nullptr;

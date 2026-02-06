@@ -24,14 +24,14 @@ namespace Lighting
 	};
 
 	// =========================================================================
-	// Placeholder Light (until proper light system is implemented)
+	// Main Directional Light (from PerView constant buffer)
 	// =========================================================================
 
 	DirectionalLight GetMainLight()
 	{
 		DirectionalLight light;
-		light.Direction = normalize(float3(0.5f, 1.0f, 0.3f));
-		light.Radiance = float3(1.0f, 1.0f, 1.0f);
+		light.Direction = normalize(-SunDirection);           // CB stores direction toward surface; negate for "toward light"
+		light.Radiance = SunColor * SunIntensity;
 		return light;
 	}
 
