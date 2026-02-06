@@ -272,73 +272,8 @@
 └───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### What We Build Now vs Later
-
-| Component | MVP (Now) | Future Enhancement |
-|-----------|-----------|-------------------|
-| **RenderContext** | Thin wrapper over D3D12 command list | Multi-backend (Vulkan, etc.) |
-| **ResourceState** | API-agnostic state enum | Full barrier automation |
-| **ResourceHandle** | Fixed indices (0=back, 1=depth) | Virtual handles with aliasing |
-| **FrameGraph::Compile()** | No-op | Topological sort, barriers |
-| **Passes** | ForwardOpaquePass only | Shadow, GBuffer, Post, UI |
-| **SceneView** | Camera + meshes + sun | Point lights, sky, particles |
-| **GPUMeshCache** | Pointer-keyed lazy upload | Mesh IDs, streaming |
-
----
 
 
-
-### Step 0.2: Create RenderContext Interface
-
-**File:** `Engine/Renderer/Public/RenderContext.h`
-
-**RenderContext** wraps the command list and provides semantic operations:
-
-| Method Category | Methods |
-|-----------------|---------|
-| **Pipeline** | `SetPipelineState(pso)`, `SetRootSignature(sig)` |
-| **Geometry** | `SetPrimitiveTopology(topology)`, `BindVertexBuffer(view)`, `BindIndexBuffer(view)` |
-| **Constants** | `BindConstantBuffer(slot, gpuAddress)`, `BindDescriptorTable(slot, handle)` |
-| **Render Targets** | `SetRenderTarget(rtv, dsv)`, `ClearRenderTarget(rtv, color)`, `ClearDepthStencil(dsv, depth)` |
-| **Viewport** | `SetViewport(x, y, w, h)`, `SetScissorRect(x, y, w, h)` |
-| **Draw** | `DrawIndexedInstanced(indexCount, instanceCount, startIndex, baseVertex, startInstance)` |
-| **Barriers** | `TransitionResource(resource, before, after)` |
-| **Access** | `GetNativeCommandList()` — escape hatch for UI, etc. |
-
----
-
-### Step 0.3: Implement D3D12RenderContext
-
-**File:** `Engine/Renderer/Private/D3D12RenderContext.cpp`
-
-**Constructor takes:**
-- `ID3D12GraphicsCommandList*` — the active command list
-
-**Each method translates to D3D12:**
-
-| RenderContext Method | D3D12 Translation |
-|---------------------|-------------------|
-| `SetPipelineState(pso)` | `cmdList->SetPipelineState(pso)` |
-| `SetRootSignature(sig)` | `cmdList->SetGraphicsRootSignature(sig)` |
-| `BindConstantBuffer(slot, addr)` | `cmdList->SetGraphicsRootConstantBufferView(slot, addr)` |
-| `BindDescriptorTable(slot, hdl)` | `cmdList->SetGraphicsRootDescriptorTable(slot, hdl)` |
-| `SetRenderTarget(rtv, dsv)` | `cmdList->OMSetRenderTargets(1, &rtv, false, &dsv)` |
-| `ClearRenderTarget(rtv, color)` | `cmdList->ClearRenderTargetView(rtv, color, 0, nullptr)` |
-| `DrawIndexedInstanced(...)` | `cmdList->DrawIndexedInstanced(...)` |
-| `TransitionResource(...)` | Build `D3D12_RESOURCE_BARRIER` + `ResourceBarrier()` |
-
-**TransitionResource maps ResourceState to D3D12:**
-```
-TransitionResource(resource, before, after):
-    barrier = D3D12_RESOURCE_BARRIER
-    barrier.Type = TRANSITION
-    barrier.Resource = resource
-    barrier.StateBefore = MapToD3D12State(before)
-    barrier.StateAfter = MapToD3D12State(after)
-    cmdList.ResourceBarrier(1, &barrier)
-```
-
----
 
 ## Phase 1: Frame Graph Foundation
 
