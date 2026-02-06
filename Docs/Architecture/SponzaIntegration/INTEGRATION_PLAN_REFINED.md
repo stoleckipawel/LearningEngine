@@ -286,45 +286,7 @@
 
 ---
 
-## Phase -1: GameFramework Decoupling
 
-> **Goal:** Remove all D3D12 dependencies from GameFramework. Renderer owns all GPU resources.
-
-
-**⚠️ DO NOT PROCEED TO PHASE 0 UNTIL BOX SCENE RENDERS CORRECTLY**
-
----
-
-## Phase 0: RenderContext API
-
-> **Goal:** Create a high-level command abstraction inspired by Frostbite, hiding D3D12 details from render passes.
-
-### Why RenderContext?
-
-| Without RenderContext | With RenderContext |
-|----------------------|-------------------|
-| Passes call raw D3D12 commands | Passes call semantic methods |
-| Barrier management in every pass | Barriers centralized in context |
-| Hard to add Vulkan later | Clean abstraction boundary |
-| GPU debugging scattered | Single point for validation |
-
-### Step 0.1: Create ResourceState Enum
-
-**File:** `Engine/Renderer/Public/FrameGraph/ResourceState.h`
-
-| State | D3D12 Equivalent | Usage |
-|-------|------------------|-------|
-| Common | COMMON | Initial/final state |
-| RenderTarget | RENDER_TARGET | Writing to color buffer |
-| DepthWrite | DEPTH_WRITE | Writing to depth buffer |
-| DepthRead | DEPTH_READ | Sampling depth buffer |
-| ShaderResource | PIXEL_SHADER_RESOURCE | Sampling in shader |
-| UnorderedAccess | UNORDERED_ACCESS | Compute read/write |
-| CopySource | COPY_SOURCE | Copy from |
-| CopyDest | COPY_DEST | Copy to |
-| Present | PRESENT | Swap chain present |
-
----
 
 ### Step 0.2: Create RenderContext Interface
 
