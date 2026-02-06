@@ -1,0 +1,58 @@
+// =============================================================================
+// MaterialDesc.h — CPU-Side PBR Material Description
+// =============================================================================
+//
+// Describes a PBR material loaded from glTF or other asset sources.
+// Pure data — no GPU handles, no rendering dependencies.
+//
+// USAGE:
+//   MaterialDesc desc;
+//   desc.baseColor = {1.0f, 0.5f, 0.2f, 1.0f};
+//   desc.roughness = 0.8f;
+//   if (desc.albedoTexture) { ... load texture ... }
+//
+// NOTES:
+//   - Lives in GameFramework (CPU-only, no Renderer dependency)
+//   - Renderer maps this to its own MaterialData for GPU upload
+//   - Texture fields store relative paths resolved via AssetSystem
+//
+// =============================================================================
+
+#pragma once
+
+#include "GameFramework/Public/GameFrameworkAPI.h"
+
+#include <DirectXMath.h>
+#include <filesystem>
+#include <optional>
+#include <string>
+
+// =============================================================================
+// MaterialDesc
+// =============================================================================
+
+struct SPARKLE_ENGINE_API MaterialDesc
+{
+	// -------------------------------------------------------------------------
+	// Identity
+	// -------------------------------------------------------------------------
+
+	std::string name;
+
+	// -------------------------------------------------------------------------
+	// PBR Parameters
+	// -------------------------------------------------------------------------
+
+	DirectX::XMFLOAT4 baseColor = {1.0f, 1.0f, 1.0f, 1.0f};
+	float metallic = 0.0f;
+	float roughness = 0.5f;
+	float f0 = 0.04f;  // Fresnel reflectance at normal incidence (dielectric default)
+
+	// -------------------------------------------------------------------------
+	// Texture Paths (relative to asset root)
+	// -------------------------------------------------------------------------
+
+	std::optional<std::filesystem::path> albedoTexture;
+	std::optional<std::filesystem::path> normalTexture;
+	std::optional<std::filesystem::path> metallicRoughnessTexture;
+};
