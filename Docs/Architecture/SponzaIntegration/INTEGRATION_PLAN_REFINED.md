@@ -272,29 +272,6 @@
 └───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-
-
-
-## Phase 1: Frame Graph Foundation
-
-> **Goal:** Create the core Frame Graph infrastructure — passes declare resources, graph orchestrates execution.
-
-### Step 1.1: Create ResourceHandle
-
-**File:** `Engine/Renderer/Public/FrameGraph/ResourceHandle.h`
-
-| Member | Type | Description |
-|--------|------|-------------|
-| index | uint32 | Resource slot ID |
-
-| Constant | Value | Meaning |
-|----------|-------|---------|
-| INVALID | UINT32_MAX | No resource |
-| BACKBUFFER | 0 | Swap chain back buffer (MVP) |
-| DEPTH_BUFFER | 1 | Depth stencil buffer (MVP) |
-
----
-
 ### Step 1.2: Create RenderPass Base Class
 
 **File:** `Engine/Renderer/Public/FrameGraph/RenderPass.h`
