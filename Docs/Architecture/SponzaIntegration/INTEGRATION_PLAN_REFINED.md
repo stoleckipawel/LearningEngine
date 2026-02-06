@@ -272,26 +272,6 @@
 └───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Step 1.2: Create RenderPass Base Class
-
-**File:** `Engine/Renderer/Public/FrameGraph/RenderPass.h`
-
-| Method | Parameters | Description |
-|--------|------------|-------------|
-| Constructor | name | Store pass name for debugging |
-| `Setup` (pure virtual) | builder, sceneView | Declare resource dependencies |
-| `Execute` (pure virtual) | context | Record GPU commands |
-| `GetName` | — | Return pass name |
-
-**Setup vs Execute:**
-
-| Aspect | Setup | Execute |
-|--------|-------|---------|
-| When called | Before rendering | During rendering |
-| Purpose | Declare what resources needed | Record GPU commands |
-| GPU work | NONE | All drawing here |
-| Receives | PassBuilder, SceneView | RenderContext |
-
 ---
 
 ### Step 1.3: Create PassBuilder
