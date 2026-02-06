@@ -274,48 +274,8 @@
 
 ---
 
-### Step 1.3: Create PassBuilder
-
-**File:** `Engine/Renderer/Public/FrameGraph/PassBuilder.h`
-
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `UseBackBuffer()` | ResourceHandle | Declare write to back buffer |
-| `UseDepthBuffer()` | ResourceHandle | Declare write to depth buffer |
-| `Read(handle, state)` | ResourceHandle | Declare read (future) |
-| `Write(handle, state)` | ResourceHandle | Declare write (future) |
-| `CreateTexture(desc)` | ResourceHandle | Create transient (future) |
-
-**MVP Implementation:** Only `UseBackBuffer()` and `UseDepthBuffer()` needed.
-
 ---
 
-### Step 1.4: Create FrameGraph Class
-
-**File:** `Engine/Renderer/Public/FrameGraph/FrameGraph.h`
-
-| Member | Type | Description |
-|--------|------|-------------|
-| m_passes | vector<unique_ptr<RenderPass>> | All registered passes |
-| m_swapChain | D3D12SwapChain* | For back buffer access |
-| m_depthStencil | D3D12DepthStencil* | For depth buffer access |
-
-| Method | Description |
-|--------|-------------|
-| `AddPass<T>(name, ...)` | Create and register a pass, return reference |
-| `Setup(sceneView)` | Call Setup on all passes |
-| `Compile()` | MVP: no-op. Future: barriers, ordering |
-| `Execute(context)` | Call Execute on all passes |
-
-**Per-Frame Flow:**
-```
-1. SceneView view = scene.ExtractSceneView(w, h)
-2. frameGraph.Setup(view)      ← All passes declare resources
-3. frameGraph.Compile()        ← MVP: no-op
-4. frameGraph.Execute(context) ← All passes record commands
-```
-
----
 
 ## Phase 2: SceneView Extraction
 
