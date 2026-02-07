@@ -142,9 +142,8 @@ D3D12_VIEWPORT D3D12SwapChain::GetDefaultViewport() const
 	vp.TopLeftY = 0;
 	vp.Width = float(m_window->GetWidth());
 	vp.Height = float(m_window->GetHeight());
-	// Reversed-Z: map near to 1.0 and far to 0.0 for better precision
-	vp.MinDepth = 1.0f;
-	vp.MaxDepth = 0.0f;
+	vp.MinDepth = 0.0f;
+	vp.MaxDepth = 1.0f;
 	return vp;
 }
 
