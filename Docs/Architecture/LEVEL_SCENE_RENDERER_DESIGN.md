@@ -384,6 +384,340 @@ This is a **measured optimization** — profile first, optimize second.
 
 ---
 
+## 8.1 Phase 1 Implementation Plan — Declarative Descriptor
+
+Detailed step-by-step plan for migrating from imperative `OnLoad` to declarative `LevelDesc`.
+
+### Step 1: Create `LevelDesc.h` and `MeshRequest`
+
+**File:** `Engine/GameFramework/Public/Level/LevelDesc.h`
+
+Create the descriptor structs that replace imperative level loading. These are pure value types with no behavior.
+
+```cpp
+#pragma once
+
+#include "GameFramework/Public/GameFrameworkAPI.h"
+#include "GameFramework/Public/Level/Level.h"           // CameraSetup
+#include "GameFramework/Public/Scene/MeshFactory.h"     // MeshFactory::Shape
+#include "GameFramework/Public/Assets/AssetTypes.h"     // AssetType
+
+#include <DirectXMath.h>
+#include <cstdint>
+#include <filesystem>
+#include <optional>
+#include <vector>
+
+// What mesh asset the level wants loaded
+struct SPARKLE_ENGINE_API MeshRequest
+{
+    std::filesystem::path assetPath;                // Relative (e.g., "Sponza/Sponza.gltf")
+    AssetType assetType = AssetType::Mesh;
+};
+
+// Procedural primitive spawn request
+struct SPARKLE_ENGINE_API PrimitiveRequest
+{
+    MeshFactory::Shape shape = MeshFactory::Shape::Box;
+    std::uint32_t count = 500;
+    DirectX::XMFLOAT3 center  = {0.0f, 0.0f, 50.0f};
+    DirectX::XMFLOAT3 extents = {100.0f, 100.0f, 100.0f};
+    std::uint32_t seed = 1337;
+};
+
+// Complete declarative level description — everything a Scene needs to build
+struct SPARKLE_ENGINE_API LevelDesc
+{
+    Level::CameraSetup camera;
+    std::vector<MeshRequest> meshAssets;
+    std::optional<PrimitiveRequest> primitives;
+    // Future: std::vector<LightDesc> lights;
+};
+```
+
+**Why separate from `Scene::PrimitiveConfig`?** `PrimitiveRequest` is the level's *intent*; `PrimitiveConfig` is Scene's internal state. Currently identical, but decoupling now prevents future breakage when Scene internals change.
+
+**Verification:** Header-only, no `.cpp` needed. Compiles if included from any GameFramework source.
+
+---
+
+### Step 2: Refactor `Level` base class — add `BuildDescription()`
+
+**File:** `Engine/GameFramework/Public/Level/Level.h`
+
+Changes:
+- Add `#include "LevelDesc.h"`
+- Add pure virtual `BuildDescription()` returning `LevelDesc`
+- Remove `OnLoad()` and `OnUnload()` virtual methods
+- Keep `GetName()`, `GetDescription()`, `GetDefaultCamera()` (camera is also in LevelDesc but `GetDefaultCamera()` provides the value that `BuildDescription()` uses)
+
+```cpp
+// BEFORE:
+virtual void OnLoad(LevelContext& context) = 0;
+virtual void OnUnload(LevelContext& context);
+
+// AFTER:
+virtual LevelDesc BuildDescription() const = 0;
+// OnLoad / OnUnload removed entirely
+```
+
+**Why keep `GetDefaultCamera()`?** It's a convenience accessor. `BuildDescription()` implementations call it to fill `desc.camera`. Could be removed later but avoids breaking the `BuiltinLevel` pattern now.
+
+**Verification:** Compile will fail on all Level subclasses — expected. Fixed in Step 3.
+
+---
+
+### Step 3: Refactor built-in levels to return `LevelDesc`
+
+Update each of the 3 built-in levels to implement `BuildDescription()` instead of `OnLoad()`.
+
+#### 3a: `EmptyLevel.h`
+
+```cpp
+// BEFORE:
+void OnLoad(LevelContext&) override { /* empty */ }
+
+// AFTER:
+LevelDesc BuildDescription() const override
+{
+    LevelDesc desc;
+    desc.camera = GetDefaultCamera();
+    return desc;
+}
+```
+
+No includes to remove — `EmptyLevel` didn't use Scene or AssetSystem.
+
+#### 3b: `BasicShapesLevel.h`
+
+```cpp
+// BEFORE:
+void OnLoad(LevelContext& context) override
+{
+    Scene::PrimitiveConfig config;
+    config.shape = MeshFactory::Shape::Box;
+    ...
+    context.scene.SetPrimitiveConfig(config);
+}
+
+// AFTER:
+LevelDesc BuildDescription() const override
+{
+    LevelDesc desc;
+    desc.camera = GetDefaultCamera();
+
+    PrimitiveRequest prims;
+    prims.shape = MeshFactory::Shape::Box;
+    prims.count = 500;
+    prims.center = {0.0f, 0.0f, 50.0f};
+    prims.extents = {100.0f, 100.0f, 100.0f};
+    prims.seed = 1337;
+    desc.primitives = prims;
+
+    return desc;
+}
+```
+
+Remove `#include "Scene/Scene.h"` and `#include "Level/LevelContext.h"` — no longer needed.
+
+#### 3c: `SponzaLevel.h` + `SponzaLevel.cpp`
+
+Move implementation into header (now trivial) or keep `.cpp`:
+
+```cpp
+// BEFORE (SponzaLevel.cpp):
+void SponzaLevel::OnLoad(LevelContext& context)
+{
+    auto path = context.assetSystem.ResolvePath("Sponza/Sponza.gltf", AssetType::Mesh);
+    if (path) context.scene.LoadGltf(*path);
+}
+
+// AFTER (SponzaLevel.h, inline):
+LevelDesc BuildDescription() const override
+{
+    LevelDesc desc;
+    desc.camera = GetDefaultCamera();
+    desc.meshAssets.push_back({"Sponza/Sponza.gltf", AssetType::Mesh});
+    return desc;
+}
+```
+
+**Delete `SponzaLevel.cpp`** — no longer needed. The level no longer resolves paths or calls Scene. Path resolution moves to `Scene::LoadLevel()`.
+
+**Verification:** All 3 levels compile with `BuildDescription()`. No level includes `Scene.h`.
+
+---
+
+### Step 4: Delete `LevelContext.h` and `Level::OnUnload`
+
+**Delete:** `Engine/GameFramework/Public/Level/LevelContext.h`
+
+**Delete from `Level.cpp`:**
+```cpp
+// Remove:
+void Level::OnUnload(LevelContext&) { }
+```
+
+**Verification:** `grep -r "LevelContext" Engine/` returns zero hits.
+
+---
+
+### Step 5: Refactor `Scene::LoadLevel()` to consume `LevelDesc`
+
+**File:** `Engine/GameFramework/Public/Scene/Scene.h`
+
+Change signature:
+```cpp
+// BEFORE:
+void LoadLevel(Level& level, AssetSystem& assetSystem);
+
+// AFTER:
+void LoadLevel(const Level& level, AssetSystem& assetSystem);
+```
+
+Note: `const Level&` — Level is now read-only (pure data factory).
+
+**File:** `Engine/GameFramework/Private/Scene/Scene.cpp`
+
+```cpp
+void Scene::LoadLevel(const Level& level, AssetSystem& assetSystem)
+{
+    LOG_INFO("Scene: Loading level '" + std::string(level.GetName()) + "'");
+
+    Clear();
+
+    // Get declarative description
+    LevelDesc desc = level.BuildDescription();
+
+    // Camera
+    m_camera->SetPosition(desc.camera.position);
+    m_camera->SetYawPitch(desc.camera.yawRadians, desc.camera.pitchRadians);
+
+    // Load mesh assets
+    for (const auto& req : desc.meshAssets)
+    {
+        auto resolved = assetSystem.ResolvePath(req.assetPath, req.assetType);
+        if (resolved)
+        {
+            LoadGltf(*resolved);
+        }
+        else
+        {
+            LOG_WARNING("Scene: Asset not found — " + req.assetPath.string());
+        }
+    }
+
+    // Procedural primitives (used if no mesh assets loaded, or explicitly requested)
+    if (desc.primitives)
+    {
+        PrimitiveConfig config;
+        config.shape   = desc.primitives->shape;
+        config.count   = desc.primitives->count;
+        config.center  = desc.primitives->center;
+        config.extents = desc.primitives->extents;
+        config.seed    = desc.primitives->seed;
+        SetPrimitiveConfig(config);
+    }
+
+    m_currentLevelName = std::string(level.GetName());
+    LOG_INFO("Scene: Level '" + m_currentLevelName + "' loaded");
+}
+```
+
+**Key change:** Scene now drives the loading. Level just described what it wanted. Path resolution, glTF loading, primitive generation — all Scene's responsibility.
+
+Remove includes from Scene.cpp that are no longer needed:
+- Remove `#include "Level/LevelContext.h"` — deleted
+- Add `#include "Level/LevelDesc.h"`
+
+**Verification:** `Scene::LoadLevel` compiles. App.cpp unchanged (still calls `scene.LoadLevel(level, assetSystem)`).
+
+---
+
+### Step 6: Update `App.cpp` — const-correctness
+
+**File:** `Engine/Application/Private/App.cpp`
+
+The `FindLevel` call now returns a `Level*` used as `const Level&`. Minor change:
+
+```cpp
+// BEFORE:
+if (auto* level = levelRegistry.FindLevel(...))
+{
+    m_scene->LoadLevel(*level, *m_assetSystem);
+}
+
+// AFTER: (same code, but LoadLevel now takes const Level&)
+// No source change needed — implicit const conversion.
+```
+
+**Verification:** App.cpp compiles without changes.
+
+---
+
+### Step 7: Clean up includes and verify no regressions
+
+Run these checks:
+
+```
+1. grep -r "OnLoad"       Engine/GameFramework/  → zero hits (removed)
+2. grep -r "OnUnload"     Engine/GameFramework/  → zero hits (removed)
+3. grep -r "LevelContext"  Engine/                → zero hits (deleted)
+4. grep -r "BuildDescription" Engine/GameFramework/ → hits in Level.h + 3 built-in levels
+5. Full build: cmake --build build --config Debug
+```
+
+---
+
+### Step 8: Verify data flow end-to-end
+
+Post-build verification that the new data flow works:
+
+```
+App::Initialize()
+  └── LevelRegistry::FindLevel(BuiltinLevel::Sponza)
+       └── returns SponzaLevel*
+
+Scene::LoadLevel(const SponzaLevel&, assetSystem)
+  └── SponzaLevel::BuildDescription()
+       └── returns LevelDesc { camera, meshAssets: ["Sponza/Sponza.gltf"] }
+  └── Scene resolves path via AssetSystem
+  └── Scene calls LoadGltf() internally
+  └── Scene stores meshes + materials
+
+Renderer::BuildSceneView()
+  └── reads Scene::GetMeshes(), GetLoadedMaterials()
+  └── produces SceneView { meshDraws, materials }
+
+ForwardOpaquePass::Execute()
+  └── draws meshDraws with GPUMeshCache + material data
+```
+
+No change to Renderer or RenderPass code. The refactoring is contained entirely within GameFramework.
+
+---
+
+### Files Changed Summary
+
+| Action | File | Lines |
+|--------|------|-------|
+| **Create** | `GameFramework/Public/Level/LevelDesc.h` | ~40 |
+| **Edit** | `GameFramework/Public/Level/Level.h` | Remove `OnLoad`/`OnUnload`, add `BuildDescription` |
+| **Edit** | `GameFramework/Private/Level/Level.cpp` | Remove `OnUnload` default impl |
+| **Edit** | `GameFramework/Private/Level/Levels/EmptyLevel.h` | Replace `OnLoad` → `BuildDescription` |
+| **Edit** | `GameFramework/Private/Level/Levels/BasicShapesLevel.h` | Replace `OnLoad` → `BuildDescription`, remove Scene include |
+| **Edit** | `GameFramework/Private/Level/Levels/SponzaLevel.h` | Replace `OnLoad` → `BuildDescription` (inline) |
+| **Delete** | `GameFramework/Private/Level/Levels/SponzaLevel.cpp` | Entire file |
+| **Delete** | `GameFramework/Public/Level/LevelContext.h` | Entire file |
+| **Edit** | `GameFramework/Public/Scene/Scene.h` | `LoadLevel` takes `const Level&` |
+| **Edit** | `GameFramework/Private/Scene/Scene.cpp` | New `LoadLevel` that consumes `LevelDesc` |
+| **None** | `Application/Private/App.cpp` | No changes needed |
+| **None** | `Renderer/Private/Renderer.cpp` | No changes needed |
+
+**Total:** ~200 lines changed, 2 files deleted, 1 file created. Zero Renderer changes.
+
+---
+
 ## 9. Interview Talking Points
 
 This design demonstrates several principles interviewers at NVIDIA/AMD/Epic value:
