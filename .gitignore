@@ -30,6 +30,7 @@ mono_crash.*
 
 # Editor files
 .history
+imgui.ini
 .vscode/
 .vscode/*.code-workspace
 .vscode/settings.json
