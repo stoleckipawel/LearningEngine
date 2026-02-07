@@ -2,7 +2,7 @@
 
 int main()
 {
-	App app("HelloWorld");
+	App app("DemoProject", "Sponza");
 	app.Run();
 	return 0;
 }

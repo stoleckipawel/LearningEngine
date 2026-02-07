@@ -25,7 +25,7 @@ void D3D12PipelineState::SetRasterizerState(
 	rs = {};
 	rs.FillMode = bRenderWireframe ? D3D12_FILL_MODE_WIREFRAME : D3D12_FILL_MODE_SOLID;
 	rs.CullMode = cullMode;
-	rs.FrontCounterClockwise = TRUE;
+	rs.FrontCounterClockwise = FALSE;
 	rs.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
 	rs.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
 	rs.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;

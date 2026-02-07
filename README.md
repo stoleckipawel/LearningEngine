@@ -206,8 +206,7 @@ Module/
 
 | Project | Description |
 |---------|-------------|
-| `Projects/HelloWorld/` | Minimal starter example |
-| `Projects/SampleScenes/` | Primitive showcase |
+| `Projects/DemoProject/` | Sponza scene viewer |
 | `Projects/TemplateProject/` | Template for new projects |
 
 ### Build Output
