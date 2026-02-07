@@ -6,8 +6,9 @@
 # Level → Scene → Renderer: Data Transport Design
 
 **Author:** Engine Architecture  
-**Status:** Proposed  
+**Status:** In Progress (Phase 1)  
 **Date:** 2026-02-07  
+**Last Updated:** 2026-02-07  
 
 ---
 
@@ -32,41 +33,52 @@ The design must satisfy:
 
 ---
 
-## 2. Current Architecture (Status Quo)
+## 2. Current Architecture (as of 2026-02-07)
 
 ```
-Level::OnLoad(LevelContext{scene, assetSystem})
-  │
-  ├── SponzaLevel calls scene.LoadGltf(path)     ← Level drives loading
-  ├── BasicShapesLevel calls scene.SetPrimitives  ← Level drives loading
-  │
-  ▼
-Scene owns:
+Level::BuildDescription() -> LevelDesc               ← Declarative (Option B)
+    │
+    ▼
+Scene::LoadLevel(level, assetSystem)
+    ├── resolves mesh asset paths, calls LoadGltf()
+    ├── handles procedural mesh requests via MeshFactory
+    │
+    ▼
+Scene owns:                                          ← IMPROVED: pure container
   ├── GameCamera
-  ├── vector<unique_ptr<Mesh>> (imported or procedural)
-  ├── vector<MaterialDesc>  (CPU PBR descriptions)
-  └── MeshFactory (procedural)
+  ├── vector<unique_ptr<Mesh>> m_meshes               (unified — no dual-path)
+  └── vector<MaterialDesc>     m_loadedMaterials
   │
   ▼
 Renderer::BuildSceneView() [per frame]
-  ├── Converts MaterialDesc → MaterialData (Renderer-side)
-  ├── Iterates Scene::GetMeshes() → emits MeshDraw per mesh
-  └── Returns SceneView { camera, meshDraws, materials, lights }
+  ├── BuildMaterials()  — MaterialDesc → MaterialData via FromDesc()
+  ├── BuildMeshDraws()  — iterates GetMeshes() → MeshDraw per mesh
+  └── Returns SceneView { camera, meshDraws, materials, sunLight }
   │
   ▼
 ForwardOpaquePass::Execute(RenderContext)
   └── Draws meshDraws with GPU resources from GPUMeshCache
 ```
 
-### Problems with Current Design
+### What Improved Since Initial Design
+
+| # | Change | Impact |
+|---|--------|--------|
+| ✅ | **Scene is a pure container** — no MeshFactory, no PrimitiveConfig, no RebuildGeometry | P5 resolved — Scene is no longer a god object |
+| ✅ | **Unified mesh vector** — single `m_meshes`, no imported-vs-procedural priority logic | Simpler, no ambiguous fallback behavior |
+| ✅ | **No CameraSetup in Level** — removed entirely, camera uses GameCamera defaults | Fewer concepts, less coupling |
+| ✅ | **BuildMaterials/BuildMeshDraws extracted** — Renderer has clean separation of extraction steps | Readability |
+| ✅ | **MaterialData::FromDesc()** — encapsulated conversion, no field-by-field copy in Renderer | Maintainability |
+| ✅ | **MeshFactory::TakeMeshes()** — rvalue-qualified ownership transfer | Clear ownership semantics |
+| ✅ | **Scene::AddMeshes()** — generic mesh intake, not tied to procedural or imported | Extensible |
+
+### Remaining Problems
 
 | # | Issue | Severity |
 |---|-------|----------|
-| P1 | **Level performs loading** — `SponzaLevel::OnLoad` calls `scene.LoadGltf()`. Level is both *data definition* and *imperative loader*. Violates SRP. | High |
-| P2 | **MaterialDesc → MaterialData conversion happens every frame** — `BuildSceneView()` re-converts the entire material array each frame even when nothing changed. | Medium |
-| P3 | **No declarative level description** — Level must know Scene's API. Adding a new content type (e.g., lights, volumes) requires changing Level and Scene simultaneously. | High |
-| P4 | **No diff/change tracking** — Renderer re-extracts everything every frame. No dirty flags or change sets. | Medium |
-| P5 | **Mixed concerns in Scene** — Scene owns camera, meshes, materials, mesh factory, AND level state. Acts as god object. | Medium |
+| P2 | **MaterialDesc → MaterialData rebuilt every frame** — `BuildMaterials()` re-converts via `FromDesc()` each frame even when nothing changed. | Medium |
+| P4 | **No diff/change tracking** — Renderer re-extracts everything every frame. No dirty flags. | Medium |
+| P7 | **No material cache in Scene** — Scene only stores `MaterialDesc`, Renderer must rebuild materials every frame. | Medium |
 
 ---
 
@@ -76,11 +88,11 @@ ForwardOpaquePass::Execute(RenderContext)
 
 ```cpp
 class Level {
-    virtual void OnLoad(LevelContext& ctx) = 0;  // Level calls scene APIs
+    virtual void OnLoad(Scene& scene, AssetSystem& assetSystem) = 0;  // Level calls scene APIs
 };
 ```
 
-**How it works:** Level receives a `LevelContext` with references to Scene and AssetSystem. Level imperatively calls `scene.LoadGltf()`, `scene.SetPrimitives()`, etc.
+**How it works:** Level receives direct references to Scene and AssetSystem. Level imperatively calls `scene.LoadGltf()`, `scene.AddMeshes()`, etc.
 
 | Pros | Cons |
 |------|------|
@@ -100,11 +112,8 @@ class Level {
 
 ```cpp
 struct LevelDesc {
-    Level::CameraSetup camera;
-    vector<MeshRequest> meshes;           // What to load
-    vector<MaterialDesc> materials;       // Already have this type
-    vector<LightDesc> lights;             // Future
-    PrimitiveConfig proceduralPrimitives; // Optional fallback
+    vector<MeshRequest> meshRequests;         // Imported or procedural
+    // vector<LightDesc> lights;               // Future
 };
 
 class Level {
@@ -112,10 +121,10 @@ class Level {
 };
 
 // Scene processes it:
-void Scene::LoadLevel(const LevelDesc& desc, AssetSystem& assets);
+void Scene::LoadLevel(const Level& level, AssetSystem& assets);
 ```
 
-**How it works:** Level produces a pure-data `LevelDesc`. Scene consumes it, performs all loading, and owns the results. Level never touches Scene directly.
+**How it works:** Level produces a pure-data `LevelDesc`. Scene consumes it, performs all loading, and owns the results. Procedural and imported meshes are both expressed as `MeshRequest`.
 
 | Pros | Cons |
 |------|------|
@@ -212,29 +221,44 @@ struct AddLightCommand { LightDesc light; };
 ```cpp
 // ---- GameFramework/Public/Level/LevelDesc.h ----
 
-/// What mesh asset to load and where to place it
+/// Procedural primitive spawn request
+struct PrimitiveRequest
+{
+    MeshFactory::Shape shape = MeshFactory::Shape::Box;
+    std::uint32_t count = 500;
+    DirectX::XMFLOAT3 center  = {0.0f, 0.0f, 50.0f};
+    DirectX::XMFLOAT3 extents = {100.0f, 100.0f, 100.0f};
+    std::uint32_t seed = 1337;
+};
+
+/// Mesh request — unified path for imported and procedural meshes
+enum class MeshSource
+{
+    Asset,
+    Procedural,
+};
+
 struct MeshRequest
 {
+    MeshSource source = MeshSource::Asset;
+
+    // Asset-backed mesh (used when source == Asset)
     std::filesystem::path assetPath;    // Relative path (e.g., "Sponza/Sponza.gltf")
     AssetType assetType = AssetType::Mesh;
+
+    // Procedural mesh (used when source == Procedural)
+    PrimitiveRequest procedural;
 };
 
 /// Complete declarative level description
 struct LevelDesc
 {
-    // Camera
-    Level::CameraSetup camera;
-
-    // Mesh assets to load
-    std::vector<MeshRequest> meshAssets;
-
-    // Procedural primitives (if no mesh assets)
-    std::optional<Scene::PrimitiveConfig> primitives;
-
-    // Lighting (future-ready)
-    // std::vector<LightDesc> lights;
+    std::vector<MeshRequest> meshRequests;
+    // Future: std::vector<LightDesc> lights;
 };
 ```
+
+**Note:** No `CameraSetup` — camera is managed by `GameCamera` independently. Levels don't dictate camera placement.
 
 ### 5.2 Refactored Level
 
@@ -250,29 +274,35 @@ class Level {
 
 ### 5.3 Refactored Scene
 
+Scene already has the right container shape (`m_meshes`, `AddMeshes()`). `LoadLevel` changes from calling `level.OnLoad()` to consuming the descriptor:
+
 ```cpp
-// Scene becomes the sole loader / interpreter
 void Scene::LoadLevel(const Level& level, AssetSystem& assetSystem)
 {
     Clear();
 
     LevelDesc desc = level.BuildDescription();
 
-    // Camera
-    m_camera->SetPosition(desc.camera.position);
-    m_camera->SetYawPitch(desc.camera.yawRadians, desc.camera.pitchRadians);
-
-    // Load mesh assets
-    for (const auto& req : desc.meshAssets)
+    // Mesh requests (imported + procedural)
+    for (const auto& req : desc.meshRequests)
     {
-        auto resolved = assetSystem.ResolvePath(req.assetPath, req.assetType);
-        if (resolved) LoadGltf(*resolved);
-    }
-
-    // Procedural fallback
-    if (desc.primitives && m_importedMeshes.empty())
-    {
-        SetPrimitiveConfig(*desc.primitives);
+        if (req.source == MeshSource::Asset)
+        {
+            auto resolved = assetSystem.ResolvePath(req.assetPath, req.assetType);
+            if (resolved)
+                LoadGltf(*resolved);
+            else
+                LOG_WARNING("Scene: Asset not found — " + req.assetPath.string());
+        }
+        else
+        {
+            MeshFactory factory;
+            factory.AppendShapes(
+                req.procedural.shape, req.procedural.count,
+                req.procedural.center, req.procedural.extents,
+                req.procedural.seed);
+            AddMeshes(std::move(factory).TakeMeshes());
+        }
     }
 
     m_currentLevelName = std::string(level.GetName());
@@ -281,7 +311,7 @@ void Scene::LoadLevel(const Level& level, AssetSystem& assetSystem)
 
 ### 5.4 Example: SponzaLevel (Before → After)
 
-**Before (Imperative):**
+**Before (Imperative — current):**
 ```cpp
 void SponzaLevel::OnLoad(LevelContext& context)
 {
@@ -295,21 +325,54 @@ void SponzaLevel::OnLoad(LevelContext& context)
 LevelDesc SponzaLevel::BuildDescription() const
 {
     LevelDesc desc;
-    desc.camera = GetDefaultCamera();
-    desc.meshAssets.push_back({"Sponza/Sponza.gltf", AssetType::Mesh});
+    MeshRequest req;
+    req.source = MeshSource::Asset;
+    req.assetPath = "Sponza/Sponza.gltf";
+    req.assetType = AssetType::Mesh;
+    desc.meshRequests.push_back(req);
     return desc;
 }
 ```
 
 The level no longer includes Scene.h. It no longer knows how loading works. It just says *what* it wants.
 
-### 5.5 Benefits Delivered
+### 5.5 Example: BasicShapesLevel (Before → After)
+
+**Before (Imperative — current):**
+```cpp
+void BasicShapesLevel::OnLoad(LevelContext& context)
+{
+    MeshFactory factory;
+    factory.AppendShapes(MeshFactory::Shape::Box, 500, ...);
+    std::vector<std::unique_ptr<Mesh>> meshes = std::move(factory).TakeMeshes();
+    context.scene.AddMeshes(std::move(meshes));
+}
+```
+
+**After (Declarative):**
+```cpp
+LevelDesc BasicShapesLevel::BuildDescription() const
+{
+    LevelDesc desc;
+    MeshRequest req;
+    req.source = MeshSource::Procedural;
+    req.procedural = PrimitiveRequest{
+        MeshFactory::Shape::Box, 500,
+        {0.0f, 0.0f, 50.0f}, {100.0f, 100.0f, 100.0f}, 1337};
+    desc.meshRequests.push_back(req);
+    return desc;
+}
+```
+
+BasicShapesLevel no longer creates MeshFactory or calls Scene. MeshFactory creation moves to Scene::LoadLevel.
+
+### 5.6 Benefits Delivered
 
 | Problem | Resolution |
 |---------|------------|
 | P1: Level performs loading | Level returns data; Scene loads |
 | P3: No declarative description | LevelDesc is serializable pure data |
-| P4: No change tracking | LevelDesc enables future diffing |
+| P6: LevelContext coupling | Deleted — Level doesn't reference Scene at all |
 | Interview signal | Shows SRP, data-driven design, layered architecture |
 
 ---
@@ -339,48 +402,60 @@ This is the second boundary: **GameFramework → Renderer**. Currently `BuildSce
 
 ### 6.3 MaterialDesc → MaterialData Conversion
 
-Current: rebuilt every frame in `BuildSceneView()`.  
-Proposed: cache in Scene, invalidate on level load.
+Current: rebuilt every frame in `Renderer::BuildMaterials()` via `MaterialData::FromDesc()`.
+
+Proposed optimization (Phase 3): cache `vector<MaterialData>` alongside `vector<MaterialDesc>` in Scene. Rebuild only on `LoadLevel`/`LoadGltf`. Renderer reads `Scene::GetMaterials()` directly — zero per-frame conversion.
 
 ```cpp
-// Future optimization (not needed yet):
-// Scene caches MaterialData[] alongside MaterialDesc[]
-// Only rebuilt on LoadLevel/LoadGltf
-// Renderer reads cached version directly
+// Scene.h (future):
+bool LoadGltf(const std::filesystem::path& filePath);
+const std::vector<MaterialData>& GetCachedMaterials() const noexcept;
+
+// Scene.cpp (future):
+void Scene::RebuildMaterialCache()
+{
+    m_cachedMaterials.clear();
+    m_cachedMaterials.reserve(m_loadedMaterials.size());
+    for (const auto& desc : m_loadedMaterials)
+        m_cachedMaterials.push_back(MaterialData::FromDesc(desc));
+}
 ```
 
-This is a **measured optimization** — profile first, optimize second.
+This is a **measured optimization** — profile first, optimize second. At ~500 meshes the cost is negligible.
 
 ---
 
 ## 7. Data Ownership Summary
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     DATA OWNERSHIP MAP                       │
-├─────────────┬────────────────────┬──────────────────────────┤
-│ Layer        │ Owns               │ Produces                 │
-├─────────────┼────────────────────┼──────────────────────────┤
-│ Level        │ (nothing)          │ LevelDesc (value type)   │
-│ Scene        │ Camera, Meshes,    │ GetMeshes(),             │
-│              │ Materials, Factory │ GetLoadedMaterials()     │
-│ Renderer     │ RenderCamera,      │ SceneView (per frame)    │
-│              │ GPUMeshCache,      │                          │
-│              │ FrameGraph         │                          │
-│ RenderPass   │ (nothing)          │ GPU commands             │
-└─────────────┴────────────────────┴──────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                     DATA OWNERSHIP MAP                          │
+├─────────────┬──────────────────────┬───────────────────────────┤
+│ Layer        │ Owns                 │ Produces                  │
+├─────────────┼──────────────────────┼───────────────────────────┤
+│ Level        │ (nothing)            │ LevelDesc (value type)    │
+│ Scene        │ GameCamera, Meshes,  │ GetMeshes(),              │
+│              │ MaterialDescs        │ GetLoadedMaterials()      │
+│ Renderer     │ RenderCamera,        │ SceneView (per frame)     │
+│              │ GPUMeshCache,        │                           │
+│              │ FrameGraph           │                           │
+│ RenderPass   │ (nothing)            │ GPU commands              │
+└─────────────┴──────────────────────┴───────────────────────────┘
 ```
+
+**Note:** Scene no longer owns MeshFactory. MeshFactory is a local tool used during level loading (by Scene::LoadLevel when processing `MeshRequest` with `MeshSource::Procedural`). Ownership is transient, not persistent.
 
 ---
 
 ## 8. Migration Path
 
-| Phase | Work | Complexity |
-|-------|------|------------|
-| **Phase 1** (now) | Introduce `LevelDesc`, refactor 3 built-in levels, remove `OnLoad`/`LevelContext` | Small — ~200 lines changed |
-| **Phase 2** (future) | Add `LightDesc` to `LevelDesc`, wire into SceneView | Small |
-| **Phase 3** (future) | Scene dirty flags for materials/meshes | Medium |
-| **Phase 4** (future) | Entity-Component archetype in LevelDesc (Option C migration) | Large |
+| Phase | Work | Status | Complexity |
+|-------|------|--------|------------|
+| **Phase 0** | Clean Scene (remove MeshFactory/PrimitiveConfig, unify mesh vector, add AddMeshes, remove CameraSetup) | ✅ Done | Small |
+| **Phase 1** (next) | Introduce `LevelDesc`, refactor 3 built-in levels, remove `OnLoad`/`LevelContext` | 🔄 Ready | Small — ~150 lines changed |
+| **Phase 2** (future) | Add `LightDesc` to `LevelDesc`, wire into SceneView | Not started | Small |
+| **Phase 3** (future) | Cache materials in Scene, SceneView as Renderer member | Not started | Medium |
+| **Phase 4** (future) | Entity-Component archetype in LevelDesc (Option C migration) | Not started | Large |
 
 ---
 
@@ -388,17 +463,25 @@ This is a **measured optimization** — profile first, optimize second.
 
 Detailed step-by-step plan for migrating from imperative `OnLoad` to declarative `LevelDesc`.
 
+**Prerequisites already completed (Phase 0):**
+- ✅ Scene is a pure container (no MeshFactory, no PrimitiveConfig)
+- ✅ `Scene::AddMeshes()` accepts externally-created meshes
+- ✅ `MeshFactory::TakeMeshes()` transfers ownership
+- ✅ Unified `m_meshes` vector (no imported-vs-procedural split)
+- ✅ CameraSetup removed from Level (camera uses GameCamera defaults)
+- ✅ `MaterialData::FromDesc()` encapsulates material conversion
+- ✅ `BuildMaterials()` / `BuildMeshDraws()` extracted in Renderer
+
 ### Step 1: Create `LevelDesc.h` and `MeshRequest`
 
 **File:** `Engine/GameFramework/Public/Level/LevelDesc.h`
 
-Create the descriptor structs that replace imperative level loading. These are pure value types with no behavior.
+Create the descriptor structs that replace imperative level loading. Pure value types with no behavior.
 
 ```cpp
 #pragma once
 
 #include "GameFramework/Public/GameFrameworkAPI.h"
-#include "GameFramework/Public/Level/Level.h"           // CameraSetup
 #include "GameFramework/Public/Scene/MeshFactory.h"     // MeshFactory::Shape
 #include "GameFramework/Public/Assets/AssetTypes.h"     // AssetType
 
@@ -408,14 +491,7 @@ Create the descriptor structs that replace imperative level loading. These are p
 #include <optional>
 #include <vector>
 
-// What mesh asset the level wants loaded
-struct SPARKLE_ENGINE_API MeshRequest
-{
-    std::filesystem::path assetPath;                // Relative (e.g., "Sponza/Sponza.gltf")
-    AssetType assetType = AssetType::Mesh;
-};
-
-// Procedural primitive spawn request
+/// Procedural primitive spawn request
 struct SPARKLE_ENGINE_API PrimitiveRequest
 {
     MeshFactory::Shape shape = MeshFactory::Shape::Box;
@@ -425,23 +501,40 @@ struct SPARKLE_ENGINE_API PrimitiveRequest
     std::uint32_t seed = 1337;
 };
 
-// Complete declarative level description — everything a Scene needs to build
+/// Mesh request — unified path for imported and procedural meshes
+enum class MeshSource
+{
+    Asset,
+    Procedural,
+};
+
+struct SPARKLE_ENGINE_API MeshRequest
+{
+    MeshSource source = MeshSource::Asset;
+
+    // Asset-backed mesh (used when source == Asset)
+    std::filesystem::path assetPath;                // Relative (e.g., "Sponza/Sponza.gltf")
+    AssetType assetType = AssetType::Mesh;
+
+    // Procedural mesh (used when source == Procedural)
+    PrimitiveRequest procedural;
+};
+
+/// Complete declarative level description — everything a Scene needs to build
 struct SPARKLE_ENGINE_API LevelDesc
 {
-    Level::CameraSetup camera;
-    std::vector<MeshRequest> meshAssets;
-    std::optional<PrimitiveRequest> primitives;
+    std::vector<MeshRequest> meshRequests;
     // Future: std::vector<LightDesc> lights;
 };
 ```
 
-**Why separate from `Scene::PrimitiveConfig`?** `PrimitiveRequest` is the level's *intent*; `PrimitiveConfig` is Scene's internal state. Currently identical, but decoupling now prevents future breakage when Scene internals change.
+**Note:** No camera field — levels don't dictate camera placement (CameraSetup was removed).
 
 **Verification:** Header-only, no `.cpp` needed. Compiles if included from any GameFramework source.
 
 ---
 
-### Step 2: Refactor `Level` base class — add `BuildDescription()`
+### Step 2: Refactor `Level` base class — replace `OnLoad` with `BuildDescription()`
 
 **File:** `Engine/GameFramework/Public/Level/Level.h`
 
@@ -449,19 +542,21 @@ Changes:
 - Add `#include "LevelDesc.h"`
 - Add pure virtual `BuildDescription()` returning `LevelDesc`
 - Remove `OnLoad()` and `OnUnload()` virtual methods
-- Keep `GetName()`, `GetDescription()`, `GetDefaultCamera()` (camera is also in LevelDesc but `GetDefaultCamera()` provides the value that `BuildDescription()` uses)
+- Remove forward declaration of `LevelContext`
 
 ```cpp
 // BEFORE:
+struct LevelContext;
+...
 virtual void OnLoad(LevelContext& context) = 0;
 virtual void OnUnload(LevelContext& context);
 
 // AFTER:
-virtual LevelDesc BuildDescription() const = 0;
+#include "GameFramework/Public/Level/LevelDesc.h"
+...
+[[nodiscard]] virtual LevelDesc BuildDescription() const = 0;
 // OnLoad / OnUnload removed entirely
 ```
-
-**Why keep `GetDefaultCamera()`?** It's a convenience accessor. `BuildDescription()` implementations call it to fill `desc.camera`. Could be removed later but avoids breaking the `BuiltinLevel` pattern now.
 
 **Verification:** Compile will fail on all Level subclasses — expected. Fixed in Step 3.
 
@@ -475,18 +570,16 @@ Update each of the 3 built-in levels to implement `BuildDescription()` instead o
 
 ```cpp
 // BEFORE:
-void OnLoad(LevelContext&) override { /* empty */ }
+void OnLoad(LevelContext& /*context*/) override { /* empty */ }
 
 // AFTER:
 LevelDesc BuildDescription() const override
 {
-    LevelDesc desc;
-    desc.camera = GetDefaultCamera();
-    return desc;
+    return {};  // Empty level — no mesh requests
 }
 ```
 
-No includes to remove — `EmptyLevel` didn't use Scene or AssetSystem.
+Remove `#include "Level/LevelContext.h"` — no longer needed.
 
 #### 3b: `BasicShapesLevel.h`
 
@@ -494,35 +587,29 @@ No includes to remove — `EmptyLevel` didn't use Scene or AssetSystem.
 // BEFORE:
 void OnLoad(LevelContext& context) override
 {
-    Scene::PrimitiveConfig config;
-    config.shape = MeshFactory::Shape::Box;
-    ...
-    context.scene.SetPrimitiveConfig(config);
+    MeshFactory factory;
+    factory.AppendShapes(MeshFactory::Shape::Box, 500, ...);
+    std::vector<std::unique_ptr<Mesh>> meshes = std::move(factory).TakeMeshes();
+    context.scene.AddMeshes(std::move(meshes));
 }
 
 // AFTER:
 LevelDesc BuildDescription() const override
 {
     LevelDesc desc;
-    desc.camera = GetDefaultCamera();
-
-    PrimitiveRequest prims;
-    prims.shape = MeshFactory::Shape::Box;
-    prims.count = 500;
-    prims.center = {0.0f, 0.0f, 50.0f};
-    prims.extents = {100.0f, 100.0f, 100.0f};
-    prims.seed = 1337;
-    desc.primitives = prims;
-
+    MeshRequest req;
+    req.source = MeshSource::Procedural;
+    req.procedural = PrimitiveRequest{
+        MeshFactory::Shape::Box, 500,
+        {0.0f, 0.0f, 50.0f}, {100.0f, 100.0f, 100.0f}, 1337};
+    desc.meshRequests.push_back(req);
     return desc;
 }
 ```
 
-Remove `#include "Scene/Scene.h"` and `#include "Level/LevelContext.h"` — no longer needed.
+Remove `#include "Level/LevelContext.h"`, `#include "Scene/Scene.h"`, `#include "Scene/MeshFactory.h"`.
 
 #### 3c: `SponzaLevel.h` + `SponzaLevel.cpp`
-
-Move implementation into header (now trivial) or keep `.cpp`:
 
 ```cpp
 // BEFORE (SponzaLevel.cpp):
@@ -536,15 +623,18 @@ void SponzaLevel::OnLoad(LevelContext& context)
 LevelDesc BuildDescription() const override
 {
     LevelDesc desc;
-    desc.camera = GetDefaultCamera();
-    desc.meshAssets.push_back({"Sponza/Sponza.gltf", AssetType::Mesh});
+    MeshRequest req;
+    req.source = MeshSource::Asset;
+    req.assetPath = "Sponza/Sponza.gltf";
+    req.assetType = AssetType::Mesh;
+    desc.meshRequests.push_back(req);
     return desc;
 }
 ```
 
-**Delete `SponzaLevel.cpp`** — no longer needed. The level no longer resolves paths or calls Scene. Path resolution moves to `Scene::LoadLevel()`.
+**Delete `SponzaLevel.cpp`** — no longer needed. Path resolution moves to Scene::LoadLevel.
 
-**Verification:** All 3 levels compile with `BuildDescription()`. No level includes `Scene.h`.
+**Verification:** All 3 levels compile with `BuildDescription()`. No level includes Scene.h.
 
 ---
 
@@ -552,11 +642,7 @@ LevelDesc BuildDescription() const override
 
 **Delete:** `Engine/GameFramework/Public/Level/LevelContext.h`
 
-**Delete from `Level.cpp`:**
-```cpp
-// Remove:
-void Level::OnUnload(LevelContext&) { }
-```
+**Edit `Level.cpp`:** Remove `OnUnload` default impl. If Level.cpp becomes empty (no remaining implementations), delete it too.
 
 **Verification:** `grep -r "LevelContext" Engine/` returns zero hits.
 
@@ -575,8 +661,6 @@ void LoadLevel(Level& level, AssetSystem& assetSystem);
 void LoadLevel(const Level& level, AssetSystem& assetSystem);
 ```
 
-Note: `const Level&` — Level is now read-only (pure data factory).
-
 **File:** `Engine/GameFramework/Private/Scene/Scene.cpp`
 
 ```cpp
@@ -586,37 +670,34 @@ void Scene::LoadLevel(const Level& level, AssetSystem& assetSystem)
 
     Clear();
 
-    // Get declarative description
     LevelDesc desc = level.BuildDescription();
 
-    // Camera
-    m_camera->SetPosition(desc.camera.position);
-    m_camera->SetYawPitch(desc.camera.yawRadians, desc.camera.pitchRadians);
-
-    // Load mesh assets
-    for (const auto& req : desc.meshAssets)
+    // Mesh requests (imported + procedural)
+    for (const auto& req : desc.meshRequests)
     {
-        auto resolved = assetSystem.ResolvePath(req.assetPath, req.assetType);
-        if (resolved)
+        if (req.source == MeshSource::Asset)
         {
-            LoadGltf(*resolved);
+            auto resolved = assetSystem.ResolvePath(req.assetPath, req.assetType);
+            if (resolved)
+            {
+                LoadGltf(*resolved);
+            }
+            else
+            {
+                LOG_WARNING("Scene: Asset not found — " + req.assetPath.string());
+            }
         }
         else
         {
-            LOG_WARNING("Scene: Asset not found — " + req.assetPath.string());
-        }
-    }
+            MeshFactory factory;
+            factory.AppendShapes(
+                req.procedural.shape, req.procedural.count,
+                req.procedural.center, req.procedural.extents,
+                req.procedural.seed);
 
-    // Procedural primitives (used if no mesh assets loaded, or explicitly requested)
-    if (desc.primitives)
-    {
-        PrimitiveConfig config;
-        config.shape   = desc.primitives->shape;
-        config.count   = desc.primitives->count;
-        config.center  = desc.primitives->center;
-        config.extents = desc.primitives->extents;
-        config.seed    = desc.primitives->seed;
-        SetPrimitiveConfig(config);
+            std::vector<std::unique_ptr<Mesh>> meshes = std::move(factory).TakeMeshes();
+            AddMeshes(std::move(meshes));
+        }
     }
 
     m_currentLevelName = std::string(level.GetName());
@@ -624,70 +705,51 @@ void Scene::LoadLevel(const Level& level, AssetSystem& assetSystem)
 }
 ```
 
-**Key change:** Scene now drives the loading. Level just described what it wanted. Path resolution, glTF loading, primitive generation — all Scene's responsibility.
+**Key change:** Scene drives all loading. MeshFactory is created locally and destroyed after meshes are transferred — no persistent ownership.
 
-Remove includes from Scene.cpp that are no longer needed:
+Remove includes:
 - Remove `#include "Level/LevelContext.h"` — deleted
 - Add `#include "Level/LevelDesc.h"`
+- Add `#include "Scene/MeshFactory.h"` (for PrimitiveRequest processing)
 
-**Verification:** `Scene::LoadLevel` compiles. App.cpp unchanged (still calls `scene.LoadLevel(level, assetSystem)`).
-
----
-
-### Step 6: Update `App.cpp` — const-correctness
-
-**File:** `Engine/Application/Private/App.cpp`
-
-The `FindLevel` call now returns a `Level*` used as `const Level&`. Minor change:
-
-```cpp
-// BEFORE:
-if (auto* level = levelRegistry.FindLevel(...))
-{
-    m_scene->LoadLevel(*level, *m_assetSystem);
-}
-
-// AFTER: (same code, but LoadLevel now takes const Level&)
-// No source change needed — implicit const conversion.
-```
-
-**Verification:** App.cpp compiles without changes.
+**Verification:** `Scene::LoadLevel` compiles. App.cpp unchanged.
 
 ---
 
-### Step 7: Clean up includes and verify no regressions
+### Step 6: Clean up and verify
 
 Run these checks:
 
 ```
-1. grep -r "OnLoad"       Engine/GameFramework/  → zero hits (removed)
-2. grep -r "OnUnload"     Engine/GameFramework/  → zero hits (removed)
-3. grep -r "LevelContext"  Engine/                → zero hits (deleted)
-4. grep -r "BuildDescription" Engine/GameFramework/ → hits in Level.h + 3 built-in levels
-5. Full build: cmake --build build --config Debug
+1. grep -r "OnLoad"         Engine/GameFramework/  → zero hits
+2. grep -r "OnUnload"       Engine/GameFramework/  → zero hits
+3. grep -r "LevelContext"   Engine/                → zero hits
+4. grep -r "BuildDescription" Engine/GameFramework/ → Level.h + 3 built-in levels
+5. cmake --build build --config Debug              → clean build
 ```
 
 ---
 
-### Step 8: Verify data flow end-to-end
+### Step 7: Verify data flow end-to-end
 
-Post-build verification that the new data flow works:
+Post-build verification:
 
 ```
 App::Initialize()
-  └── LevelRegistry::FindLevel(BuiltinLevel::Sponza)
+  └── LevelRegistry::FindLevelOrDefault("Sponza")
        └── returns SponzaLevel*
 
 Scene::LoadLevel(const SponzaLevel&, assetSystem)
   └── SponzaLevel::BuildDescription()
-       └── returns LevelDesc { camera, meshAssets: ["Sponza/Sponza.gltf"] }
+    └── returns LevelDesc { meshRequests: ["Sponza/Sponza.gltf"] }
   └── Scene resolves path via AssetSystem
   └── Scene calls LoadGltf() internally
-  └── Scene stores meshes + materials
+  └── Scene stores meshes + materials in m_meshes / m_loadedMaterials
 
 Renderer::BuildSceneView()
-  └── reads Scene::GetMeshes(), GetLoadedMaterials()
-  └── produces SceneView { meshDraws, materials }
+  └── BuildMaterials()  — reads GetLoadedMaterials(), converts via FromDesc()
+  └── BuildMeshDraws()  — reads GetMeshes(), emits MeshDraw per mesh
+  └── returns SceneView { camera, meshDraws, materials, sunLight }
 
 ForwardOpaquePass::Execute()
   └── draws meshDraws with GPUMeshCache + material data
@@ -699,22 +761,22 @@ No change to Renderer or RenderPass code. The refactoring is contained entirely 
 
 ### Files Changed Summary
 
-| Action | File | Lines |
+| Action | File | Notes |
 |--------|------|-------|
-| **Create** | `GameFramework/Public/Level/LevelDesc.h` | ~40 |
-| **Edit** | `GameFramework/Public/Level/Level.h` | Remove `OnLoad`/`OnUnload`, add `BuildDescription` |
-| **Edit** | `GameFramework/Private/Level/Level.cpp` | Remove `OnUnload` default impl |
-| **Edit** | `GameFramework/Private/Level/Levels/EmptyLevel.h` | Replace `OnLoad` → `BuildDescription` |
-| **Edit** | `GameFramework/Private/Level/Levels/BasicShapesLevel.h` | Replace `OnLoad` → `BuildDescription`, remove Scene include |
-| **Edit** | `GameFramework/Private/Level/Levels/SponzaLevel.h` | Replace `OnLoad` → `BuildDescription` (inline) |
-| **Delete** | `GameFramework/Private/Level/Levels/SponzaLevel.cpp` | Entire file |
+| **Create** | `GameFramework/Public/Level/LevelDesc.h` | ~35 lines — MeshRequest, PrimitiveRequest, LevelDesc |
+| **Edit** | `GameFramework/Public/Level/Level.h` | Remove `OnLoad`/`OnUnload`, add `BuildDescription`, remove LevelContext fwd decl |
+| **Edit** | `GameFramework/Private/Level/Level.cpp` | Remove `OnUnload` impl; delete file if empty |
+| **Edit** | `GameFramework/Private/Level/Levels/EmptyLevel.h` | `OnLoad` → `BuildDescription`, remove LevelContext include |
+| **Edit** | `GameFramework/Private/Level/Levels/BasicShapesLevel.h` | `OnLoad` → `BuildDescription`, remove Scene/MeshFactory/LevelContext includes |
+| **Edit** | `GameFramework/Private/Level/Levels/SponzaLevel.h` | `OnLoad` → `BuildDescription` (inline) |
+| **Delete** | `GameFramework/Private/Level/Levels/SponzaLevel.cpp` | Entire file — level is now header-only |
 | **Delete** | `GameFramework/Public/Level/LevelContext.h` | Entire file |
 | **Edit** | `GameFramework/Public/Scene/Scene.h` | `LoadLevel` takes `const Level&` |
-| **Edit** | `GameFramework/Private/Scene/Scene.cpp` | New `LoadLevel` that consumes `LevelDesc` |
+| **Edit** | `GameFramework/Private/Scene/Scene.cpp` | Consume `LevelDesc`, use MeshFactory locally for procedural mesh requests |
 | **None** | `Application/Private/App.cpp` | No changes needed |
 | **None** | `Renderer/Private/Renderer.cpp` | No changes needed |
 
-**Total:** ~200 lines changed, 2 files deleted, 1 file created. Zero Renderer changes.
+**Total:** ~150 lines changed, 2 files deleted, 1 file created. Zero Renderer changes.
 
 ---
 
