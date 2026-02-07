@@ -4,29 +4,38 @@
 // Container for gameplay objects (camera, meshes, etc.).
 //
 // USAGE:
-//   Scene scene;  // Ready to use immediately
+//   Scene scene;
+//   scene.LoadLevel(sponzaLevel, assetSystem);
 //
 // DESIGN:
 //   - Pure container for logical game objects
+//   - Levels define scene content; Scene is the runtime container
 //   - No direct GPU/RHI dependencies (decoupled from rendering backend)
+//   - Supports both procedural primitives and imported meshes
 //   - Camera and mesh data created in constructor
 //   - Scene owns its objects, external systems configure them
-//   - GPU resource upload handled externally by MeshFactory::Upload()
+//   - GPU resource upload handled externally by GPUMeshCache
 //
 // ============================================================================
 
 #pragma once
 
 #include "GameFramework/Public/GameFrameworkAPI.h"
+#include "GameFramework/Public/Assets/MaterialDesc.h"
 
-#include "MeshFactory.h"
-#include <DirectXMath.h>
 #include <cstdint>
+#include <filesystem>
 #include <memory>
+#include <string>
 #include <vector>
 
 class Mesh;
 class GameCamera;
+class Level;
+class AssetSystem;
+struct LevelDesc;
+struct MeshRequest;
+struct PrimitiveRequest;
 
 class SPARKLE_ENGINE_API Scene final
 {
@@ -47,59 +56,68 @@ class SPARKLE_ENGINE_API Scene final
 	// Camera
 	// ========================================================================
 
-	/// Returns the scene's camera.
 	[[nodiscard]] GameCamera& GetCamera() noexcept;
 	[[nodiscard]] const GameCamera& GetCamera() const noexcept;
 
 	// ========================================================================
-	// Configuration
+	// Level Loading
 	// ========================================================================
 
-	/// Configuration for procedural primitive spawning.
-	struct PrimitiveConfig
-	{
-		MeshFactory::Shape shape = MeshFactory::Shape::Box;    ///< Primitive type to spawn
-		std::uint32_t count = 500;                             ///< Number of primitives
-		DirectX::XMFLOAT3 center = {0.0f, 0.0f, 50.0f};        ///< Center of spawn volume
-		DirectX::XMFLOAT3 extents = {100.0f, 100.0f, 100.0f};  ///< Half-extents of spawn volume
-		std::uint32_t seed = 1337;                             ///< Random seed for positions
-	};
+	/// Loads a level into the scene, replacing all current content.
+	void LoadLevel(const Level& level, AssetSystem& assetSystem);
 
-	/// Updates primitive configuration and rebuilds geometry immediately.
-	/// Note: Call UploadMeshes() after this to send data to GPU.
-	void SetPrimitiveConfig(const PrimitiveConfig& config);
+	/// Clears all scene content (meshes, materials, level state).
+	void Clear();
 
-	/// Convenience method to update only shape and count.
-	/// Note: Call UploadMeshes() after this to send data to GPU.
-	void SetPrimitives(MeshFactory::Shape shape, std::uint32_t count);
+	/// Returns the name of the currently loaded level (empty if none).
+	[[nodiscard]] const std::string& GetCurrentLevelName() const noexcept { return m_currentLevelName; }
+
+	// ========================================================================
+	// Asset Loading
+	// ========================================================================
+
+	/// Loads a glTF file and replaces the current scene contents.
+	/// Clears any procedural primitives. Materials are stored and
+	/// accessible via GetLoadedMaterials().
+	bool LoadGltf(const std::filesystem::path& filePath);
+
+	/// Returns materials loaded from the last glTF import.
+	[[nodiscard]] const std::vector<MaterialDesc>& GetLoadedMaterials() const noexcept { return m_loadedMaterials; }
+
+	// ========================================================================
+	// Mesh Management
+	// ========================================================================
+
+	/// Takes ownership of externally-created meshes (e.g., from MeshFactory or glTF).
+	void AddMeshes(std::vector<std::unique_ptr<Mesh>> meshes);
 
 	// ========================================================================
 	// Accessors
 	// ========================================================================
 
-	[[nodiscard]] const PrimitiveConfig& GetPrimitiveConfig() const noexcept { return m_primitiveConfig; }
-	[[nodiscard]] MeshFactory::Shape GetCurrentShape() const noexcept { return m_primitiveConfig.shape; }
-	[[nodiscard]] std::uint32_t GetCurrentCount() const noexcept { return m_primitiveConfig.count; }
-	[[nodiscard]] const std::vector<std::unique_ptr<Mesh>>& GetMeshes() const noexcept;
-	[[nodiscard]] bool HasMeshes() const noexcept;
-
-	/// Returns the mesh factory for external GPU upload.
-	[[nodiscard]] MeshFactory& GetMeshFactory() noexcept { return *m_meshFactory; }
-	[[nodiscard]] const MeshFactory& GetMeshFactory() const noexcept { return *m_meshFactory; }
+	[[nodiscard]] const std::vector<std::unique_ptr<Mesh>>& GetMeshes() const noexcept { return m_meshes; }
+	[[nodiscard]] bool HasMeshes() const noexcept { return !m_meshes.empty(); }
 
   private:
-	void RebuildGeometry();
+	void LoadMeshRequests(const LevelDesc& desc, AssetSystem& assetSystem);
+	void LoadImportedMeshRequest(const MeshRequest& request, AssetSystem& assetSystem);
+	void LoadProceduralMeshRequest(const MeshRequest& request);
+	void AppendProceduralMeshes(const PrimitiveRequest& request);
+	bool AppendGltf(const std::filesystem::path& filePath);
 
 	// ------------------------------------------------------------------------
 	// Owned Objects
 	// ------------------------------------------------------------------------
 
 	std::unique_ptr<GameCamera> m_camera;
-	std::unique_ptr<MeshFactory> m_meshFactory;
+
+	// All meshes in the scene (procedural, imported, etc.)
+	std::vector<std::unique_ptr<Mesh>> m_meshes;
+	std::vector<MaterialDesc> m_loadedMaterials;
 
 	// ------------------------------------------------------------------------
 	// State
 	// ------------------------------------------------------------------------
 
-	PrimitiveConfig m_primitiveConfig;
+	std::string m_currentLevelName;
 };

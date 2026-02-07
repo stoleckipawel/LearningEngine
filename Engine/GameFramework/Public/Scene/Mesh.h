@@ -67,8 +67,8 @@ class SPARKLE_ENGINE_API Mesh
 	// World Matrix
 	// -------------------------------------------------------------------------
 
-	[[nodiscard]] DirectX::XMMATRIX GetWorldMatrix() const noexcept;
-	[[nodiscard]] DirectX::XMMATRIX GetWorldInverseTransposeMatrix() const noexcept;
+	[[nodiscard]] virtual DirectX::XMMATRIX GetWorldMatrix() const noexcept;
+	[[nodiscard]] virtual DirectX::XMMATRIX GetWorldInverseTransposeMatrix() const noexcept;
 	[[nodiscard]] DirectX::XMFLOAT3X3 GetWorldRotationMatrix3x3() const noexcept;
 
 	// -------------------------------------------------------------------------

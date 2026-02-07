@@ -19,6 +19,6 @@ struct SPARKLE_RENDERER_API MeshDraw
 {
 	DirectX::XMFLOAT4X4 worldMatrix = {};
 	DirectX::XMFLOAT3X4 worldInvTranspose = {};
-	std::uint32_t materialId = 0;                 // Index into SceneView::materials[]
-	const void* meshPtr = nullptr;                // Opaque handle for GPUMeshCache lookup
+	std::uint32_t materialId = 0;   // Index into SceneView::materials[]
+	const void* meshPtr = nullptr;  // Opaque handle for GPUMeshCache lookup
 };

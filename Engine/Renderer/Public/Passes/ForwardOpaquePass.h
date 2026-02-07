@@ -63,6 +63,12 @@ class ForwardOpaquePass final : public RenderPass
 	void Execute(RenderContext& context) override;
 
   private:
+	void PrepareTargets(RenderContext& context);
+	void ConfigurePipeline(RenderContext& context);
+	void BindFrameResources(RenderContext& context);
+	void BindGlobalResources(RenderContext& context);
+	void DrawOpaqueMeshes(RenderContext& context);
+
 	// -------------------------------------------------------------------------
 	// Dependencies (not owned)
 	// -------------------------------------------------------------------------

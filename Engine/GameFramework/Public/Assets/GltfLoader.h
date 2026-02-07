@@ -44,7 +44,7 @@
 
 class SPARKLE_ENGINE_API GltfLoader final
 {
-public:
+  public:
 	// =========================================================================
 	// Load Result
 	// =========================================================================
@@ -53,11 +53,11 @@ public:
 	/// Owns all loaded data — caller takes ownership via move.
 	struct LoadResult
 	{
-		std::vector<MeshData> meshes;                     // One per glTF primitive
-		std::vector<MaterialDesc> materials;              // One per glTF material
-		std::vector<std::string> texturePaths;            // Unique texture file paths
-		std::vector<DirectX::XMFLOAT4X4> transforms;     // World transform per mesh
-		std::vector<std::uint32_t> materialIndices;       // Material index per mesh (into materials[])
+		std::vector<MeshData> meshes;                 // One per glTF primitive
+		std::vector<MaterialDesc> materials;          // One per glTF material
+		std::vector<std::string> texturePaths;        // Unique texture file paths
+		std::vector<DirectX::XMFLOAT4X4> transforms;  // World transform per mesh
+		std::vector<std::uint32_t> materialIndices;   // Material index per mesh (into materials[])
 
 		bool bSuccess = false;
 		std::string errorMessage;

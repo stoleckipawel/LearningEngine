@@ -232,17 +232,17 @@ struct PrimitiveRequest
 };
 
 /// Mesh request — unified path for imported and procedural meshes
-enum class MeshSource
+enum class AssetSource
 {
-    Asset,
+    Imported,
     Procedural,
 };
 
 struct MeshRequest
 {
-    MeshSource source = MeshSource::Asset;
+    AssetSource source = AssetSource::Imported;
 
-    // Asset-backed mesh (used when source == Asset)
+    // Imported mesh (used when source == Imported)
     std::filesystem::path assetPath;    // Relative path (e.g., "Sponza/Sponza.gltf")
     AssetType assetType = AssetType::Mesh;
 
@@ -270,7 +270,7 @@ class Level {
 };
 ```
 
-`OnLoad` / `OnUnload` / `LevelContext` are removed. Level becomes a pure data factory.
+`OnLoad` / `OnUnload` are removed. Level becomes a pure data factory.
 
 ### 5.3 Refactored Scene
 
@@ -286,7 +286,7 @@ void Scene::LoadLevel(const Level& level, AssetSystem& assetSystem)
     // Mesh requests (imported + procedural)
     for (const auto& req : desc.meshRequests)
     {
-        if (req.source == MeshSource::Asset)
+        if (req.source == AssetSource::Imported)
         {
             auto resolved = assetSystem.ResolvePath(req.assetPath, req.assetType);
             if (resolved)
@@ -313,10 +313,10 @@ void Scene::LoadLevel(const Level& level, AssetSystem& assetSystem)
 
 **Before (Imperative — current):**
 ```cpp
-void SponzaLevel::OnLoad(LevelContext& context)
+void SponzaLevel::OnLoad(Scene& scene, AssetSystem& assetSystem)
 {
-    auto path = context.assetSystem.ResolvePath("Sponza/Sponza.gltf", AssetType::Mesh);
-    if (path) context.scene.LoadGltf(*path);
+    auto path = assetSystem.ResolvePath("Sponza/Sponza.gltf", AssetType::Mesh);
+    if (path) scene.LoadGltf(*path);
 }
 ```
 
@@ -326,7 +326,7 @@ LevelDesc SponzaLevel::BuildDescription() const
 {
     LevelDesc desc;
     MeshRequest req;
-    req.source = MeshSource::Asset;
+    req.source = AssetSource::Imported;
     req.assetPath = "Sponza/Sponza.gltf";
     req.assetType = AssetType::Mesh;
     desc.meshRequests.push_back(req);
@@ -340,12 +340,12 @@ The level no longer includes Scene.h. It no longer knows how loading works. It j
 
 **Before (Imperative — current):**
 ```cpp
-void BasicShapesLevel::OnLoad(LevelContext& context)
+void BasicShapesLevel::OnLoad(Scene& scene, AssetSystem& /*assetSystem*/)
 {
     MeshFactory factory;
     factory.AppendShapes(MeshFactory::Shape::Box, 500, ...);
     std::vector<std::unique_ptr<Mesh>> meshes = std::move(factory).TakeMeshes();
-    context.scene.AddMeshes(std::move(meshes));
+    scene.AddMeshes(std::move(meshes));
 }
 ```
 
@@ -355,7 +355,7 @@ LevelDesc BasicShapesLevel::BuildDescription() const
 {
     LevelDesc desc;
     MeshRequest req;
-    req.source = MeshSource::Procedural;
+    req.source = AssetSource::Procedural;
     req.procedural = PrimitiveRequest{
         MeshFactory::Shape::Box, 500,
         {0.0f, 0.0f, 50.0f}, {100.0f, 100.0f, 100.0f}, 1337};
@@ -372,7 +372,7 @@ BasicShapesLevel no longer creates MeshFactory or calls Scene. MeshFactory creat
 |---------|------------|
 | P1: Level performs loading | Level returns data; Scene loads |
 | P3: No declarative description | LevelDesc is serializable pure data |
-| P6: LevelContext coupling | Deleted — Level doesn't reference Scene at all |
+| P6: Level coupling | Deleted — Level doesn't reference Scene at all |
 | Interview signal | Shows SRP, data-driven design, layered architecture |
 
 ---
@@ -443,7 +443,7 @@ This is a **measured optimization** — profile first, optimize second. At ~500 
 └─────────────┴──────────────────────┴───────────────────────────┘
 ```
 
-**Note:** Scene no longer owns MeshFactory. MeshFactory is a local tool used during level loading (by Scene::LoadLevel when processing `MeshRequest` with `MeshSource::Procedural`). Ownership is transient, not persistent.
+**Note:** Scene no longer owns MeshFactory. MeshFactory is a local tool used during level loading (by Scene::LoadLevel when processing `MeshRequest` with `AssetSource::Procedural`). Ownership is transient, not persistent.
 
 ---
 
@@ -452,7 +452,7 @@ This is a **measured optimization** — profile first, optimize second. At ~500 
 | Phase | Work | Status | Complexity |
 |-------|------|--------|------------|
 | **Phase 0** | Clean Scene (remove MeshFactory/PrimitiveConfig, unify mesh vector, add AddMeshes, remove CameraSetup) | ✅ Done | Small |
-| **Phase 1** (next) | Introduce `LevelDesc`, refactor 3 built-in levels, remove `OnLoad`/`LevelContext` | 🔄 Ready | Small — ~150 lines changed |
+| **Phase 1** (next) | Introduce `LevelDesc`, refactor 3 built-in levels, remove `OnLoad` | 🔄 Ready | Small — ~150 lines changed |
 | **Phase 2** (future) | Add `LightDesc` to `LevelDesc`, wire into SceneView | Not started | Small |
 | **Phase 3** (future) | Cache materials in Scene, SceneView as Renderer member | Not started | Medium |
 | **Phase 4** (future) | Entity-Component archetype in LevelDesc (Option C migration) | Not started | Large |
@@ -502,17 +502,17 @@ struct SPARKLE_ENGINE_API PrimitiveRequest
 };
 
 /// Mesh request — unified path for imported and procedural meshes
-enum class MeshSource
+enum class AssetSource
 {
-    Asset,
+    Imported,
     Procedural,
 };
 
 struct SPARKLE_ENGINE_API MeshRequest
 {
-    MeshSource source = MeshSource::Asset;
+    AssetSource source = AssetSource::Imported;
 
-    // Asset-backed mesh (used when source == Asset)
+    // Imported mesh (used when source == Imported)
     std::filesystem::path assetPath;                // Relative (e.g., "Sponza/Sponza.gltf")
     AssetType assetType = AssetType::Mesh;
 
@@ -542,14 +542,11 @@ Changes:
 - Add `#include "LevelDesc.h"`
 - Add pure virtual `BuildDescription()` returning `LevelDesc`
 - Remove `OnLoad()` and `OnUnload()` virtual methods
-- Remove forward declaration of `LevelContext`
 
 ```cpp
 // BEFORE:
-struct LevelContext;
-...
-virtual void OnLoad(LevelContext& context) = 0;
-virtual void OnUnload(LevelContext& context);
+virtual void OnLoad(Scene& scene, AssetSystem& assetSystem) = 0;
+virtual void OnUnload();
 
 // AFTER:
 #include "GameFramework/Public/Level/LevelDesc.h"
@@ -570,7 +567,7 @@ Update each of the 3 built-in levels to implement `BuildDescription()` instead o
 
 ```cpp
 // BEFORE:
-void OnLoad(LevelContext& /*context*/) override { /* empty */ }
+void OnLoad(Scene& /*scene*/, AssetSystem& /*assetSystem*/) override { /* empty */ }
 
 // AFTER:
 LevelDesc BuildDescription() const override
@@ -579,18 +576,18 @@ LevelDesc BuildDescription() const override
 }
 ```
 
-Remove `#include "Level/LevelContext.h"` — no longer needed.
+Remove any Scene/AssetSystem includes — no longer needed.
 
 #### 3b: `BasicShapesLevel.h`
 
 ```cpp
 // BEFORE:
-void OnLoad(LevelContext& context) override
+void OnLoad(Scene& scene, AssetSystem& /*assetSystem*/) override
 {
     MeshFactory factory;
     factory.AppendShapes(MeshFactory::Shape::Box, 500, ...);
     std::vector<std::unique_ptr<Mesh>> meshes = std::move(factory).TakeMeshes();
-    context.scene.AddMeshes(std::move(meshes));
+    scene.AddMeshes(std::move(meshes));
 }
 
 // AFTER:
@@ -598,7 +595,7 @@ LevelDesc BuildDescription() const override
 {
     LevelDesc desc;
     MeshRequest req;
-    req.source = MeshSource::Procedural;
+    req.source = AssetSource::Procedural;
     req.procedural = PrimitiveRequest{
         MeshFactory::Shape::Box, 500,
         {0.0f, 0.0f, 50.0f}, {100.0f, 100.0f, 100.0f}, 1337};
@@ -607,16 +604,16 @@ LevelDesc BuildDescription() const override
 }
 ```
 
-Remove `#include "Level/LevelContext.h"`, `#include "Scene/Scene.h"`, `#include "Scene/MeshFactory.h"`.
+Remove `#include "Scene/Scene.h"` and `#include "Scene/MeshFactory.h"`.
 
 #### 3c: `SponzaLevel.h` + `SponzaLevel.cpp`
 
 ```cpp
 // BEFORE (SponzaLevel.cpp):
-void SponzaLevel::OnLoad(LevelContext& context)
+void SponzaLevel::OnLoad(Scene& scene, AssetSystem& assetSystem)
 {
-    auto path = context.assetSystem.ResolvePath("Sponza/Sponza.gltf", AssetType::Mesh);
-    if (path) context.scene.LoadGltf(*path);
+    auto path = assetSystem.ResolvePath("Sponza/Sponza.gltf", AssetType::Mesh);
+    if (path) scene.LoadGltf(*path);
 }
 
 // AFTER (SponzaLevel.h, inline):
@@ -624,7 +621,7 @@ LevelDesc BuildDescription() const override
 {
     LevelDesc desc;
     MeshRequest req;
-    req.source = MeshSource::Asset;
+    req.source = AssetSource::Imported;
     req.assetPath = "Sponza/Sponza.gltf";
     req.assetType = AssetType::Mesh;
     desc.meshRequests.push_back(req);
@@ -638,13 +635,9 @@ LevelDesc BuildDescription() const override
 
 ---
 
-### Step 4: Delete `LevelContext.h` and `Level::OnUnload`
-
-**Delete:** `Engine/GameFramework/Public/Level/LevelContext.h`
+### Step 4: Delete `OnUnload` and leftover `OnLoad` artifacts
 
 **Edit `Level.cpp`:** Remove `OnUnload` default impl. If Level.cpp becomes empty (no remaining implementations), delete it too.
-
-**Verification:** `grep -r "LevelContext" Engine/` returns zero hits.
 
 ---
 
@@ -675,7 +668,7 @@ void Scene::LoadLevel(const Level& level, AssetSystem& assetSystem)
     // Mesh requests (imported + procedural)
     for (const auto& req : desc.meshRequests)
     {
-        if (req.source == MeshSource::Asset)
+        if (req.source == AssetSource::Imported)
         {
             auto resolved = assetSystem.ResolvePath(req.assetPath, req.assetType);
             if (resolved)
@@ -708,7 +701,6 @@ void Scene::LoadLevel(const Level& level, AssetSystem& assetSystem)
 **Key change:** Scene drives all loading. MeshFactory is created locally and destroyed after meshes are transferred — no persistent ownership.
 
 Remove includes:
-- Remove `#include "Level/LevelContext.h"` — deleted
 - Add `#include "Level/LevelDesc.h"`
 - Add `#include "Scene/MeshFactory.h"` (for PrimitiveRequest processing)
 
@@ -723,9 +715,8 @@ Run these checks:
 ```
 1. grep -r "OnLoad"         Engine/GameFramework/  → zero hits
 2. grep -r "OnUnload"       Engine/GameFramework/  → zero hits
-3. grep -r "LevelContext"   Engine/                → zero hits
-4. grep -r "BuildDescription" Engine/GameFramework/ → Level.h + 3 built-in levels
-5. cmake --build build --config Debug              → clean build
+3. grep -r "BuildDescription" Engine/GameFramework/ → Level.h + 3 built-in levels
+4. cmake --build build --config Debug              → clean build
 ```
 
 ---
@@ -764,13 +755,12 @@ No change to Renderer or RenderPass code. The refactoring is contained entirely 
 | Action | File | Notes |
 |--------|------|-------|
 | **Create** | `GameFramework/Public/Level/LevelDesc.h` | ~35 lines — MeshRequest, PrimitiveRequest, LevelDesc |
-| **Edit** | `GameFramework/Public/Level/Level.h` | Remove `OnLoad`/`OnUnload`, add `BuildDescription`, remove LevelContext fwd decl |
+| **Edit** | `GameFramework/Public/Level/Level.h` | Remove `OnLoad`/`OnUnload`, add `BuildDescription` |
 | **Edit** | `GameFramework/Private/Level/Level.cpp` | Remove `OnUnload` impl; delete file if empty |
-| **Edit** | `GameFramework/Private/Level/Levels/EmptyLevel.h` | `OnLoad` → `BuildDescription`, remove LevelContext include |
-| **Edit** | `GameFramework/Private/Level/Levels/BasicShapesLevel.h` | `OnLoad` → `BuildDescription`, remove Scene/MeshFactory/LevelContext includes |
+| **Edit** | `GameFramework/Private/Level/Levels/EmptyLevel.h` | `OnLoad` → `BuildDescription` |
+| **Edit** | `GameFramework/Private/Level/Levels/BasicShapesLevel.h` | `OnLoad` → `BuildDescription`, remove Scene/MeshFactory includes |
 | **Edit** | `GameFramework/Private/Level/Levels/SponzaLevel.h` | `OnLoad` → `BuildDescription` (inline) |
 | **Delete** | `GameFramework/Private/Level/Levels/SponzaLevel.cpp` | Entire file — level is now header-only |
-| **Delete** | `GameFramework/Public/Level/LevelContext.h` | Entire file |
 | **Edit** | `GameFramework/Public/Scene/Scene.h` | `LoadLevel` takes `const Level&` |
 | **Edit** | `GameFramework/Private/Scene/Scene.cpp` | Consume `LevelDesc`, use MeshFactory locally for procedural mesh requests |
 | **None** | `Application/Private/App.cpp` | No changes needed |

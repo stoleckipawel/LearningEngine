@@ -112,6 +112,12 @@ class SPARKLE_RENDERER_API Renderer final
 	/// Builds a SceneView from owned subsystems for the current frame.
 	[[nodiscard]] SceneView BuildSceneView() const;
 
+	/// Initializes viewport and camera references for the SceneView.
+	void InitializeSceneView(SceneView& view) const;
+
+	/// Populates materials from the scene's loaded material descriptions.
+	void BuildMaterials(SceneView& view) const;
+
 	/// Populates mesh draw commands from the scene's mesh list.
 	void BuildMeshDraws(SceneView& view) const;
 

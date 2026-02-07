@@ -20,8 +20,8 @@
 
 #include "GameFramework/Public/GameFrameworkAPI.h"
 
-#include "Assets/AssetSource.h"
 #include "Assets/AssetTypes.h"
+#include "Paths/PathRoot.h"
 
 #include <array>
 #include <filesystem>
@@ -55,17 +55,17 @@ class SPARKLE_ENGINE_API AssetSystem final
 	// =========================================================================
 
 	// Returns the directory path for a specific asset type.
-	// When source is Any: returns Project path if available, otherwise Engine.
-	[[nodiscard]] const std::filesystem::path& GetTypedPath(AssetType type, AssetSource source = AssetSource::Any) const noexcept;
+	// When root is Any: returns Project path if available, otherwise Engine.
+	[[nodiscard]] const std::filesystem::path& GetTypedPath(AssetType type, PathRoot root = PathRoot::Any) const noexcept;
 
-	[[nodiscard]] const std::filesystem::path& GetShaderPath(AssetSource source = AssetSource::Any) const noexcept;
-	[[nodiscard]] const std::filesystem::path& GetShaderSymbolsPath(AssetSource source = AssetSource::Any) const noexcept;
-	[[nodiscard]] const std::filesystem::path& GetTexturePath(AssetSource source = AssetSource::Any) const noexcept;
-	[[nodiscard]] const std::filesystem::path& GetMeshPath(AssetSource source = AssetSource::Any) const noexcept;
-	[[nodiscard]] const std::filesystem::path& GetMaterialPath(AssetSource source = AssetSource::Any) const noexcept;
-	[[nodiscard]] const std::filesystem::path& GetScenePath(AssetSource source = AssetSource::Any) const noexcept;
-	[[nodiscard]] const std::filesystem::path& GetAudioPath(AssetSource source = AssetSource::Any) const noexcept;
-	[[nodiscard]] const std::filesystem::path& GetFontPath(AssetSource source = AssetSource::Any) const noexcept;
+	[[nodiscard]] const std::filesystem::path& GetShaderPath(PathRoot root = PathRoot::Any) const noexcept;
+	[[nodiscard]] const std::filesystem::path& GetShaderSymbolsPath(PathRoot root = PathRoot::Any) const noexcept;
+	[[nodiscard]] const std::filesystem::path& GetTexturePath(PathRoot root = PathRoot::Any) const noexcept;
+	[[nodiscard]] const std::filesystem::path& GetMeshPath(PathRoot root = PathRoot::Any) const noexcept;
+	[[nodiscard]] const std::filesystem::path& GetMaterialPath(PathRoot root = PathRoot::Any) const noexcept;
+	[[nodiscard]] const std::filesystem::path& GetScenePath(PathRoot root = PathRoot::Any) const noexcept;
+	[[nodiscard]] const std::filesystem::path& GetAudioPath(PathRoot root = PathRoot::Any) const noexcept;
+	[[nodiscard]] const std::filesystem::path& GetFontPath(PathRoot root = PathRoot::Any) const noexcept;
 
 	// =========================================================================
 	// Path Resolution

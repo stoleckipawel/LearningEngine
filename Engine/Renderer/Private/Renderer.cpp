@@ -1,5 +1,6 @@
 #include "PCH.h"
 #include "Renderer.h"
+
 #include "Assets/AssetSystem.h"
 #include "D3D12DebugLayer.h"
 #include "D3D12Rhi.h"
@@ -111,7 +112,6 @@ void Renderer::PostLoad() noexcept
 	m_rhi->ExecuteCommandList();
 	m_rhi->Flush();
 }
-
 
 
 void Renderer::CreateDepthStencilBuffer()
@@ -229,7 +229,17 @@ void Renderer::EndFrame() noexcept
 SceneView Renderer::BuildSceneView() const
 {
 	SceneView view = {};
+	InitializeSceneView(view);
 
+	// Materials and draw commands
+	BuildMaterials(view);
+	BuildMeshDraws(view);
+
+	return view;
+}
+
+void Renderer::InitializeSceneView(SceneView& view) const
+{
 	// Viewport (from window, which swap chain tracks)
 	view.width = m_window->GetWidth();
 	view.height = m_window->GetHeight();
@@ -238,13 +248,24 @@ SceneView Renderer::BuildSceneView() const
 	view.camera = m_renderCamera.get();
 
 	// Lighting — struct defaults (sun down, white, intensity 1)
-	// Materials — single default PBR material at index 0
-	view.materials.emplace_back();
+}
 
-	// Draw commands
-	BuildMeshDraws(view);
-
-	return view;
+void Renderer::BuildMaterials(SceneView& view) const
+{
+	const auto& loadedMaterials = m_scene->GetLoadedMaterials();
+	if (!loadedMaterials.empty())
+	{
+		view.materials.reserve(loadedMaterials.size());
+		for (const auto& desc : loadedMaterials)
+		{
+			view.materials.push_back(MaterialData::FromDesc(desc));
+		}
+	}
+	else
+	{
+		// Single default PBR material at index 0
+		view.materials.emplace_back();
+	}
 }
 
 void Renderer::BuildMeshDraws(SceneView& view) const

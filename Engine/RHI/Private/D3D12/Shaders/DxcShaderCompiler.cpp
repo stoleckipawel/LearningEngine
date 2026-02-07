@@ -28,8 +28,8 @@ void DxcShaderCompiler::ConfigureIncludePaths(const AssetSystem& assetSystem, Sh
 {
 	options.AdditionalIncludeDirs.clear();
 
-	const auto& projectShaders = assetSystem.GetTypedPath(AssetType::Shader, AssetSource::Project);
-	const auto& engineShaders = assetSystem.GetTypedPath(AssetType::Shader, AssetSource::Engine);
+	const auto& projectShaders = assetSystem.GetTypedPath(AssetType::Shader, PathRoot::Project);
+	const auto& engineShaders = assetSystem.GetTypedPath(AssetType::Shader, PathRoot::Engine);
 
 	// Primary include: project if available, otherwise engine.
 	options.IncludeDir = !projectShaders.empty() ? projectShaders : engineShaders;

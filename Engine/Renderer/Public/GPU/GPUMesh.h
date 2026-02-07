@@ -76,7 +76,7 @@ class SPARKLE_RENDERER_API GPUMesh final
 	Microsoft::WRL::ComPtr<ID3D12Resource2> m_indexBuffer;
 
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView{};
-	D3D12_INDEX_BUFFER_VIEW  m_indexBufferView{};
+	D3D12_INDEX_BUFFER_VIEW m_indexBufferView{};
 
 	std::uint32_t m_vertexCount = 0;
 	std::uint32_t m_indexCount = 0;

@@ -141,7 +141,7 @@ AssetSystem::~AssetSystem()
 	m_shaderSymbolsOutputPath.clear();
 }
 
-const std::filesystem::path& AssetSystem::GetTypedPath(AssetType type, AssetSource source) const noexcept
+const std::filesystem::path& AssetSystem::GetTypedPath(AssetType type, PathRoot root) const noexcept
 {
 	const size_t idx = static_cast<size_t>(type);
 	if (type == AssetType::Count || idx >= kAssetTypeCount)
@@ -149,15 +149,15 @@ const std::filesystem::path& AssetSystem::GetTypedPath(AssetType type, AssetSour
 		return s_emptyPath;
 	}
 
-	switch (source)
+	switch (root)
 	{
-		case AssetSource::Project:
+		case PathRoot::Project:
 			return m_projectTypedPaths[idx];
 
-		case AssetSource::Engine:
+		case PathRoot::Engine:
 			return m_engineTypedPaths[idx];
 
-		case AssetSource::Any:
+		case PathRoot::Any:
 		default:
 		{
 			const auto& projectPath = m_projectTypedPaths[idx];
@@ -238,42 +238,42 @@ std::optional<std::filesystem::path> AssetSystem::TryResolveIn(
 	return std::nullopt;
 }
 
-const std::filesystem::path& AssetSystem::GetShaderPath(AssetSource source) const noexcept
+const std::filesystem::path& AssetSystem::GetShaderPath(PathRoot root) const noexcept
 {
-	return GetTypedPath(AssetType::Shader, source);
+	return GetTypedPath(AssetType::Shader, root);
 }
 
-const std::filesystem::path& AssetSystem::GetShaderSymbolsPath(AssetSource source) const noexcept
+const std::filesystem::path& AssetSystem::GetShaderSymbolsPath(PathRoot root) const noexcept
 {
-	return GetTypedPath(AssetType::ShaderSymbols, source);
+	return GetTypedPath(AssetType::ShaderSymbols, root);
 }
 
-const std::filesystem::path& AssetSystem::GetTexturePath(AssetSource source) const noexcept
+const std::filesystem::path& AssetSystem::GetTexturePath(PathRoot root) const noexcept
 {
-	return GetTypedPath(AssetType::Texture, source);
+	return GetTypedPath(AssetType::Texture, root);
 }
 
-const std::filesystem::path& AssetSystem::GetMeshPath(AssetSource source) const noexcept
+const std::filesystem::path& AssetSystem::GetMeshPath(PathRoot root) const noexcept
 {
-	return GetTypedPath(AssetType::Mesh, source);
+	return GetTypedPath(AssetType::Mesh, root);
 }
 
-const std::filesystem::path& AssetSystem::GetMaterialPath(AssetSource source) const noexcept
+const std::filesystem::path& AssetSystem::GetMaterialPath(PathRoot root) const noexcept
 {
-	return GetTypedPath(AssetType::Material, source);
+	return GetTypedPath(AssetType::Material, root);
 }
 
-const std::filesystem::path& AssetSystem::GetScenePath(AssetSource source) const noexcept
+const std::filesystem::path& AssetSystem::GetScenePath(PathRoot root) const noexcept
 {
-	return GetTypedPath(AssetType::Scene, source);
+	return GetTypedPath(AssetType::Scene, root);
 }
 
-const std::filesystem::path& AssetSystem::GetAudioPath(AssetSource source) const noexcept
+const std::filesystem::path& AssetSystem::GetAudioPath(PathRoot root) const noexcept
 {
-	return GetTypedPath(AssetType::Audio, source);
+	return GetTypedPath(AssetType::Audio, root);
 }
 
-const std::filesystem::path& AssetSystem::GetFontPath(AssetSource source) const noexcept
+const std::filesystem::path& AssetSystem::GetFontPath(PathRoot root) const noexcept
 {
-	return GetTypedPath(AssetType::Font, source);
+	return GetTypedPath(AssetType::Font, root);
 }

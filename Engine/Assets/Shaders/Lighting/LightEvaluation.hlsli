@@ -30,7 +30,7 @@ namespace Lighting
 	DirectionalLight GetMainLight()
 	{
 		DirectionalLight light;
-		light.Direction = normalize(-SunDirection);           // CB stores direction toward surface; negate for "toward light"
+		light.Direction = normalize(-SunDirection);  // CB stores direction toward surface; negate for "toward light"
 		light.Radiance = SunColor * SunIntensity;
 		return light;
 	}

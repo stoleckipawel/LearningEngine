@@ -54,7 +54,6 @@ void PrimitiveHemisphere::GenerateGeometry(MeshData& outMeshData) const
 	}
 
 	// Base cap (y = 0), outward is -Y
-	const uint32_t capCenterIndex = (uint32_t) outVertices.size();
 	outVertices.push_back({{0.0f, 0.0f, 0.0f}, {0.5f, 0.5f}, {0.7f, 0.7f, 0.7f, 1.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}});
 
 	for (int lon = 0; lon <= lonSegments; ++lon)

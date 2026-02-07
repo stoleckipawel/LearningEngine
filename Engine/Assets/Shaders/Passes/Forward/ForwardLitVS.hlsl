@@ -7,17 +7,10 @@
 
 void main(in VS::Input Input, out VS::Output Output)
 {
-	// Procedural rotation
-	const float rotationOffset = ScaledTotalTime * 0.3f;
-	const float3 rotationAxis = float3(0.0f, 1.0f, 0.0f);
-	const float3 positionLocalRotated = Rotate(Input.Position, rotationAxis, rotationOffset);
-	const float3 normalLocalRotated = Rotate(Input.Normal, rotationAxis, rotationOffset);
-	const float3 tangentLocalRotated = Rotate(Input.Tangent.xyz, rotationAxis, rotationOffset);
-
-	// Transform rotated local-space vectors to world space
-	const float4 positionWorld = PositionLocalToWorld(float4(positionLocalRotated, 1.0f));
-	const float3 normalWorld = NormalLocalToWorld(normalLocalRotated);
-	const float4 tangentWorld = TangentLocalToWorld(float4(tangentLocalRotated, Input.Tangent.w));
+	// Transform local-space vectors to world space
+	const float4 positionWorld = PositionLocalToWorld(float4(Input.Position, 1.0f));
+	const float3 normalWorld = NormalLocalToWorld(Input.Normal);
+	const float4 tangentWorld = TangentLocalToWorld(Input.Tangent);
 
 	// Reconstruct bitangent from world normal/tangent
 	const float3 bitangentWorld = ComputeBitangent(normalWorld, tangentWorld);

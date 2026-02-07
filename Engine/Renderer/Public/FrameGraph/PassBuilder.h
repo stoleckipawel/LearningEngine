@@ -55,24 +55,19 @@ class SPARKLE_RENDERER_API PassBuilder
 	// -------------------------------------------------------------------------
 
 	/// Declares read access to a resource.
-	[[nodiscard]] ResourceHandle Read(
-	    [[maybe_unused]] ResourceHandle handle,
-	    [[maybe_unused]] ResourceState state) noexcept
+	[[nodiscard]] ResourceHandle Read([[maybe_unused]] ResourceHandle handle, [[maybe_unused]] ResourceState state) noexcept
 	{
 		return handle;
 	}
 
 	/// Declares write access to a resource.
-	[[nodiscard]] ResourceHandle Write(
-	    [[maybe_unused]] ResourceHandle handle,
-	    [[maybe_unused]] ResourceState state) noexcept
+	[[nodiscard]] ResourceHandle Write([[maybe_unused]] ResourceHandle handle, [[maybe_unused]] ResourceState state) noexcept
 	{
 		return handle;
 	}
 
 	/// Creates a transient texture resource.
-	template <typename TextureDesc>
-	[[nodiscard]] ResourceHandle CreateTexture([[maybe_unused]] const TextureDesc& desc) noexcept
+	template <typename TextureDesc> [[nodiscard]] ResourceHandle CreateTexture([[maybe_unused]] const TextureDesc& desc) noexcept
 	{
 		return ResourceHandle::Invalid();
 	}

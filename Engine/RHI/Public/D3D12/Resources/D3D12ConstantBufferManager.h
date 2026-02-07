@@ -80,7 +80,7 @@ class D3D12ConstantBufferManager final
 	[[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS UpdatePerObjectVS(const PerObjectVSConstantBufferData& data);
 
 	// Update per-object PS constant buffer (material data).
-	[[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS UpdatePerObjectPS();
+	[[nodiscard]] D3D12_GPU_VIRTUAL_ADDRESS UpdatePerObjectPS(const PerObjectPSConstantBufferData& data);
 
   private:
 	// Per-Frame constant buffers (persistent, one per frame-in-flight)

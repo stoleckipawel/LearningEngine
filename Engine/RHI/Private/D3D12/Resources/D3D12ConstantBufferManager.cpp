@@ -98,15 +98,7 @@ D3D12_GPU_VIRTUAL_ADDRESS D3D12ConstantBufferManager::UpdatePerObjectVS(const Pe
 // Per-Object PS Update (per draw call - uses ring buffer)
 //------------------------------------------------------------------------------
 
-D3D12_GPU_VIRTUAL_ADDRESS D3D12ConstantBufferManager::UpdatePerObjectPS()
+D3D12_GPU_VIRTUAL_ADDRESS D3D12ConstantBufferManager::UpdatePerObjectPS(const PerObjectPSConstantBufferData& data)
 {
-	PerObjectPSConstantBufferData data = {};
-	data.BaseColor = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	data.Metallic = 0.0f;
-	data.Roughness = 0.5f;
-	data.F0 = 0.04f;  // Typical dielectric F0
-	data._padPerObjectPS0 = 0.0f;
-
-	// Allocate from ring buffer and copy data - returns unique GPU VA
 	return m_frameResourceManager->AllocateConstantBuffer(data);
 }

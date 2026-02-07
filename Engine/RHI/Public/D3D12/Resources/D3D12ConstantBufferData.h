@@ -72,11 +72,11 @@ struct alignas(256) PerViewConstantBufferData
 	float FarZ;                         // Far clip plane
 	DirectX::XMFLOAT3 CameraDirection;  // World-space camera forward
 
-	DirectX::XMFLOAT3 SunDirection;     // World-space sun light direction
-	float SunIntensity;                 // Sun light intensity multiplier
+	DirectX::XMFLOAT3 SunDirection;  // World-space sun light direction
+	float SunIntensity;              // Sun light intensity multiplier
 
-	DirectX::XMFLOAT3 SunColor;         // Sun light color (linear RGB)
-	float _padPerView0;                 // Pad to 256-byte boundary
+	DirectX::XMFLOAT3 SunColor;  // Sun light color (linear RGB)
+	float _padPerView0;          // Pad to 256-byte boundary
 };
 CBV_CHECK(PerViewConstantBufferData);
 

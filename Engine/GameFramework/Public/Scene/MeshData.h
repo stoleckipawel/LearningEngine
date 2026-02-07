@@ -2,6 +2,7 @@
 // MeshData.h — Pure CPU vertex and mesh data for GameFramework
 // =============================================================================
 
+#pragma once
 
 #include "GameFramework/Public/GameFrameworkAPI.h"
 #include "Core/Public/CoreTypes.h"

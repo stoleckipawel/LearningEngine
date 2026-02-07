@@ -9,8 +9,9 @@
 #pragma once
 
 #include "Application/Public/ApplicationAPI.h"
-#include <string>
+
 #include <memory>
+#include <string>
 
 class Timer;
 class Window;
@@ -19,11 +20,13 @@ class Scene;
 class CameraController;
 class Renderer;
 class AssetSystem;
+class LevelRegistry;
 
 class SPARKLE_APPLICATION_API App
 {
   public:
-	explicit App(std::string&& windowTitle);
+	explicit App(std::string windowTitle);
+	App(std::string windowTitle, std::string startupLevelName);
 	~App();
 
 	App(const App&) = delete;
@@ -39,9 +42,12 @@ class SPARKLE_APPLICATION_API App
 	void EndFrame();
 	void RenderLoop();
 	void Shutdown();
+	void LoadStartupLevel();
 
 	std::string m_windowTitle;
+	std::string m_startupLevelName;
 	std::unique_ptr<Timer> m_timer;
+	std::unique_ptr<LevelRegistry> m_levelRegistry;
 	std::unique_ptr<AssetSystem> m_assetSystem;
 	std::unique_ptr<Window> m_window;
 	std::unique_ptr<InputSystem> m_inputSystem;

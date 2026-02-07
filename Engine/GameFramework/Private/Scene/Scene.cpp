@@ -1,12 +1,17 @@
 #include "PCH.h"
 #include "Scene.h"
-#include "Scene/Mesh.h"
-#include "Camera/GameCamera.h"
 
-Scene::Scene() : m_camera(std::make_unique<GameCamera>()), m_meshFactory(std::make_unique<MeshFactory>())
-{
-	RebuildGeometry();
-}
+#include "Scene/Mesh.h"
+#include "Scene/ImportedMesh.h"
+#include "Camera/GameCamera.h"
+#include "Assets/AssetSystem.h"
+#include "Assets/GltfLoader.h"
+#include "Level/Level.h"
+#include "Level/LevelDesc.h"
+#include "Core/Public/Diagnostics/Log.h"
+#include "Scene/MeshFactory.h"
+
+Scene::Scene() : m_camera(std::make_unique<GameCamera>()) {}
 
 Scene::~Scene() noexcept = default;
 
@@ -20,49 +25,140 @@ const GameCamera& Scene::GetCamera() const noexcept
 	return *m_camera;
 }
 
-void Scene::SetPrimitiveConfig(const PrimitiveConfig& config)
+// =============================================================================
+// Level Loading
+// =============================================================================
+
+void Scene::LoadLevel(const Level& level, AssetSystem& assetSystem)
 {
-	m_primitiveConfig = config;
-	RebuildGeometry();
+	LOG_INFO("Scene: Loading level '" + std::string(level.GetName()) + "'");
+
+	Clear();
+
+	LevelDesc desc = level.BuildDescription();
+	LoadMeshRequests(desc, assetSystem);
+
+	m_currentLevelName = std::string(level.GetName());
+
+	LOG_INFO("Scene: Level '" + m_currentLevelName + "' loaded");
 }
 
-void Scene::SetPrimitives(MeshFactory::Shape shape, std::uint32_t count)
+void Scene::LoadMeshRequests(const LevelDesc& desc, AssetSystem& assetSystem)
 {
-	m_primitiveConfig.shape = shape;
-	m_primitiveConfig.count = count;
-	// Spawn at world origin with default extents
-	m_primitiveConfig.center = {0.0f, 0.0f, 0.0f};
-
-	RebuildGeometry();
+	for (const auto& request : desc.meshRequests)
+	{
+		switch (request.source)
+		{
+			case AssetSource::Imported:
+				LoadImportedMeshRequest(request, assetSystem);
+				break;
+			case AssetSource::Procedural:
+				LoadProceduralMeshRequest(request);
+				break;
+			default:
+				// Fail fast if a new AssetSource is added without handling.
+				LOG_FATAL("Scene: Unhandled AssetSource in LoadMeshRequests");
+				break;
+		}
+	}
 }
 
-void Scene::RebuildGeometry()
+void Scene::LoadImportedMeshRequest(const MeshRequest& request, AssetSystem& assetSystem)
 {
-	if (!m_meshFactory)
+	auto resolved = assetSystem.ResolvePath(request.assetPath, request.assetType);
+	if (resolved)
+	{
+		AppendGltf(*resolved);
 		return;
+	}
 
-	// Rebuild meshes (CPU-side geometry only, no GPU upload)
-	m_meshFactory->Clear();
-	m_meshFactory->AppendShapes(
-	    m_primitiveConfig.shape,
-	    m_primitiveConfig.count,
-	    m_primitiveConfig.center,
-	    m_primitiveConfig.extents,
-	    m_primitiveConfig.seed);
-
-	// Note: GPU upload must be done externally via MeshFactory::Upload()
-	// This keeps Scene decoupled from RHI implementation.
+	LOG_WARNING("Scene: Asset not found — " + request.assetPath.string());
 }
 
-const std::vector<std::unique_ptr<Mesh>>& Scene::GetMeshes() const noexcept
+void Scene::LoadProceduralMeshRequest(const MeshRequest& request)
 {
-	static const std::vector<std::unique_ptr<Mesh>> kEmpty;
-	if (!m_meshFactory)
-		return kEmpty;
-	return m_meshFactory->GetMeshes();
+	AppendProceduralMeshes(request.procedural);
 }
 
-bool Scene::HasMeshes() const noexcept
+void Scene::AppendProceduralMeshes(const PrimitiveRequest& request)
 {
-	return m_meshFactory && !m_meshFactory->GetMeshes().empty();
+	MeshFactory factory;
+	factory.AppendShapes(request.shape, request.count, request.center, request.extents, request.seed);
+
+	std::vector<std::unique_ptr<Mesh>> meshes = std::move(factory).TakeMeshes();
+	AddMeshes(std::move(meshes));
+}
+
+void Scene::Clear()
+{
+	m_meshes.clear();
+	m_loadedMaterials.clear();
+	m_currentLevelName.clear();
+}
+
+// =============================================================================
+// Asset Loading
+// =============================================================================
+
+bool Scene::LoadGltf(const std::filesystem::path& filePath)
+{
+	Clear();
+	return AppendGltf(filePath);
+}
+
+bool Scene::AppendGltf(const std::filesystem::path& filePath)
+{
+	LOG_INFO("Scene: Loading glTF from " + filePath.string());
+
+	GltfLoader::LoadResult result = GltfLoader::Load(filePath);
+
+	if (!result.IsValid())
+	{
+		LOG_ERROR("Scene: Failed to load glTF — " + result.errorMessage);
+		return false;
+	}
+
+	const std::size_t materialOffset = m_loadedMaterials.size();
+
+	// Store materials from the glTF file
+	if (!result.materials.empty())
+	{
+		m_loadedMaterials.reserve(m_loadedMaterials.size() + result.materials.size());
+		for (auto& material : result.materials)
+		{
+			m_loadedMaterials.push_back(std::move(material));
+		}
+	}
+
+	// Create ImportedMesh for each primitive
+	m_meshes.reserve(m_meshes.size() + result.meshes.size());
+	for (std::size_t i = 0; i < result.meshes.size(); ++i)
+	{
+		auto mesh = std::make_unique<ImportedMesh>(std::move(result.meshes[i]), result.transforms[i]);
+
+		// Map glTF material index to scene-level material
+		if (i < result.materialIndices.size())
+		{
+			mesh->SetMaterialId(static_cast<uint32_t>(materialOffset) + result.materialIndices[i]);
+		}
+
+		m_meshes.push_back(std::move(mesh));
+	}
+
+	LOG_INFO("Scene: Loaded " + std::to_string(m_meshes.size()) + " meshes, " + std::to_string(m_loadedMaterials.size()) + " materials");
+
+	return true;
+}
+
+// =============================================================================
+// Mesh Management
+// =============================================================================
+
+void Scene::AddMeshes(std::vector<std::unique_ptr<Mesh>> meshes)
+{
+	m_meshes.reserve(m_meshes.size() + meshes.size());
+	for (auto& mesh : meshes)
+	{
+		m_meshes.push_back(std::move(mesh));
+	}
 }
