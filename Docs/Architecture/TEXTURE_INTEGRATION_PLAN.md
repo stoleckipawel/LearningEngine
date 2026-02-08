@@ -44,6 +44,8 @@ Support all texture types present in Sponza and standard glTF PBR materials:
 | 9 | Shaders: full PBR sampling with alpha mask support | Phase 5, 6, 8 |
 | 10 | Default textures: create fallback set | Phase 3 |
 | 11 | BC compression: AMD Compressonator + KTX2 output | Phase 3 |
+| 12 | Cleanup: remove WIC image support | Phase 3, 11 |
+| 13 | Unit tests for current engine capabilities | Phase 12 |
 
 ---
 
@@ -52,28 +54,42 @@ Support all texture types present in Sponza and standard glTF PBR materials:
 ### Phase 0 — Integrate Third-Party Texture Libraries
 
 **Goal:** Replace WIC-based texture loading with cross-platform libraries for loading, mip generation, and compression.
+WIC support will be removed after validation in Phase 12.
 
-**Libraries to integrate:**
+**All third-party dependencies use CMake FetchContent** — sources are downloaded automatically at configure time into `build/_deps/`. No manual cloning or vendoring needed. Configuration is in `Scripts/FetchDependencies.cmake`.
 
-| Library | Role | License | Integration |
-|---|---|---|---|
-| **stb_image** | Load PNG, JPEG, BMP, TGA, HDR → raw RGBA | Public domain | Single header (`stb_image.h`) |
-| **stb_image_resize2** | CPU mip generation (Kaiser, Mitchell, sRGB-aware) | Public domain | Single header (`stb_image_resize2.h`) |
-| **AMD Compressonator** | BC1–BC7 compression (cross-platform, GPU-accelerable) | MIT | CMake subproject or prebuilt lib |
-| **KTX-Software** | KTX2 container I/O (pre-compressed asset pipeline) | Apache 2.0 | CMake subproject (optional, Phase 11) |
+**Libraries:**
 
-**Files:**
-- `Engine/third_party/stb/` — add `stb_image.h`, `stb_image_resize2.h`
-- `Engine/third_party/compressonator/` — add Compressonator SDK
-- `Engine/Renderer/CMakeLists.txt` — link Compressonator
+| Library | Role | License | FetchContent Target | Pinned Version |
+|---|---|---|---|---|
+| **stb** | Load PNG/JPEG/BMP/TGA/HDR + CPU mip generation | Public domain | `stb` (INTERFACE) | `master` |
+| **AMD Compressonator** | BC1–BC7 block compression (CMP_Core only) | MIT | `CMP_Core` (STATIC) | `master` |
+| **KTX-Software** | KTX2 container I/O (pre-compressed asset pipeline) | Apache 2.0 | `ktx` (STATIC) | `v4.3.2` |
+
+**How it works:**
+1. User runs `cmake -B build` — FetchContent clones repos automatically
+2. Sources go into `build/_deps/` (gitignored, cached between configures)
+3. Only the minimal subsets are built (e.g., CMP_Core only, not full Compressonator GUI)
+
+**Existing third-party also migrated to FetchContent:**
+
+| Library | Target | Pinned Version |
+|---|---|---|
+| **Dear ImGui** | `imgui` (STATIC, DX12 + Win32 backends) | `v1.92.5` |
+| **cgltf** | `cgltf` (INTERFACE, header-only) | `v1.15` |
+
+**Note:** `Engine/third_party/` only contains `d3dx12.h` (Microsoft D3D12 helper header).
+
+**CMake usage in any module:**
+```cmake
+target_link_libraries(YourTarget PRIVATE stb CMP_Core ktx imgui cgltf)
+```
 
 **What each library provides:**
 - `stbi_load` / `stbi_load_16` / `stbi_loadf` — load PNG, JPEG, BMP, TGA, HDR to raw pixels
 - `stbir_resize` — generate each mip level with selectable filter (Kaiser recommended)
-- `CMP_ConvertTexture` — BC1–BC7 compression, cross-platform, optional GPU acceleration
+- `CompressBlockBC7()` / `DecompressBlockBC7()` — BC1–BC7 block compression via CMP_Core
 - `ktxTexture2_Create` / `ktxTexture2_WriteToFile` — write KTX2 containers (future)
-
-**Decision:** include stb headers in `third_party/stb/` (same pattern as cgltf and imgui — single-header, public domain). Compressonator as a CMake subproject or prebuilt static lib.
 
 ---
 
@@ -110,6 +126,8 @@ struct MaterialDesc
     optional<path> emissiveTexture;          // NEW
 };
 ```
+
+**Integration note:** during rollout, texture sampling will progressively replace the uniform scalar values (baseColor/metallic/roughness/emissiveColor) whenever a texture is present, while keeping the scalar values as fallbacks.
 
 **New enum:**
 
@@ -548,6 +566,38 @@ float3 UnpackBC5Normal(float2 rg)
 
 ---
 
+### Phase 12 — Remove WIC Support (Cleanup)
+
+**Goal:** Remove WIC-based image loading and any legacy WIC helpers once stb_image-based loading is fully validated.
+
+**Tasks:**
+- Remove WIC loaders from the texture path (any `LoadFromWICFile` / WIC wrappers)
+- Remove WIC-related includes, libs, and build flags
+- Ensure texture loading and mip generation use only stb_image + stb_image_resize2
+- Update any docs or comments referencing WIC
+
+**Exit criteria:**
+- All textures load correctly without WIC
+- No WIC dependencies remain in the build or codebase
+
+---
+
+### Phase 13 — Unit Tests for Current Engine Capabilities
+
+**Goal:** Add unit tests covering the current texture and material pipeline behavior.
+
+**Targets:**
+- TextureManager cache behavior (load-once, reuse by path)
+- Mip generation count correctness
+- Default texture fallbacks when texture paths are missing
+- MaterialData flag setup from MaterialDesc
+
+**Exit criteria:**
+- Tests pass in CI and locally
+- Core texture/material assumptions are locked down
+
+---
+
 ## 4. Implementation Order (Recommended)
 
 | Step | Phase | Description | Estimated Complexity |
@@ -567,6 +617,8 @@ float3 UnpackBC5Normal(float2 rg)
 | 13 | 9 | Shaders: full PBR sampling + alpha mask | Medium |
 | 14 | 11 | BC compression via AMD Compressonator (optional, last) | Low |
 | 15 | 11 | KTX2 output via KTX-Software (optional, asset pipeline) | Low |
+| 16 | 12 | Remove WIC loaders and build deps | Low |
+| 17 | 13 | Add unit tests for current engine capabilities | Medium |
 
 ---
 
@@ -590,9 +642,8 @@ float3 UnpackBC5Normal(float2 rg)
 
 | Layer | Files |
 |---|---|
-| Third-party | `Engine/third_party/stb/` (stb_image.h, stb_image_resize2.h) |
-| Third-party | `Engine/third_party/compressonator/` (AMD Compressonator SDK) |
-| Third-party | `Engine/third_party/ktx/` (KTX-Software — optional, Phase 11) |
+| Build | `Scripts/FetchDependencies.cmake` (all third-party deps via FetchContent) |
+| Third-party | `build/_deps/` (auto-downloaded: stb, compressonator, ktx, imgui, cgltf) |
 | Shared | `TextureData.h` (RHI-agnostic texture data struct) |
 | GameFramework | `MaterialDesc.h`, `GltfLoader.cpp` |
 | RHI | `D3D12Texture.h/cpp`, `D3D12RootSignature.cpp`, `D3D12RootBindings.h`, `D3D12ConstantBufferData.h` |
