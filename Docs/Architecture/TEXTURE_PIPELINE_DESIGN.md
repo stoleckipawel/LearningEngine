@@ -181,7 +181,96 @@ LevelDesc
 
 ---
 
-## 6. Implementation Plan (Option A)
+## 6. Texture Library Comparison
+
+Comparison of popular image loading, mip generation, and compression libraries relevant to a D3D12/Vulkan engine.
+
+### 6.1 Image Loading
+
+| Criteria | **stb_image** | **WIC (Windows Imaging Component)** | **DirectXTex** | **FreeImage** |
+|---|---|---|---|---|
+| License | Public domain (MIT-0) | Windows SDK (proprietary) | MIT | GPL-2/FIPL |
+| Platforms | Windows, Linux, macOS, consoles | **Windows only** | **Windows only** (COM dependency) | Windows, Linux, macOS |
+| Integration | Single header, drop-in | System library, zero setup on Win | ~30 source files or NuGet | Large library (~500KB) |
+| Formats | PNG, JPEG, BMP, TGA, HDR, PSD, GIF | PNG, JPEG, BMP, TIFF, DDS, WMP, ICO | PNG, JPEG, BMP, TIFF, TGA, **DDS**, HDR, EXR | 40+ formats |
+| HDR support | `.hdr` (Radiance) | JPEG XR | HDR, EXR, DDS (BC6H) | HDR, EXR, OpenEXR |
+| DDS/compressed input | No | Limited | **Full** (all BCn, ASTC headers) | No |
+| 16-bit / float output | `stbi_load_16`, `stbi_loadf` | Via WIC pixel format | ScratchImage with any DXGI format | Yes |
+| Output format | Raw RGBA8/16/float | IWICBitmap / raw pixels | ScratchImage (DXGI-typed) | FIBITMAP |
+| Thread safety | Yes (stateless) | COM apartment rules | Yes | Not guaranteed |
+| Build complexity | Zero | Zero (Windows SDK) | Medium (CMake or source inclusion) | High (prebuilt binaries) |
+| Used by | Godot, raylib, countless indie engines | Legacy D3D11 samples, WPF | Microsoft D3D12 samples, UWP | Older engines, image editors |
+
+### 6.2 Mip Generation
+
+| Criteria | **stb_image_resize2** | **DirectXTex** | **Custom box filter** | **GPU compute** |
+|---|---|---|---|---|
+| License | Public domain | MIT | N/A | N/A |
+| Platforms | Cross-platform | Windows only | Cross-platform | Requires GPU |
+| Filters | Box, bilinear, Catmull-Rom, Mitchell, Kaiser | Box, linear, cubic, triangle, WIC-based | Box only | Depends on shader |
+| sRGB-correct | Yes (flag) | Yes (format-aware) | Manual | Manual |
+| Quality | Excellent (Kaiser) | Good | Acceptable | Good to excellent |
+| Speed | Fast (SIMD optimized) | Fast | Very fast | Fastest (GPU) |
+| Integration effort | Single header | Part of DirectXTex | ~50 lines of code | Needs compute pipeline |
+
+### 6.3 Texture Compression (BCn)
+
+| Criteria | **AMD Compressonator** | **DirectXTex `Compress()`** | **Intel ISPC Texture Compressor** | **bc7enc_rdo** |
+|---|---|---|---|---|
+| License | MIT | MIT | MIT | MIT / Public domain |
+| Platforms | **Cross-platform** | **Windows only** | Cross-platform | Cross-platform |
+| BC formats | BC1–BC7, ASTC, ETC | BC1–BC7 | BC1, BC6H, BC7 | BC1, BC7 (with RDO) |
+| Quality | High (BC7 mode partitions) | High | Very high (BC7) | Very high (BC7) |
+| GPU acceleration | Yes (OpenCL, Vulkan) | No (CPU only) | ISPC SIMD (CPU) | No |
+| Speed | Fast (GPU), medium (CPU) | Medium | Fast (ISPC vectorized) | Medium |
+| Build complexity | Medium (CMake project) | Part of DirectXTex | Medium (ISPC compiler needed) | Single header |
+| Container output | DDS, KTX, KTX2 | DDS | Raw blocks | Raw blocks |
+| Used by | AMD tools, Godot, many engines | Microsoft samples, UWP apps | Intel GPU tools | Basis Universal |
+
+### 6.4 Pre-Compressed Container Formats (DDS vs KTX2)
+
+| Criteria | **DDS** | **KTX2** (Khronos) |
+|---|---|---|
+| Platform affinity | DirectX / Windows | Vulkan / cross-platform |
+| BCn support | Full (BC1–BC7) | Full (BC1–BC7) + ASTC + ETC |
+| Mips in file | Yes | Yes |
+| Supercompression | No | Yes (Basis Universal, zstd) |
+| Loader library | DirectXTex | KTX-Software (Khronos, Apache 2.0) |
+| GPU upload | Direct — matches DXGI formats | Direct — matches VkFormat |
+| Recommended for | D3D12-only builds | Cross-platform or Vulkan builds |
+
+### 6.5 Recommended Combinations
+
+**D3D12 only (current):**
+| Role | Library |
+|---|---|
+| Image loading | stb_image **or** DirectXTex |
+| Mip generation | stb_image_resize2 **or** DirectXTex `GenerateMipMaps` |
+| BC compression | DirectXTex `Compress()` |
+| Pre-compressed | DDS via DirectXTex |
+
+**Cross-platform (D3D12 + Vulkan future):**
+| Role | Library |
+|---|---|
+| Image loading | **stb_image** |
+| Mip generation | **stb_image_resize2** |
+| BC compression | **AMD Compressonator** or **ISPC Texture Compressor** |
+| Pre-compressed | KTX2 via KTX-Software (both backends) |
+
+**Hybrid (recommended for this engine):**
+| Role | Library | Rationale |
+|---|---|---|
+| Image loading | **stb_image** | Cross-platform, trivial integration, covers all Sponza formats |
+| Mip generation | **stb_image_resize2** | sRGB-correct Kaiser filter, single header, no platform lock |
+| BC compression | **AMD Compressonator** | Cross-platform, GPU-accelerated option, MIT |
+| DDS fast-path (D3D12) | DirectXTex `LoadFromDDSFile` only | For pre-compressed asset pipelines on Windows |
+| Pre-compressed (Vulkan) | KTX-Software | Khronos standard, matches VkFormat directly |
+
+> **Key takeaway:** stb_image + stb_image_resize2 + Compressonator gives full coverage for both backends with zero platform lock-in. DirectXTex is only needed if you want DDS fast-path loading on Windows.
+
+---
+
+## 7. Implementation Plan (Option A)
 
 1. **TextureManager path cache**
    - Add LoadFromPath(path) -> D3D12Texture*
@@ -211,7 +300,7 @@ LevelDesc
 
 ---
 
-## 7. Future Extensions
+## 8. Future Extensions
 
 Short term:
 - Add normal map and metallic-roughness SRVs
@@ -230,7 +319,7 @@ Long term:
 
 ---
 
-## 8. Risks and Mitigations
+## 9. Risks and Mitigations
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
@@ -240,7 +329,7 @@ Long term:
 
 ---
 
-## 9. References
+## 10. References
 
 - Unreal Engine: material system with uniform buffers and SRV tables (historical UE4), bindless in UE5
 - Frostbite: explicit resource binding with material data staging
@@ -248,7 +337,7 @@ Long term:
 
 ---
 
-## 10. Decision Record
+## 11. Decision Record
 
 - **Adopt Option A** for immediate correctness and minimal complexity.
 - **Plan Option B** as next step once correctness is proven.
