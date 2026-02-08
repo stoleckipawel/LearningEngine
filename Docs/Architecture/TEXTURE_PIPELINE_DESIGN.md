@@ -76,9 +76,10 @@ Key gaps:
 - No batching by material (future optimization needed)
 
 **Texture loading and mips:**
-- Use DirectXTex to load images and generate mip chains
-- Create SRVs with full mip chains
-- Add a compression step (BC7 for color, BC5 for normals) when ready
+- Use stb_image for cross-platform image loading (PNG, JPEG, BMP, TGA)
+- Use stb_image_resize2 for CPU mip chain generation (Kaiser filter, sRGB-aware)
+- Use AMD Compressonator for BC compression (BC7 for color, BC5 for normals) when ready
+- Use KTX2 via KTX-Software for pre-compressed asset pipeline (optional)
 
 **Industry references:**
 - UE4 forward renderer historically used per-draw material binding
@@ -277,11 +278,11 @@ Comparison of popular image loading, mip generation, and compression libraries r
    - Cache by absolute path string
    - Keep existing enum slots for defaults
 
-2. **DirectXTex-based load + mip generation**
-  - Load WIC/TGA/DDS with DirectXTex
-  - Generate mip chain (GenerateMipMaps)
+2. **stb_image + stb_image_resize2 load + mip generation**
+  - Load PNG/JPEG/BMP/TGA with `stbi_load` (cross-platform)
+  - Generate mip chain with `stbir_resize` (Kaiser filter, sRGB-aware)
   - Upload all mip levels to GPU
-  - Add compression step later (BC7 for albedo, BC5 for normals)
+  - Add BC compression step later via AMD Compressonator
 
 3. **MaterialData::FromDesc**
    - Accept TextureManager reference
@@ -306,15 +307,16 @@ Short term:
 - Add normal map and metallic-roughness SRVs
 - Expand root signature SRV range to t0..t2
 - Extend MaterialData to store multiple handles
-- Add BC compression path for released builds
+- Add BC compression path via AMD Compressonator for released builds
 
 Medium term:
 - Per-material descriptor tables (Option B)
 - Material sorting to reduce SRV binds
+- KTX2 pre-compressed asset pipeline
 
 Long term:
 - Bindless texture arrays
-- Streaming and mip generation
+- Streaming and virtual texturing
 - Texture compression pipeline (BC7/BC5)
 
 ---

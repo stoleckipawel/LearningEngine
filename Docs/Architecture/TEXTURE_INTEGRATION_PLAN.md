@@ -32,10 +32,10 @@ Support all texture types present in Sponza and standard glTF PBR materials:
 
 | Phase | Description | Depends On |
 |---|---|---|
-| 0 | Third-party: integrate DirectXTex | — |
+| 0 | Third-party: integrate stb_image, stb_image_resize2, AMD Compressonator | — |
 | 1 | Data model: expand MaterialDesc and MaterialData | — |
 | 2 | glTF loader: extract all maps and alpha mode | Phase 1 |
-| 3 | TextureManager: path cache + DirectXTex + mip generation | Phase 0 |
+| 3 | TextureManager: path cache + stb_image + stb_image_resize2 mip generation | Phase 0 |
 | 4 | D3D12Texture: support full mip chains | Phase 3 |
 | 5 | Root signature: expand SRV table to 5 slots | — |
 | 6 | Constant buffer: add texture flags and alpha params | — |
@@ -43,29 +43,37 @@ Support all texture types present in Sponza and standard glTF PBR materials:
 | 8 | ForwardOpaquePass: per-draw SRV binding | Phase 5, 6, 7 |
 | 9 | Shaders: full PBR sampling with alpha mask support | Phase 5, 6, 8 |
 | 10 | Default textures: create fallback set | Phase 3 |
-| 11 | BC compression: add DirectXTex compress step | Phase 3 |
+| 11 | BC compression: AMD Compressonator + KTX2 output | Phase 3 |
 
 ---
 
 ## 3. Phase Details
 
-### Phase 0 — Integrate DirectXTex
+### Phase 0 — Integrate Third-Party Texture Libraries
 
-**Goal:** Replace WIC-based texture loading with DirectXTex for mip generation and compression support.
+**Goal:** Replace WIC-based texture loading with cross-platform libraries for loading, mip generation, and compression.
+
+**Libraries to integrate:**
+
+| Library | Role | License | Integration |
+|---|---|---|---|
+| **stb_image** | Load PNG, JPEG, BMP, TGA, HDR → raw RGBA | Public domain | Single header (`stb_image.h`) |
+| **stb_image_resize2** | CPU mip generation (Kaiser, Mitchell, sRGB-aware) | Public domain | Single header (`stb_image_resize2.h`) |
+| **AMD Compressonator** | BC1–BC7 compression (cross-platform, GPU-accelerable) | MIT | CMake subproject or prebuilt lib |
+| **KTX-Software** | KTX2 container I/O (pre-compressed asset pipeline) | Apache 2.0 | CMake subproject (optional, Phase 11) |
 
 **Files:**
-- `Engine/third_party/` — add DirectXTex headers and source (or prebuilt lib)
-- `Engine/RHI/CMakeLists.txt` — link DirectXTex
+- `Engine/third_party/stb/` — add `stb_image.h`, `stb_image_resize2.h`
+- `Engine/third_party/compressonator/` — add Compressonator SDK
+- `Engine/Renderer/CMakeLists.txt` — link Compressonator
 
-**What DirectXTex provides:**
-- `LoadFromWICFile` — load PNG, JPEG, BMP, TIFF
-- `LoadFromTGAFile` — load TGA
-- `LoadFromDDSFile` — load pre-compressed DDS
-- `GenerateMipMaps` — CPU-side mip chain generation
-- `Compress` — CPU-side BC compression (BC1–BC7)
-- `ScratchImage` — owns pixel data with mip levels
+**What each library provides:**
+- `stbi_load` / `stbi_load_16` / `stbi_loadf` — load PNG, JPEG, BMP, TGA, HDR to raw pixels
+- `stbir_resize` — generate each mip level with selectable filter (Kaiser recommended)
+- `CMP_ConvertTexture` — BC1–BC7 compression, cross-platform, optional GPU acceleration
+- `ktxTexture2_Create` / `ktxTexture2_WriteToFile` — write KTX2 containers (future)
 
-**Decision:** include DirectXTex as source files in `third_party/` (same pattern as cgltf and imgui). DirectXTex is MIT licensed and header-only-friendly with a single implementation translation unit.
+**Decision:** include stb headers in `third_party/stb/` (same pattern as cgltf and imgui — single-header, public domain). Compressonator as a CMake subproject or prebuilt static lib.
 
 ---
 
@@ -176,7 +184,7 @@ Extract from each `cgltf_material`:
 
 ---
 
-### Phase 3 — TextureManager: Path Cache + DirectXTex
+### Phase 3 — TextureManager: Path Cache + stb_image + Mip Generation
 
 **Goal:** Load any texture by path, generate mips, cache by path, provide fallback defaults.
 
@@ -211,13 +219,23 @@ private:
 
 **Load pipeline per texture:**
 1. Check cache by canonical path string → return if cached
-2. Load with DirectXTex (`LoadFromWICFile` / `LoadFromTGAFile` / `LoadFromDDSFile`)
-3. Generate mip chain (`GenerateMipMaps`)
-4. (Phase 11) Optionally compress (`Compress` to BC7/BC5)
-5. Create D3D12 resource with full mip chain
-6. Upload via staging buffer
+2. Load with `stbi_load(path, &w, &h, &channels, 4)` → RGBA8 pixels
+3. Generate mip chain using `stbir_resize()` with `STBIR_FILTER_KAISER`
+   - Compute `mipCount = floor(log2(max(w, h))) + 1`
+   - For sRGB textures (albedo, emissive): use `STBIR_COLORSPACE_SRGB` flag
+   - For linear textures (normal, MR, occlusion): use `STBIR_COLORSPACE_LINEAR`
+   - Store each mip level as a separate allocation in a `vector<vector<uint8_t>>`
+4. (Phase 11) Optionally compress via AMD Compressonator (`CMP_ConvertTexture`)
+5. Create D3D12 resource with `MipLevels = mipCount`
+6. Upload all mip subresources via staging buffer
 7. Create SRV with `MipLevels = mipCount`
 8. Store in cache, return pointer
+
+**stb_image notes:**
+- `stbi_load` returns `unsigned char*` — caller must `stbi_image_free()`
+- Force 4 channels (RGBA) for consistent GPU format
+- For HDR: use `stbi_loadf` → `DXGI_FORMAT_R32G32B32A32_FLOAT`
+- Thread-safe: stateless, no global state
 
 ---
 
@@ -230,14 +248,30 @@ private:
 - `Engine/RHI/Private/D3D12/Resources/D3D12Texture.cpp`
 
 **Changes:**
-- Accept a DirectXTex `ScratchImage` (or raw subresource data + mip count) instead of a file path
+- Accept raw subresource data (array of mip levels) + mip count instead of a file path
 - Create resource with `MipLevels = N`
 - Upload N subresources via `UpdateSubresources`
 - SRV desc uses `MipLevels = N`
 
 **Constructor options:**
 - Keep existing path-based constructor for legacy default textures
-- Add new constructor: `D3D12Texture(D3D12Rhi&, const DirectX::ScratchImage&, D3D12DescriptorHeapManager&)`
+- Add new constructor: `D3D12Texture(D3D12Rhi&, const TextureData& data, D3D12DescriptorHeapManager&)`
+
+**RHI-agnostic TextureData struct (shared between backends):**
+
+```cpp
+struct TextureData
+{
+    uint32_t width;
+    uint32_t height;
+    uint32_t mipCount;
+    uint32_t channels = 4;    // always RGBA
+    bool isSRGB = false;      // affects GPU format selection
+    std::vector<std::vector<uint8_t>> mipLevels; // [0]=full res, [1]=half, ...
+};
+```
+
+This struct is RHI-agnostic — the same `TextureData` can be consumed by both the D3D12 and future Vulkan backend.
 
 ---
 
@@ -447,7 +481,7 @@ These ensure shaders always have a valid SRV to sample even when a material lack
 
 ---
 
-### Phase 11 — BC Compression (Last Step)
+### Phase 11 — BC Compression via AMD Compressonator (Last Step)
 
 **Goal:** Optionally compress textures for reduced VRAM usage and bandwidth.
 
@@ -463,10 +497,42 @@ These ensure shaders always have a valid SRV to sample even when a material lack
 | Occlusion | BC4 | High | Single channel (R) |
 | Emissive | BC7 | High | Full color |
 
-**Implementation:**
-- After `GenerateMipMaps`, call `DirectX::Compress()` with chosen BC format
-- Create GPU resource with compressed format (e.g., `DXGI_FORMAT_BC7_UNORM_SRGB`)
+**Implementation with AMD Compressonator:**
+
+```cpp
+// After mip generation, compress each mip level:
+CMP_Texture srcTexture = {};
+srcTexture.dwSize     = sizeof(CMP_Texture);
+srcTexture.dwWidth    = mipWidth;
+srcTexture.dwHeight   = mipHeight;
+srcTexture.dwPitch    = mipWidth * 4;
+srcTexture.format     = CMP_FORMAT_RGBA_8888;
+srcTexture.dwDataSize = mipWidth * mipHeight * 4;
+srcTexture.pData      = mipPixels;
+
+CMP_Texture dstTexture = {};
+dstTexture.dwSize     = sizeof(CMP_Texture);
+dstTexture.dwWidth    = mipWidth;
+dstTexture.dwHeight   = mipHeight;
+dstTexture.format     = CMP_FORMAT_BC7;  // or BC5, BC4
+dstTexture.dwDataSize = CMP_CalculateBufferSize(&dstTexture);
+dstTexture.pData      = new CMP_BYTE[dstTexture.dwDataSize];
+
+CMP_CompressOptions options = {};
+options.dwSize        = sizeof(CMP_CompressOptions);
+options.fquality      = 0.05f;  // 0.0 = fast, 1.0 = best
+
+CMP_ConvertTexture(&srcTexture, &dstTexture, &options, nullptr);
+```
+
+- Create GPU resource with compressed format (e.g., `DXGI_FORMAT_BC7_UNORM_SRGB` / `VK_FORMAT_BC7_UNORM_BLOCK`)
 - SRV format must match
+- Works identically on D3D12 and future Vulkan backend
+
+**KTX2 output (optional, for pre-compressed asset pipeline):**
+- After compression, write to KTX2 via KTX-Software
+- KTX2 stores all mip levels + BC format metadata
+- Both D3D12 and Vulkan can load KTX2 → skip runtime compression
 
 **BC5 normal map shader change:**
 ```hlsl
@@ -486,19 +552,21 @@ float3 UnpackBC5Normal(float2 rg)
 
 | Step | Phase | Description | Estimated Complexity |
 |---|---|---|---|
-| 1 | 0 | Integrate DirectXTex into third_party | Low |
-| 2 | 1 | Expand MaterialDesc + AlphaMode enum | Low |
-| 3 | 2 | Expand glTF material extraction | Low |
-| 4 | 4 | D3D12Texture: mip chain support via ScratchImage | Medium |
-| 5 | 3 | TextureManager: path cache + DirectXTex load + mips | Medium |
-| 6 | 10 | Create default fallback textures | Low |
-| 7 | 5 | Root signature: expand SRV to 5 slots | Low |
-| 8 | 6 | PerObjectPS CB: add TextureFlags, EmissiveColor, AlphaCutoff, AlphaMode | Low |
-| 9 | 1 | Expand MaterialData with 5 SRV handles + flags | Low |
-| 10 | 7 | Renderer BuildMaterials: resolve textures to GPU handles | Medium |
-| 11 | 8 | ForwardOpaquePass: per-draw texture table binding | Medium |
-| 12 | 9 | Shaders: full PBR sampling + alpha mask | Medium |
-| 13 | 11 | BC compression (optional, last) | Low |
+| 1 | 0 | Integrate stb_image + stb_image_resize2 into third_party | Low |
+| 2 | 0 | Integrate AMD Compressonator (link as static lib or CMake subproject) | Medium |
+| 3 | 1 | Expand MaterialDesc + AlphaMode enum | Low |
+| 4 | 2 | Expand glTF material extraction | Low |
+| 5 | 4 | D3D12Texture: mip chain support via TextureData struct | Medium |
+| 6 | 3 | TextureManager: path cache + stb_image load + stb_image_resize2 mips | Medium |
+| 7 | 10 | Create default fallback textures | Low |
+| 8 | 5 | Root signature: expand SRV to 5 slots | Low |
+| 9 | 6 | PerObjectPS CB: add TextureFlags, EmissiveColor, AlphaCutoff, AlphaMode | Low |
+| 10 | 1 | Expand MaterialData with 5 SRV handles + flags | Low |
+| 11 | 7 | Renderer BuildMaterials: resolve textures to GPU handles | Medium |
+| 12 | 8 | ForwardOpaquePass: per-draw texture table binding | Medium |
+| 13 | 9 | Shaders: full PBR sampling + alpha mask | Medium |
+| 14 | 11 | BC compression via AMD Compressonator (optional, last) | Low |
+| 15 | 11 | KTX2 output via KTX-Software (optional, asset pipeline) | Low |
 
 ---
 
@@ -522,7 +590,10 @@ float3 UnpackBC5Normal(float2 rg)
 
 | Layer | Files |
 |---|---|
-| Third-party | `Engine/third_party/DirectXTex/` (new) |
+| Third-party | `Engine/third_party/stb/` (stb_image.h, stb_image_resize2.h) |
+| Third-party | `Engine/third_party/compressonator/` (AMD Compressonator SDK) |
+| Third-party | `Engine/third_party/ktx/` (KTX-Software — optional, Phase 11) |
+| Shared | `TextureData.h` (RHI-agnostic texture data struct) |
 | GameFramework | `MaterialDesc.h`, `GltfLoader.cpp` |
 | RHI | `D3D12Texture.h/cpp`, `D3D12RootSignature.cpp`, `D3D12RootBindings.h`, `D3D12ConstantBufferData.h` |
 | Renderer | `TextureManager.h/cpp`, `MaterialData.h/cpp`, `Renderer.cpp`, `ForwardOpaquePass.cpp` |
